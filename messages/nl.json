@@ -1,0 +1,74 @@
+{
+  "common": {
+    "skipToContent": "Naar inhoud"
+  },
+  "header": {
+    "homeAria": "CarO — naar de homepage"
+  },
+  "localeSwitcher": {
+    "label": "Taal",
+    "nl": "Nederlands",
+    "en": "Engels"
+  },
+  "themeToggle": {
+    "light": "Schakel naar licht thema",
+    "dark": "Schakel naar donker thema"
+  },
+  "home": {
+    "metaTitle": "CarO — Auto-onderdelen",
+    "metaDescription": "Auto-onderdelen voor de Nederlandse markt. Zoek op onderdeel of OE-nummer. Alle prijzen inclusief 21% btw.",
+    "eyebrow": "Auto-onderdelen",
+    "title": "Het juiste onderdeel, zonder gedoe",
+    "intro": "Zoek op onderdeel of OE-nummer. Alle prijzen zijn inclusief 21% btw en verzendkosten zie je vóór het afrekenen.",
+    "cta": "Bekijk het aanbod",
+    "featuredTitle": "Veelgekocht"
+  },
+  "product": {
+    "empty": "Geen onderdelen gevonden. Probeer een andere categorie.",
+    "oeLabel": "OE-nummer",
+    "inclVat": "incl. 21% btw",
+    "availability": {
+      "in-stock": "Op voorraad",
+      "ordered": "Levertijd 2–3 werkdagen",
+      "out-of-stock": "Niet leverbaar"
+    }
+  },
+  "cart": {
+    "metaTitle": "Winkelwagen — CarO",
+    "metaDescription": "Je winkelwagen bij CarO. Alle prijzen inclusief 21% btw.",
+    "title": "Winkelwagen",
+    "buttonAria": "Winkelwagen, {count, plural, =0 {leeg} =1 {1 artikel} other {# artikelen}}",
+    "addToCart": "In winkelwagen",
+    "added": "Toegevoegd",
+    "addedAnnouncement": "{name} toegevoegd aan winkelwagen",
+    "empty": "Je winkelwagen is leeg.",
+    "emptyCta": "Bekijk het aanbod",
+    "quantityFor": "Aantal voor {name}",
+    "decrease": "Aantal verlagen van {name}",
+    "increase": "Aantal verhogen van {name}",
+    "remove": "Verwijderen",
+    "summaryTitle": "Overzicht",
+    "subtotal": "Subtotaal",
+    "inclVat": "Inclusief 21% btw",
+    "shippingNote": "Verzendkosten zie je vóór het afrekenen.",
+    "withdrawalNote": "14 dagen bedenktijd op elke bestelling.",
+    "checkout": "Afrekenen",
+    "checkoutUnavailable": "Afrekenen komt beschikbaar zodra de betaalkoppeling er is."
+  },
+  "footer": {
+    "vat": "Alle prijzen zijn inclusief 21% btw.",
+    "shipping": "Verzendkosten zie je vóór het afrekenen.",
+    "withdrawal": "14 dagen bedenktijd op elke bestelling.",
+    "copyright": "© {year} CarO Onderdelen"
+  },
+  "error": {
+    "title": "Er ging iets mis",
+    "description": "De pagina kon niet geladen worden. Probeer het opnieuw.",
+    "retry": "Probeer opnieuw"
+  },
+  "notFound": {
+    "title": "Pagina niet gevonden",
+    "description": "Deze pagina bestaat niet of is verplaatst.",
+    "backHome": "Terug naar de homepage"
+  }
+}

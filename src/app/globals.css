@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/* Dark mode is class-based (next-themes zet .dark op <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Merkkleuren — docs/BRAND.md is leidend */
+  --caro-orange: #ff6a13;
+  --caro-ink: #0e1013;
+  --caro-grey: #767c85;
+  --caro-zinc: #f5f6f7;
+
+  /* Semantische tokens (light) */
+  --background: #ffffff;
+  --foreground: var(--caro-ink);
+  --surface: var(--caro-zinc);
+  --muted: var(--caro-grey);
+  --border: color-mix(in srgb, var(--caro-grey) 25%, transparent);
+}
+
+.dark {
+  /* Semantische tokens (dark) — achtergrond is merk-antraciet */
+  --background: var(--caro-ink);
+  --foreground: var(--caro-zinc);
+  /* Afgeleide neutralen: iets lichter dan ink voor kaartvlakken,
+     iets lichter grijs voor 4,5:1 contrast op donker */
+  --surface: #181b20;
+  --muted: #9aa1aa;
+  --border: color-mix(in srgb, var(--caro-grey) 35%, transparent);
+}
+
+@theme inline {
+  --color-caro-orange: var(--caro-orange);
+  --color-caro-ink: var(--caro-ink);
+  --color-caro-grey: var(--caro-grey);
+  --color-caro-zinc: var(--caro-zinc);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-anton: var(--font-anton), sans-serif;
+}
+
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-inter), system-ui, sans-serif;
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  /* Focus altijd zichtbaar; foreground haalt in beide thema's ruim contrast */
+  :focus-visible {
+    outline: 2px solid var(--foreground);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Max 1280px, mobile-first randen */
+@utility site-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding-inline: 1rem;
+
+  @media (min-width: 768px) {
+    padding-inline: 1.5rem;
+  }
+}
+
+/* Eyebrow/label-stijl uit BRAND.md */
+@utility eyebrow {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
