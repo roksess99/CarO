@@ -1,0 +1,52 @@
+{
+  "common": {
+    "skipToContent": "Skip to content"
+  },
+  "header": {
+    "homeAria": "CarO — go to homepage"
+  },
+  "localeSwitcher": {
+    "label": "Language",
+    "nl": "Dutch",
+    "en": "English"
+  },
+  "themeToggle": {
+    "light": "Switch to light theme",
+    "dark": "Switch to dark theme"
+  },
+  "home": {
+    "metaTitle": "CarO — Car parts",
+    "metaDescription": "Car parts for the Dutch market. Search by part or OE number. All prices include 21% VAT.",
+    "eyebrow": "Car parts",
+    "title": "The right part, no hassle",
+    "intro": "Search by part or OE number. All prices include 21% VAT and shipping costs are shown before checkout.",
+    "cta": "Browse the range",
+    "featuredTitle": "Frequently bought"
+  },
+  "product": {
+    "empty": "No parts found. Try a different category.",
+    "oeLabel": "OE number",
+    "inclVat": "incl. 21% VAT",
+    "availability": {
+      "in-stock": "In stock",
+      "ordered": "Delivery in 2–3 working days",
+      "out-of-stock": "Unavailable"
+    }
+  },
+  "footer": {
+    "vat": "All prices include 21% VAT.",
+    "shipping": "Shipping costs are shown before checkout.",
+    "withdrawal": "14-day right of withdrawal on every order.",
+    "copyright": "© {year} CarO Onderdelen"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "description": "The page could not be loaded. Please try again.",
+    "retry": "Try again"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "This page does not exist or has been moved.",
+    "backHome": "Back to the homepage"
+  }
+}
