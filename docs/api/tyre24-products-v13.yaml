@@ -1,0 +1,3074 @@
+swagger: '2.0'
+info:
+  version: '1.3'
+  title: Tyre24.com REST API Version 1.3 Products
+  description: |
+    TYRE 24 REST API Version V1.3 Products
+
+    All API commands need a TOKEN.
+host: tyre24.alzura.com
+basePath: /de/de/rest/v13/products
+schemes:
+  - https
+produces:
+  - application/json
+consumes:
+  - application/json
+securityDefinitions:
+  tokenAuth:
+    type: apiKey
+    in: header
+    name: X-AUTH-TOKEN
+    description: |
+      To enable you to log in to ALZURA.com via an interface using third-party systems
+      such as your ERP, ERP, DMS or other systems, you generate a unique token [here](https://tyre24.alzura.com/de/de/tokenmanagement),
+      which you store in the respective system in order to log in automatically.
+      You only need this one token and can use it in several systems.
+
+      **Managing Access with Your ALZURA Account**
+        1. **Linked Platforms, Websites, and Apps**  
+           - You use your ALZURA account to log in to various services, platforms, and applications.  
+
+        2. **Access Permissions**  
+           - When you log in using your ALZURA account, you grant these services access to certain data.  
+           - This data may include confidential information.  
+
+        3. **Where to Find Your Tokens**  
+           - Follow these steps to locate and manage your tokens:  
+             1. Log in to your ALZURA account.  
+             2. Navigate to the [Token Management Page](https://tyre24.alzura.com/de/de/tokenmanagement).  
+
+        4. **Token Validity and Expiration**  
+           - A token determines how long you remain logged in to an external service.  
+           - Once the token expires, you will need to log in again to refresh it.  
+
+        5. **Re-establishing Access**  
+           - If you remove access, you can log in again to the service at any time using your ALZURA account.  
+           - Re-login will grant access to the service once more.  
+
+      Once you have obtained your API-Token, use it in the X-AUTH-TOKEN header of your requests.
+         Example:
+        ```
+          GET /api/v1/tyres HTTP/1.1
+          X-AUTH-TOKEN:<your-api-token>
+        ```
+paths:
+  /newPdfAgreement:
+    get:
+      summary: /newPdfAgreement
+      produces:
+        - application/json
+      description: >-
+        Will return a preview of a PDF agreement (preview == true). In this case
+        no new agreement will be save to database. If you want to generate a new
+        PDF agreement (preview == false) the PDF agreement will be saved,
+      security:
+        - tokenAuth: []
+      parameters:
+        - in: query
+          name: productAreaId
+          description: >-
+            ID of the product area
+          required: true
+          type: integer
+        - in: query
+          name: preview
+          description: >-
+            true to get only a preview, don't save the agreement to database
+          required: true
+          type: boolean
+        - in: query
+          name: retailerId
+          description: >-
+            The ID of the retailer for the agreement PDF
+          required: true
+          type: integer
+        - in: query
+          name: wholesalerId
+          description: >-
+            The ID of the wholesaler for the agreement PDF
+          required: true
+          type: integer
+      responses:
+        200:
+          description: >-
+            <ul>
+              <li>success === true => PDF generated with success, additional 'pdf' param will contain a base64 encoded PDF binary</li>
+              <li>success === false => generation of PDF failed, or agreement not activated for the given product Area.</li>
+            </ul>
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+              pdf:
+                type: string
+  /agreementPdfs:
+    get:
+      summary: /agreementPdfs
+      produces:
+        - application/json
+      description: >-
+        Will generate a PDF
+      security:
+        - tokenAuth: []
+      parameters:
+        - in: query
+          name: retailerId
+          description: ID of the retailer
+          required: true
+          type: integer
+        - in: query
+          name: productAreaId
+          description: >-
+            ID of the product area
+          required: true
+          type: integer
+        - in: query
+          name: newAgreement
+          description: >-
+            if true, it will generate and download all missing agreement pdfs and
+            they will be saved to database
+          required: false
+          type: boolean
+        - in: query
+          name: wholesalerId
+          description: >-
+            the id of the wholesaler id to generate the pdf for
+          required: false
+          type: string
+        - in: query
+          name: agreementId
+          description: >-
+            ID of the agreement id you want to fetch
+          required: false
+          type: integer
+        - in: query
+          name: wholesalerIds
+          description: >-
+            an array of wholesaler ids to generate agreement pdf for
+          required: false
+          type: array
+          items:
+            type: integer
+      responses:
+        200:
+          description: >-
+            <ul>
+              <li>success === true</li>
+              <li>success === false -> generation of PDF failed</li>
+            </ul>
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                description: >-
+                  true if pdf generation was successful, otherwise false
+              pdf:
+                type: string
+                description: >-
+                  base64 encoded pdf binary
+  /agreementList:
+    get:
+      summary: /agreementList
+      produces:
+        - application/json
+      security:
+        - tokenAuth: []
+      description:
+        Return a list of the existing agreement data (only if you are logged in as a retailer)
+      parameters:
+        - in: query
+          name: productAreaId
+          description: >-
+            ID of the product area
+          required: true
+          type: integer
+      responses:
+        200:
+          description: >-
+          schema:
+            type: array
+            items:
+              type: object
+              required:
+                - agreement_id
+                - agreement_wholesaler_id
+                - agreement_wholesaler_history_id
+                - agreement_retailer_id
+                - agreement_retailer_history_id
+                - agreement_ip
+                - agreement_confirmation_date
+                - agreement_accepted
+                - wholesaler_id
+                - wholesaler_history_id
+                - wholesaler_name1
+                - wholesaler_name2
+                - wholesaler_address
+                - wholesaler_zip
+                - wholesaler_city
+                - wholesaler_country_id
+                - wholesaler_country
+                - retailer_id
+                - retailer_history_id
+                - retailer_taxident
+                - retailer_ustid
+                - retailer_name1
+                - retailer_name2
+                - retailer_contact
+                - retailer_address
+                - retailer_zip
+                - retailer_city
+                - retailer_country_id
+                - retailer_country
+                - retailer_number_of_employees
+                - retailer_count_of_employees
+                - retailer_number_of_vehicle_repair_pits
+                - retailer_number_of_vehicle_lifts
+                - retailer_number_of_workstations
+                - retailer_number_at_hwk
+                - retailer_business_registration
+              properties:
+                agreement_id:
+                  type: string
+                  description: >-
+                    id of the agreement
+                agreement_wholesaler_id:
+                  type: string
+                  description: >-
+                    agreement wholesaler ID
+                agreement_wholesaler_history_id:
+                  type: string
+                  description: >-
+                    agreement wholesaler history ID
+                agreement_retailer_id:
+                  type: string
+                  description: >-
+                    agreement retailer ID
+                agreement_retailer_history_id:
+                  type: string
+                  description: >-
+                    agreement retailer history ID
+                agreement_ip:
+                  type: string
+                  description: >-
+                    agreement ip address
+                agreement_confirmation_date:
+                  type: string
+                  description: >-
+                    agreeme confirmation date. 'YYYY-MM-DD HH:II:SS'
+                agreement_accepted:
+                  type: string
+                  description: >-
+                    1 if agreement is accepted, otherwise 0
+                wholesaler_id:
+                  type: string
+                  description: >-
+                    wholesaler ID
+                wholesaler_history_id:
+                  type: string
+                  description: >-
+                    wholesaler history ID
+                wholesaler_name1:
+                  type: string
+                  description: >-
+                    wholesaler name
+                wholesaler_name2:
+                  type: string
+                  description: >-
+                    wholesaler additional name
+                wholesaler_address:
+                  type: string
+                  description: >-
+                    wholesaler address
+                wholesaler_zip:
+                  type: string
+                  description: >-
+                    wholesaler zip code
+                wholesaler_city:
+                  type: string
+                  description: >-
+                    wholesaler city
+                wholesaler_country_id:
+                  type: string
+                  description: >-
+                    ID of wholesaler country
+                wholesaler_country:
+                  type: string
+                  description: >-
+                    wholesaler country name
+                retailer_id:
+                  type: string
+                  description: >-
+                    retailer ID
+                retailer_history_id:
+                  type: string
+                  description: >-
+                    retailer history ID
+                retailer_taxident:
+                  type: string
+                  description: >-
+                    retailer tax identification number
+                retailer_ustid:
+                  type: string
+                  description: >-
+                    retailer ustid 'Umsatzsteuernummer'
+                retailer_name1:
+                  type: string
+                  description: >-
+                    retailer name
+                retailer_name2:
+                  type: string
+                  description: >-
+                    retailer additional name
+                retailer_contact:
+                  type: string
+                  description: >-
+                    name of the retailer contact person
+                retailer_address:
+                  type: string
+                  description: >-
+                    retailer address
+                retailer_zip:
+                  type: string
+                  description: >-
+                    retailer zip code
+                retailer_city:
+                  type: string
+                  description: >-
+                    retailer city
+                retailer_country_id:
+                  type: string
+                  description: >-
+                    ID of retailer country
+                retailer_country:
+                  type: string
+                  description: >-
+                    name of retailer country
+                retailer_number_of_employees:
+                  type: string
+                  description: >-
+                    retailer number of employees
+                retailer_count_of_employees:
+                  type: string
+                retailer_number_of_vehicle_repair_pits:
+                  type: string
+                  description: >-
+                    retailer number of vehicle repair pits
+                retailer_number_of_vehicle_lifts:
+                  type: string
+                  description: >-
+                    retailer number of vehicle lifts
+                retailer_number_of_workstations:
+                  type: string
+                  description: >-
+                    retailer number of workstations
+                retailer_number_at_hwk:
+                  type: string
+                  description: >-
+                    retailer registration number at HWK (Handwerkskammer)
+                retailer_business_registration:
+                  type: string
+                  description: >-
+                    retailer business registration number
+  /areas:
+    get:
+      summary: /areas
+      produces:
+        - application/json
+      description: >-
+        Returns the information of the requested areas.
+      security:
+        - tokenAuth: []
+      parameters:
+        - in: query
+          name: areaIds
+          description: >-
+            defines the area
+          required: false
+          type: array
+          items:
+            type: integer
+      responses:
+        '200':
+          description: >-
+            Returns the information of the requested areas.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Areas'
+        '403':
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+  /categories:
+    get:
+      summary: /categories
+      produces:
+        - application/json
+      description: >-
+        Returns requested categories of product area id
+      security:
+        - tokenAuth: []
+      parameters:
+        - in: query
+          name: productAreaId
+          description: id of product area
+          required: true
+          type: integer
+        - in: query
+          name: onlyFeatured
+          description: >-
+            filter to get only featured categories
+          required: false
+          type: boolean
+          default: false
+        - in: query
+          name: parentNodeId
+          description: >-
+            id of parent category to get child nodes
+          required: false
+          type: integer
+        - in: query
+          name: hideEmpty
+          description: >-
+            filter to get only categories with offers
+          required: false
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Returns models for a specified manufacturer.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Categories'
+        '403':
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+  /sorter:
+    get:
+      summary: /sorter
+      produces:
+        - application/json
+      description: >-
+        Returns all sorter
+      security:
+        - tokenAuth: []
+      responses:
+        '200':
+          description: Returns all sorter
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Sorter'
+        '403':
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+  /items:
+    get:
+      summary: /items
+      produces:
+        - application/json
+      description: Returns products by searching with parent node id or search string or item id.
+      security:
+        - tokenAuth: []
+      parameters:
+        - in: query
+          name: productAreaId
+          description: id of product area
+          required: true
+          type: integer
+        - in: query
+          name: parentNodeId
+          type: integer
+          required: false
+          description: id of category to get all items in this category (either itemId or parentNodeId or search are required)
+        - in: query
+          name: search
+          type: string
+          required: false
+          description: search string to search for items (either itemId or parentNodeId or search are required)
+        - in: query
+          name: itemId
+          type: integer
+          required: false
+          description: id of item to find (either itemId or parentNodeId or search are required)
+        - in: query
+          name: manufacturer
+          type: array
+          required: false
+          description: manufacturer filter (using identifiers)
+          items:
+            type: string
+        - in: query
+          name: filterByExpress
+          type: integer
+          required: false
+          description: if 1 the express filter is active
+        - in: query
+          name: attributeStrings
+          type: array
+          required: false
+          description: special base64 string of "id~description" for attribute filter. In response as "identifier"
+          items:
+            type: string
+        - in: query
+          name: wholesalerIds
+          type: array
+          required: false
+          description: wholesaler id filter
+          items:
+            type: integer
+        - in: query
+          name: page
+          type: integer
+          required: false
+          description: actural page of result pagination
+        - in: query
+          name: limit
+          type: integer
+          required: false
+          description: limit of results per page
+        - in: query
+          name: sort
+          type: integer
+          required: false
+          description: id of sorter to sort result
+        - in: query
+          name: pricelistId
+          type: integer
+          required: false
+          description: determines which pricelist to send alone the normal price
+      responses:
+        '200':
+          description: Returns products by searching with parent bode id or search string or item id.
+          schema:
+            type: object
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '#/definitions/Item'
+              resCount:
+                type: integer
+                description: number of results
+              pageCount:
+                type: integer
+                description: number of total pages
+              page:
+                type: integer
+                description: actual page
+              categories:
+                type: array
+                items:
+                  $ref: '#/definitions/Categories'
+              filter:
+                type: array
+                items:
+                  $ref: '#/definitions/Filter'
+              itemIds:
+                type: array
+              allItemIds:
+                type: array
+        '403':
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+
+  /distributors:
+    get:
+      summary: /distributors
+      produces:
+        - application/json
+      description: Returns a list of all wholesalers with price and enough quantity saved in database for specific article.
+      security:
+        - tokenAuth: []
+      parameters:
+        - in: query
+          name: productAreaId
+          type: integer
+          required: true
+          description: product area id
+        - in: query
+          name: itemId
+          type: integer
+          required: true
+          description: item id of the given article
+        - in: query
+          name: onlyCooperation
+          type: boolean
+          required: false
+          description: filter to get only wholesaler with matching cooperation
+          default: 1
+        - in: query
+          name: postcode
+          type: string
+          required: false
+          description: shipping postcode
+        - in: query
+          name: pricelistId
+          type: integer
+          required: false
+      responses:
+        '200':
+          description: Returns a list of all wholesalers with price and enough quantity saved in database for specific article.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/DistributorList'
+        '403':
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+  /order:
+    get:
+      summary: /order
+      produces:
+        - application/json
+      security:
+        - tokenAuth: []
+      parameters:
+        - in: query
+          name: productAreaId
+          type: string
+          required: true
+          description: the area id from /areas endpoint. alternatively area abbreviations (like 'ty') are accepted
+        - in: query
+          name: itemId
+          type: string
+          required: true
+          description: article identification number
+        - in: query
+          name: quantity
+          type: integer
+          required: true
+          description: the quantity you want to order
+        - in: query
+          name: shippingMethodIds
+          type: integer
+          required: false
+          description: >-
+            Comma separated list of shipping method Id’s, you also can
+            give only one Id. If the field is left blank, standard shipping is
+            used.; 1  standard shipping;2 pickup;3  express - tomorrow
+            (truck);4  express - today (truck); 5  express - tomorrow (package);
+            6 express - today (package)
+        - in: query
+          name: useAlternateShippingAddress
+          required: false
+          default: 1
+          description: >-
+            Whether or not to use the alternate shipping address saved in backoffice (default 1)
+          type: integer
+        - in: query
+          name: shippingName
+          required: false
+          description: 'Different shipping address: name'
+          type: string
+        - in: query
+          name: shippingAdditional
+          required: false
+          description: 'additional name or address'
+          type: string
+        - in: query
+          name: shippingPhone
+          required: false
+          description: 'phone number of buyer for requests from seller'
+          type: string
+        - in: query
+          name: shippingAddress
+          required: false
+          description: 'Different shipping address: street and house number'
+          type: string
+        - in: query
+          name: shippingPostcode
+          required: false
+          description: 'Different shipping address: zip code, if set this zip code is used for fast search'
+          type: string
+        - in: query
+          name: shippingNeutral
+          required: false
+          description: 'Different shipping address: neutral shipping; 0 no; 1 yes'
+          type: string
+        - in: query
+          name: shippingLatitude
+          required: false
+          description: >-
+            If set, the parameter is used for the self-pickup search. (e.g.
+            49.4630089)
+          type: number
+          format: float
+        - in: query
+          name: shippingLongitude
+          required: false
+          description: >-
+            If set, the parameter is used for the self-pickup search. (e.g.
+            7.6939128)
+          type: number
+          format: float
+        - in: query
+          name: wholesalerList
+          required: false
+          description: >-
+            Comma separated list of wholesalers-Id's, you only get offers from
+            these wholesalers.
+          type: string
+        - in: query
+          name: paymentMethodIds
+          required: false
+          description: >-
+            Comma separated list of payment methods-Id's, you also can give only
+            one id . If the field is left blank, all payment method are
+            considered. 1  SEPA direct debit; 2  advance payment; 3  cash on
+            delivery; 5 open payment; 7 invoice (payable within 8 days); 8  open
+            payment (SEPA) - used for marketplace orders
+          type: integer
+        - in: query
+          name: orderComment
+          required: false
+          description: 'Comment field, is forwarded to the wholesaler in the order.'
+          type: string
+        - in: query
+          name: referenceNumber
+          required: false
+          description: >-
+            Reference number (maximum 25 characters), is forwarded to the
+            wholesaler in the order.
+          type: string
+        - in: query
+          name: onlyCooperation
+          required: false
+          description: >-
+            Defines if only cooperation partner should be shown. Important: If
+            this parameter is set to ‘1’ in the offer request, you have to set
+            it to ‘1’ in the corresponding order request. Otherwise the order
+            will fail. 0  If the cooperation allows displaying wholesalers which
+            do not belong to the same cooperation, you will also get offers of
+            them.; 1  Show only wholesalers belonging to the same cooperation.
+          type: integer
+        - in: query
+          name: productSpecificParams
+          required: false
+          description: >-
+            Under the item keyValuePair additional information must be specified
+            for certain products. In an alloy rim order or an offer request of
+            an alloy rim, as shown in the example above, the data for the offset
+            'et' and the vehicle-id 'fid' must be entered. Additionally you can
+            set the vehicle information type (inspectionTextVehicleBrand) and
+            design / kW (inspectionTextVehicleTyp) optionally, when the client
+            is sure that the product fits on the car. Otherwise, when the Seller
+            has to check you have to add vehicle key number
+            inspectionTextVehicleKey1 (4 chars) and inspectionTextVehicleKey2
+            (6-8 chars).
+          type: string
+        - in: query
+          name: useAnonymousPrice
+          type: boolean
+          required: false
+          description: >-
+            flag to get anonymous price for wholesaler
+        - in: query
+          name: superDeal
+          type: boolean
+          required: false
+          description: >-
+            flag to get superDeal price
+        - in: query
+          name: shippingCity
+          type: string
+          required: false
+        - in: query
+          name: anonymous
+          type: boolean
+          required: false
+      responses:
+        '200':
+          description: >-
+            Returns the cheapest offer for a requested article which matches all requirements based on the logged in retailer.
+            <br />
+            It's possible that your offer response contains another manufacturer name than that you provided. If this case occurs please use the manufacturer name provided in the response!
+            <br /><br/>
+            Following error codes are available and may be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_USER_ORDER_FORBIDDEN</p></td>
+                <td style="padding-left: 5px;"><p>retailer has no permission to perform an offer/order, which can be caused by using the wrong platform</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_USER_NO_PRIVILEDGE</p></td>
+                <td style="padding-left: 5px;"><p>retailer has no permission to perform an offer/order because of his status</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_INVALID_QUANTITY</p></td>
+                <td style="padding-left: 5px;"><p>you passed an invalid quantity value</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_NAME</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the name</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_STREET</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the street</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_ZIP</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the zip</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_CITY</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the city</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_INVALID_SHIPPING_NEUTRAL</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the neutral</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_INVALID_SHIPPING_METHOD</p></td>
+                <td style="padding-left: 5px;"><p>you passed an invalid shipping method</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_PAYMENT_NOT_SUPPORTED</p></td>
+                <td style="padding-left: 5px;"><p>you passed a payment mehtod which is not supported by the distributor</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_NO_MATCHING_PAYMENT</p></td>
+                <td style="padding-left: 5px;"><p>retailer and distributor have no matching payments</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_WHOLESALER_ID_INVALID</p></td>
+                <td style="padding-left: 5px;"><p>the requested distributor doesn't exist</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_ITEM_NOT_FOUND</p></td>
+                <td style="padding-left: 5px;"><p>the item could not be found</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MANDATE_NOT_ACCEPTED</p></td>
+                <td style="padding-left: 5px;"><p>the wholesaler mandate has an invalid state in the database (accepted = 0)</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_SEPA_NOT_ACCEPTED</p></td>
+                <td style="padding-left: 5px;"><p>can only occur in poland when direct debit is chosen as payment method and there's no mandate existing between the distributor and retailer</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_METHOD_NOT_IMPLEMENTED</p></td>
+                <td style="padding-left: 5px;"><p>The method you are trying to call isn't implemented</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_MANDATORY_PARAMETER</p></td>
+                <td style="padding-left: 5px;"><p>A mandatory parameter is missing</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_TOO_MANY_REQUESTS</p></td>
+                <td style="padding-left: 5px;"><p>Over 100 requests per minute</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_ALTERNATIVE_OFFER_FOUND_{filter}</p></td>
+                <td style="padding-left: 5px;"><p>alternative offer is found when filter is deactivated</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_NO_OFFER_FOUND</p></td>
+                <td style="padding-left: 5px;"><p>offer could not be retrieved from the database, this may be because the distributor is no longer offering this item or does not have the required amount</p></td>
+              </tr>
+              
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_EXTERNAL_SYSTEM_ADDRESS</p></td>
+                <td style="padding-left: 5px;"><p>Error while checking the delivery address.</p></td>
+              </tr>
+
+            </table>
+          schema:
+            $ref: '#/definitions/GetOrder'
+        '403':
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+    post:
+      summary: /order
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - tokenAuth: []
+      parameters:
+        - in: body
+          name: offer
+          schema:
+            $ref: '#/definitions/PostOrderOffer'
+          required: true
+          description: >-
+            You have to insert the response data of [GET] order, append quantity (and maybe vehicleIdentification) and send it in the body of your POST request (you have to use JSON)
+        - in: query
+          name: shippingMethodIds
+          type: integer
+          required: false
+          description: >-
+            Comma separated list of shipping method Id’s, you also can
+            give only one Id. If the field is left blank, standard shipping is
+            used.; 1  standard shipping;2 pickup;3  express - tomorrow
+            (truck);4  express - today (truck); 5  express - tomorrow (package);
+            6 express - today (package)
+        - in: query
+          name: shippingName
+          required: false
+          description: 'Different shipping address: name'
+          type: string
+        - in: query
+          name: shippingAdditional
+          required: false
+          description: 'additional name or address'
+          type: string
+        - in: query
+          name: shippingPhone
+          required: false
+          description: 'phone number of buyer for requests from seller'
+          type: string
+        - in: query
+          name: shippingAddress
+          required: false
+          description: 'Different shipping address: street and house number'
+          type: string
+        - in: query
+          name: shippingPostcode
+          required: false
+          description: >-
+            Different shipping address: zip code, if set this zip code is used
+            for fast search
+          type: string
+        - in: query
+          name: shippingCity
+          required: false
+          description: 'Different shipping address: city'
+          type: string
+        - in: query
+          name: shippingNeutral
+          required: false
+          description: 'Different shipping address: neutral shipping; 0 no;1  yes'
+          type: string
+        - in: query
+          name: shippingLatitude
+          required: false
+          description: >-
+            If set, the parameter is used for the self-pickup search. (e.g.
+            49.4630089)
+          type: number
+          format: float
+        - in: query
+          name: shippingLongitude
+          required: false
+          description: >-
+            If set, the parameter is used for the self-pickup search. (e.g.
+            7.6939128)
+          type: number
+          format: float
+        - in: query
+          name: wholesalerList
+          required: false
+          description: >-
+            Comma separated list of wholesalers-Id's, you only get offers from
+            these wholesalers.
+          type: string
+        - in: query
+          name: paymentMethodIds
+          required: false
+          description: >-
+            Comma separated list of payment methods-Id's, you also can give only
+            one id . If the field is left blank, all payment method are
+            considered. 1  SEPA direct debit; 2  advance payment; 3  cash on
+            delivery; 5 open payment; 7 invoice (payable within 8 days); 8  open
+            payment (SEPA) - used for marketplace orders
+          type: integer
+        - in: query
+          name: orderComment
+          required: false
+          description: 'Comment field, is forwarded to the wholesaler in the order.'
+          type: string
+        - in: query
+          name: referenceNumber
+          required: false
+          description: >-
+            Reference number (maximum 25 characters), is forwarded to the
+            wholesaler in the order.
+          type: string
+        - in: query
+          name: useAlternateShippingAddress
+          required: false
+          default: 1
+          description: >-
+            Whether or not to use the alternate shipping address saved in backoffice (default 1)
+          type: integer
+        - in: query
+          name: couponCode
+          required: false
+          description: >-
+            optional coupon code with format XXX-XXX-XXX-XXX
+          type: string
+        - in: query
+          name: anonymous
+          type: boolean
+          required: false
+          description: >-
+            flag to filter for anonymous orders.
+            Default (not set): Include all orders.
+            True: Include only anonymous orders.
+            False: Include only non-anonmous orders.
+        - in: query
+          name: productSpecificParams
+          required: false
+          description: >-
+            Under the item keyValuePair additional information must be specified
+            for certain products. In an alloy rim order or an offer request of
+            an alloy rim, as shown in the example above, the data for the offset
+            'et' and the vehicle-id 'fid' must be entered. Additionally you can
+            set the vehicle information type (inspectionTextVehicleBrand) and
+            design / kW (inspectionTextVehicleTyp) optionally, when the client
+            is sure that the product fits on the car. Otherwise, when the Seller
+            has to check you have to add vehicle key number
+            inspectionTextVehicleKey1 (4 chars) and inspectionTextVehicleKey2
+            (6-8 chars).
+          type: string
+        - in: query
+          name: deliveryDate
+          type: string
+          required: false
+        - in: query
+          name: superDeal
+          type: boolean
+          required: false
+      responses:
+        '200':
+          description: >-
+            Trigger an order based on the given article (normally after performing an GET order request).
+            If the order was successful the number of the order will be returned, otherwise 0.
+            <br /><br/>
+            Following error codes are available and may be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_USER_NO_PRIVILEDGE</p></td>
+                <td style="padding-left: 5px;"><p>retailer has no permission to perform an order because of his status</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_USER_ORDER_FORBIDDEN</p></td>
+                <td style="padding-left: 5px;"><p>retailer has no permission to perform an order, which can be caused by using the wrong platform</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_NO_MATCHING_PAYMENT</p></td>
+                <td style="padding-left: 5px;"><p>retailer and distributor have no matching payments</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_PAYMENT_NOT_SUPPORTED</p></td>
+                <td style="padding-left: 5px;"><p>you passed a payment mehtod which is not supported by the distributor</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_SWIFT_BIC</p></td>
+                <td style="padding-left: 5px;"><p>the retailer has no swift/bic</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_NO_USTID</p></td>
+                <td style="padding-left: 5px;"><p>the retailer has no "Umsatzsteuer-Id"</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_REFERENCENUMBER</p></td>
+                <td style="padding-left: 5px;"><p>you forgot to pass a reference number which may be required by some cooperations, e.g. KAGUMA</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_INVALID_SHIPPING_METHOD</p></td>
+                <td style="padding-left: 5px;"><p>you passed an invalid shipping method</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_ORDER_NOT_VALID</p></td>
+                <td style="padding-left: 5px;"><p>the order could not be performed, see the meta key for more information</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_TECDOC_DATA_ALL_NUMBERS</p></td>
+                <td style="padding-left: 5px;"><p>No TecDoc data found for the article</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_TECDOC_DATA_ARTICLE_BYID</p></td>
+                <td style="padding-left: 5px;"><p>No TecDoc data found for the article</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MANDATE_NOT_ACCEPTED</p></td>
+                <td style="padding-left: 5px;"><p>the wholesaler mandate has an invalid state in the database (accepted = 0)</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_SEPA_NOT_ACCEPTED</p></td>
+                <td style="padding-left: 5px;"><p>can only occur in poland when direct debit is chosen as payment method and there's no mandate existing between the distributor and retailer</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MARKETPLACE_ORDER_NOT_POSSIBLE</p></td>
+                <td style="padding-left: 5px;"><p>Marketplace orders are not possible for wearparts.</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_MANDATORY_PARAMETER</p></td>
+                <td style="padding-left: 5px;"><p>a mandatory param is missing</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_WHOLESALER_MISMATCH</p></td>
+                <td style="padding-left: 5px;"><p>the given wholesaler id does not match the wholesaler id in the database result</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_METHOD_NOT_IMPLEMENTED</p></td>
+                <td style="padding-left: 5px;"><p>The method you are trying to call isn't implemented</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_MANDATORY_PARAMETER</p></td>
+                <td style="padding-left: 5px;"><p>A mandatory parameter is missing</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_ARTICLE_VERSION_MISMATCH</p></td>
+                <td style="padding-left: 5px;"><p>REST API error when trying to access a article or version that doesn't exist</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_TOO_MANY_REQUESTS</p></td>
+                <td style="padding-left: 5px;"><p>Over 100 requests per minute</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_NAME</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the name</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_STREET</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the street</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_ZIP</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the zip</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_CITY</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the city</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_INVALID_SHIPPING_NEUTRAL</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the neutral</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_INVALID_QUANTITY</p></td>
+                <td style="padding-left: 5px;"><p>you passed an invalid quantity value</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_OFFER_PRICE_MISMATCH</p></td>
+                <td style="padding-left: 5px;"><p>the price changed</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_NO_OFFER_FOUND</p></td>
+                <td style="padding-left: 5px;"><p>offer could not be retrieved from the database, this may be because the distributor is no longer offering this item or does not have the required amount</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_ITEM_NOT_FOUND</p></td>
+                <td style="padding-left: 5px;"><p>the item could not be found</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_NO_MATCHING_AGREEMENT</p></td>
+                <td style="padding-left: 5px;"><p>no agreement between retailer and wholesaler, can be generated on master data management</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_ORDER_LIMIT_REACHED</p></td>
+                <td style="padding-left: 5px;"><p>You have reached the order limit currently available to you. You can no longer place this order until we have verified your details. This is a security measure. Please contact our support.</p></td>
+              </tr>
+            
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_EXTERNAL_SYSTEM_ADDRESS</p></td>
+                <td style="padding-left: 5px;"><p>Error while checking the delivery address.</p></td>
+              </tr>
+            
+            </table>
+            <br /><br />
+            There are some examples below, but keep in mind there are many more cases, which is too much work to list them all.
+
+          examples:
+            Success:
+              orderId: "123456789"
+              status: true
+              type: "PXX"
+            With Coupon:
+              orderId: "123456789"
+              status: true
+              type: "PXX"
+              coupon:
+                - success: true
+                  errorMessages: []
+            With Coupon Failure:
+              orderId: "123456789"
+              status: true
+              type: "PXX"
+              coupon:
+                - success: false
+                  errorMessages:
+                    - NO_VALID_COUPON_AVAILABLE
+            Possible failure 1:
+              orderId: ''
+              status: false
+            Possible failure 2:
+              status: false
+              message: ""
+              errorMessage: "ERR_ORDER_INVALID"
+              meta:
+                - itemId: A2B0C5D
+                  errorCode: "ERR_INVALID_SHIPPING_METHOD"
+            Possible failure 3:
+              message: "Das SEPA-Lastschriftmandat für den Großhändler muss akzeptiert werden, um eine Bestellung durchführen zu können."
+              errorMessage: "ERR_MANDATE_NOT_ACCEPTED"
+              status: false
+
+          schema:
+            $ref: '#/definitions/OrderStatus'
+        '403':
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+definitions:
+  Price:
+    type: object
+    properties:
+      country_code:
+        type: string
+      currency:
+        type: string
+      type:
+        type: string
+      prices:
+        type: object
+        properties:
+          1:
+            type: object
+            description: price for this productAreaId
+            properties:
+              base:
+                type: string
+                description: price per item
+              unit:
+                type: string
+                description: price per unit key value
+              unit_key:
+                type: string
+                description: unit for calculating
+              shipping_standard:
+                type: string
+                description: base price (no cost for standard shipping)
+              shipping_truck_fast:
+                type: string
+                description: standard shipping + shipping method price
+              shipping_spedition:
+                type: string
+                description: standard shipping + shipping method price
+              shipping_truck:
+                type: string
+                description: standard shipping + shipping method price
+
+  Item:
+    type: object
+    properties:
+      isXSellArticle:
+        type: boolean
+        description: is xsell article?
+      xSellType:
+        type: integer
+        description: xsell type id
+      xSellPrio:
+        type: integer
+        description: xsell rank
+      xSellWholesalerId:
+        type: integer
+        description: wholesaler id of xsell article
+      isOenProduct:
+        type: boolean
+        description: is product with given oen?
+      linkedTargetId:
+        type: integer
+        description: tecdoc linked target id
+      tecDocData:
+        type: array
+        description: tecdoc specific data
+        items:
+          $ref: '#/definitions/TecDocData'
+      itemId:
+        type: integer
+        description: id of item
+      typeId:
+        type: integer
+        description: item type id
+      manufacturerItemNumber:
+        type: string
+        description: string to identify item of wholesaler
+      manufacturerId:
+        type: integer
+        description: id of manufacturer
+      manufacturerName:
+        type: string
+        description: name of manufacturer
+      isPalletDelivery:
+        type: boolean
+      stock:
+        type: integer
+        description: number of articles in stock
+      isExpressAvailable:
+        type: boolean
+        description: article can be ordered via expres?
+      name:
+        type: string
+        description: translated article name
+      isActive:
+        type: boolean
+        description: article is visible in frontend?
+      identifications:
+        type: object
+        description: specific item numbers like EAN, GTIN, OEN or UPC
+        properties:
+          EAN:
+            type: array
+            items:
+              type: string
+          GTIN:
+            type: array
+            items:
+              type: string
+          OEN:
+            type: array
+            items:
+              type: string
+          UPC:
+            type: array
+            items:
+              type: string
+      categories:
+        type: array
+        items:
+          $ref: '#/definitions/ItemsCategories'
+      attributeValues:
+        type: array
+        items:
+          $ref: '#/definitions/AttributeValues'
+      distributors:
+        type: array
+        items:
+          $ref: '#/definitions/ItemDistributor'
+      media:
+        type: array
+        items:
+          $ref: '#/definitions/MediaData'
+      description:
+        type: string
+        description: additional description for wholesaler
+      basicPriceData:
+        type: object
+        description: Basic Price Data
+        properties:
+          relevant:
+            type: boolean
+            description: Basic Price Relevant?
+          translationKey:
+            type: string
+            description: Basic Price Translation Key
+      sizes:
+        type: array
+      amazonProductcategory:
+        type: string
+      outdated:
+        type: boolean
+      promoted:
+        type: boolean
+      creationDate:
+        type: string
+      lastEditBy:
+        type: integer
+      needsRework:
+        type: boolean
+      modifiedDate:
+        type: string
+      metas:
+        type: array
+      dataOwner:
+        type: integer
+
+  MediaData:
+    type: object
+    properties:
+      mediaId:
+        type: integer
+        description: id of media dataset
+      sourceId:
+        type: integer
+        description: id of media source
+      sourceName:
+        type: string
+        description: name of source file
+      sourceTargetId:
+        type: integer
+        description: id of media file
+      uploadYear:
+        type: integer
+        description: year when the file was uploaded
+      uploadMonth:
+        type: integer
+        description: month when the file was uploaded
+      uploadDay:
+        type: integer
+        description: day when the file was uploaded
+      type:
+        type: string
+        description: product area of media file
+      extension:
+        type: string
+        description: file ending e.g. jpg
+      country:
+        type: string
+        description: iso2-code of country where the file was uploaded
+      isDefault:
+        type: boolean
+        description: is defualt media file?
+      isDeleted:
+        type: boolean
+        description: media file is deleted?
+      hasBranding:
+        type: boolean
+        description: file has branding?
+      imageLink:
+        type: string
+        description: url of file
+
+  TecDocData:
+    type: array
+    items:
+      $ref: '#/definitions/TecDocDataSet'
+
+  TecDocDataSet:
+    type: object
+    properties:
+      manufacturerId:
+        type: integer
+        description: description of article manufacturer
+      modelId:
+        type: integer
+        description: id of selected car model
+      carId:
+        type: integer
+        description: id of selected car
+
+  ItemDistributor:
+    type: object
+    properties:
+      distributorId:
+        type: string
+        description: id of wholesaler
+      prices:
+        type: array
+        items:
+          $ref: '#/definitions/Price'
+      shipping:
+        type: object
+        properties:
+          1:
+            type: object
+            description: shipping method id
+            properties:
+              maxOrderHour:
+                type: integer
+                description: max order hour for express
+              deliveryDaysDelay:
+                type: integer
+                description: days needed for delivery
+              price:
+                type: number
+                description: price for express shipping
+              countryCode:
+                type: string
+                description: ISO2 country code
+              shippingMethodId:
+                type: integer
+                description: id of shipping method
+      payment:
+        type: array
+        items:
+          $ref: '#/definitions/Payment'
+
+  Payment:
+    type: object
+    properties:
+      countryCode:
+        type: string
+        description: ISO2 country code
+      paymentMethodId:
+        type: integer
+        description: id of used payment method
+      paymentMethodCosts:
+        type: number
+        description: costs for payment method
+      paymentMethodText:
+        type: string
+        description: additional information for payment method
+      paymentMethodTextInfo:
+        type: boolean
+        description: text available?
+
+
+  AttributeValues:
+    type: object
+    required:
+      - attributeId
+      - value
+      - name
+    properties:
+      attributeId:
+        type: integer
+        description: id of attribute
+      value:
+        type: string
+        description: value of attribute
+      name:
+        type: string
+        description: name of attribute
+      values:
+        type: array
+        items:
+          type: object
+          required:
+            - id
+            - translated_value
+          properties:
+            id:
+              type: integer
+              description: the value id
+            translated_value:
+              type: string
+              description: the value (translated if this value is a text)
+        description: list of all possible values (translated if this value is a text)
+
+  Areas:
+    type: object
+    required:
+      - areaId
+      - areaAbbreviation
+      - showXml
+      - showHistory
+      - showTecDocVehicleSearch
+      - pubProductId
+      - itemStockThreshold
+      - agreementNeeded
+      - searchableByCategory
+      - searchPrefix
+      - marketplaceAvailable
+      - boPriceStockEditable
+      - reduceStockOnOrder
+      - areaStatus
+      - areaShipping
+      - logManufacturerError
+      - maintainTyreSizes
+      - allowArticleCreation
+      - priceValidationActive
+    properties:
+      areaId:
+        type: integer
+        description: id of product area
+      areaAbbreviation:
+        type: string
+        description: abbrevation of product area
+      showXml:
+        type: boolean
+        description: is the product area shown in xml?
+      showHistory:
+        type: boolean
+        description:  the product area shown in history?
+      showTecDocVehicleSearch:
+        type: boolean
+        description: is tec doc vehicle search shown?
+      pubProductId:
+        type: string
+        description: id from pub_products
+      itemStockThreshold:
+        type: integer
+        description: item stock threshold
+      agreementNeeded:
+        type: boolean
+        description: is the product area using agreement
+      searchableByCategory:
+        type: boolean
+        description: using category search
+      areaStatus:
+        type: array
+        items:
+          type: object
+          required:
+            - name
+            - active
+          properties:
+            name:
+              type: string
+              description: translated name of product area
+            active:
+              type: boolean
+              description: is product area active?
+            standardShippingFlatRate:
+              type: string
+              description: default shipping flat rate
+            amountFreeShipping:
+              type: string
+              description: amount for free shipping
+      searchPrefix:
+        type: string
+      marketplaceAvailable:
+        type: boolean
+      boPriceStockEditable:
+        type: boolean
+      reduceStockOnOrder:
+        type: boolean
+      areaShipping:
+        type: array
+        description: always empty
+      logManufacturerError:
+        type: boolean
+      maintainTyreSizes:
+        type: boolean
+      allowArticleCreation:
+        type: boolean
+      priceValidationActive:
+        type: boolean
+
+  Categories:
+    type: object
+    required:
+      - categoryId
+      - parentId
+      - position
+      - isPartnerShop
+      - isFeatured
+      - name
+      - children
+      - image
+      - hoverImage
+      - infoText
+      - categoryInfoText
+    properties:
+      categoryId:
+        type: integer
+        description: id of category
+      parentId:
+        type: integer
+        description: id of parent category
+      position:
+        type: integer
+        description: position or ranking of category in frontend
+      isPartnerShop:
+        type: boolean
+        description: category is partnershop?
+      isFeatured:
+        type: boolean
+        description: category is featured?
+      name:
+        type: string
+        description: translated name of category
+      children:
+        type: array
+        items:
+          $ref: '#/definitions/Categories'
+        description: child nodes of category
+      image:
+        type: string
+        description: image url
+      hoverImage:
+        type: string
+        description: image url
+      infoText:
+        type: string
+
+  ItemsCategories:
+    type: object
+    required:
+      - categoryId
+      - parentId
+      - position
+      - isPartnerShop
+      - isFeatured
+      - name
+      - children
+      - image
+      - categoryInfoText
+    properties:
+      categoryId:
+        type: integer
+        description: id of category
+      parentId:
+        type: integer
+        description: id of parent category
+      position:
+        type: integer
+        description: position or ranking of category in frontend
+      isPartnerShop:
+        type: boolean
+        description: category is partnershop?
+      isFeatured:
+        type: boolean
+        description: category is featured?
+      name:
+        type: string
+        description: translated name of category
+      children:
+        type: array
+        items:
+          $ref: '#/definitions/Categories'
+        description: child nodes of category
+      image:
+        type: string
+        description: image url
+      categoryInfoText:
+        type: string
+
+  Sorter:
+    type: object
+    required:
+      - name
+      - value
+    properties:
+      name:
+        type: string
+        description: name of sorter
+      value:
+        type: integer
+        description: value of sorter
+
+  Filter:
+    type: object
+    properties:
+      manufacturer:
+        type: object
+        description: data for manufacturer filter
+        properties:
+          total:
+            type: integer
+            description: result count for this filter
+          selected:
+            type: integer
+            description: is filter selected?
+          filter:
+            type: array
+            description: list of filter
+            items:
+              type: object
+              properties:
+                identifier:
+                  type: string
+                  description: exact identifier for filter with value
+                value:
+                  type: string
+                  description: filter text
+                selected:
+                  type: boolean
+                  description: is filter value selected?
+                count:
+                  type: integer
+                  description: result count of filter value
+                values:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - id
+                      - translated_value
+                    properties:
+                      id:
+                        type: integer
+                        description: the value id
+                      translated_value:
+                        type: string
+                        description: the value (translated if this value is a text)
+                  description: list of all possible values (translated if this value is a text)
+      filterByExpress:
+        type: object
+        description: data for express filter
+        properties:
+          total:
+            type: integer
+            description: result count for this filter
+          selected:
+            type: boolean
+            description: is filter selected?
+          filter:
+            type: array
+            description: list of filter
+            items:
+              type: object
+              properties:
+                identifier:
+                  type: string
+                  description: exact identifier for filter with value
+                value:
+                  type: string
+                  description: filter text
+                selected:
+                  type: boolean
+                  description: is filter value selected?
+                count:
+                  type: integer
+                  description: result count of filter value
+
+  Category:
+    type: object
+    required:
+      - assemblyGroupName
+      - assemblyGroupNodeId
+      - hasChilds
+    properties:
+      assemblyGroupName:
+        type: string
+        description: "Assembly Group Name"
+      assemblyGroupNodeId:
+        type: integer
+        description: "Assembly Group Id"
+      hasChilds:
+        type: boolean
+        description: "Whether or not the category has any children categories"
+      icon:
+        type: string
+        description: "URL to category icon"
+      parentNodeId:
+        type: integer
+        description: "Id of parent node (category)"
+
+  CategoryBySearchString:
+    type: object
+    required:
+      - assemblyGroupName
+      - assemblyGroupNodeId
+    properties:
+      assemblyGroupName:
+        type: string
+        description: "Assembly Group Name"
+      assemblyGroupNodeId:
+        type: integer
+        description: "Assembly Group Id"
+      parentNodeId:
+        type: integer
+        description: "Id of parent node (category)"
+
+  Articles:
+    type: object
+    required:
+      - page
+      - showPerPage
+      - pageCount
+      - resultCount
+      - result
+      - filter
+    properties:
+      page:
+        type: integer
+      showPerPage:
+        type: integer
+      pageCount:
+        type: integer
+      resultCount:
+        type: integer
+      result:
+        type: array
+        items:
+          $ref: '#/definitions/ArticlesResult'
+      filter:
+        type: object
+        required:
+          - filterByExpress
+          - filterList
+          - filterByBrands
+        properties:
+          filterByExpress:
+            type: object
+            required:
+              - selected
+              - translation
+              - available
+            properties:
+              selected:
+                type: boolean
+              translation:
+                type: string
+              available:
+                type: integer
+          filterList:
+            type: object
+            required:
+              - SAME_AS_ATTRIBUTEID
+            properties:
+              SAME_AS_ATTRIBUTEID:
+                type: object
+                required:
+                  - attribute
+                  - filters
+                properties:
+                  attribute:
+                    type: object
+                    required:
+                      - attributeId
+                      - attributeName
+                      - attributeShortName
+                      - attributeType
+                      - dutyFlag
+                      - interval
+                    properties:
+                      attributeId:
+                        type: integer
+                      attributeName:
+                        type: string
+                      attributeShortName:
+                        type: string
+                      attributeType:
+                        type: string
+                      dutyFlag:
+                        type: boolean
+                      interval:
+                        type: boolean
+                  filters:
+                    type: object
+                    required:
+                      - SAME_AS_HASH
+                    properties:
+                      SAME_AS_HASH:
+                        type: object
+                        required:
+                          - attributeId
+                          - count
+                          - keyValue
+                          - keyValueText
+                          - noValue
+                          - selected
+                          - type
+                          - hash
+                        properties:
+                          attributeId:
+                            type: integer
+                          count:
+                            type: integer
+                          keyValue:
+                            type: string
+                          keyValueText:
+                            type: string
+                          noValue:
+                            type: boolean
+                          selected:
+                            type: boolean
+                          type:
+                            type: string
+                          hash:
+                            type: string
+
+  ArticlesResult:
+    type: object
+    required:
+      - articleAttributes
+      - articleDocuments
+      - articlePrices
+      - articleThumbnails
+      - assignedArticle
+      - eanNumber
+      - oenNumbers
+      - assignedTyre24Data
+    properties:
+      articleAttributes:
+        type: object
+        properties:
+          array:
+            type: array
+            items:
+              $ref: '#/definitions/ArticlesResultArticleAttributes'
+      articleDocuments:
+        type: object
+        properties:
+          array:
+            type: array
+            items:
+              $ref: '#/definitions/ArticlesResultArticleDocuments'
+      articlePrices:
+        type: object
+        properties:
+          array:
+            type: array
+            items: {}
+            example: []
+      articleThumbnails:
+        type: object
+        properties:
+          array:
+            type: array
+            items:
+              $ref: '#/definitions/ArticlesResultArticleThumbnails'
+      assignedArticle:
+        type: object
+        required:
+          - articleId
+          - articleLinkId
+          - articleName
+          - articleNo
+          - articleState
+          - articleStateName
+          - flagAccessories
+          - flagCertificationCompulsory
+          - flagRemanufacturedPart
+          - flagSuitedforSelfService
+          - hasAppendage
+          - hasAxleLink
+          - hasCsGraphics
+          - hasDocuments
+          - hasLessDiscount
+          - hasMarkLink
+          - hasMotorLink
+          - hasOEN
+          - hasPartList
+          - hasPrices
+          - hasSecurityInfo
+          - hasUsage
+          - hasVehicleLink
+          - packingUnit
+          - quantityPerPackingUnit
+        properties:
+          articleId:
+            type: integer
+          articleLinkId:
+            type: integer
+          articleName:
+            type: string
+          articleNo:
+            type: integer
+          articleState:
+            type: integer
+          articleStateName:
+            type: string
+          flagAccessories:
+            type: boolean
+          flagCertificationCompulsory:
+            type: boolean
+          flagRemanufacturedPart:
+            type: boolean
+          flagSuitedforSelfService:
+            type: boolean
+          hasAppendage:
+            type: boolean
+          hasAxleLink:
+            type: boolean
+          hasCsGraphics:
+            type: boolean
+          hasDocuments:
+            type: boolean
+          hasLessDiscount:
+            type: boolean
+          hasMarkLink:
+            type: boolean
+          hasMotorLink:
+            type: boolean
+          hasOEN:
+            type: boolean
+          hasPartList:
+            type: boolean
+          hasPrices:
+            type: boolean
+          hasSecurityInfo:
+            type: boolean
+          hasUsage:
+            type: boolean
+          hasVehicleLink:
+            type: boolean
+          packingUnit:
+            type: integer
+          quantityPerPackingUnit:
+            type: integer
+      eanNumber:
+        type: object
+        properties:
+          array:
+            type: array
+            items:
+              $ref: '#/definitions/ArticlesResultEanNumber'
+      oenNumbers:
+        type: object
+        properties:
+          array:
+            type: array
+            items:
+              $ref: '#/definitions/ArticlesResultOenNumbers'
+      assignedTyre24Data:
+        type: object
+        required:
+          - wholesaler_id
+          - price
+          - manufacturer_number
+          - manufacturer_name
+          - manufacturer_name_abbreviation
+          - description1
+          - description2
+          - wholesaler_item_number
+          - quantity
+          - express
+          - countWholesalers
+          - articleId
+          - articleLinkId
+          - thumbnails
+          - documents
+          - images
+          - evkPrices
+        properties:
+          wholesaler_id:
+            type: string
+          price:
+            type: string
+          manufacturer_number:
+            type: string
+          manufacturer_name:
+            type: string
+          manufacturer_name_abbreviation:
+            type: string
+          description1:
+            type: string
+          description2:
+            type: object
+            properties:
+              ATTRIBUTEID:
+                type: object
+                required:
+                  - name
+                  - value
+                properties:
+                  name:
+                    type: string
+                  value:
+                    type: array
+                    items: {}
+                    example: ["string"]
+          wholesaler_item_number:
+            type: string
+          quantity:
+            type: string
+          express:
+            type: string
+          countWholesalers:
+            type: string
+          articleId:
+            type: string
+          articleLinkId:
+            type: string
+          thumbnails:
+            type: string
+            example: ['string']
+          documents:
+            type: string
+            example: ['string']
+          images:
+            type: array
+            items: {}
+            example: ['string']
+          evkPrices:
+            type: object
+            required:
+              - '1'
+              - '2'
+              - '3'
+              - '4'
+              - '5'
+            properties:
+              '1':
+                type: string
+              '2':
+                type: string
+              '3':
+                type: string
+              '4':
+                type: string
+              '5':
+                type: string
+
+  ArticlesResultArticleAttributes:
+    type: object
+    required:
+      - attrBlockNo
+      - attrId
+      - attrIsConditional
+      - attrIsInterval
+      - attrIsLinked
+      - attrName
+      - attrShortName
+      - attrType
+      - attrValue
+      - attrValueId
+    properties:
+      attrBlockNo:
+        type: integer
+      attrId:
+        type: integer
+      attrIsConditional:
+        type: boolean
+      attrIsInterval:
+        type: boolean
+      attrIsLinked:
+        type: boolean
+      attrName:
+        type: string
+      attrShortName:
+        type: string
+      attrType:
+        type: string
+      attrValue:
+        type: string
+      attrValueId:
+        type: integer
+
+  ArticlesResultArticleDocuments:
+    type: object
+    required:
+      - docFileName
+      - docFileTypeName
+      - docId
+      - docTypeId
+      - docTypeName
+    properties:
+      docFileName:
+        type: string
+      docFileTypeName:
+        type: string
+      docId:
+        type: integer
+      docTypeId:
+        type: integer
+      docTypeName:
+        type: string
+
+  ArticlesResultArticleThumbnails:
+    type: object
+    required:
+      - thumbDocId
+      - thumbFileName
+      - thumbTypeId
+    properties:
+      thumbDocId:
+        type: integer
+      thumbFileName:
+        type: string
+      thumbTypeId:
+        type: integer
+
+  ArticlesResultEanNumber:
+    type: object
+    required:
+      - eanNumber
+    properties:
+      eanNumber:
+        type: integer
+
+  ArticlesResultOenNumbers:
+    type: object
+    required:
+      - blockNumber
+      - brandName
+      - oeNumber
+      - sortNumber
+    properties:
+      blockNumber:
+        type: integer
+      brandName:
+        type: string
+      oeNumber:
+        type: string
+      sortNumber:
+        type: integer
+
+  ArticlesDirectSearch:
+    type: object
+    required:
+      - page
+      - showPerPage
+      - pageCount
+      - resultCount
+      - result
+      - filter
+    properties:
+      page:
+        type: integer
+      showPerPage:
+        type: integer
+      pageCount:
+        type: integer
+      resultCount:
+        type: integer
+      result:
+        type: array
+        items:
+          $ref: '#/definitions/ArticlesDirectSearchResult'
+      filter:
+        type: object
+        properties:
+          filterByExpress:
+            type: object
+            required:
+              - selected
+              - translation
+              - available
+            properties:
+              selected:
+                type: boolean
+              translation:
+                type: string
+              available:
+                type: integer
+          filterByBrands:
+            type: object
+            properties:
+              SAME_AS_BRANDID:
+                type: object
+                required:
+                  - brandId
+                  - brandName
+                  - selected
+                properties:
+                  brandId:
+                    type: integer
+                  brandName:
+                    type: string
+                  selected:
+                    type: boolean
+          filterByCategory:
+            type: object
+            properties:
+              SAME_AS_GENERICARTICLEID:
+                type: object
+                required:
+                  - genericArticleId
+                  - genericArticleName
+                  - count
+                  - selected
+                properties:
+                  genericArticleId:
+                    type: integer
+                  genericArticleName:
+                    type: string
+                  count:
+                    type: integer
+                  selected:
+                    type: boolean
+          filterByAttributes:
+            type: object
+            required:
+              - SAME_AS_ATTRIBUTEID
+            properties:
+              SAME_AS_ATTRIBUTEID:
+                type: object
+                required:
+                  - attribute
+                  - filters
+                properties:
+                  attribute:
+                    type: object
+                    required:
+                      - attributeId
+                      - attributeName
+                      - attributeShortName
+                      - attributeType
+                    properties:
+                      attributeId:
+                        type: integer
+                      attributeName:
+                        type: string
+                      attributeShortName:
+                        type: string
+                      attributeType:
+                        type: string
+                      dutyFlag:
+                        type: boolean
+                      interval:
+                        type: boolean
+                  filters:
+                    type: object
+                    required:
+                      - SAME_AS_HASH
+                    properties:
+                      SAME_AS_HASH:
+                        type: object
+                        required:
+                          - attributeId
+                          - count
+                          - keyValue
+                          - keyValueText
+                          - noValue
+                          - selected
+                          - type
+                          - hash
+                        properties:
+                          attributeId:
+                            type: integer
+                          count:
+                            type: integer
+                          keyValue:
+                            type: string
+                          keyValueText:
+                            type: string
+                          noValue:
+                            type: boolean
+                          selected:
+                            type: boolean
+                          type:
+                            type: string
+                          hash:
+                            type: string
+
+  ArticlesDirectSearchResult:
+    type: object
+    required:
+      - articleAttributes
+      - articleDocuments
+      - articlePrices
+      - articleThumbnails
+      - directArticle
+      - eanNumber
+      - oenNumbers
+      - assignedTyre24Data
+    properties:
+      articleAttributes:
+        type: object
+        properties:
+          array:
+            type: array
+            items:
+              $ref: '#/definitions/ArticlesResultArticleAttributes'
+      articleDocuments:
+        type: object
+        properties:
+          array:
+            type: array
+            items:
+              $ref: '#/definitions/ArticlesResultArticleDocuments'
+      articlePrices:
+        type: object
+        properties:
+          array:
+            type: array
+            items: {}
+            example: []
+      articleThumbnails:
+        type: object
+        properties:
+          array:
+            type: array
+            items:
+              $ref: '#/definitions/ArticlesResultArticleThumbnails'
+      directArticle:
+        type: object
+        required:
+          - articleId
+          - brandNo
+        properties:
+          articleAddName:
+            type: string
+          articleId:
+            type: integer
+          articleName:
+            type: string
+          articleNo:
+            type: integer
+          articleState:
+            type: integer
+          articleStateName:
+            type: string
+          brandName:
+            type: string
+          brandNo:
+            type: integer
+          flagAccessories:
+            type: boolean
+          flagCertificationCompulsory:
+            type: boolean
+          flagRemanufacturedPart:
+            type: boolean
+          flagSuitedforSelfService:
+            type: boolean
+          genericArticleId:
+            type: integer
+          hasAppendage:
+            type: boolean
+          hasAxleLink:
+            type: boolean
+          hasCsGraphics:
+            type: boolean
+          hasDocuments:
+            type: boolean
+          hasLessDiscount:
+            type: boolean
+          hasMarkLink:
+            type: boolean
+          hasMotorLink:
+            type: boolean
+          hasOEN:
+            type: boolean
+          hasPartList:
+            type: boolean
+          hasPrices:
+            type: boolean
+          hasSecurityInfo:
+            type: boolean
+          hasUsage:
+            type: boolean
+          hasVehicleLink:
+            type: boolean
+          packingUnit:
+            type: integer
+          quantityPerPackingUnit:
+            type: integer
+      eanNumber:
+        type: object
+        properties:
+          array:
+            type: array
+            items:
+              $ref: '#/definitions/ArticlesResultEanNumber'
+      oenNumbers:
+        type: object
+        properties:
+          array:
+            type: array
+            items:
+              $ref: '#/definitions/ArticlesResultOenNumbers'
+      assignedTyre24Data:
+        type: object
+        required:
+          - wholesaler_id
+          - price
+          - manufacturer_number
+          - manufacturer_name
+          - manufacturer_name_abbreviation
+          - description1
+          - wholesaler_item_number
+          - quantity
+          - express
+          - countWholesalers
+          - articleId
+          - evkPrices
+        properties:
+          wholesaler_id:
+            type: string
+          price:
+            type: string
+          manufacturer_number:
+            type: string
+          manufacturer_name:
+            type: string
+          manufacturer_name_abbreviation:
+            type: string
+          description1:
+            type: string
+          description2:
+            type: object
+            properties:
+              ATTRIBUTEID:
+                type: object
+                required:
+                  - name
+                  - value
+                properties:
+                  name:
+                    type: string
+                  value:
+                    type: array
+                    items: {}
+                    example: ["string"]
+          wholesaler_item_number:
+            type: string
+          quantity:
+            type: string
+          express:
+            type: string
+          countWholesalers:
+            type: string
+          articleId:
+            type: string
+          articleLinkId:
+            type: string
+          thumbnail:
+            type: string
+            example: ['string']
+          images:
+            type: array
+            items: {}
+            example: ['string']
+          evkPrices:
+            type: object
+            required:
+              - '1'
+              - '2'
+              - '3'
+              - '4'
+              - '5'
+            properties:
+              '1':
+                type: string
+              '2':
+                type: string
+              '3':
+                type: string
+              '4':
+                type: string
+              '5':
+                type: string
+
+  FilterList:
+    type: object
+    required:
+      - filterByExpress
+    properties:
+      filterByExpress:
+        type: object
+        required:
+          - selected
+          - translation
+          - available
+        properties:
+          selected:
+            type: boolean
+          translation:
+            type: string
+          available:
+            type: integer
+      filterList:
+        type: object
+        properties:
+          SAME_AS_ATTRIBUTEID:
+            type: object
+            properties:
+              attribute:
+                type: object
+                required:
+                  - attributeId
+                  - attributeName
+                properties:
+                  attriuteId:
+                    type: integer
+                  attributeName:
+                    type: string
+                  attributeShortName:
+                    type: string
+                  attributeType:
+                    type: string
+                  dutyFlag:
+                    type: boolean
+                  interval:
+                    type: boolean
+              filters:
+                type: object
+                properties:
+                  SAME_AS_HASH:
+                    type: object
+                    required:
+                      - attributeId
+                      - count
+                      - selected
+                      - type
+                      - hash
+                    properties:
+                      attributeId:
+                        type: integer
+                      count:
+                        type: integer
+                      keyValue:
+                        type: integer
+                      keyValueText:
+                        type: string
+                      noValue:
+                        type: boolean
+                      selected:
+                        type: boolean
+                      type:
+                        type: string
+                      hash:
+                        type: string
+
+  DistributorList:
+    type: object
+    required:
+      - distributorId
+      - distributorType
+      - hasProfile
+      - dataList
+      - country
+      - countryCode
+      - name
+      - stock
+      - priceList
+      - orderTerms
+      - deliveryTerms
+      - neutralShippingCosts
+      - shippingCosts
+      - positiveRating
+      - supplierLikeStatus
+    properties:
+      distributorId:
+        type: integer
+        description: The internal id of the distributor
+      distributorType:
+        type: integer
+      hasProfile:
+        type: boolean
+      dataList:
+        type: array
+        description: >- 
+          see <a href="https://alzura-ag.atlassian.net/wiki/spaces/AI/pages/1676738561/Products+Distributor+List+-+Possible+Datalist+Values" target="_blank">Full list of possible values here</a>
+        items:
+          $ref: '#/definitions/DataList'
+      country:
+        type: string
+        description: The name of the country e.g. Deutschland
+      countryCode:
+        type: string
+        description: The 2-letter country iso-code e.g. de
+      name:
+        type: string
+        description: The name of the distributor
+      stock:
+        type: integer
+        description: The stock of the distributor
+      priceList:
+        type: array
+        items:
+          $ref: '#/definitions/PriceList'
+      orderTerms:
+        type: string
+      deliveryTerms:
+        type: string
+      neutralShippingCosts:
+        type: number
+        format: float
+        description: "delivery costs for different shipping address or neutral shipping"
+      shippingCosts:
+        $ref: '#/definitions/ShippingCosts'
+      positiveRating:
+        type: integer
+      supplierLikeStatus:
+        type: string
+        enum: [positive, negative, neutral]
+        default: neutral
+        description: "Dealer's personal rating for this supplier"
+
+  ShippingCosts:
+    type: object
+    description: "available shipping types"
+    properties:
+      shipping_standard:
+        $ref: '#/definitions/ShippingCostsItem'
+      pickup:
+        $ref: '#/definitions/ShippingCostsItem'
+      shipping_truck:
+        $ref: '#/definitions/ShippingCostsItem'
+      shipping_truck_fast:
+        $ref: '#/definitions/ShippingCostsItem'
+      shipping_spedition:
+        $ref: '#/definitions/ShippingCostsItem'
+      shipping_spedition_fast:
+        $ref: '#/definitions/ShippingCostsItem'
+
+  ShippingCostsItem:
+    type: object
+    required:
+      - price
+      - estimatedDelivery
+    properties:
+      price:
+        type: number
+        format: float
+        example: 2.21
+      estimatedDelivery:
+        type: string
+        example: '2018-10-22'
+
+  DataList:
+    type: object
+    required:
+      - name
+      - supported
+      - matching
+    properties:
+      name:
+        type: string
+      supported:
+        type: boolean
+      matching:
+        type: boolean
+
+  PriceList:
+    type: object
+    required:
+      - country_code
+      - currency
+      - type
+    properties:
+      country_code:
+        type: string
+        description: 2-letter iso-code e.g. de
+      currency:
+        type: string
+        description: 3-letter iso currency code e.g. EUR
+      type:
+        type: string
+      prices:
+        type: object
+        properties:
+          1:
+            type: object
+            properties:
+              base:
+                type: string
+              unit:
+                type: string
+              shipping_standard:
+                type: string
+
+  WholesalerCartData:
+    type: object
+    required:
+      - price
+      - shippingMethodId
+      - manufacturerName
+      - manufacturerNumber
+      - quantity
+    properties:
+      price:
+        type: string
+      shippingMethodId:
+        type: string
+      manufacturerName:
+        type: string
+      manufacturerNumber:
+        type: string
+      quantity:
+        type: string
+
+  WholesalerCartDataOptimized:
+    type: object
+    allOf:
+      - $ref: '#/definitions/WholesalerCartData'
+      - type: object
+      - required:
+          - price
+          - shippingMethodId
+          - manufacturerName
+          - manufacturerNumber
+          - quantity
+          - maxQuantity
+      - properties:
+          maxQuantity:
+            type: string
+
+  GetOrder:
+    type: object
+    required:
+      - itemId
+      - price
+      - wholesalerId
+      - quantity
+      - shippingMethodId
+      - paymentMethodId
+      - estimatedDelivery
+      - vat
+    properties:
+      itemId:
+        type: string
+        description: The id of the offered item
+      price:
+        type: number
+        format: float
+        description: The price of the offer as float value
+      wholesalerId:
+        type: integer
+        description: The id of the wholesaler
+      quantity:
+        type: integer
+        description: The available quantity for this seller
+      shippingMethodId:
+        type: integer
+        description: >-
+          The shipping method id. 1 standard shipping; 2  pickup; 3 express -
+          tomorrow (truck); 4 express - today (truck); 5  express - tomorrow
+          (package); 6 express - today (package)
+      paymentMethodId:
+        type: integer
+        description: >-
+          Comma separated list of payment methods-Id's, you also can give only
+          one id . If the field is left blank, all payment method are
+          considered. 1  SEPA direct debit; 2  advance payment; 3  cash on
+          delivery; 5 open payment; 7 invoice (payable within 8 days); 8  open
+          payment (SEPA) - used for marketplace orders
+      estimatedDelivery:
+        type: string
+        example: '2018-10-18'
+      vat:
+        type: number
+        description: The current vat rate for this item given as a float (example 0.19)
+
+      manufacturerName:
+        type: string
+      brandId:
+        type: integer
+      depositPrice:
+        type: number
+  PostOrderOffer:
+    type: object
+    properties:
+      offer:
+        allOf:
+          - $ref: '#/definitions/GetOrder'
+          - type: object
+          - required:
+              - itemId
+              - price
+              - wholesalerId
+              - quantity
+              - shippingMethodId
+              - paymentMethodId
+          - properties:
+              quantity:
+                type: integer
+                description: the quantity you want to order
+              vehicleIdentification:
+                type: string
+                description: >-
+                  The parameter vehicleIdentification is optional, so it may be left out.
+                  <br /><br />
+                  Specification of how to build the vehicleIdentification parameter:<br />
+                  Concatenate the following keys retrieved by getVehicles:<br />
+                  * carId (e.g. 55092)<br />
+                  * manuName (e.g. Audi)<br />
+                  * modelName (e.g. A3 (8V1, 8VK))<br />
+                  * typeName (e.g. 1.4 TFSI)<br />
+                  * powerHpTo (e.g. 122)<br />
+                  * yearOfConstrFrom (e.g. 201204 -> 04/2012)<br />
+                  * yearOfConstrTo (e.g. 201702 -> 02/2017)<br /><br />
+                  <i>Both, yearOfConstrFrom and yearOfConstrTo have to be reformatted to match the following format 'm/Y'. There has to be a hyphen in between yearOfConstrFrom and yearOfConstrTo, also if only yearOfConstrFrom is available.</i><br /><br />
+                  Example:<br />
+                  55092 Audi A3 (8V1, 8VK) 1.4 TFSI 122 04/2012 -
+
+  OrderStatus:
+    type: object
+    required:
+      - orderId
+      - status
+      - type
+    properties:
+      orderId:
+        type: string
+      orderStatus:
+        type: boolean
+      type:
+        type: string
+      estimatedDelivery:
+        type: string
+        example: '2018-10-18'

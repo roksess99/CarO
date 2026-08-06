@@ -4,23 +4,30 @@ Zolang een beslissing hier op OPEN staat: **niet gokken, vragen.**
 
 ---
 
-## 1. Onderdelen-catalogus API — OPEN — blokkerend
+## 1. Onderdelen-catalogus API — VASTGESTELD → Tyre24/ALZURA
 
-Dit is de kern van de webshop en het grootste risico. Auto-onderdelen hebben een
-voertuig-koppeling nodig (merk/model/motorcode → welk onderdeel past), niet alleen een
-productlijst. Opties:
+Besloten 2026-08-06: **Tyre24 / ALZURA REST API v1.3** (zie docs/api/TYRE24.md en
+docs/api/tyre24-products-v13.yaml). Marketplace met groothandels, inclusief
+TecDoc-data (voertuig-koppeling) en bestellen via de API (dropship mogelijk).
 
-| Optie | Voordeel | Nadeel |
-|---|---|---|
-| **TecDoc / TecAlliance** | De EU-standaard. Volledige voertuig-onderdeel matching | Licentiekosten, contract nodig, niet self-service |
-| **Leverancier-feed** (bv. via een NL groothandel) | Goedkoop, direct voorraad en inkoopprijs | Afhankelijk van één partij, formaat vaak CSV/XML |
-| **Eigen catalogus** | Volledige controle | Enorm veel datawerk, geen voertuig-matching |
+**Nog te regelen voordat de adapter live kan** (blokkeert fase 3-oplevering, niet de bouw):
+- [ ] API-token genereren (Token Management op tyre24.alzura.com) → `TYRE24_API_TOKEN`
+- [ ] `productAreaId` bepalen via `GET /areas` → `TYRE24_PRODUCT_AREA_ID`
+- [ ] NL base path verifiëren (`/nl/nl/` i.p.v. `/de/de/`)
 
-**Actie**: eerst uitzoeken welke leverancier of dropship-partner je gebruikt. De datakeuze
-volgt uit de leverancier, niet andersom.
+De adapter staat achter `src/lib/catalog/provider.ts`; zonder token valt hij terug
+op de mock. Geen enkele andere plek in de code weet waar de data vandaan komt.
 
-**Tot dat vaststaat**: bouw achter `src/lib/catalog/provider.ts` met een mock-implementatie.
-Geen enkele andere plek in de code mag weten waar de data vandaan komt.
+---
+
+## 5. Prijsstrategie (marge op inkoop) — OPEN — blokkerend voor live gang
+
+Tyre24 levert **B2B-inkoopprijzen**. De consumentenprijs (incl. 21% btw) moet daar
+bovenop berekend worden. Opties: vaste marge %, marge per categorie, adviesprijs
+(de `evkPrices` uit de API — uitzoeken wat die precies zijn).
+
+**Tot dit besloten is**: `src/lib/pricing.ts` rekent met `CARO_MARGIN_PERCENT` uit
+.env (alleen voor ontwikkeling) en een TODO-verwijzing naar deze beslissing.
 
 ---
 
@@ -33,9 +40,11 @@ Vercel (simpelst voor Next.js) vs. een EU-VPS. Let op AVG: klantdata bij voorkeu
 Mollie vereist een KvK-inschrijving en zakelijke rekening. Dit blokkeert de betaal-integratie,
 niet de rest van de bouw. Bouw checkout eerst tegen Mollie test mode.
 
-## 4. Voorraadbeheer — OPEN
+## 4. Voorraadbeheer — OPEN, richting bekend
 
-Eigen voorraad of dropshipping? Bepaalt of we voorraadstanden bijhouden of live opvragen.
+Tyre24 maakt dropshipping mogelijk: voorraad live opvragen (`stock` per item,
+`/distributors` per artikel) en inkooporders via `POST /order`. Definitieve keuze
+(alles dropship, of deels eigen voorraad) staat nog open, maar de API dekt beide.
 
 ---
 
@@ -43,6 +52,8 @@ Eigen voorraad of dropshipping? Bepaalt of we voorraadstanden bijhouden of live 
 
 | Datum | Beslissing | Reden |
 |---|---|---|
+| 2026-08-06 | Tyre24/ALZURA als catalogus- en inkoop-API | Swagger-docs beschikbaar, TecDoc-data inbegrepen, dropship via API mogelijk |
+| 2026-08-06 | Velgen komen in het assortiment | Tyre24 Alloys-API dekt matching (carID-flow) én 3D-beelden; zelfde leverancier en token. Eigen fase, na fase 3 |
 | — | Next.js + TypeScript + Tailwind | Grootste community, snelste iteratie met een agent, sterke SEO-ondersteuning |
 | — | PostgreSQL + Prisma | Type-safe, migraties, past bij bestaande SQL-kennis |
 | — | Mollie boven Stripe | iDEAL is ~60% van NL online betalingen; Mollie is hier de standaard |

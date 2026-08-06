@@ -1,0 +1,2320 @@
+swagger: '2.0'
+info:
+  version: '1.3'
+  title: Tyre24.com REST API Version 1.3 Alloys
+  description: |
+    All API commands need a TOKEN. Please refer to the additional documentation.
+    
+    
+    # How to fetch a valid carID
+    
+    For some endpoints, like [GET /details](#/paths/~1details/get), 
+    [GET /filter](#/paths/~1filter/get), [GET /images](#/paths/~1images/get), 
+    [GET /search](#/paths/~1search/get) or 
+    [GET /rimMatchingAlloyRims](#/paths/~1rimMatchingAlloyRims/get) you need a valid `carID` to be able to send a request.
+    
+    A car and its related `carID` is determined by fetching the response of all car brands. 
+    With a car brand you can fetch all car models related to that car brand.
+    Finally with your car brand and car model you can fetch all car types to identify a unique car or `carID`.
+    
+    ## Step 1: Fetch the car brand
+    The response of the endpoint [GET /carBrands](#/paths/~1carBrands/get) contains a list of car brands.
+    Each brand has a unique identifier, the `brandID`. This `brandID` must be used to call further endpoints. 
+    Call this endpoint, choose your preferred car brand and make a note of the `brandID`.
+    
+    ## Step 2: Fetch the car models
+    The response of the endpoint [GET /carModels](#/paths/~1carModels/get) contains a list of car models.
+    The endpoint requires a valid `brandID` as query parameter, which you can fetch as described in [Step 1](#section/How-to-fetch-a-valid-carID/Step-1:-Fetch-the-car-brand).
+    The endpoint documentation can be found in [GET /carBrands](#/paths/~1carBrands/get).
+    Each car model has a unique identifier, the `modelID`. This `modelID` must be used to call further endpoints.
+    Call this endpoint, choose your preferred car model and make a note of the `modelID`.
+    
+    ## Step 3: Fetch the car types
+    The response of the endpoint [GET /carTypes](#/paths/~1carTypes/get) contains a list of car types.
+    The endpoint requires a valid `brandID` and `modelID` combination, which you already fetched in [Step 1](#section/How-to-fetch-a-valid-carID/Step-1:-Fetch-the-car-brand) and [Step 2](#section/How-to-fetch-a-valid-carID/Step-2:-Fetch-the-car-models).
+    Each car type has a unique identifier, the `carID`. This `carID` must be used to call further endpoints.
+    
+    Additionally you gather further information depending on your needs.
+    
+    `threed` indicates if the car type support 3D images. If it's `true` the `threedCarID` is the unique identifier
+    of the 3D car, which can be used in further endpoints.  
+    
+    Furthermore the `colors` in the response provides information about all supported colors `colors.color` and the default
+    color is returned in `colors.defaultColor`. Each color has 2 identifiers. First the `id` itself, which is the
+    unique identifier of the color, and Second the `t24MaterialId` the unique identifier of the color to be used for 3D images. 
+    
+    
+    # How to fetch alloys that matches your car
+    There are several ways to find alloy wheels that fits to your car. With the endpoints [GET /rimMatchingAlloyRims](#/paths/~1rimMatchingAlloyRims/get)
+    and [GET /search](#/paths/~1search/get) you are able to fetch fitting alloy wheel to your car. Both endpoints
+    needs the `carID` and in case you want to fetch 3D alloy wheel you need to provide the `threedCarID`. In the section
+    [How to fetch a valid carID](#section/How-to-fetch-a-valid-carID) is already described how you can fetch those 2 identifiers.
+    The `carID` is always required, as the `threedCarID` is optional only in case you want to fetch 3D alloy wheel.
+    
+    
+    
+    # How to fetch (3D) images for a car
+    To be able to use the endpoint [GET /images](#/paths/~1images/get) you need to determine a valid `carID`.
+    For retrieving 3D images you need to determine the `threedCarID`.
+    This is described already in [How to fetch a valid carID](#section/How-to-fetch-a-valid-carID).
+    
+    ## Default values that you should use
+    The endpoint [GET /images](#/paths/~1images/get) has some parameters that are required, but you should set them to the mentioned default values.
+    Here `scene` should be set to `1` and `screen` should be set to `4`. For now we do not have any further detailed explanation for those values.
+    
+    ## Decide which images you want to fetch
+    The endpoint supports different types of images. The image urls will only be within the response, if we can provide image links and if you requested them within your request.
+
+    You can view the car with the selected alloy and the color in a 3D rotation. We provide images with 36 evenly rotated steps.
+    On the one hand, just the car with its color; on the other hand, the alloy with the tyre and its shadow.
+    Both images together will ending up in the final image. The response contains a `threedCarImages` list. Those images only show the car with its color and its background.  The response contains furthermore the `threedAlloyImages` list. Those images show only the tyre, the alloy and has a transparent background.
+    Therefore you need to set within your request `threedCarImages` and `threedAlloyImages` to `1`. You will fetch a list of 36 images each, for `threedCarImages` and `threedAlloyImages`. 
+    As an example, select the fifth image of each list. These are treated as layers, superimposed on top of one another, and blended together. This produces the final image.
+    
+    Setting `rotaryImages` to `1` will return 36 images, each rotated in 10 degrees to get a full 360 degree turn of the alloy.
+    
+    Set `alloyImages` to `1` and a list of alloy images with the background removed, will be returned.
+    
+    Set `emoticleImages` to `1` and a list of images with some close up details of the alloy will be returned.
+    
+    Set `HDRI` to `1` will return a list of High Dynamic Range Images, that show the rendered 3D car in different backgrounds. See [example](https://tyre24.alzura.com/de/de/alufelgen/3d-konfigurator/bmw/f34xm-x4%20m-1571-3644/flamencorot%20brillant%20metallic-176-1779/diewe%20wheels-trina-850-19-zoll-850-30-30-5-11200-6660-platin%20%20platin%20matt-835-835-145275-0/#carGallery-8)
+    
+    # A full working example to fetch 3D images for a car.
+    
+    ## Step 1: Get a brand that supports 3D images
+    Using the endpoint [GET /carBrands](#/paths/~1carBrands/get) to fetch all car brands. The response looks similar to this:
+    ```
+    {
+      "alloyRimCarBrandsList": [
+        {
+            "brandID": 70,
+            "brand": "Aiways",
+            "threed": false
+        },
+        ...
+        {
+            "brandID": 22,
+            "brand": "BMW",
+            "threed": true
+        },
+        ...
+    }
+    ```
+    I choose the brand `BMW` as i want to receive at a later point 3D images of a 3D BMW car.
+    The `brandID` we need to use for further endpoints is: `22`
+    
+    ## Step 2: Get the car models for BMW
+    Using the endpoint [GET /carModels](#/paths/~1carModels/get) and set `brandID=22` in the query parameters to fetch all car models of the car brand `BMW`.
+    The response looks similar to this:
+    ```
+    {
+      "alloyRimCarModelsList": [
+        ...
+        {
+            "modelID": 666,
+            "model": "6er Reihe",
+            "threed": true
+        },
+      ...
+    }
+    ```
+    The `modelID` for a BMW 6er Reihe is `666`.
+    
+    ## Step 3: Get all car types for a BMW 6er Reihe
+    Using the endpoint [GET /carTypes](#/paths/~1carTypes/get) and set as `brandID=22` and as `modelID=666`  in the query parameters to fetch all car types for a `BMW 6er Reihe`.
+    The response looks similar to this:
+    ```
+    {
+      "alloyRimCarTypesList": [
+        {
+            "carID": 3231,
+            "carType": "G6GT",
+            "carTypeDesc": "G32",
+            "carComment": "Gran Turismo",
+            "holeNumber": 5,
+            "holeCircle": "112.00",
+            "hubHole": "66.60",
+            "permitNumber": "e1*2007/46*1791*08..",
+            "carPic": "https://media3.tyre-shopping.com/images/carpic/cp_3231_nobr-soap_search_v1-w%-h%.jpg",
+            "threed": true,
+            "threedCarID": 907,
+            "colors": {
+                "color": [
+                    {
+                        "id": 3691,
+                        "t24MaterialId": "561",
+                        "desc": "Bluestone metallic",
+                        "image": {
+                            "URL": "https://media1.tyre-shopping.com/images/3dmaterials/561_nobr-R-%s-%s.jpg"
+                        }
+                    },
+                    ...
+                ],
+                "defaultColor": [
+                    {
+                        "id": 5020,
+                        "t24MaterialId": "302",
+                        "desc": "Piemont Rot Metallic",
+                        "image": {
+                            "URL": "https://media2.tyre-shopping.com/images/3dmaterials/302_nobr-R-%s-%s.jpg"
+                        }
+                    }
+                ]
+            },
+            "additionalThreedData": {
+                "brakeId": null,
+                "axleDistance": "3070",
+                "tyreDistanceFront": "1892",
+                "tyreDistanceRear": "1911",
+                "tyreRadius": "350",
+                "platesId": "3",
+                "brakesId": "1"
+            },
+            "tyrePressureMonitoringSystems": [],
+            "manufactureYearFrom": "5.2020",
+            "manufactureYearTo": "0.0"
+        },
+        ...
+    }
+    ```
+    The `carType=G6GT` with its `carId=3231` for a `BMW 6er Reihe` support 3D images as `threed=true` and `threedCarID` has a valid identifier `907`.
+    Additionally in the list of `colors` i am choosing not the default color, i am choosing the `Bluestone metallic` which has as `id=3691` and "t24MaterialId=561".
+    
+    ## Step 4: Search a 3D alloy wheel that fits to the car
+    Using the endpoint [GET /search](#/paths/~1search/get) with the already gathered information for `carID` and `threedCarID` as query parameters (`carID=3231` and `threedCarID=907`).
+    The response looks similar to this:
+    ```
+    {
+      "alloyRimsList": [
+        {
+            "alloyRimFrontID": 152801,
+            ...
+            "alloyRimRearID": 0,
+            ...
+            "manufacturer": "AUTEC",
+            "manufacturerDescription": "<p><strong>AUTEC Leichtmetallräder</strong> ist ein führender deutscher Hersteller von hochwertigen Aluminiumfelgen für den Pkw-Nachrüstmarkt in Europa. Die Marke steht für moderne und kreative Designs, die jedem Fahrzeug eine individuelle Note verleihen – von zeitlos-elegant bis sportlich und innovativ.</p>\r\n<p>Die Produktpalette von AUTEC umfasst eine Vielzahl von Felgendesigns in Größen von 14 bis 22 Zoll, passend für nahezu alle Lochkreise und Einpresstiefen. Alle Felgen sind von KBA und TÜV geprüft und zertifiziert, was höchste Qualitäts- und Sicherheitsstandards garantiert.</p>\r\n<p>AUTEC legt großen Wert auf Innovation und Qualität. Neben Aluminiumfelgen fertigt das Unternehmen auch Kompletträder und bietet Reifendruckkontrollsysteme (RDKS) für nahezu jedes Fahrzeug an.</p>\r\n<p> </p>\r\n<p> </p>\r\n<p><strong>Angaben zur Produktsicherheit:</strong></p>\r\n<p> </p>\r\n<p><strong>Hersteller:</strong></p>\r\n<p>AUTEC GmbH & Co. KG</p>\r\n<p>Ziegeleistraße 25</p>\r\n<p>67105 Schifferstadt</p>\r\n<p>Deutschland</p>",
+            "type": "LAMERA (L) Schwarz Matt Poliert Einteilig",
+            "typeName": "LAMERA (L)",
+            "typeColor": "Schwarz Matt Poliert",
+            "typeConstruction": "Einteilig",
+            "axlePositionType": "VUH",
+            "alloyTypeID": 6395,
+            "alloyFilterTypeID": 6395,
+            "alloyXrefID": 12514326,
+            "threedCarInformation": {
+                "widthFront": "7.50",
+                "widthRear": "7.50",
+                "diameter": "17",
+                "rimIdFront": "1711",
+                "rimIdRear": "1711",
+                "offsetFront": "30",
+                "offsetRear": "30"
+            },
+            "imageUrl": {
+                "URL": "https://media1.tyre-shopping.com/images_ts/alloy/v3/6395/5/2_Freistellen-AUTEC-%s-%s-br0.png"
+            },
+            "threed": true,
+            "groupedByDesign": false,
+            "groupedByPrice": false,
+            "priceList": [
+                {
+                    "id": "1",
+                    "value": 105,
+                    "country_code": "de",
+                    "currency": "EUR",
+                    "type": "evp_list_1",
+                    "min_order": 1 
+                },
+                ...
+            ]
+        },
+      ...
+    }
+    ```
+    The required value to get 3D images is `alloyRimFrontID` in the response (`152801`).
+    
+    ## Step 5: Get the 3D images.
+    Using the endpoint [GET /images](#/paths/~1images/get) to finally retrieve the 3D images.
+    With your gathered information you can set as query parameters: `carId=3231`, `threedCarID=907`, `frontAlloyId=152801` and `colorID=561`.
+    You should set as default: `scene=1` and `screen=4`.
+    To fetch all kind of images that our systems provides you should set additionally: `alloyImages=1`, `emoticleImages=1`, `HDRI=1`, `rotaryImages=1`, `threedAlloyImages=1` and `threedCarImages=1`.
+    Your request url may look like
+    ```
+      /images?alloyImages=1&carID=3231&colorID=561&emoticleImages=1&frontAlloyID=152801&frontAlloyModelsID=&frontAlloyOffset&HDRI=1&rearAlloyID=&rearAlloyModelsID=&rearAlloyOffset&rotaryImages=1&scene=1&screen=4&threedAlloyImages=1&threedCarID=907&threedCarImages=1
+    ```
+    The response looks similar to this:
+    ```
+    {
+      "threedCarImages": {
+        "image": [
+            {
+                "URL": "https://media3.tyre-shopping.com/dryd/907/561/1/1/3/1/4/0001-%s-%s.jpg"
+            },
+            ...
+        ]
+      },
+      "threedAlloyImages": {
+        "image": [
+            {
+                "URL": "https://media4.tyre-shopping.com/dryd_rims2/907/75_75/1/1/75x17_75x17/1711_1711/30_30/0001-%s-%s.png"
+            },
+            ...
+        ]
+      },
+      "HDRI": {
+        "image": []
+      },
+      "emoticleImages": {
+        "image": [
+            {
+                "URL": "https://media4.tyre-shopping.com/images/alloy/v3/6395/5/1_Details-AUTEC-%s-%s-br0.jpg"
+            },
+            ...
+        ]
+      },
+      "rotaryImages": {
+        "image": [
+            {
+                "URL": "https://media2.tyre-shopping.com/images/alloy/v3/6395/5/1-AUTEC-%s-%s-br0.jpg"
+            },
+            ...
+        ]
+      },
+      "alloyImages": {
+        "image": [
+            {
+                "URL": "https://media2.tyre-shopping.com/images/alloy/v3/6395/5/1_Freistellen-AUTEC-%s-%s-br0.png"
+            },
+            ...
+        ]
+      }
+    }
+    ```
+
+host: tyre24.alzura.com
+basePath: /de/de/rest/v13/alloys
+schemes:
+  - https
+produces:
+  - application/json
+consumes:
+  - application/json
+securityDefinitions:
+  tokenAuth:
+    type: apiKey
+    in: header
+    name: X-AUTH-TOKEN
+    description: |
+      To enable you to log in to ALZURA.com via an interface using third-party systems
+      such as your ERP, ERP, DMS or other systems, you generate a unique token [here](https://tyre24.alzura.com/de/de/tokenmanagement),
+      which you store in the respective system in order to log in automatically.
+      You only need this one token and can use it in several systems.
+
+      **Managing Access with Your ALZURA Account**
+        1. **Linked Platforms, Websites, and Apps**  
+           - You use your ALZURA account to log in to various services, platforms, and applications.  
+
+        2. **Access Permissions**  
+           - When you log in using your ALZURA account, you grant these services access to certain data.  
+           - This data may include confidential information.  
+
+        3. **Where to Find Your Tokens**  
+           - Follow these steps to locate and manage your tokens:  
+             1. Log in to your ALZURA account.  
+             2. Navigate to the [Token Management Page](https://tyre24.alzura.com/de/de/tokenmanagement).  
+
+        4. **Token Validity and Expiration**  
+           - A token determines how long you remain logged in to an external service.  
+           - Once the token expires, you will need to log in again to refresh it.  
+
+        5. **Re-establishing Access**  
+           - If you remove access, you can log in again to the service at any time using your ALZURA account.  
+           - Re-login will grant access to the service once more.  
+
+      Once you have obtained your API-Token, use it in the X-AUTH-TOKEN header of your requests.
+         Example:
+        ```
+          GET /api/v1/tyres HTTP/1.1
+          X-AUTH-TOKEN:<your-api-token>
+        ```
+paths:
+  /details:
+    get:
+      summary: /details
+      parameters:
+        - in: query
+          name: alloyRimFrontID
+          type: integer
+          required: true
+          description: "id of the alloy rim front"
+        - in: query
+          name: alloyRimRearID
+          type: integer
+          required: false
+          description: "id of the alloy rim rear"
+        - in: query
+          name: carID
+          required: true
+          type: integer
+          description: "id of the car"
+        - in: query
+          name: threedCarID
+          type: integer
+          required: false
+          description: "The identifier of the 3D car. Required to retrieve 3D car information."
+      description: "Returns the details of a requested alloy"
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: Details of the Requested alloy.
+          schema:
+            $ref: '#/definitions/alloyDetailsList'
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+  /filter:
+    get:
+      summary: /filter
+      parameters:
+        - in: query
+          name: carID
+          required: true
+          type: integer
+          description: "id of the car"
+      description: >-
+        The Tyre24 search offers various filters to narrow down a search result.
+        For this purpose several filters can be requested before sending a
+        search query which can then be used to influence the search results. The
+        search contains all available filters and shows how many results would
+        be affected by these filters.
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: >-
+            Returns all filters which can be used initially to modify the tyre
+            search results.
+          schema:
+            $ref: '#/definitions/Filter'
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+  /sorter:
+    get:
+      summary: /sorter
+      description: >-
+        By adding one of the following sorting filters, the order of search
+        results can be changed. In case of sending an unknown or no sorting
+        filter, the standard sorting (currently by price) will be used.
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: Returns a list of all available sorting options.
+          schema:
+            $ref: '#/definitions/Sorter'
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+  /carBrands:
+    get:
+      summary: /carBrands
+      description: >-
+        Returns a list of all available car brands.
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: Returns a list of all available car brands.
+          schema:
+            $ref: '#/definitions/alloyRimCarBrandsList'
+  /carModels:
+    get:
+      summary: /carModels
+      parameters:
+        - in: query
+          name: brandID
+          type: integer
+          required: true
+          description: >-
+            Identifier of the car brand to fetch the associated car models.
+            To get a valid `brandID`, see [GET /carBrands](#/paths/~1carBrands/get)
+      description: >-
+        Returns a list of all available car models for the requested car brand.
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: A list of all available car models for the requested car brand.
+          schema:
+            $ref: '#/definitions/alloyRimCarModelsList'
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+  /carTypes:
+    get:
+      summary: /carTypes
+      parameters:
+        - in: query
+          name: brandID
+          type: integer
+          required: true
+          description: >-
+            Identifier of the car brand.
+            To get a valid `brandID`, see [GET /carBrands](#/paths/~1carBrands/get)
+        - in: query
+          name: modelID
+          type: integer
+          required: true
+          description: >- 
+            Identifier of the car model.
+            To get a valid `modelID`, see [GET /carModels](#/paths/~1carModels/get)
+      description: >-
+        Returns a list of all available car types for the requested car brand and car model.
+        You need to use a valid combination of `brandID` and `modelID`. See [GET /carBrands](#/paths/~1carBrands/get) and [GET /carModels](#/paths/~1carModels/get)
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: >-
+            Returns a list of all available car types for the requested car brand and car model.
+          schema:
+            $ref: '#/definitions/alloyRimCarTypesList'
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+  /images:
+    get:
+      summary: /images
+      parameters:
+        - in: query
+          name: carID
+          type: integer
+          required: true
+          description: >-
+            The identifier of the car.
+            See e.x. response of [GET /carTypes](#/paths/~1carTypes/get).
+        - in: query
+          name: threedCarID
+          type: integer
+          required: true
+          description: >-
+            The identifier of the 3D car. Required to retrieve 3D car information.
+            See e.x. response of [GET /carTypes](#/paths/~1carTypes/get).
+        - in: query
+          name: colorID
+          type: integer
+          required: true
+          description: >-
+            The identifier of the 3D color.
+            Warning: Risk of confusion with the identifier of the color! This is the identifier of the 3D color!
+            See e.x. response of [GET /carTypes](#/paths/~1carTypes/get).
+        - in: query
+          name: frontAlloyID
+          type: integer
+          required: true
+          description: "Identifier of the front alloy"
+        - in: query
+          name: frontAlloyOffset
+          type: integer
+          required: true
+          description: "front alloy offset"
+        - in: query
+          name: frontAlloyModelsID
+          type: integer
+          required: true
+          description: "Identifier of the front alloy model"
+        - in: query
+          name: rearAlloyID
+          type: integer
+          required: true
+          description: "Identifier of the rear alloy"
+        - in: query
+          name: rearAlloyOffset
+          type: integer
+          required: true
+          description: "rear alloy offset"
+        - in: query
+          name: rearAlloyModelsID
+          type: integer
+          required: true
+          description: "rear alloy models id"
+        - in: query
+          name: screen
+          type: integer
+          required: true
+          description: >- 
+            The identifier of the screen. You should use `4` as default.
+            At the moment there is no further explanation for the `screen`.
+        - in: query
+          name: scene
+          type: integer
+          required: true
+          description: |
+            The identifier of the screen. You should use `1` as default.
+            At the moment there is no further explanation for the `scene`.
+        - in: query
+          name: threedCarImages
+          type: integer
+          required: false
+          description: >-
+            Image flag for 3D car images.
+            This parameter must be set to 1 if you want to receive existing images in the response.
+        - in: query
+          name: threedAlloyImages
+          type: integer
+          required: false
+          description: >- 
+            Image flag for 3D alloy images.
+            This parameter must be set to 1 if you want to receive existing images in the response.
+        - in: query
+          name: HDRI
+          type: integer
+          required: false
+          description: >-
+            Image flag for HDRI images.
+            This parameter must be set to 1 if you want to receive existing images in the response.
+        - in: query
+          name: emoticleImages
+          type: integer
+          required: false
+          description:
+            Image flag for emoticle images.
+            This parameter must be set to 1 if you want to receive existing images in the response.
+        - in: query
+          name: rotaryImages
+          type: integer
+          required: false
+          description: >-
+            Image flag for rotary images.
+            This parameter must be set to 1 if you want to receive existing images in the response.
+        - in: query
+          name: alloyImages
+          type: integer
+          required: false
+          description: >-
+            Image flag for alloy images.
+            This parameter must be set to 1 if you want to receive existing images in the response.
+      description: >-
+        Returns image url(s). Don't forget to set an image flag. Without image flag the method generates an empty response.
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: Returns image urls.
+          schema:
+              $ref: '#/definitions/images'
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+  /search:
+    get:
+      summary: /search
+      parameters:
+        - in: query
+          name: carID
+          type: integer
+          required: true
+          description: "Identifier of the car. See [How to fetch a valid carID](#section/How-to-fetch-a-valid-carID)."
+        - in: query
+          name: limit
+          type: integer
+          required: false
+          description: "The number of items returned in the response matching your search criteria."
+        - in: query
+          name: language
+          type: string
+          required: false
+          description: "language"
+        - in: query
+          name: country
+          type: string
+          required: false
+          description: "country"
+        - in: query
+          name: pricelistKey
+          type: integer
+          required: true
+          description: |
+            The id of the price list that you configured in your [calculation](https://tyre24.alzura.com/de/de/user/masterdata/edit/calculation).
+            `priceListKey` has to be send as a query parameter, use as default value `3`. Possible values are `1` up to `5` and `99` or `ek`. 
+            For now the value doesn't matter as all price list values will be returned in the response.
+        - in: query
+          name: threedCarID
+          type: integer
+          required: false
+          description: "The identifier of the 3D car. Required in case to retrieve 3D car information. See [How to fetch a valid carID](#section/How-to-fetch-a-valid-carID)."
+      description: >-
+        Return alloy with search criteria
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: Return alloy with search criteria
+          schema:
+            $ref: '#/definitions/searchResponse'
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+  /profiSearch:
+    get:
+      summary: /profiSearch
+      parameters:
+        - in: query
+          name: search
+          type: string
+          description: "search for alloys using some matchcode-like text, e.g. 'A165114.3 ET38'"
+        - in: query
+          name: width
+          type: number
+          description: "width, e.g. '7.5'"
+        - in: query
+          name: diameter
+          type: integer
+          description: "diameter, e.g. '17'"
+        - in: query
+          name: et
+          type: integer
+          description: "rim offset, e.g. '35'"
+        - in: query
+          name: holes
+          type: integer
+          description: "rim attachment holes, e.g. '5'"
+        - in: query
+          name: holeCircle
+          type: integer
+          description: "rim attachment hole circle, e.g. '112'"
+        - in: query
+          name: centerHole
+          type: number
+          description: "rim attachment center hole, e.g. '72.6'"
+        - in: query
+          name: manufacturer
+          type: string
+          description: "rim manufacturer"
+        - in: query
+          name: alloyType
+          type: string
+          description: "alloy type"
+        - in: query
+          name: minStock
+          type: integer
+          description: "default is '4'"
+        - in: query
+          name: ownStock
+          type: boolean
+          description: "only search for own stock"
+        - in: query
+          name: winterfit
+          type: integer
+          description: "only search for winterfit (possible values '0' or '1')"
+      description: >-
+        Return alloys matching profiSearch criterias
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: Return alloys matching profiSearch criterias
+          schema:
+            $ref: '#/definitions/profiSearchResponse'
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+  /order:
+    get:
+      summary: /order
+      parameters:
+        - in: query
+          name: itemId
+          type: string
+          required: true
+          description: "id of a item"
+        - in: query
+          name: quantity
+          type: integer
+          required: true
+          description: "quantity"
+        - in: query
+          name: productSpecificParams[et]
+          type: integer
+          required: true
+          description: "product specific params et"
+        - in: query
+          name: productSpecificParams[fid]
+          type: string
+          required: true
+          description: "product specific params fid"
+        - in: query
+          name: productSpecificParams[inspectionTextVehicleBrand]
+          type: string
+          required: false
+          description: >-
+            Product specific params car brand. Required if fid is not set!
+            In an alloy rim order or an offer request additional information must be specified.
+            For an alloy rim, the data for the offset 'et' and the vehicle-id 'fid' must be entered.
+            If no fid is available you can set the vehicle information type (inspectionTextVehicleBrand) and
+            design / kW (inspectionTextVehicleTyp) optionally, when the client
+            is sure that the product fits on the car. Otherwise, when the Seller
+            has to check you have to add vehicle key number
+            inspectionTextVehicleKey1 (4 chars) and inspectionTextVehicleKey2
+            (6-8 chars).
+        - in: query
+          name: productSpecificParams[inspectionTextVehicleTyp]
+          type: string
+          required: false
+          description: "product specific params car type. Required if fid is not set"
+        - in: query
+          name: shippingMethodIds
+          type: integer
+          required: false
+          description: "Comma separated list of shipping method Id’s, you also can give only one Id. If the field is left blank, standard shipping is used.; 1 standard shipping;2 pickup;3 express - tomorrow (truck);4 express - today (truck); 5 express - tomorrow (package); 6 express - today (package)"
+        - in: query
+          name: shippingName
+          type: string
+          required: false
+          description: "shipping name. (Required if one shipping parameter is set)"
+        - in: query
+          name: shippingAddress
+          type: string
+          required: false
+          description: "shipping adress. (Required if one shipping parameter is set)"
+        - in: query
+          name: shippingPostcode
+          type: integer
+          required: false
+          description: "shipping postcode. (Required if one shipping parameter is set)"
+        - in: query
+          name: shippingCity
+          type: string
+          required: false
+          description: "shipping city. (Required if one shipping parameter is set)"
+        - in: query
+          name: shippingPhone
+          type: integer
+          required: false
+          description: "shipping phone number. (Required if one shipping parameter is set)"
+        - in: query
+          name: shippingAdditional
+          type: integer
+          required: false
+          description: "shipping additional. (Required if one shipping parameter is set)"
+      description: >-
+        Order alloy.
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: Offered alloy for order
+          schema:
+            $ref: '#/definitions/offerType'
+        '400':
+          description: >-
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+               <tr>
+                  <td style="padding-left: 5px; font-style: normal;"><p>ERR_EXTERNAL_SYSTEM_ADDRESS</p></td>
+                  <td style="padding-left: 5px;"><p>Error while checking the delivery address.</p></td>
+              </tr>
+            </table>
+        403:
+          description: >-
+            Trigger an order based on the given article (normally after performing an GET order request).
+            If the order was successful the number of the order will be returned, otherwise 0.
+            <br /><br/>
+            Following error codes are available and may be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+             <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_ALTERNATIVE_OFFER_FOUND_wholesalerList</p></td>
+                <td style="padding-left: 5px;"><p>alternative offer is found when filter wholesalerList is deactivated</p></td>
+              </tr>
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_NAME</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the name</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_STREET</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the street</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_ZIP</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the zip</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_SHIPPING_ADDRESS_CITY</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the city</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_INVALID_SHIPPING_NEUTRAL</p></td>
+                <td style="padding-left: 5px;"><p>you're trying to pass a different shipping address and forgot to add the neutral</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MANDATE_NOT_ACCEPTED</p></td>
+                <td style="padding-left: 5px;"><p>the wholesaler mandate has an invalid state in the database (accepted = 0)</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_SEPA_NOT_ACCEPTED</p></td>
+                <td style="padding-left: 5px;"><p>can only occur in poland when direct debit is chosen as payment method and there's no mandate existing between the distributor and retailer</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_PAYMENT_NOT_SUPPORTED</p></td>
+                <td style="padding-left: 5px;"><p>you passed a payment mehtod which is not supported by the distributor</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_NO_MATCHING_PAYMENT</p></td>
+                <td style="padding-left: 5px;"><p>retailer and distributor have no matching payments</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_USER_ORDER_FORBIDDEN</p></td>
+                <td style="padding-left: 5px;"><p>retailer has no permission to perform an order, which can be caused by using the wrong platform</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_USER_NO_PRIVILEDGE</p></td>
+                <td style="padding-left: 5px;"><p>retailer has no permission to perform an order because of his status</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_INVALID_QUANTITY</p></td>
+                <td style="padding-left: 5px;"><p>you passed an invalid quantity value</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_QUANTITY_MAX_20</p></td>
+                <td style="padding-left: 5px;"><p>you're only allowed to order 20 tyres at once</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_ITEM_NOT_FOUND</p></td>
+                <td style="padding-left: 5px;"><p>the item could not be found</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_SWIFT_BIC</p></td>
+                <td style="padding-left: 5px;"><p>the retailer has no swift/bic</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_NO_USTID</p></td>
+                <td style="padding-left: 5px;"><p>the retailer has no "Umsatzsteuer-Id"</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_REFERENCENUMBER</p></td>
+                <td style="padding-left: 5px;"><p>you forgot to pass a reference number which may be required by some cooperations, e.g. KAGUMA</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_INVALID_SHIPPING_METHOD</p></td>
+                <td style="padding-left: 5px;"><p>you passed an invalid shipping method</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_ITEM_ID</p></td>
+                <td style="padding-left: 5px;"><p>the item id is missing either in the request or in the database result</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_MIN_QUANTITY</p></td>
+                <td style="padding-left: 5px;"><p>quantity is missing</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_DISTRIBUTOR_ID</p></td>
+                <td style="padding-left: 5px;"><p>distriutor id is missing</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_MISSING_MANDATORY_PARAMETER</p></td>
+                <td style="padding-left: 5px;"><p>a mandatory param is missing</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_INTERNAL_SERVER_ERROR</p></td>
+                <td style="padding-left: 5px;"><p>an internal server error occured, you may provide this information to the tyre24 team with the exact request you made including the body</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_ORDER_NOT_VALID</p></td>
+                <td style="padding-left: 5px;"><p>the order could not be performed, see the meta key for more information</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_NO_OFFER_FOUND</p></td>
+                <td style="padding-left: 5px;"><p>offer could not be retrieved from the database, this may be because the distributor is no longer offering this item or does not have the required amount</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_OFFER_PRICE_MISMATCH</p></td>
+                <td style="padding-left: 5px;"><p>the price changed</p></td>
+              </tr>
+
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_WHOLESALER_MISMATCH</p></td>
+                <td style="padding-left: 5px;"><p>the given wholesaler id does not match the wholesaler id in the database result</p></td>
+              </tr>
+            </table>
+            <br /><br />
+            There are some examples below, but keep in mind there are many more cases, which is too much work to list them all.
+             <br /><br />
+            The access to this endpoint is restricted for your user
+            <br />
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+    post:
+      summary: /order
+      parameters:
+        - in: query
+          name: itemId
+          type: string
+          required: true
+          description: "id of a item"
+        - in: query
+          name: quantity
+          type: integer
+          required: true
+          description: "quantity"
+        - in: query
+          name: productSpecificParams[et]
+          type: integer
+          required: true
+          description: "product specific params et"
+        - in: query
+          name: productSpecificParams[fid]
+          type: string
+          required: true
+          description: "product specific params fid"
+        - in: query
+          name: productSpecificParams[inspectionTextVehicleBrand]
+          type: string
+          required: false
+          description: >-
+            Product specific params car brand. Required if fid is not set!
+            In an alloy rim order or an offer request additional information must be specified.
+            For an alloy rim, the data for the offset 'et' and the vehicle-id 'fid' must be entered.
+            If no fid is available you can set the vehicle information type (inspectionTextVehicleBrand) and
+            design / kW (inspectionTextVehicleTyp) optionally, when the client
+            is sure that the product fits on the car. Otherwise, when the Seller
+            has to check you have to add vehicle key number
+            inspectionTextVehicleKey1 (4 chars) and inspectionTextVehicleKey2
+            (6-8 chars).
+        - in: query
+          name: productSpecificParams[inspectionTextVehicleTyp]
+          type: string
+          required: false
+          description: "product specific params car type. Required if fid is not set"
+        - in: query
+          name: shippingName
+          type: string
+          required: false
+          description: "shipping name. (Required if one shipping parameter is set)"
+        - in: query
+          name: shippingAddress
+          type: string
+          required: false
+          description: "shipping adress. (Required if one shipping parameter is set)"
+        - in: query
+          name: shippingPostcode
+          type: integer
+          required: false
+          description: "shipping postcode. (Required if one shipping parameter is set)"
+        - in: query
+          name: shippingCity
+          type: string
+          required: false
+          description: "shipping city. (Required if one shipping parameter is set)"
+        - in: query
+          name: shippingPhone
+          type: integer
+          required: false
+          description: "shipping phone number. (Required if one shipping parameter is set)"
+        - in: query
+          name: shippingAdditional
+          type: integer
+          required: false
+          description: "shipping additional. (Required if one shipping parameter is set)"
+        - in: query
+          name: couponCode
+          required: false
+          description: >-
+            optional coupon code with format XXX-XXX-XXX-XXX
+          type: string
+        - in: body
+          name: offerType
+          schema:
+            $ref: '#/definitions/offerType'
+          required: true
+          description: >-
+            You have to insert the response data of [GET] order, append quantity
+            and send it in the body of your POST request (you have to use JSON)
+      description: >-
+        Order alloy.
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: Order Status
+          schema:
+            $ref: '#/definitions/orderStatus'
+        '400':
+          description: >-
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+               <tr>
+                  <td style="padding-left: 5px; font-style: normal;"><p>ERR_EXTERNAL_SYSTEM_ADDRESS</p></td>
+                  <td style="padding-left: 5px;"><p>Error while checking the delivery address.</p></td>
+              </tr>
+            </table>
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+          examples:
+            Success:
+              orderId: "123456789"
+              status: true
+              type: "A"
+            With Coupon:
+              orderId: "123456789"
+              status: true
+              type: "A"
+              coupon:
+                - success: true
+                  errorMessages: []
+            With Coupon Failure:
+              orderId: "123456789"
+              status: true
+              type: "A"
+              coupon:
+                - success: false
+                  errorMessages:
+                    - NO_VALID_COUPON_AVAILABLE
+  /distributorList:
+    get:
+      summary: /distributorList
+      parameters:
+        - in: query
+          name: itemID
+          type: string
+          required: true
+          description: "id of item"
+        - in: query
+          name: postcode
+          type: string
+          required: false
+          description: postalcode for alternative delivery address
+      description: >-
+        Return a list of information about distributor.
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/distributor'
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+  /distributorProfile:
+    get:
+      summary: /distributorProfile
+      parameters:
+        - in: query
+          name: distributorId
+          type: integer
+          required: true
+          description: "id of the distributor"
+        - in: query
+          name: distributorType
+          type: integer
+          required: true
+          description: "type of distributor"
+      description: Return distributor profile data
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/distributorProfile'
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+  /rimMatchingAlloyRims:
+    get:
+      summary: /rimMatchingAlloyRims
+      parameters:
+        - in: query
+          name: carID
+          type: integer
+          required: true
+          description: "id of the car"
+        - in: query
+          name: threedCarID
+          type: integer
+          required: false
+          description: "The identifier of the 3D car. Required to retrieve 3D car information."
+      description: Return list of alloy fit on requested car.
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/alloyRimsList'
+        403:
+          description: >-
+            The access to this endpoint is restricted for your user
+            <br /><br/>
+            The following error code will be returned:
+
+            <table style="width: 100%; margin: 10px;" border="1" bordercolor="gray">
+              <tr>
+                <td style="padding-left: 5px; font-style: normal;"><p>ERR_RESTRICTED_ACCESS</p></td>
+                <td style="padding-left: 5px;"><p>The access to this endpoint is not allowed for your user</p></td>
+              </tr>
+            </table>
+
+definitions:
+  distributorProfile:
+    type: object
+    required:
+      - country
+      - countryCode
+      - name
+      - images
+      - description
+      - street
+      - city
+      - orderTerms
+      - deliveryTerms
+    properties:
+      country:
+        type: string
+        description: "country of the distributor"
+      countryCode:
+        type: string
+        description: "2-letter ISO code of the distributors country"
+      name:
+        type: string
+        description: "The name of the distributor"
+      images:
+        type: array
+        items:
+          $ref: '#/definitions/imageUrl'
+      description:
+        type: string
+        description: "A description of the distributor"
+      street:
+        type: string
+        description: "street of the distributor"
+      city:
+        type: string
+        description: "city of the distributor"
+      orderTerms:
+        type: string
+        description: "order terms of the distributor"
+      deliveryTerms:
+        type: string
+        description: "delivery terms of the distributor"
+  distributor:
+    type: object
+    required:
+      - distributorId
+      - distributorType
+      - hasProfile
+      - dataList
+      - country
+      - countryCode
+      - name
+      - priceList
+      - orderTerms
+      - neutralShippingCosts
+      - positiveRating
+      - supplierLikeStatus
+    properties:
+      distributorId:
+        type: integer
+        description: The internal id of the distributor
+      distributorType:
+        type: integer
+      hasProfile:
+        type: boolean
+      dataList:
+        type: array
+        description: >-
+          Contains distributor specific values of matching and supported data. see <a href="https://alzura-ag.atlassian.net/wiki/spaces/AI/pages/1676935169/Alloy+Distributor+List+-+Possible+Datalist+Values" target="_blank">Full list of possible values here</a>
+        items:
+          $ref: '#/definitions/distributorData'
+      country:
+        type: string
+        description: The name of the country e.g. Deutschland
+      countryCode:
+        type: string
+        description: The 2-letter country iso-code e.g. de
+      name:
+        type: string
+        description: The name of the distributor
+      stock:
+        type: integer
+        description: The stock of the distributor
+      priceList:
+        type: array
+        items:
+          $ref: '#/definitions/priceListValue'
+      orderTerms:
+        type: string
+      deliveryTerms:
+        type: string
+      neutralShippingCosts:
+        type: number
+        format: float
+        description: "delivery costs for different shipping address or neutral shipping"
+      shippingCosts:
+        type: array
+        items:
+          $ref: '#/definitions/shippingCosts'
+      in_range:
+        type: string
+      pickup_date:
+        type: string
+      pickup_possible:
+        type: integer
+      pickup_preparation_time:
+        type: string
+      is_premium_supplier:
+        type: string
+      positiveRating:
+        type: integer
+      supplierLikeStatus:
+        type: string
+        enum: [positive, negative, neutral]
+        default: neutral
+        description: "Dealer's personal rating for this supplier"
+  distributorData:
+    type: object
+    properties:
+      name:
+        type: string
+      supported:
+        type: boolean
+      matching:
+        type: boolean
+  priceListValue:
+    type: object
+    required:
+      - value
+      - country_code
+      - type
+      - currency
+    properties:
+      id:
+        type: string
+        description: a unique identifier, can be ignored
+        example: 18
+      value:
+        type: string
+        format: float
+        description: "The price itself."
+        example: "77.75"
+      country_code:
+        type: string
+        description: 2-letter iso-code e.g. de
+        example: "de"
+      currency:
+        type: string
+        description: 3-letter iso currency code e.g. EUR
+        example: "EUR"
+      type:
+        type: string
+        description: |
+          The type of the price. Possible values are:
+          * evp_list_[1-5|99]
+          * rear_evp_list_[1-5|99]
+          * set_evp_list_[1-5|99]
+          * ek_front
+          * ek_rear
+          * ek_set
+          
+          The abbreviation `evp` is the German term `empfohlener Verkauspreis` which is the `recommended retail price`.
+          The price lists configuration `evp_list_[1-5|99]`, `rear_evp_list_[1-5|99]`, and `set_evp_list_[1-5|99]` can be configured in your price [calculation](https://tyre24.alzura.com/de/de/user/masterdata/edit/calculation)
+          The abbreviation `ek` is the German term `Einkaufpreis` which is the `purchase price`.
+        example: "evp_list_3"
+      min_order:
+        type: integer
+        description: The minimum quantity you have to order to get the mentioned price.
+  shippingCosts:
+    type: object
+    description: "available shipping types"
+    properties:
+      shipping_standard:
+        $ref: '#/definitions/ShippingCostsItem'
+      pickup:
+        $ref: '#/definitions/ShippingCostsItem'
+      shipping_truck:
+        $ref: '#/definitions/ShippingCostsItem'
+      shipping_truck_fast:
+        $ref: '#/definitions/ShippingCostsItem'
+      shipping_spedition:
+        $ref: '#/definitions/ShippingCostsItem'
+      shipping_spedition_fast:
+        $ref: '#/definitions/ShippingCostsItem'
+  ShippingCostsItem:
+    type: object
+    required:
+      - price
+      - estimatedDelivery
+    properties:
+      price:
+        type: number
+        format: float
+        example: 2.21
+      estimatedDelivery:
+        type: string
+        example: '2018-10-22'
+  Sorter:
+    type: object
+    required:
+      - sorterId
+      - sorterName
+    properties:
+      sorterId:
+        type: string
+        description: 'The id of the sorter (e.g.: ts | pa | pd | kb | mf | tl1 | tl2)'
+      sorterName:
+        type: string
+        description: >-
+          The translated text of the sorter to view in a frontend (e.g.
+          Topseller | Preis: niedrigste Preise zuerst | Preis: höchste Preise
+          zuerst | ... )
+  Filter:
+    type: object
+    required:
+      - filterId
+      - filterName
+      - filterValueList
+      - multipleChoice
+    properties:
+      filterId:
+        type: string
+        description: 'The id of the Filter (e.g.: 6)'
+      filterName:
+        type: string
+        description: 'The internal name of the Filter (e.g.: express_delivery)'
+      filterValueList:
+        type: array
+        items:
+          $ref: '#/definitions/FilterValue'
+      multipleChoice:
+        type: boolean
+  FilterValue:
+    type: object
+    required:
+      - valueId
+      - amount
+    properties:
+      description:
+        type: string
+        description: >-
+          The translated description of the value to show in a Frontend (e.g.:
+          Alle | Express Heute | Express Morgen)
+      valueId:
+        type: string
+        description: The value of the vilter (e.g. all | today | tomorrow)
+      amount:
+        type: integer
+        description: The amount how many results match this filter
+  orderStatus:
+    type: object
+    required:
+      - orderId
+      - orderStatus
+      - type
+    properties:
+      orderId:
+        type: string
+      orderStatus:
+        type: boolean
+      type:
+        type: string
+      estimatedDelivery:
+        type: string
+        example: '2018-10-18'
+  offerType:
+    type: object
+    properties:
+      offerType:
+        $ref: '#/definitions/offer'
+  offer:
+    type: object
+    required:
+      - itemId
+      - price
+      - wholesalerId
+      - shippingMethodId
+      - paymentMethodId
+    properties:
+      itemId:
+        type: string
+        description: The id of the offered item
+      price:
+        type: number
+        format: float
+        description: The price of the offer as float value
+      wholesalerId:
+        type: integer
+        description: The id of the wholesaler
+      shippingMethodId:
+        type: integer
+        description: >-
+          The shipping method id. 1 standard shipping; 2  pickup; 3 express -
+          tomorrow (truck); 4 express - today (truck); 5  express - tomorrow
+          (package); 6 express - today (package)
+      paymentMethodId:
+        type: integer
+        description: >-
+          Comma separated list of payment methods-Id's, you also can give only
+          one id . If the field is left blank, all payment method are
+          considered. 1  SEPA direct debit; 2  advance payment; 3  cash on
+          delivery; 5 open payment; 7 invoice (payable within 8 days); 8  open
+          payment (SEPA) - used for marketplace orders
+      estimatedDelivery:
+        type: string
+        example: '2018-10-22'
+  searchResponse:
+    type: object
+    properties:
+      alloyRimsList:
+        type: array
+        items:
+          $ref: '#/definitions/alloyRimsListEntry'
+      filterList:
+        type: array
+        items:
+          $ref: '#/definitions/Filter'
+      count:
+        type: integer
+        description: result count
+  profiSearchResponse:
+    type: object
+    properties:
+      alloyRimsList:
+        $ref: '#/definitions/alloyRimsListProfi'
+      count:
+        type: integer
+        description: result count
+  alloyRimsListProfi:
+    type: array
+    items:
+      $ref: '#/definitions/alloyRimsListEntryProfi'
+  alloyRimsListEntryProfi:
+    type: object
+    properties:
+      alloyRimFrontID:
+        type: integer
+        description: "The article front rim id"
+      alloyRimFrontStock:
+        type: integer
+        description: "The article front stock"
+      alloyRimFrontDescription:
+        type: string
+        description: "Article description of the front rim"
+      alloyRimFrontWidth:
+        type: string
+        description: "The article front width"
+      alloyRimFrontDiameter:
+        type: integer
+        description: "The article front diameter"
+      alloyRimFrontOffset:
+        type: integer
+        description: "The article front offset"
+      alloyRimFrontOffsetFrom:
+        type: integer
+        description: "The article front offset from"
+      alloyRimFrontOffsetTo:
+        type: integer
+        description: "The article front offset to"
+      alloyRimFrontWinterUsage:
+        type: boolean
+        description: "Is article fit for winter usage"
+      manufacturer:
+        type: string
+        description: "Name of the manufacturer"
+      type:
+        type: string
+        description: "The article type"
+      typeName:
+        type: string
+        description: "The article type name"
+      typeColor:
+        type: string
+        description: "Article color"
+      typeConstruction:
+        type: string
+        description: "The article type construction"
+      alloyTypeID:
+        type: integer
+        description: "The alloy type id"
+      alloyFilterTypeID:
+        type: integer
+        description: "The alloy filter type id"
+      carInfoList:
+        type: array
+        items:
+          type: object
+          properties:
+            carID:
+              type: integer
+            brand:
+              type: string
+            type:
+              type: string
+      imageURL:
+        type: array
+        items:
+          $ref: '#/definitions/imageUrl'
+      priceList:
+        type: array
+        items:
+          $ref: "#/definitions/priceListValue"
+        description: "The existing price lists for this tyre"
+  alloyRimsList:
+    type: object
+    properties:
+      alloyRimsList:
+        type: array
+        items:
+          $ref: '#/definitions/alloyRimsListEntry'
+  alloyRimsListEntry:
+    type: object
+    required:
+      - alloyRimFrontID
+      - alloyRimRearID
+      - threed
+      - priceList
+    properties:
+      alloyRimFrontID:
+        type: integer
+        description: "The unique identifier of the alloy front wheel."
+        example: 152801
+      alloyRimFrontStock:
+        type: integer
+        description: "The article front stock"
+      alloyRimFrontDescription:
+        type: string
+        description: "Article description of the front rim"
+      alloyRimFrontWidth:
+        type: string
+        description: "The article front width"
+      alloyRimFrontDiameter:
+        type: integer
+        description: "The article front diameter"
+      alloyRimFrontOffset:
+        type: integer
+        description: "The article front offset"
+      alloyRimFrontOffsetFrom:
+        type: integer
+        description: "The article front offset from"
+      alloyRimFrontOffsetTo:
+        type: integer
+        description: "The article front offset to"
+      alloyRimFrontWinterUsage:
+        type: boolean
+        description: "Is article fit for winter usage"
+      alloyRimRearID:
+        type: integer
+        description: |
+          The unique identifier of the alloy rear wheel.
+          If the value eq. `0` the rear alloy is the same as the front alloy for the requested car.
+        example: 0
+      alloyRimRearStock:
+        type: integer
+        description: "The article rear stock"
+      alloyRimRearDescription:
+        type: string
+        description: "Article description of the rear rim"
+      alloyRimRearWidth:
+        type: string
+        description: "The article rear width"
+      alloyRimRearDiameter:
+        type: integer
+        description: "The article rear diameter"
+      alloyRimRearOffset:
+        type: integer
+        description: "The article rear offset"
+      alloyRimRearOffsetFrom:
+        type: integer
+        description: "The article rear offset from"
+      alloyRimRearOffsetTo:
+        type: integer
+        description: "The article rear offset to"
+      alloyRimRearWinterUsage:
+        type: string
+        description: "Is article fit for winter usage"
+      manufacturer:
+        type: string
+        description: "Name of the manufacturer"
+        example: "AUTEC"
+      manufacturerDescription:
+        type: string
+        description: "A textual description of the manufacturer"
+        example: |
+          AUTEC Leichtmetallräder ist ein führender deutscher Hersteller von hochwertigen Aluminiumfelgen ...
+      type:
+        type: string
+        description: "A more detailed name of the alloy wheel which identifies the type."
+        example: "LAMERA (L) Schwarz Matt Poliert Einteilig"
+      typeName:
+        type: string
+        description: "The article type name"
+        example: "LAMERA (L)"
+      typeColor:
+        type: string
+        description: "Article color"
+        example: "Schwarz Matt Poliert"
+      typeConstruction:
+        type: string
+        description: "The article type construction"
+      axlePositionType:
+        type: string
+        description: "The axle position type."
+        example: VUH
+      alloyTypeID:
+        type: integer
+        description: "The alloy type id"
+      alloyFilterTypeID:
+        type: integer
+        description: "The alloy filter type id"
+      alloyXrefID:
+        type: integer
+        description: "The alloy xref id"
+      threedCarInformation:
+        type: array
+        items:
+          $ref: '#/definitions/threedCarInformation'
+      imageURL:
+        type: array
+        items:
+          $ref: '#/definitions/imageUrl'
+      threed:
+        type: boolean
+        description: "`true` if the alloy wheel supports 3D images, otherwise `false`."
+        example: true
+      groupedByDesign:
+        type: boolean
+        description: "Group the result by design"
+      groupedByPrice:
+        type: boolean
+        description: "Group the result by price"
+      priceList:
+        type: array
+        items:
+          $ref: "#/definitions/priceListValue"
+        description: "The existing price lists for this tyre"
+  threedCarInformation:
+    type: object
+    properties:
+      widthFront:
+        type: string
+        description: "Width of the front alloy wheel in inch."
+        example: "7.50"
+      widthRear:
+        type: string
+        description: "Width of the rear alloy wheel in inch."
+        example: "7.50"
+      diameter:
+        type: string
+        description: "Diameter of the alloy wheel in inch."
+        example: "17"
+      rimIdFront:
+        type: string
+        description: "Unique identifier of the front alloy wheel."
+        example: "1711"
+      rimIdRear:
+        type: string
+        description: "Unique identifier of the rear alloy wheel."
+        example: "1711"
+      offsetFront:
+        type: string
+        description: "Offset value of the front alloy wheel. Measured in mm"
+        example: "30"
+      offsetRear:
+        type: string
+        description: "Offest alue of the rear alloay wheel. Measured in mm"
+        example: "30"
+  alloyRimCarBrandsList:
+    type: object
+    properties:
+      alloyRimCarBrandsList:
+        type: array
+        items:
+          $ref: '#/definitions/alloyRimCarBrandsListEntry'
+  alloyRimCarBrandsListEntry:
+    type: object
+    required:
+      - brandID
+      - brand
+      - threed
+    properties:
+      brandID:
+        type: integer
+        description: "The identifier of the brand"
+        example: 22
+      brand:
+        type: string
+        description: "The name of the brand"
+        example: "BMW"
+      threed:
+        type: boolean
+        description: "`true` if the brand supports 3D images, otherwise `false`"
+        example: true
+  alloyRimCarModelsList:
+    type: object
+    properties:
+      alloyRimCarModelsList:
+        type: array
+        items:
+          $ref: '#/definitions/alloyRimCarModelsListEntry'
+  alloyRimCarModelsListEntry:
+    type: object
+    required:
+      - modelID
+      - model
+      - threed
+    properties:
+      modelID:
+        type: integer
+        description: "Identifier for the car model"
+        example: 666
+      model:
+        type: string
+        description: "Name of the car model"
+        example: "6er Reihe"
+      threed:
+        type: boolean
+        description: "`true` if the car model supports 3D images, otherweise `false`"
+        example: true
+  alloyRimCarTypesList:
+    type: object
+    properties:
+      alloyRimCarTypesList:
+        type: array
+        items:
+          $ref: '#/definitions/alloyRimCarTypesListEntry'
+  alloyRimCarTypesListEntry:
+    type: object
+    required:
+      - carID
+      - carType
+      - carTypeDesc
+      - colors
+    properties:
+      carID:
+        type: integer
+        description: "The identifier of the car"
+        example: 3231
+      carType:
+        type: string
+        description: "The car type"
+        example: "G6GT"
+      carTypeDesc:
+        type: string
+        description: "The car type description"
+        example: "G32"
+      carComment:
+        type: string
+        description: "Car comment"
+        example: "Gran Turismo"
+      holeNumber:
+        type: integer
+        description: "The hole number of the car"
+      holeCircle:
+        type: string
+        description: "The hole circle of the car"
+      hubHole:
+        type: string
+        description: "The hub hole of the car"
+      permitNumber:
+        type: string
+        description: "The permit Number of the car"
+      carPic:
+        type: string
+        description: "The url of the car picture"
+      threed:
+        type: boolean
+        description: "`true` if car types supports 3D images, otherwise `false`"
+      threedCarID:
+        type: integer
+        description: "The identifier of the 3D car. Has a valid integer in case `threed` eq. `true`."
+      colors:
+        $ref: '#/definitions/colors'
+      additionalThreedData:
+        type: array
+        items:
+          $ref: '#/definitions/additionalThreedData'
+      tyrePressureMonitoringSystems:
+        type: array
+        items:
+          $ref: '#/definitions/tyrePressureMonitoringSystemsEntry'
+      manufactureYearFrom:
+        type: string
+        description: "Start of the production year of the car."
+      manufactureYearTo:
+        type: string
+        description: "End of the production year of the car."
+  tyrePressureMonitoringSystemsEntry:
+    type: object
+    properties:
+      oen:
+        type: string
+        description: "The vehicle type oen number"
+  colors:
+    type: object
+    properties:
+      color:
+        type: array
+        items:
+          $ref: '#/definitions/color'
+      defaultColor:
+        type: array
+        items:
+          $ref: '#/definitions/color'
+  color:
+    type: object
+    required:
+      - id
+      - desc
+    properties:
+      id:
+        type: integer
+        description: "The identifier of the color"
+        example: 5020
+      t24MaterialId:
+        type: string
+        description: "The identifier of the color used for 3D images. (Internally also called as Tyre24 material id)"
+        example: 302
+      desc:
+        type: string
+        description: "The color name"
+        example: "Piemont Rot Metallic"
+      image:
+        type: array
+        items:
+          $ref: '#/definitions/imageUrl'
+  additionalThreedData:
+    type: object
+    properties:
+      brakeId:
+        type: string
+        description: "The identifier of the brake"
+      axleDistance:
+        type: string
+        description: "The distance of the axle"
+      tyreDistanceFront:
+        type: string
+        description: "The front tyre distance"
+      tyreDistanceRear:
+        type: string
+        description: "The rear tyre distance"
+      tyreRadius:
+        type: string
+        description: "The tyre radius"
+      platesId:
+        type: string
+        description: "The identifier of the plates"
+      brakesId:
+        type: string
+        description: "The identifier of the brakes"
+  alloyDetailsList:
+    type: object
+    properties:
+      alloyRimFrontHoleNumber:
+        type: integer
+        description: "Alloy/Rim front hole number"
+      alloyRimFrontHoleCircle:
+        type: integer
+        description: "Alloy/Rim front hole circle"
+      alloyRimFrontHubHole:
+        type: string
+        description: "Alloy/Rim front hole"
+      alloyRimFrontHubHoleType:
+        type: integer
+        description: "Alloy/Rim front hub hole type"
+      alloyRimRearHoleNumber:
+        type: integer
+        description: "Alloy/Rim rear hole number"
+      alloyRimRearHoleCircle:
+        type: integer
+        description: "Alloy/Rim rear hole circle"
+      alloyRimRearHubHole:
+        type: string
+        description: "Alloy/Rim rear hole"
+      alloyRimRearHubHoleType:
+        type: integer
+        description: "Alloy/Rim rear hub hole type"
+      technicalReports:
+        type: array
+        items:
+          $ref: '#/definitions/technicalReports'
+      technicalReportsAdditional:
+        type: array
+        items:
+          $ref: '#/definitions/technicalReports'
+      wholesalerArticleNo:
+        type: string
+        description: "The wholesaler article number"
+      expressData:
+        type: array
+        items:
+          $ref: '#/definitions/expressData'
+      tyreMaterialId:
+        type: integer
+        description: "The tyre material id"
+      tyreSizeType:
+        type: integer
+        description: "The tyre size type"
+      alloyRimFrontOwnStock:
+        type: "null"
+        description: "always null"
+      alloyRimRearOwnStock:
+        type: "null"
+        description: "always null"
+      alloyRimFrontWholesalerArticleNo:
+        type: "null"
+        description: "always null"
+      alloyRimRearWholesalerArticleNo:
+        type: "null"
+        description: "always null"
+      alloyRimFrontEAN:
+        type: string
+        description: "EAN number of the front alloy/rim"
+      alloyRimRearEAN:
+        type: string
+        description: "EAN number of the rear alloy/rim"
+      alloyRimFrontIdent:
+        type: string
+        description: "Alloy/Rim front ident"
+      alloyRimRearIdent:
+        type: string
+        description: "Alloy/Rim rear ident"
+      alloyRimFrontID:
+        type: integer
+        description: "Alloy/Rim front id"
+      alloyRimFrontStock:
+        type: integer
+        description: "Alloy/Rim front stock"
+      alloyRimFrontDescription:
+        type: string
+        description: "Alloy/Rim front description"
+      alloyRimFrontWidth:
+        type: string
+        description: "Alloy/Rim front width"
+      alloyRimFrontDiameter:
+        type: integer
+        description: "Alloy/Rim front diameter"
+      alloyRimFrontOffset:
+        type: integer
+        description: "Alloy/Rim front offset"
+      alloyRimFrontOffsetFrom:
+        type: integer
+        description: "Alloy/Rim front offset from"
+      alloyRimFrontOffsetTo:
+        type: integer
+        description: "Alloy/Rim front offset to"
+      alloyRimFrontWinterUsage:
+        type: boolean
+        description: "Is alloy/rim front fit for winter"
+      alloyRimRearID:
+        type: integer
+        description: "Alloy/Rim rear id"
+      alloyRimRearStock:
+        type: integer
+        description: "Alloy/Rim rear stock"
+      alloyRimRearDescription:
+        type: string
+        description: "Alloy/Rim rear description"
+      alloyRimRearWidth:
+        type: string
+        description: "Alloy/Rim rear width"
+      alloyRimRearDiameter:
+        type: integer
+        description: "Alloy/Rim rear diameter"
+      alloyRimRearOffset:
+        type: integer
+        description: "Alloy/Rim rear offset"
+      alloyRimRearOffsetFrom:
+        type: integer
+        description: "Alloy/Rim rear offset from"
+      alloyRimRearOffsetTo:
+        type: integer
+        description: "Alloy/Rim rear offset to"
+      alloyRimRearWinterUsage:
+        type: boolean
+        description: "Is alloy/rim rear fit for winter"
+      manufacturer:
+        type: string
+        description: "Manufacturer name"
+      type:
+        type: string
+        description: "Type description"
+      typeName:
+        type: string
+        description: "Name of type"
+      typeColor:
+        type: string
+        description: "Color of type"
+      typeConstruction:
+        type: string
+        description: "Construction type"
+      axlePositionType:
+        type: string
+        description: "Axle position type"
+      alloyTypeID:
+        type: integer
+        description: "Alloy type id"
+      alloyFilterTypeID:
+        type: integer
+        description: "Alloy filter type id"
+      alloyXrefID:
+        type: integer
+        description: "Alloy xref id"
+      threedCarInformation:
+        type: array
+        items:
+          $ref: '#/definitions/threedCarInformation'
+      imageUrl:
+        type: array
+        items:
+          $ref: '#/definitions/imageUrl'
+      threed:
+        type: "null"
+        description: "always null"
+      groupedByDesign:
+        type: "null"
+        description: "always null"
+      groupedByPrice:
+        type: "null"
+        description: "always null"
+      priceList:
+        type: array
+        items:
+          $ref: '#/definitions/priceListValue'
+  technicalReports:
+    type: object
+    properties:
+      type_description:
+        type: string
+        description: "Type/Description of technical report"
+      url:
+        type: string
+        description: "URL of technical report"
+      report_type:
+        type: integer
+        description: "Report type of technical report"
+      report_nr:
+        type: string
+        description: "Report number of technical report"
+      tuev:
+        type: integer
+        description: "Tuev number of technical report"
+      creation_date:
+        type: string
+        description: "Creation date of technical report"
+      from_date:
+        type: string
+        description: "From date of technical report"
+      to_date:
+        type: string
+        description: "To date of technical report"
+      orderReportPossible:
+        type: boolean
+        description: "Is possible to order report"
+      matchType:
+        type: string
+        description: "Match type of technical report"
+  expressData:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: 'id of express data'
+      deliveryDelay:
+        type: integer
+        description: 'delivary delay'
+      deliveryType:
+        type: array
+        items:
+          $ref: "#/definitions/deliveryType"
+      expressOffer:
+        $ref: '#/definitions/expressOffer'
+  deliveryType:
+    type: object
+    properties:
+      id:
+        type: string
+        description: "id of the delivery type"
+      name:
+        type: string
+        description: "name of delivery type"
+  expressOffer:
+    type: object
+    properties:
+      idSolr:
+        type: string
+      priceExpressList:
+        type: object
+        properties:
+          price:
+            type: array
+            items:
+              $ref: "#/definitions/priceListValue"
+  imageUrl:
+    type: object
+    properties:
+      URL:
+        type: string
+        description: >-
+          An url to the image. Example URL can be `https://media3.tyre-shopping.com/dryd/907/302/1/1/3/1/4/0001-%s-%s.jpg`
+          The URL may contain a placeholder `%s-%s` as shown in the example.
+          You need to replace it, with your preferred resolution of the image. E.x. `w500-h500` (= width 500px and height 500px).
+          The ratio of the original image will be kept if you provide a resolution that doesn't fit the ratio.
+        example: "https://media3.tyre-shopping.com/dryd/907/302/1/1/3/1/4/0001-%s-%s.jpg"
+  images:
+    type: object
+    properties:
+      threedCarImages:
+        $ref: '#/definitions/image'
+      threedAlloyImages:
+        $ref: '#/definitions/image'
+      HDRI:
+        $ref: '#/definitions/image'
+      emoticleImages:
+        $ref: '#/definitions/image'
+      rotaryImages:
+        $ref: '#/definitions/image'
+      alloyImages:
+        $ref: '#/definitions/image'
+  image:
+    type: object
+    properties:
+      image:
+        type: array
+        items:
+          $ref: '#/definitions/imageUrl'
