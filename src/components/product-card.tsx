@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { CaroMark } from "@/components/brand/caro-mark";
+import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents } from "@/lib/format";
 
@@ -33,6 +34,7 @@ export function ProductCard({ part }: { part: Part }) {
         >
           {t(`availability.${part.availability}`)}
         </p>
+        <AddToCartButton part={part} />
       </div>
     </article>
   );

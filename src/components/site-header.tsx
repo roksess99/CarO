@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { CaroLockup } from "@/components/brand/caro-lockup";
+import { CartButton } from "@/components/cart/cart-button";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Link } from "@/i18n/navigation";
@@ -16,6 +17,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-4">
           <LocaleSwitcher />
           <ThemeToggle />
+          <CartButton />
         </div>
       </div>
     </header>
