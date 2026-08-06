@@ -30,7 +30,9 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 - **Framework**: Next.js 16, App Router, TypeScript strict
 - **Styling**: Tailwind CSS v4 met CSS-variabelen uit @docs/BRAND.md
 - **i18n**: next-intl
-- **Thema**: next-themes, class-based
+- **Thema**: class-based dark mode, eigen implementatie (init-script in de
+  layout + `theme-toggle.tsx`). next-themes is verwijderd: verlaten package,
+  gaf een React 19-warning door zijn client-side geïnjecteerde script.
 - **Package manager**: pnpm
 - Later: PostgreSQL + Prisma (fase 4), Mollie (fase 5)
 

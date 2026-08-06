@@ -1,31 +1,79 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
-const emptySubscribe = () => () => {};
+// Eigen thema-logica ter vervanging van next-themes (verlaten package,
+// React 19-warning door zijn geïnjecteerde <script>). Het init-script in
+// [locale]/layout.tsx zet de class al vóór de eerste paint; dit component
+// houdt de class, localStorage en systeemvoorkeur daarna in sync.
+
+const STORAGE_KEY = "theme";
+const THEME_EVENT = "caro-theme";
+
+type Resolved = "light" | "dark";
+
+function subscribe(onChange: () => void) {
+  const mql = window.matchMedia("(prefers-color-scheme: dark)");
+  mql.addEventListener("change", onChange);
+  // "storage" dekt andere tabs; het eigen event dekt deze tab
+  window.addEventListener("storage", onChange);
+  window.addEventListener(THEME_EVENT, onChange);
+  return () => {
+    mql.removeEventListener("change", onChange);
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(THEME_EVENT, onChange);
+  };
+}
+
+function getResolved(): Resolved {
+  const pref = localStorage.getItem(STORAGE_KEY);
+  if (pref === "light" || pref === "dark") {
+    return pref;
+  }
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+}
+
+function applyTheme(resolved: Resolved) {
+  const root = document.documentElement;
+  root.classList.remove("light", "dark");
+  root.classList.add(resolved);
+  root.style.colorScheme = resolved;
+}
 
 export function ThemeToggle() {
   const t = useTranslations("themeToggle");
-  const { resolvedTheme, setTheme } = useTheme();
-  // Voor hydration is het thema onbekend (SSR kent het systeem-thema niet);
-  // server-snapshot false → neutrale knop, voorkomt hydration-mismatch.
-  const mounted = useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false,
+  // Server-snapshot null: vóór hydration is het thema onbekend (SSR kent
+  // localStorage noch systeemvoorkeur); tot die tijd een neutrale knop.
+  const resolved = useSyncExternalStore<Resolved | null>(
+    subscribe,
+    getResolved,
+    () => null,
   );
 
-  const isDark = mounted && resolvedTheme === "dark";
+  useEffect(() => {
+    if (resolved) {
+      applyTheme(resolved);
+    }
+  }, [resolved]);
+
+  const isDark = resolved === "dark";
   const label = isDark ? t("light") : t("dark");
+
+  function toggle() {
+    const next: Resolved = getResolved() === "dark" ? "light" : "dark";
+    localStorage.setItem(STORAGE_KEY, next);
+    window.dispatchEvent(new Event(THEME_EVENT));
+  }
 
   return (
     <button
       type="button"
       aria-label={label}
       title={label}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={toggle}
       className="inline-flex size-10 items-center justify-center rounded-md border border-border text-foreground hover:bg-surface"
     >
       {isDark ? (

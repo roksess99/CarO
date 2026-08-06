@@ -2,7 +2,6 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Anton, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
-import { ThemeProvider } from "next-themes";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { routing } from "@/i18n/routing";
@@ -23,6 +22,12 @@ const anton = Anton({
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
+
+// Zet de thema-class vóór de eerste paint zodat dark mode niet flikkert.
+// Bewust een inline script in de server-layout: server-gerenderde scripts
+// draaien tijdens het parsen van de HTML en triggeren geen React 19-warning
+// (in tegenstelling tot het script dat next-themes client-side injecteerde).
+const themeInitScript = `(function(){try{var t=localStorage.getItem("theme");var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);var e=document.documentElement;e.classList.add(d?"dark":"light");e.style.colorScheme=d?"dark":"light"}catch(e){}})()`;
 
 export default async function LocaleLayout({
   children,
@@ -45,21 +50,20 @@ export default async function LocaleLayout({
       className={`${inter.variable} ${anton.variable}`}
     >
       <body className="flex min-h-screen flex-col font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <NextIntlClientProvider>
-            <a
-              href="#main"
-              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-caro-orange focus:px-4 focus:py-2 focus:font-semibold focus:text-caro-ink"
-            >
-              {t("skipToContent")}
-            </a>
-            <SiteHeader />
-            <main id="main" className="flex-1">
-              {children}
-            </main>
-            <SiteFooter />
-          </NextIntlClientProvider>
-        </ThemeProvider>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <NextIntlClientProvider>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-caro-orange focus:px-4 focus:py-2 focus:font-semibold focus:text-caro-ink"
+          >
+            {t("skipToContent")}
+          </a>
+          <SiteHeader />
+          <main id="main" className="flex-1">
+            {children}
+          </main>
+          <SiteFooter />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
