@@ -239,6 +239,9 @@ export const tyre24Provider: CatalogProvider = {
 
     return fetchParts({
       parentNodeId,
+      // TODO: verifiëren of de manufacturer-filter exacte namen of
+      // "identifiers" verwacht zodra het token er is (swagger is vaag)
+      manufacturer: query?.brand,
       limit: query?.limit,
       page: 1,
     });

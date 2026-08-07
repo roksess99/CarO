@@ -16,6 +16,8 @@
   --surface: var(--caro-zinc);
   --muted: var(--caro-grey);
   --border: color-mix(in srgb, var(--caro-grey) 25%, transparent);
+  /* Functionele foutkleur (niet in BRAND.md; 4,5:1+ op beide achtergronden) */
+  --danger: #b42318;
 }
 
 .dark {
@@ -27,6 +29,7 @@
   --surface: #181b20;
   --muted: #9aa1aa;
   --border: color-mix(in srgb, var(--caro-grey) 35%, transparent);
+  --danger: #f97066;
 }
 
 @theme inline {
@@ -40,6 +43,7 @@
   --color-surface: var(--surface);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-danger: var(--danger);
 
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-anton: var(--font-anton), sans-serif;

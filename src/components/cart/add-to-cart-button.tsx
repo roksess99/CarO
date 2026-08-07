@@ -23,7 +23,7 @@ export function AddToCartButton({ part }: { part: Part }) {
       type="button"
       onClick={handleClick}
       disabled={disabled}
-      className="mt-2 rounded-md bg-caro-orange px-3 py-2 text-sm font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
+      className="rounded-md bg-caro-orange px-3 py-2 text-sm font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
     >
       {announced ? t("added") : t("addToCart")}
       {/* Feedback ook voor screenreaders, niet alleen visueel */}

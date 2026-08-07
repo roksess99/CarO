@@ -100,6 +100,9 @@ export const mockProvider: CatalogProvider = {
     if (query?.categorySlug) {
       result = result.filter((p) => p.categorySlug === query.categorySlug);
     }
+    if (query?.brand) {
+      result = result.filter((p) => p.brand === query.brand);
+    }
     if (query?.limit !== undefined) {
       result = result.slice(0, query.limit);
     }

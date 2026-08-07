@@ -26,6 +26,8 @@ export interface Part {
 
 export interface PartQuery {
   categorySlug?: string;
+  /** Exacte fabrikantnaam, bv. "Bosch" */
+  brand?: string;
   limit?: number;
 }
 

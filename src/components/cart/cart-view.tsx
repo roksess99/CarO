@@ -118,15 +118,12 @@ export function CartView({ parts }: { parts: Part[] }) {
         {/* Verplicht vóór de laatste checkoutstap (CLAUDE.md, NL-recht) */}
         <p className="mt-4 text-sm text-muted">{t("shippingNote")}</p>
         <p className="mt-2 text-sm text-muted">{t("withdrawalNote")}</p>
-        {/* TODO fase 5: echte checkout via Mollie (iDEAL) */}
-        <button
-          type="button"
-          disabled
-          className="mt-6 w-full cursor-not-allowed rounded-md bg-surface px-6 py-3 font-semibold text-muted"
+        <Link
+          href="/checkout"
+          className="mt-6 block w-full rounded-md bg-caro-orange px-6 py-3 text-center font-semibold text-caro-ink"
         >
           {t("checkout")}
-        </button>
-        <p className="mt-2 text-xs text-muted">{t("checkoutUnavailable")}</p>
+        </Link>
       </aside>
     </div>
   );

@@ -10,6 +10,14 @@ export const routing = defineRouting({
       nl: "/winkelwagen",
       en: "/cart",
     },
+    "/checkout": {
+      nl: "/afrekenen",
+      en: "/checkout",
+    },
+    // Categorie- en productslugs komen uit de catalogus en zijn al
+    // Nederlands (SEO-regel: /nl/remmen/remblokken, geen id's in de URL)
+    "/[category]": "/[category]",
+    "/[category]/[part]": "/[category]/[part]",
   },
 });
 

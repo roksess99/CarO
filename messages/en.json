@@ -5,6 +5,15 @@
   "header": {
     "homeAria": "CarO — go to homepage"
   },
+  "nav": {
+    "categories": "Categories",
+    "categoriesAria": "Category menu"
+  },
+  "category": {
+    "metaDescription": "{category} for your car. All prices include 21% VAT.",
+    "brandFilterLabel": "Filter by brand",
+    "allBrands": "All brands"
+  },
   "localeSwitcher": {
     "label": "Language",
     "nl": "Dutch",
@@ -25,6 +34,17 @@
   },
   "product": {
     "empty": "No parts found. Try a different category.",
+    "view": "View",
+    "viewAria": "View {name}",
+    "metaDescription": "{name} by {brand}, OE number {oeNumber}. Price includes 21% VAT.",
+    "detailsTitle": "Item details",
+    "brandLabel": "Brand",
+    "quantityLabel": "Quantity",
+    "shippingNote": "Shipping costs are shown before checkout.",
+    "withdrawalNote": "14-day right of withdrawal on every order.",
+    "breadcrumbAria": "Breadcrumb",
+    "breadcrumbHome": "Home",
+    "noImage": "No image available",
     "oeLabel": "OE number",
     "inclVat": "incl. 21% VAT",
     "availability": {
@@ -52,8 +72,43 @@
     "inclVat": "Including 21% VAT",
     "shippingNote": "Shipping costs are shown before checkout.",
     "withdrawalNote": "14-day right of withdrawal on every order.",
-    "checkout": "Checkout",
-    "checkoutUnavailable": "Checkout becomes available once the payment integration is in place."
+    "checkout": "Checkout"
+  },
+  "checkout": {
+    "metaTitle": "Checkout — CarO",
+    "metaDescription": "Enter your details to complete your order. All prices include 21% VAT.",
+    "title": "Checkout",
+    "contactTitle": "Contact details",
+    "addressTitle": "Delivery address",
+    "email": "Email address",
+    "phone": "Phone number",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "street": "Street",
+    "houseNumber": "House number",
+    "houseNumberAddition": "Addition",
+    "postcode": "Postal code",
+    "city": "City",
+    "country": "Country",
+    "countryNl": "Netherlands",
+    "optional": "(optional)",
+    "errors": {
+      "required": "This field is required.",
+      "invalid": "This value is invalid.",
+      "email": "Enter a valid email address.",
+      "postcode": "Enter a valid postal code, for example 1234 AB."
+    },
+    "errorSummary": "Please check the highlighted fields.",
+    "summaryTitle": "Your order",
+    "subtotal": "Subtotal",
+    "inclVat": "Including 21% VAT",
+    "shippingNote": "Shipping costs are shown before the payment step.",
+    "withdrawalNote": "14-day right of withdrawal on every order.",
+    "submit": "Place order",
+    "savedNotice": "Your details have been validated and saved. Ordering and payment (iDEAL) become available once the payment integration is in place.",
+    "emptyCart": "Your cart is empty — there is nothing to check out yet.",
+    "emptyCta": "Browse the range",
+    "backToCart": "Back to cart"
   },
   "footer": {
     "vat": "All prices include 21% VAT.",

@@ -20,7 +20,7 @@ securityDefinitions:
     in: header
     name: X-AUTH-TOKEN
     description: |
-      To enable you to log in to ALZURA.com via an interface using third-party systems
+      To enable you to log in to ALZURA.com via an inte33rface using third-party systems
       such as your ERP, ERP, DMS or other systems, you generate a unique token [here](https://tyre24.alzura.com/de/de/tokenmanagement),
       which you store in the respective system in order to log in automatically.
       You only need this one token and can use it in several systems.
