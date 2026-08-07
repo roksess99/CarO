@@ -11,11 +11,54 @@ Dit is de gekozen catalogus-leverancier (docs/DECISIONS.md #1).
 | Wat | Waarde |
 |---|---|
 | Host | `https://tyre24.alzura.com` |
-| Base path | `/{land}/{taal}/rest/v13/products` — docs tonen `/de/de/`, voor NL vermoedelijk `/nl/nl/` (**verifiëren zodra token er is**) |
+| Base path | `/nl/nl/rest/v13/products` — **geverifieerd 2026-08-07**: geeft Nederlandse categorie- en area-namen. `/de/de/` werkt ook maar geeft Duitse namen (en andere areas, zie hieronder) |
 | Auth | Header `X-AUTH-TOKEN: <token>` op elk request |
 | Token | Genereren op tyre24.alzura.com → Token Management. **Nog niet geregeld.** Tokens verlopen; daarna opnieuw inloggen/verversen |
 | Rate limit | **100 requests/minuut** (`ERR_TOO_MANY_REQUESTS`) — cachen is verplicht, geen client-side calls |
 | Formaat | JSON. Let op: veel numerieke velden komen als **string** terug (o.a. prijzen, quantity) |
+
+## Wat dit account écht kan (gemeten 2026-08-07 via `GET /areas` + `/categories`)
+
+Dit is de belangrijkste bevinding: **er is geen area met nieuwe auto-onderdelen.**
+
+| id | afk | Naam | NL-platform | DE-platform |
+|---|---|---|---|---|
+| 6 | `ty` | **Banden** | ✅ 11 categorieën, 1.567 items in Auto/SUV, 191 merken | ✅ |
+| 7 | `sr` | Stalen velgen | ✅ 1 categorie | ✅ |
+| 5 | `sv` | Services | ✅ 1 categorie ("Gegevens & analyses") | ✅ |
+| 1 | `ac` | Toebehoor / Zubehör | ❌ leeg | ✅ "Rad & Reifenzubehör" |
+| 10 | `up` | **Gebruikte onderdelen** | ❌ leeg | ✅ **31 categorieën** (Bremsanlage, Filter, Elektrik, Lenkung…), 19.122 items in Bremsanlage alleen |
+| 3 | `oe` | OE | ❌ `ERR_B2B_PRODUCTAREA_INACTIVE` | ⚠️ actief, maar `ERROR_SEARCH_BY_CATEGORY_DISALBED` en `search` geeft 0 resultaten |
+| 4 | `fl` | — | ❌ inactief | ❌ leeg |
+| 8 | `aw` | Lichtmetalen wielen | ❌ leeg | ❌ leeg |
+| 9 | `to` | Tools | ❌ leeg | ❌ leeg |
+
+Gevolgen:
+- **Banden** is de enige goed gevulde area op het NL-platform.
+- **Gebruikte onderdelen** (area 10, DE-platform) is de enige bron van echte
+  auto-onderdelen: met OEN-nummers, automerk als `manufacturerName` en foto's.
+  Let op: `stock: 1` per artikel — elk exemplaar is uniek en na verkoop weg.
+- Wil je **nieuwe** onderdelen verkopen, dan moet er iets bij: area 3 (`oe`)
+  laten activeren door Tyre24, of een andere leverancier.
+
+## Gemeten datastructuur (belangrijk, wijkt af van de swagger)
+
+1. **Prijzen staan per `type` in meerdere blokken per distributeur:**
+   - `type: "ek"` = inkoopprijs (Einkaufspreis)
+   - `type: "evp_3"` = **adviesverkoopprijs** van de leverancier
+   - Voorbeeld band: `ek 27.63` / `evp_3 48.00`
+   - De sleutel binnen `prices` is **`"1"`**, *niet* de productAreaId.
+   - ⚠️ **Vermoedelijk exclusief btw** (B2B-marktplaats), maar de API zegt het
+     niet. Zie docs/DECISIONS.md #5 — navragen bij Tyre24 vóór livegang.
+2. **`imageLink` kan placeholders bevatten:** bij banden
+   `…/26064-PTY-%s-%s-br1.jpg`. Onbruikbaar als URL; de adapter filtert die weg.
+   Bij gebruikte onderdelen zijn de links wel direct bruikbaar.
+3. **Het `manufacturer`-filter wil een base64-`identifier`**, niet de merknaam:
+   `"NjE3fkFMVEVOWk8"` = `617~ALTENZO`. Die identifiers komen uit het
+   `filter.manufacturer.filter`-blok in de `/items`-response.
+4. `/items` vereist altijd `parentNodeId`, `search` of `itemId` — er is geen
+   "toon alles". Het antwoord bevat ook `resCount`, `pageCount` en een
+   `filter`-blok dat we voor de merkchips gebruiken.
 
 ## Endpoints die wij gebruiken
 

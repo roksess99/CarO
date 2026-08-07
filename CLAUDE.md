@@ -1,6 +1,10 @@
 # CarO — Onderdelen webshop (NL)
 
 Webshop voor auto-onderdelen. Markt: Nederland. UI-taal: NL primair, EN secundair.
+
+**Assortiment: alleen personenauto's en tweewielers.** Geen vrachtwagens,
+landbouw, grondverzet of industrie. Afgedwongen als allowlist in
+`src/lib/catalog/assortment.ts` — zie @docs/DECISIONS.md #7.
 Huisstijl: @docs/BRAND.md — wijk hier nooit vanaf.
 Openstaande beslissingen: @docs/DECISIONS.md — niet gokken, vragen.
 
@@ -40,6 +44,8 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 - **Package manager**: pnpm
 - **Catalogus**: Tyre24/ALZURA REST API v1.3 — zie @docs/api/TYRE24.md.
   Zod valideert alle API-responses aan de rand, daarna is alles getypeerd.
+- **Kentekenzoeker**: overheid.io (RDW-voertuiggegevens) — zie @docs/api/OVERHEID-IO.md.
+  Een kenteken is persoonsgegeven: nooit in een URL, nooit in een logregel.
 - Later: PostgreSQL + Prisma (fase 4), Mollie (fase 5)
 
 Voeg geen libraries toe zonder te vragen. Geen state-manager, geen UI-kit.

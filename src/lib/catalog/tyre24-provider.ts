@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { sellingPriceCents } from "../pricing";
+import { consumerPriceCents } from "../pricing";
+import { isCategoryInAssortment } from "./assortment";
 import type { CatalogProvider, Category, Part, PartQuery } from "./types";
 
 // Tyre24/ALZURA-adapter (docs/api/TYRE24.md). Draait UITSLUITEND server-side:
@@ -32,8 +33,15 @@ const tyreCategorySchema = z.object({
   name: z.string(),
 });
 
+// GEMETEN 2026-08-07: elke distributeur levert meerdere prijsblokken met een
+// `type`. "ek" = inkoopprijs (Einkaufspreis), "evp_3" = adviesverkoopprijs.
+// De sleutel binnen `prices` is "1", NIET de productAreaId.
+const PURCHASE_PRICE_TYPE = "ek";
+const RETAIL_PRICE_PREFIX = "evp";
+
 const tyrePriceSchema = z.object({
-  // prijzen per productAreaId, bedragen als string (B2B-inkoopprijs)
+  type: z.string().optional(),
+  currency: z.string().optional(),
   prices: z
     .record(z.string(), z.object({ base: z.string().optional() }))
     .optional(),
@@ -65,6 +73,25 @@ const tyreItemSchema = z.object({
 
 const itemsResponseSchema = z.object({
   result: z.array(z.unknown()).optional(),
+  // GEMETEN: het filterblok geeft per merk een base64-"identifier"
+  // (bv. "NjE3fkFMVEVOWk8" = "617~ALTENZO"). Het manufacturer-filter van
+  // /items verwacht die identifier, niet de merknaam.
+  filter: z
+    .object({
+      manufacturer: z
+        .object({
+          filter: z
+            .array(
+              z.object({
+                identifier: z.string().optional(),
+                value: z.string().optional(),
+              }),
+            )
+            .optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 
 const errorResponseSchema = z.object({
@@ -144,12 +171,15 @@ async function apiGet(
 
 // ---------- mapping naar het datacontract ----------
 
-function cheapestPurchaseCents(
+/** Laagste bedrag over alle distributeurs voor prijsblokken die `match` accepteert */
+function lowestPriceCents(
   item: z.infer<typeof tyreItemSchema>,
+  match: (type: string) => boolean,
 ): number | null {
   let cheapest: number | null = null;
   for (const distributor of item.distributors ?? []) {
     for (const price of distributor.prices ?? []) {
+      if (!match(price.type ?? "")) continue;
       for (const entry of Object.values(price.prices ?? {})) {
         const cents = entry.base ? euroStringToCents(entry.base) : null;
         if (cents !== null && (cheapest === null || cents < cheapest)) {
@@ -167,11 +197,32 @@ function toPart(raw: unknown): Part | null {
   const item = parsed.data;
 
   // Zonder inkoopprijs kunnen we niet verkopen → item overslaan
-  const purchaseCents = cheapestPurchaseCents(item);
+  const purchaseCents = lowestPriceCents(
+    item,
+    (type) => type === PURCHASE_PRICE_TYPE,
+  );
   if (purchaseCents === null) return null;
 
+  // Adviesverkoopprijs van de leverancier, als die er is
+  const recommendedCents = lowestPriceCents(item, (type) =>
+    type.startsWith(RETAIL_PRICE_PREFIX),
+  );
+
   const category = item.categories?.[0];
-  const image = item.media?.find((m) => m.isDefault && !m.isDeleted && m.imageLink);
+  // Buiten het assortiment → niet verkopen. Hier i.p.v. alleen in de
+  // navigatie, zodat ook een directe product-URL niets oplevert.
+  if (
+    category &&
+    !isCategoryInAssortment(getConfig().productAreaId, category.categoryId)
+  ) {
+    return null;
+  }
+
+  // GEMETEN: bij banden bevat imageLink placeholders ("...-%s-%s-br1.jpg").
+  // Die URL is onbruikbaar en zou een gebroken afbeelding opleveren.
+  const image = item.media?.find(
+    (m) => m.isDefault && !m.isDeleted && m.imageLink && !m.imageLink.includes("%s"),
+  );
 
   return {
     id: String(item.itemId),
@@ -181,7 +232,7 @@ function toPart(raw: unknown): Part | null {
     oeNumber:
       item.identifications?.OEN?.[0] ?? item.manufacturerItemNumber ?? "",
     categorySlug: category ? `${slugify(category.name)}-${category.categoryId}` : "",
-    priceCents: sellingPriceCents(purchaseCents),
+    priceCents: consumerPriceCents({ purchaseCents, recommendedCents }),
     availability: (item.stock ?? 0) > 0 ? "in-stock" : "out-of-stock",
     imageUrl: image?.imageLink,
   };
@@ -198,13 +249,37 @@ async function fetchParts(
     .filter((part): part is Part => part !== null);
 }
 
+/**
+ * Merknaam → base64-identifier die het manufacturer-filter verwacht.
+ * Kost een extra ongefilterde call; die is gecacht, dus dat is acceptabel.
+ */
+async function brandIdentifier(
+  parentNodeId: number,
+  brand: string,
+): Promise<string | null> {
+  const data = await apiGet("/items", { parentNodeId, limit: 1, page: 1 }, 3600);
+  const parsed = itemsResponseSchema.safeParse(data);
+  if (!parsed.success) return null;
+  const match = parsed.data.filter?.manufacturer?.filter?.find(
+    (entry) => entry.value?.toUpperCase() === brand.toUpperCase(),
+  );
+  return match?.identifier ?? null;
+}
+
 async function fetchCategories(): Promise<Category[]> {
+  const { productAreaId } = getConfig();
   const data = await apiGet("/categories", { hideEmpty: "true" }, 3600);
   const parsed = z.array(z.unknown()).safeParse(data);
   if (!parsed.success) return [];
   return parsed.data.flatMap((raw) => {
     const category = tyreCategorySchema.safeParse(raw);
     if (!category.success) return [];
+    // Assortimentskeuze: alleen auto's en tweewielers (assortment.ts).
+    // Eén filterpunt: dit bepaalt de navigatie én welke categorie-URL's
+    // bestaan, want de categoriepagina valideert tegen deze lijst.
+    if (!isCategoryInAssortment(productAreaId, category.data.categoryId)) {
+      return [];
+    }
     return [
       {
         slug: `${slugify(category.data.name)}-${category.data.categoryId}`,
@@ -237,11 +312,15 @@ export const tyre24Provider: CatalogProvider = {
     }
     if (parentNodeId === undefined) return [];
 
+    // GEMETEN: manufacturer wil de base64-identifier, niet de merknaam.
+    // Onbekend merk → geen filter meesturen i.p.v. een lege lijst tonen.
+    const manufacturer = query?.brand
+      ? ((await brandIdentifier(parentNodeId, query.brand)) ?? undefined)
+      : undefined;
+
     return fetchParts({
       parentNodeId,
-      // TODO: verifiëren of de manufacturer-filter exacte namen of
-      // "identifiers" verwacht zodra het token er is (swagger is vaag)
-      manufacturer: query?.brand,
+      manufacturer,
       limit: query?.limit,
       page: 1,
     });
