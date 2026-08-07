@@ -4,6 +4,7 @@ import { CartButton } from "@/components/cart/cart-button";
 import { CategoryNav } from "@/components/category-nav";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SelectedVehicle } from "@/components/vehicle/selected-vehicle";
 import { Link } from "@/i18n/navigation";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 
@@ -21,6 +22,7 @@ export async function SiteHeader() {
           <CategoryNav categories={categories} />
         </div>
         <div className="flex items-center gap-2 md:gap-4">
+          <SelectedVehicle />
           <LocaleSwitcher />
           <ThemeToggle />
           <CartButton />

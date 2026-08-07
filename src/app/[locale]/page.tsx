@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ProductGrid } from "@/components/product-grid";
+import { VehicleSearch } from "@/components/vehicle/vehicle-search";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 
 type Props = {
@@ -37,6 +38,10 @@ export default async function HomePage({ params }: Props) {
         <p className="eyebrow text-sm">{t("eyebrow")}</p>
         <h1 className="mt-3 max-w-2xl text-4xl md:text-5xl">{t("title")}</h1>
         <p className="mt-4 max-w-xl text-muted">{t("intro")}</p>
+        {/* Kentekenzoeker staat vóór de CTA: dit is waarmee de klant begint */}
+        <div className="mt-8 max-w-lg">
+          <VehicleSearch />
+        </div>
         <a
           href="#aanbod"
           className="mt-8 inline-block rounded-md bg-caro-orange px-6 py-3 font-semibold text-caro-ink"

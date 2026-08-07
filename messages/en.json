@@ -9,6 +9,22 @@
     "categories": "Categories",
     "categoriesAria": "Category menu"
   },
+  "vehicle": {
+    "title": "Does it fit your car?",
+    "label": "Enter your licence plate",
+    "placeholder": "AB-123-C",
+    "search": "Find car",
+    "searching": "Searching…",
+    "yourCar": "Your car",
+    "changeCar": "Choose another car",
+    "clearAria": "Clear car {plate}",
+    "fitmentPending": "Filtering parts for your car becomes available once the parts catalogue is connected.",
+    "errors": {
+      "invalidPlate": "A Dutch licence plate has 6 characters, for example AB-123-C.",
+      "notFound": "This licence plate is not in the RDW data. Please check your input.",
+      "unavailable": "The licence plate search is temporarily unavailable. Please try again later."
+    }
+  },
   "category": {
     "metaDescription": "{category} for your car. All prices include 21% VAT.",
     "brandFilterLabel": "Filter by brand",

@@ -9,6 +9,22 @@
     "categories": "Categorieën",
     "categoriesAria": "Categorieënmenu"
   },
+  "vehicle": {
+    "title": "Past het op jouw auto?",
+    "label": "Vul je kenteken in",
+    "placeholder": "AB-123-C",
+    "search": "Zoek auto",
+    "searching": "Zoeken…",
+    "yourCar": "Jouw auto",
+    "changeCar": "Andere auto kiezen",
+    "clearAria": "Auto {plate} wissen",
+    "fitmentPending": "Onderdelen filteren op jouw auto komt beschikbaar zodra de koppeling met de onderdelencatalogus er is.",
+    "errors": {
+      "invalidPlate": "Een Nederlands kenteken heeft 6 tekens, bijvoorbeeld AB-123-C.",
+      "notFound": "Dit kenteken staat niet in de RDW-gegevens. Controleer of je het goed hebt ingevuld.",
+      "unavailable": "De kentekenzoeker is tijdelijk niet beschikbaar. Probeer het later opnieuw."
+    }
+  },
   "category": {
     "metaDescription": "{category} voor jouw auto. Alle prijzen inclusief 21% btw.",
     "brandFilterLabel": "Filter op merk",
