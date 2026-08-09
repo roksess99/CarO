@@ -12,11 +12,16 @@ export function SelectedVehicle() {
   if (!vehicle) return null;
 
   return (
-    <div className="hidden items-center gap-2 md:flex">
+    // Ook op mobiel zichtbaar: de gekozen auto stuurt het hele koopproces.
+    // Daar tonen we alleen de plaat, op desktop ook het merk.
+    <div className="flex items-center gap-1 md:gap-2">
       <span className="inline-block rounded border-2 border-[#0e1013] bg-[#f7d117] px-1.5 py-0.5 text-xs font-bold tracking-wider text-[#0e1013]">
         {vehicle.plateFormatted}
       </span>
-      <span className="max-w-32 truncate text-sm text-muted" title={`${vehicle.brand} ${vehicle.model}`}>
+      <span
+        className="hidden max-w-32 truncate text-sm text-muted lg:inline"
+        title={`${vehicle.brand} ${vehicle.model}`}
+      >
         {vehicle.brand}
       </span>
       <button

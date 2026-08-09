@@ -5,6 +5,24 @@
   "header": {
     "homeAria": "CarO — go to homepage"
   },
+  "nav": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menuAria": "Main menu"
+  },
+  "search": {
+    "label": "Search the shop",
+    "placeholder": "Tyre size, OE number or brand",
+    "submit": "Search",
+    "title": "Search",
+    "metaDescription": "Search parts and tyres by size, OE number or brand.",
+    "resultsFor": "Results for “{term}”",
+    "noResults": "Nothing found for “{term}”.",
+    "tipsTitle": "What can you search for?",
+    "tipSize": "Tyre size, for example 195/65 R15 or 1956515",
+    "tipOen": "OE number of a part, for example 06A115561B — complete and exact",
+    "tipBrand": "Brand name, for example Continental or Bosch"
+  },
   "family": {
     "eyebrow": "Range",
     "categoriesAria": "Categories",
@@ -151,7 +169,62 @@
     "vat": "All prices include 21% VAT.",
     "shipping": "Shipping costs are shown before checkout.",
     "withdrawal": "14-day right of withdrawal on every order.",
-    "copyright": "© {year} CarO Onderdelen"
+    "copyright": "© {year} CarO Onderdelen",
+    "privacyLink": "Privacy and cookies"
+  },
+  "privacy": {
+    "title": "Privacy and cookies",
+    "intro": "This shop stores as little as possible. Below is exactly what is kept on your device, why, and for how long.",
+    "lastUpdated": "Last updated: 7 August 2026",
+    "storageTitle": "What we store on your device",
+    "storageIntro": "The law makes no distinction between cookies and other browser storage: the same rules apply to localStorage. That is why everything is listed together here.",
+    "tableName": "Name",
+    "tableKind": "Type",
+    "tablePurpose": "Purpose",
+    "tableRetention": "Retention",
+    "kind": {
+      "cookie": "Cookie",
+      "local": "localStorage"
+    },
+    "items": {
+      "NEXT_LOCALE": {
+        "purpose": "Remembers whether you view the site in Dutch or English.",
+        "retention": "Until you close your browser (session cookie)."
+      },
+      "caro-cart": {
+        "purpose": "Your shopping cart: which items you selected and how many.",
+        "retention": "Until you empty the cart or clear your browser data."
+      },
+      "caro-checkout": {
+        "purpose": "The delivery details you enter yourself, so you do not have to retype them.",
+        "retention": "Until you clear your browser data."
+      },
+      "caro-vehicle": {
+        "purpose": "The car you looked up, so we can show parts that fit it.",
+        "retention": "Until you choose another car or clear your browser data."
+      },
+      "theme": {
+        "purpose": "Your choice of light or dark theme.",
+        "retention": "Until you clear your browser data."
+      }
+    },
+    "noBannerTitle": "Why you do not see a cookie banner",
+    "noBannerBody": "Consent is required for storage that is not needed to make the site work — such as measuring visitor behaviour or advertising. Everything in the table above is either necessary for the shop to function, or a choice you made yourself. A legal exemption applies to that, so we do not have to ask for consent. We also consider it misleading to ask permission for something you cannot refuse without breaking the shopping cart.",
+    "noTracking": "We use no analytics, no advertising cookies, no social media buttons and no third-party trackers. The site also loads no fonts or scripts from external servers.",
+    "personalDataTitle": "Personal data we process",
+    "personalDataBody": "As long as you are only browsing, we process no personal data. That changes at two moments:",
+    "personalCheckout": "At checkout you enter your name, address, email address and optionally a phone number. We need these to deliver your order and issue an invoice.",
+    "personalPlate": "If you enter a licence plate, we send it to the Dutch RDW vehicle database to look up your car. A licence plate is personal data, which is why it never appears in a web address and is not kept in our logs.",
+    "thirdPartiesTitle": "Parties that receive data from us",
+    "thirdPartiesBody": "We do not sell your data and share it only where needed to fulfil your order:",
+    "thirdTyre24": "Tyre24 / ALZURA — our supplier. Receives the details needed to deliver your parcel when you place an order.",
+    "thirdRdw": "overheid.io — provides the RDW vehicle data. Receives the licence plate you enter, and nothing else about you.",
+    "thirdHosting": "Our hosting provider — processes technical data such as your IP address in order to serve the site.",
+    "rightsTitle": "Your rights",
+    "rightsBody": "You may request which data we hold about you, have it corrected or deleted, and object to the processing. Contact us to do so. If we cannot resolve it together, you can file a complaint with the Dutch Data Protection Authority.",
+    "contactTitle": "Contact",
+    "contactBody": "Questions about your data? Get in touch with:",
+    "contactPlaceholder": "Still to be filled in: company name, address, Chamber of Commerce number, VAT number and email address. This statement is only complete once those details are included."
   },
   "error": {
     "title": "Something went wrong",
