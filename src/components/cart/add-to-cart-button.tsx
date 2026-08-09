@@ -12,7 +12,7 @@ export function AddToCartButton({ part }: { part: Part }) {
   const disabled = part.availability === "out-of-stock";
 
   function handleClick() {
-    addToCart(part.id);
+    addToCart(part);
     setAnnounced(true);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => setAnnounced(false), 2000);

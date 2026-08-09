@@ -17,7 +17,7 @@ export function AddToCartWithQuantity({ part }: { part: Part }) {
   const disabled = part.availability === "out-of-stock";
 
   function handleAdd() {
-    addToCart(part.id, quantity);
+    addToCart(part, quantity);
     setAnnounced(true);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => setAnnounced(false), 2000);

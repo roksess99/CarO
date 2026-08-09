@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { consumerPriceCents } from "../pricing";
 import { isCategoryInAssortment } from "./assortment";
+import { type FamilySource, familySource, type ProductFamily } from "./families";
 import type { CatalogProvider, Category, Part, PartQuery } from "./types";
 
 // Tyre24/ALZURA-adapter (docs/api/TYRE24.md). Draait UITSLUITEND server-side:
@@ -9,20 +10,15 @@ import type { CatalogProvider, Category, Part, PartQuery } from "./types";
 
 // ---------- configuratie ----------
 
-function getConfig() {
+/** Bron van een familie, of null als die (nog) geen productArea heeft */
+function getSource(family: ProductFamily): (FamilySource & { token: string }) | null {
   if (typeof window !== "undefined") {
     throw new Error("tyre24-provider mag nooit in de browser draaien");
   }
   const token = process.env.TYRE24_API_TOKEN;
-  const productAreaId = process.env.TYRE24_PRODUCT_AREA_ID;
-  if (!token || !productAreaId) {
-    // provider.ts hoort dit al af te vangen door de mock te kiezen
-    throw new Error("TYRE24_API_TOKEN of TYRE24_PRODUCT_AREA_ID ontbreekt");
-  }
-  const baseUrl =
-    process.env.TYRE24_BASE_URL ??
-    "https://tyre24.alzura.com/nl/nl/rest/v13/products";
-  return { token, productAreaId, baseUrl };
+  const source = familySource(family);
+  if (!token || !source) return null;
+  return { ...source, token };
 }
 
 // ---------- zod-schema's (alleen de velden die wij lezen) ----------
@@ -36,6 +32,10 @@ const tyreCategorySchema = z.object({
 // GEMETEN 2026-08-07: elke distributeur levert meerdere prijsblokken met een
 // `type`. "ek" = inkoopprijs (Einkaufspreis), "evp_3" = adviesverkoopprijs.
 // De sleutel binnen `prices` is "1", NIET de productAreaId.
+// GEMETEN 2026-08-07: paginering is 0-geïndexeerd. `page=1` levert de TWEEDE
+// pagina — bij weinig treffers dus een lege lijst. De default is 0.
+const FIRST_PAGE = 0;
+
 const PURCHASE_PRICE_TYPE = "ek";
 const RETAIL_PRICE_PREFIX = "evp";
 
@@ -76,6 +76,11 @@ const itemsResponseSchema = z.object({
   // GEMETEN: het filterblok geeft per merk een base64-"identifier"
   // (bv. "NjE3fkFMVEVOWk8" = "617~ALTENZO"). Het manufacturer-filter van
   // /items verwacht die identifier, niet de merknaam.
+  //
+  // LET OP: het type van `filter` wisselt! Bij een categorie-query is het een
+  // object, bij een itemId-query een lege array. `.catch()` zorgt dat een
+  // afwijkend filterblok nooit de hele response — en dus alle producten —
+  // ongeldig maakt. Het filter is een bonus, geen voorwaarde.
   filter: z
     .object({
       manufacturer: z
@@ -91,7 +96,8 @@ const itemsResponseSchema = z.object({
         })
         .optional(),
     })
-    .optional(),
+    .optional()
+    .catch(undefined),
 });
 
 const errorResponseSchema = z.object({
@@ -140,11 +146,12 @@ function idFromSlug(slug: string): number | null {
 }
 
 async function apiGet(
+  source: FamilySource & { token: string },
   path: string,
   params: Record<string, string | number | undefined>,
   revalidateSeconds: number,
 ): Promise<unknown> {
-  const { token, productAreaId, baseUrl } = getConfig();
+  const { token, productAreaId, baseUrl } = source;
   const url = new URL(baseUrl + path);
   url.searchParams.set("productAreaId", productAreaId);
   for (const [key, value] of Object.entries(params)) {
@@ -191,7 +198,11 @@ function lowestPriceCents(
   return cheapest;
 }
 
-function toPart(raw: unknown): Part | null {
+function toPart(
+  raw: unknown,
+  source: FamilySource & { token: string },
+  family: ProductFamily,
+): Part | null {
   const parsed = tyreItemSchema.safeParse(raw);
   if (!parsed.success) return null;
   const item = parsed.data;
@@ -213,7 +224,7 @@ function toPart(raw: unknown): Part | null {
   // navigatie, zodat ook een directe product-URL niets oplevert.
   if (
     category &&
-    !isCategoryInAssortment(getConfig().productAreaId, category.categoryId)
+    !isCategoryInAssortment(source.productAreaId, category.categoryId)
   ) {
     return null;
   }
@@ -229,9 +240,11 @@ function toPart(raw: unknown): Part | null {
     slug: `${slugify(item.name)}-${item.itemId}`,
     name: item.name,
     brand: item.manufacturerName ?? "",
+    family,
     oeNumber:
       item.identifications?.OEN?.[0] ?? item.manufacturerItemNumber ?? "",
     categorySlug: category ? `${slugify(category.name)}-${category.categoryId}` : "",
+    categoryName: category?.name ?? "",
     priceCents: consumerPriceCents({ purchaseCents, recommendedCents }),
     availability: (item.stock ?? 0) > 0 ? "in-stock" : "out-of-stock",
     imageUrl: image?.imageLink,
@@ -239,13 +252,15 @@ function toPart(raw: unknown): Part | null {
 }
 
 async function fetchParts(
+  source: FamilySource & { token: string },
+  family: ProductFamily,
   params: Record<string, string | number | undefined>,
 ): Promise<Part[]> {
-  const data = await apiGet("/items", params, 300);
+  const data = await apiGet(source, "/items", params, 300);
   const parsed = itemsResponseSchema.safeParse(data);
   if (!parsed.success) return [];
   return (parsed.data.result ?? [])
-    .map(toPart)
+    .map((raw) => toPart(raw, source, family))
     .filter((part): part is Part => part !== null);
 }
 
@@ -254,10 +269,16 @@ async function fetchParts(
  * Kost een extra ongefilterde call; die is gecacht, dus dat is acceptabel.
  */
 async function brandIdentifier(
+  source: FamilySource & { token: string },
   parentNodeId: number,
   brand: string,
 ): Promise<string | null> {
-  const data = await apiGet("/items", { parentNodeId, limit: 1, page: 1 }, 3600);
+  const data = await apiGet(
+    source,
+    "/items",
+    { parentNodeId, limit: 1, page: 1 },
+    3600,
+  );
   const parsed = itemsResponseSchema.safeParse(data);
   if (!parsed.success) return null;
   const match = parsed.data.filter?.manufacturer?.filter?.find(
@@ -266,9 +287,20 @@ async function brandIdentifier(
   return match?.identifier ?? null;
 }
 
-async function fetchCategories(): Promise<Category[]> {
-  const { productAreaId } = getConfig();
-  const data = await apiGet("/categories", { hideEmpty: "true" }, 3600);
+async function fetchCategories(
+  source: FamilySource & { token: string },
+): Promise<Category[]> {
+  const { productAreaId } = source;
+  // Niet elke area kent categorieën. Area 3 (nieuwe onderdelen) heeft
+  // searchableByCategory: false en antwoordt met HTTP 400. Dat is geen
+  // storing maar een eigenschap: die familie is alleen doorzoekbaar op
+  // OE-nummer. Lege lijst i.p.v. een foutpagina.
+  let data: unknown;
+  try {
+    data = await apiGet(source, "/categories", { hideEmpty: "true" }, 3600);
+  } catch {
+    return [];
+  }
   const parsed = z.array(z.unknown()).safeParse(data);
   if (!parsed.success) return [];
   return parsed.data.flatMap((raw) => {
@@ -292,20 +324,36 @@ async function fetchCategories(): Promise<Category[]> {
 // ---------- provider ----------
 
 export const tyre24Provider: CatalogProvider = {
-  async getCategories() {
-    return fetchCategories();
+  async getCategories(family) {
+    // Familie zonder productArea → lege lijst; de pagina toont dan een
+    // eerlijke "nog geen aanbod"-staat i.p.v. een crash.
+    const source = getSource(family);
+    if (!source) return [];
+    return fetchCategories(source);
   },
 
-  async getParts(query?: PartQuery) {
-    let parentNodeId: number | undefined;
+  async getParts(query: PartQuery) {
+    const source = getSource(query.family);
+    if (!source) return [];
 
-    if (query?.categorySlug) {
+    // Zoeken op OE-nummer. Voor area 3 (nieuwe onderdelen) is dit het enige
+    // ingangspunt; /items accepteert search óf parentNodeId óf itemId.
+    if (query.search) {
+      return fetchParts(source, query.family, {
+        search: query.search.trim(),
+        limit: query.limit,
+        page: FIRST_PAGE,
+      });
+    }
+
+    let parentNodeId: number | undefined;
+    if (query.categorySlug) {
       parentNodeId = idFromSlug(query.categorySlug) ?? undefined;
     } else {
       // /items vereist parentNodeId, search of itemId — een "toon alles"
       // bestaat niet. Zonder filter tonen we de eerste categorie met aanbod.
       // TODO: uitgelichte selectie voor de homepage is een winkelkeuze.
-      const categories = await fetchCategories();
+      const categories = await fetchCategories(source);
       const first = categories[0];
       if (!first) return [];
       parentNodeId = idFromSlug(first.slug) ?? undefined;
@@ -314,22 +362,33 @@ export const tyre24Provider: CatalogProvider = {
 
     // GEMETEN: manufacturer wil de base64-identifier, niet de merknaam.
     // Onbekend merk → geen filter meesturen i.p.v. een lege lijst tonen.
-    const manufacturer = query?.brand
-      ? ((await brandIdentifier(parentNodeId, query.brand)) ?? undefined)
+    const manufacturer = query.brand
+      ? ((await brandIdentifier(source, parentNodeId, query.brand)) ?? undefined)
       : undefined;
 
-    return fetchParts({
+    return fetchParts(source, query.family, {
       parentNodeId,
       manufacturer,
-      limit: query?.limit,
-      page: 1,
+      limit: query.limit,
+      page: FIRST_PAGE,
     });
   },
 
-  async getPartBySlug(slug: string) {
+  async getPartBySlug(family, slug) {
+    const source = getSource(family);
+    if (!source) return null;
     const itemId = idFromSlug(slug);
     if (itemId === null) return null;
-    const parts = await fetchParts({ itemId });
+    const parts = await fetchParts(source, family, { itemId });
+    return parts[0] ?? null;
+  },
+
+  async getPartById(family, id) {
+    const source = getSource(family);
+    if (!source) return null;
+    const itemId = Number(id);
+    if (!Number.isInteger(itemId)) return null;
+    const parts = await fetchParts(source, family, { itemId });
     return parts[0] ?? null;
   },
 };

@@ -5,9 +5,30 @@
   "header": {
     "homeAria": "CarO — naar de homepage"
   },
-  "nav": {
-    "categories": "Categorieën",
-    "categoriesAria": "Categorieënmenu"
+  "family": {
+    "eyebrow": "Assortiment",
+    "categoriesAria": "Categorieën",
+    "featuredTitle": "Veelgekocht",
+    "viewAll": "Alles bekijken",
+    "allIn": "Alles in {family}",
+    "onderdelen": {
+      "title": "Onderdelen",
+      "intro": "Onderhoudsdelen en reparatieonderdelen. Zoek op onderdeel of OE-nummer.",
+      "menuAria": "Onderdelencategorieën",
+      "empty": "Er is nog geen onderdelenaanbod. Zodra de koppeling met de onderdelencatalogus er is, vind je hier remmen, filters, elektra en meer."
+    },
+    "banden": {
+      "title": "Banden",
+      "intro": "Banden voor auto, SUV, bestelwagen en tweewieler.",
+      "menuAria": "Bandencategorieën",
+      "empty": "Er is nog geen bandenaanbod beschikbaar."
+    },
+    "oenLabel": "Zoek op OE-nummer",
+    "oenPlaceholder": "bv. 06A115561B",
+    "oenSubmit": "Zoeken",
+    "oenHint": "Vul het volledige OE-nummer in zoals het op het onderdeel staat. Zoeken op productnaam of een deel van het nummer werkt niet.",
+    "oenResults": "Resultaten voor {term}",
+    "oenNoResults": "Geen onderdelen gevonden voor {term}. Controleer het OE-nummer — het moet volledig en exact kloppen."
   },
   "vehicle": {
     "title": "Past het op jouw auto?",
@@ -28,7 +49,9 @@
   "category": {
     "metaDescription": "{category} voor jouw auto. Alle prijzen inclusief 21% btw.",
     "brandFilterLabel": "Filter op merk",
-    "allBrands": "Alle merken"
+    "allBrands": "Alle merken",
+    "breadcrumbAria": "Kruimelpad",
+    "breadcrumbHome": "Home"
   },
   "localeSwitcher": {
     "label": "Taal",
@@ -44,9 +67,7 @@
     "metaDescription": "Auto-onderdelen voor de Nederlandse markt. Zoek op onderdeel of OE-nummer. Alle prijzen inclusief 21% btw.",
     "eyebrow": "Auto-onderdelen",
     "title": "Het juiste onderdeel, zonder gedoe",
-    "intro": "Zoek op onderdeel of OE-nummer. Alle prijzen zijn inclusief 21% btw en verzendkosten zie je vóór het afrekenen.",
-    "cta": "Bekijk het aanbod",
-    "featuredTitle": "Veelgekocht"
+    "intro": "Zoek op onderdeel of OE-nummer. Alle prijzen zijn inclusief 21% btw en verzendkosten zie je vóór het afrekenen."
   },
   "product": {
     "empty": "Geen onderdelen gevonden. Probeer een andere categorie.",

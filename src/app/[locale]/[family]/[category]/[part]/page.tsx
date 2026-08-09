@@ -6,12 +6,22 @@ import { CaroMark } from "@/components/brand/caro-mark";
 import { AddToCartWithQuantity } from "@/components/cart/add-to-cart-with-quantity";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import {
+  familyFromSlug,
+  familySlug,
+  type ProductFamily,
+} from "@/lib/catalog/families";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents, priceCentsToDecimalString } from "@/lib/format";
 
 type Props = {
-  params: Promise<{ locale: string; category: string; part: string }>;
+  params: Promise<{
+    locale: string;
+    family: string;
+    category: string;
+    part: string;
+  }>;
 };
 
 // TODO: echte domeinnaam zodra hosting vaststaat (docs/DECISIONS.md #2)
@@ -20,25 +30,46 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 // Bewust geen generateStaticParams: de echte catalogus heeft te veel
 // artikelen om voor te renderen. De adapter cachet de API-calls al.
 
-/** Eén onderdeel ophalen en controleren dat het in déze categorie zit */
-async function findPart(categorySlug: string, partSlug: string): Promise<Part> {
-  const part = await getCatalogProvider().getPartBySlug(partSlug);
-  // Categorie-mismatch → 404, anders is hetzelfde artikel op meerdere
-  // URL's bereikbaar (dubbele content)
-  if (!part || part.categorySlug !== categorySlug) notFound();
+/** Onderdeel ophalen en controleren dat het in déze familie én categorie zit */
+async function findPart(
+  family: ProductFamily,
+  categorySlug: string,
+  partSlug: string,
+): Promise<Part> {
+  const part = await getCatalogProvider().getPartBySlug(family, partSlug);
+  // Mismatch → 404, anders is hetzelfde artikel op meerdere URL's
+  // bereikbaar (dubbele content)
+  if (!part || part.categorySlug !== categorySlug || part.family !== family) {
+    notFound();
+  }
   return part;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, category, part: partSlug } = await params;
-  const part = await getCatalogProvider().getPartBySlug(partSlug);
+  const {
+    locale,
+    family: familyParam,
+    category,
+    part: partSlug,
+  } = await params;
+  const family = familyFromSlug(familyParam, locale);
+  if (!family) return {};
+  const part = await getCatalogProvider().getPartBySlug(family, partSlug);
   if (!part || part.categorySlug !== category) return {};
 
   const t = await getTranslations({ locale, namespace: "product" });
-  const href = {
-    pathname: "/[category]/[part]",
-    params: { category, part: partSlug },
-  } as const;
+  const localizedHref = (targetLocale: string) =>
+    getPathname({
+      locale: targetLocale as Locale,
+      href: {
+        pathname: "/[family]/[category]/[part]",
+        params: {
+          family: familySlug(family, targetLocale),
+          category,
+          part: partSlug,
+        },
+      },
+    });
 
   return {
     title: `${part.name} — ${part.brand} — CarO`,
@@ -49,11 +80,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }),
     metadataBase: new URL(SITE_URL),
     alternates: {
-      canonical: getPathname({ locale: locale as Locale, href }),
-      languages: {
-        nl: getPathname({ locale: "nl", href }),
-        en: getPathname({ locale: "en", href }),
-      },
+      canonical: localizedHref(locale),
+      languages: { nl: localizedHref("nl"), en: localizedHref("en") },
     },
   };
 }
@@ -65,14 +93,30 @@ const SCHEMA_AVAILABILITY = {
 } as const;
 
 export default async function ProductPage({ params }: Props) {
-  const { locale, category, part: partSlug } = await params;
+  const {
+    locale,
+    family: familyParam,
+    category,
+    part: partSlug,
+  } = await params;
   setRequestLocale(locale);
+  const family = familyFromSlug(familyParam, locale);
+  if (!family) notFound();
 
-  const part = await findPart(category, partSlug);
+  const part = await findPart(family, category, partSlug);
   const t = await getTranslations("product");
-  const categories = await getCatalogProvider().getCategories();
-  const categoryName =
-    categories.find((c) => c.slug === category)?.name ?? category;
+  const tFamily = await getTranslations("family");
+  // Het artikel kent zijn eigen categorienaam; niet elke area levert een
+  // categorielijst om die in op te zoeken (area 3 bijvoorbeeld niet).
+  const categoryName = part.categoryName || category;
+
+  const canonicalPath = getPathname({
+    locale: locale as Locale,
+    href: {
+      pathname: "/[family]/[category]/[part]",
+      params: { family: familyParam, category, part: partSlug },
+    },
+  });
 
   // JSON-LD voor rich results (SEO-regel in .claude/rules/frontend.md)
   const jsonLd = {
@@ -85,13 +129,7 @@ export default async function ProductPage({ params }: Props) {
     ...(part.imageUrl ? { image: part.imageUrl } : {}),
     offers: {
       "@type": "Offer",
-      url: `${SITE_URL}${getPathname({
-        locale: locale as Locale,
-        href: {
-          pathname: "/[category]/[part]",
-          params: { category, part: partSlug },
-        },
-      })}`,
+      url: `${SITE_URL}${canonicalPath}`,
       priceCurrency: "EUR",
       price: priceCentsToDecimalString(part.priceCents),
       availability: SCHEMA_AVAILABILITY[part.availability],
@@ -106,6 +144,7 @@ export default async function ProductPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
+      {/* Kruimelpad: Home / familie / categorie */}
       <nav aria-label={t("breadcrumbAria")}>
         <ol className="flex flex-wrap items-center gap-2 text-sm text-muted">
           <li>
@@ -116,7 +155,19 @@ export default async function ProductPage({ params }: Props) {
           <li aria-hidden="true">/</li>
           <li>
             <Link
-              href={{ pathname: "/[category]", params: { category } }}
+              href={{ pathname: "/[family]", params: { family: familyParam } }}
+              className="hover:text-foreground"
+            >
+              {tFamily(`${family}.title`)}
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li>
+            <Link
+              href={{
+                pathname: "/[family]/[category]",
+                params: { family: familyParam, category },
+              }}
               className="hover:text-foreground"
             >
               {categoryName}

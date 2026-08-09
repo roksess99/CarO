@@ -1,15 +1,21 @@
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CaroMark } from "@/components/brand/caro-mark";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { Link } from "@/i18n/navigation";
+import { familySlug } from "@/lib/catalog/families";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents } from "@/lib/format";
 
 export function ProductCard({ part }: { part: Part }) {
   const t = useTranslations("product");
+  const locale = useLocale();
   const href = {
-    pathname: "/[category]/[part]",
-    params: { category: part.categorySlug, part: part.slug },
+    pathname: "/[family]/[category]/[part]",
+    params: {
+      family: familySlug(part.family, locale),
+      category: part.categorySlug,
+      part: part.slug,
+    },
   } as const;
 
   return (

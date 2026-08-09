@@ -1,3 +1,4 @@
+import { PRODUCT_FAMILIES, type ProductFamily } from "../catalog/families";
 import {
   type Cart,
   type CartItem,
@@ -15,13 +16,21 @@ function clampQuantity(quantity: number): number {
   return Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, quantity));
 }
 
-export function addItem(cart: Cart, partId: string, quantity = 1): Cart {
+export function addItem(
+  cart: Cart,
+  partId: string,
+  family: ProductFamily,
+  quantity = 1,
+): Cart {
   const existing = cart.items.find((i) => i.partId === partId);
   if (existing) {
     return setItemQuantity(cart, partId, existing.quantity + quantity);
   }
   return {
-    items: [...cart.items, { partId, quantity: clampQuantity(quantity) }],
+    items: [
+      ...cart.items,
+      { partId, family, quantity: clampQuantity(quantity) },
+    ],
   };
 }
 
@@ -61,6 +70,7 @@ export function isValidCartItem(value: unknown): value is CartItem {
   return (
     typeof item.partId === "string" &&
     item.partId.length > 0 &&
+    PRODUCT_FAMILIES.includes(item.family as ProductFamily) &&
     typeof item.quantity === "number" &&
     Number.isInteger(item.quantity) &&
     item.quantity >= MIN_QUANTITY &&

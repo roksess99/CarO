@@ -1,23 +1,28 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCart } from "@/components/cart/use-cart";
+import { useCartParts } from "@/components/cart/use-cart-parts";
 import { subtotalCents } from "@/lib/cart/cart";
-import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents } from "@/lib/format";
 import { Link } from "@/i18n/navigation";
 
-// Compact, alleen-lezen overzicht voor de checkout. De wagen leeft
-// client-side; de server-page geeft de catalogus mee voor de lookup.
-export function OrderSummary({ parts }: { parts: Part[] }) {
+// Compact, alleen-lezen overzicht voor de checkout. Zelfde bron als de
+// winkelwagen: artikelen worden op id opgezocht via de Server Action.
+export function OrderSummary() {
   const t = useTranslations("checkout");
-  const cart = useCart();
+  const { entries, loading } = useCartParts();
 
-  const partById = new Map(parts.map((p) => [p.id, p]));
-  const entries = cart.items.flatMap((item) => {
-    const part = partById.get(item.partId);
-    return part ? [{ item, part }] : [];
-  });
+  if (loading) {
+    return (
+      <div className="rounded-lg border border-border p-6" aria-busy="true">
+        <div className="h-6 w-32 animate-pulse rounded bg-surface" />
+        <div className="mt-4 space-y-3">
+          <div className="h-4 w-full animate-pulse rounded bg-surface" />
+          <div className="h-4 w-2/3 animate-pulse rounded bg-surface" />
+        </div>
+      </div>
+    );
+  }
 
   if (entries.length === 0) {
     return (
@@ -34,8 +39,8 @@ export function OrderSummary({ parts }: { parts: Part[] }) {
   }
 
   const subtotal = subtotalCents(
-    entries.map(({ item, part }) => ({
-      quantity: item.quantity,
+    entries.map(({ part, quantity }) => ({
+      quantity,
       priceCents: part.priceCents,
     })),
   );
@@ -44,14 +49,17 @@ export function OrderSummary({ parts }: { parts: Part[] }) {
     <div className="rounded-lg border border-border p-6">
       <h2 className="text-lg">{t("summaryTitle")}</h2>
       <ul className="mt-4 divide-y divide-border border-y border-border">
-        {entries.map(({ item, part }) => (
-          <li key={part.id} className="flex items-baseline justify-between gap-4 py-3 text-sm">
+        {entries.map(({ part, quantity }) => (
+          <li
+            key={part.id}
+            className="flex items-baseline justify-between gap-4 py-3 text-sm"
+          >
             <span>
               {part.name}{" "}
-              <span className="text-muted tabular-nums">× {item.quantity}</span>
+              <span className="text-muted tabular-nums">× {quantity}</span>
             </span>
             <span className="font-medium tabular-nums">
-              {formatPriceCents(part.priceCents * item.quantity)}
+              {formatPriceCents(part.priceCents * quantity)}
             </span>
           </li>
         ))}

@@ -33,6 +33,59 @@ Dit is de belangrijkste bevinding: **er is geen area met nieuwe auto-onderdelen.
 | 8 | `aw` | Lichtmetalen wielen | ❌ leeg | ❌ leeg |
 | 9 | `to` | Tools | ❌ leeg | ❌ leeg |
 
+### Nieuwe onderdelen: area 3 "Original-Ersatzteile" (onderzocht 2026-08-07)
+
+Dit is de area die je wilt voor **nieuwe** onderdelen. Hij bestaat en werkt —
+op het Duitse platform. Volledig record uit `GET /areas`:
+
+| Veld | Waarde | Betekenis |
+|---|---|---|
+| `areaStatus[0].name` | **Original-Ersatzteile** | Nieuwe originele onderdelen |
+| `active` | `true` | Bestaat en is in gebruik |
+| `searchPrefix` | **`"OEN"`** | Zoeken gaat op **OE-nummer**, niet op productnaam |
+| `searchableByCategory` | **`false`** | **Geen categoriebrowsing mogelijk** |
+| `showTecDocVehicleSearch` | `true` | Voertuigzoeken via TecDoc wordt ondersteund |
+| `agreementNeeded` | **`true`** | B2B-overeenkomst met de groothandel vereist vóór bestellen |
+
+Bewijs dat er data in zit — zoeken op OE-nummer `06A115561B`:
+
+```
+VOLKSWAGEN | OELFILTER | stock=9  | ek=10.01 evp_3=19.00
+VOLKSWAGEN | OELFILTER | stock=10 | ek=14.80 evp_3=26.00
+```
+
+Zoeken op een productnaam ("bremsbelag", "ölfilter") geeft **0 resultaten** —
+dat verklaart waarom een eerdere poging niets vond. Het is een OEN-zoekmachine.
+
+**Beschikbaarheid per landplatform** (zelfde token, zelfde OEN):
+
+| Platform | Resultaat |
+|---|---|
+| `de/de` | ✅ werkt, levert artikelen |
+| `at/de` | ⚠️ area actief, maar 0 resultaten voor dit account |
+| `nl/nl`, `be/nl`, `fr/fr` | ❌ `ERR_B2B_PRODUCTAREA_INACTIVE` |
+
+**Geen voertuig-endpoints in deze API.** `/carBrands`, `/carModels`, `/carTypes`,
+`/vehicles`, `/articles`, `/tecdoc` geven allemaal HTTP 400 op de Products-API.
+Toch staan er in de swagger ongebruikte TecDoc-definities (`assemblyGroup`,
+`CategoryBySearchString`, `ArticlesDirectSearch`, `vehicleIdentification`) die
+bij géén enkel gedocumenteerd endpoint horen. Sterke aanwijzing dat er een
+**aparte onderdelen-/TecDoc-API bestaat waarvan wij de documentatie niet hebben**.
+
+**Wat je aan Tyre24 moet vragen:**
+1. **Activeer productarea 3 ("Original-Ersatzteile") op het NL-platform.** Zonder
+   dat kun je geen nieuwe onderdelen verkopen aan Nederlandse klanten.
+2. **Documentatie van de TecDoc-voertuigzoek-API.** Zonder categoriebrowsing is
+   dat de enige manier om onderdelen vindbaar te maken (en het is meteen de
+   ontbrekende schakel voor de kentekenzoeker — zie DECISIONS.md #6).
+3. **Welke overeenkomsten nodig zijn** (`agreementNeeded: true`) en hoe je die
+   afsluit via `/agreementList` en `/newPdfAgreement`.
+
+⚠️ **Gevolg voor de shop-UI**: area 3 kan niet met de huidige
+categorie-navigatie werken. Onderdelen vragen een ander winkelmodel: klant
+voert kenteken of OE-nummer in → passende artikelen. De categoriebrowsing die
+we nu hebben werkt alleen voor banden (area 6) en gebruikte onderdelen (area 10).
+
 Gevolgen:
 - **Banden** is de enige goed gevulde area op het NL-platform.
 - **Gebruikte onderdelen** (area 10, DE-platform) is de enige bron van echte
@@ -50,9 +103,22 @@ Gevolgen:
    - De sleutel binnen `prices` is **`"1"`**, *niet* de productAreaId.
    - ⚠️ **Vermoedelijk exclusief btw** (B2B-marktplaats), maar de API zegt het
      niet. Zie docs/DECISIONS.md #5 — navragen bij Tyre24 vóór livegang.
-2. **`imageLink` kan placeholders bevatten:** bij banden
-   `…/26064-PTY-%s-%s-br1.jpg`. Onbruikbaar als URL; de adapter filtert die weg.
-   Bij gebruikte onderdelen zijn de links wel direct bruikbaar.
+2. **Productfoto's werken (nog) niet — `imageLink` is een sjabloon.**
+   Gemeten 2026-08-07: **alle** areas leveren URL's met twee `%s`-placeholders,
+   niet alleen banden:
+   - banden: `https://media3.tyre-shopping.com/images/tyre/26064-PTY-%s-%s-br1.jpg`
+   - gebruikte onderdelen: `…/3947354-X-%s-%s-br1.jpeg`
+
+   Wat we hebben geprobeerd: `%s-%s` vervangen door breedte-hoogte
+   (`200-200`, `400-400`, `800-600`, `1-1`, `0-0`, …). De server antwoordt dan
+   **HTTP 500 met steeds exact dezelfde 12.240 bytes**, een generieke
+   vervangfoto van 300×225 — ongeacht de gevraagde maat. De URL met de
+   placeholders er nog in geeft HTTP 400. Het echte substitutieformaat staat
+   niet in de swagger.
+
+   **Actie: navragen bij Tyre24 waar `%s-%s` voor staat.** Tot die tijd
+   filtert de adapter deze URL's weg en toont de UI een eigen merkplaceholder —
+   beter dan op elk product dezelfde generieke foto of een gebroken plaatje.
 3. **Het `manufacturer`-filter wil een base64-`identifier`**, niet de merknaam:
    `"NjE3fkFMVEVOWk8"` = `617~ALTENZO`. Die identifiers komen uit het
    `filter.manufacturer.filter`-blok in de `/items`-response.

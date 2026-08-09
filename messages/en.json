@@ -5,9 +5,30 @@
   "header": {
     "homeAria": "CarO — go to homepage"
   },
-  "nav": {
-    "categories": "Categories",
-    "categoriesAria": "Category menu"
+  "family": {
+    "eyebrow": "Range",
+    "categoriesAria": "Categories",
+    "featuredTitle": "Frequently bought",
+    "viewAll": "View all",
+    "allIn": "All in {family}",
+    "onderdelen": {
+      "title": "Parts",
+      "intro": "Maintenance and repair parts. Search by part or OE number.",
+      "menuAria": "Part categories",
+      "empty": "No parts are available yet. Once the parts catalogue is connected, you will find brakes, filters, electrics and more here."
+    },
+    "banden": {
+      "title": "Tyres",
+      "intro": "Tyres for cars, SUVs, vans and two-wheelers.",
+      "menuAria": "Tyre categories",
+      "empty": "No tyres are available yet."
+    },
+    "oenLabel": "Search by OE number",
+    "oenPlaceholder": "e.g. 06A115561B",
+    "oenSubmit": "Search",
+    "oenHint": "Enter the full OE number exactly as it appears on the part. Searching by product name or a partial number does not work.",
+    "oenResults": "Results for {term}",
+    "oenNoResults": "No parts found for {term}. Check the OE number — it must be complete and exact."
   },
   "vehicle": {
     "title": "Does it fit your car?",
@@ -28,7 +49,9 @@
   "category": {
     "metaDescription": "{category} for your car. All prices include 21% VAT.",
     "brandFilterLabel": "Filter by brand",
-    "allBrands": "All brands"
+    "allBrands": "All brands",
+    "breadcrumbAria": "Breadcrumb",
+    "breadcrumbHome": "Home"
   },
   "localeSwitcher": {
     "label": "Language",
@@ -44,9 +67,7 @@
     "metaDescription": "Car parts for the Dutch market. Search by part or OE number. All prices include 21% VAT.",
     "eyebrow": "Car parts",
     "title": "The right part, no hassle",
-    "intro": "Search by part or OE number. All prices include 21% VAT and shipping costs are shown before checkout.",
-    "cta": "Browse the range",
-    "featuredTitle": "Frequently bought"
+    "intro": "Search by part or OE number. All prices include 21% VAT and shipping costs are shown before checkout."
   },
   "product": {
     "empty": "No parts found. Try a different category.",

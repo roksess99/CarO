@@ -49,9 +49,21 @@ de inhoud bekijken, dan toevoegen aan de allowlist.
 Het filter zit in de provider (`fetchCategories` én `toPart`), zodat uitgesloten
 categorieën ook niet via een directe URL bereikbaar zijn.
 
-**Actie**: vragen bij Tyre24 of area 3 (`oe`, nieuwe onderdelen) op het
-NL-platform geactiveerd kan worden. Dat bepaalt of de shop kan worden wat
-CLAUDE.md beschrijft.
+**Uitgezocht 2026-08-07 — nieuwe onderdelen bestaan wél**: area 3 heet
+"Original-Ersatzteile" en levert echte artikelen (bewijs in docs/api/TYRE24.md).
+Drie concrete blokkades, alle drie bij Tyre24:
+
+1. **Area 3 is niet actief op het NL-platform** (wel op DE, deels AT).
+2. **Zoeken kan alleen op OE-nummer** (`searchPrefix: "OEN"`,
+   `searchableByCategory: false`) — de huidige categorie-navigatie werkt hier
+   dus niet. Onderdelen vragen een zoek-gedreven winkelmodel.
+3. **`agreementNeeded: true`** — B2B-overeenkomst per groothandel vereist
+   voordat je kunt bestellen.
+
+**Actie bij Tyre24**: (a) area 3 activeren op NL, (b) documentatie van de
+TecDoc-voertuigzoek-API opvragen — die ontbreekt in de swagger en is de
+ontbrekende schakel voor zowel onderdelen-navigatie als beslissing #6,
+(c) uitzoeken welke overeenkomsten nodig zijn.
 
 ---
 

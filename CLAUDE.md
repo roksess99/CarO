@@ -5,6 +5,12 @@ Webshop voor auto-onderdelen. Markt: Nederland. UI-taal: NL primair, EN secundai
 **Assortiment: alleen personenauto's en tweewielers.** Geen vrachtwagens,
 landbouw, grondverzet of industrie. Afgedwongen als allowlist in
 `src/lib/catalog/assortment.ts` — zie @docs/DECISIONS.md #7.
+
+**Twee productfamilies: onderdelen en banden.** Dat onderscheid loopt door de
+hele site: eigen navigatie-ingang, eigen URL-tak, eigen sectie op de homepage
+en zichtbaar in het kruimelpad. Elke familie hangt aan een eigen Tyre24
+productArea (`src/lib/catalog/families.ts`). Een familie zonder bron toont een
+eerlijke lege staat, geen verzonnen producten.
 Huisstijl: @docs/BRAND.md — wijk hier nooit vanaf.
 Openstaande beslissingen: @docs/DECISIONS.md — niet gokken, vragen.
 
@@ -64,9 +70,19 @@ Draai `pnpm typecheck && pnpm lint` voordat je zegt dat werk af is.
 
 ## Structuur
 
+URL-structuur (drie niveaus, taalafhankelijke familieslug):
+
+```
+/nl/banden                              /en/tyres
+/nl/banden/auto-suv-1                   /en/tyres/auto-suv-1
+/nl/banden/auto-suv-1/<product>-<id>    /en/tyres/auto-suv-1/<product>-<id>
+/nl/onderdelen                          /en/parts
+```
+
 ```
 src/
   app/[locale]/          # routes
+  app/[locale]/[family]/ # familie > categorie > product
   components/            # herbruikbare UI
   components/brand/      # logo-componenten
   lib/                   # domeinlogica, geen React

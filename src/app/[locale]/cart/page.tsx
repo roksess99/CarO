@@ -3,7 +3,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CartView } from "@/components/cart/cart-view";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { getCatalogProvider } from "@/lib/catalog/provider";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -34,14 +33,11 @@ export default async function CartPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("cart");
-  // Hele (mock)catalogus mee voor de lookup; zie TODO in CartView
-  const parts = await getCatalogProvider().getParts();
-
   return (
     <div className="site-container py-12 md:py-16">
       <h1 className="text-3xl md:text-4xl">{t("title")}</h1>
       <div className="mt-8">
-        <CartView parts={parts} />
+        <CartView />
       </div>
     </div>
   );
