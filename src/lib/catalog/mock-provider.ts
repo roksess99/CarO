@@ -1,12 +1,19 @@
+import type { ProductFamily } from "./families";
 import type { CatalogProvider, Category, Part } from "./types";
 
-const categories: Category[] = [
-  { slug: "remmen", name: "Remmen" },
-  { slug: "filters", name: "Filters" },
-  { slug: "elektra", name: "Elektra" },
-  { slug: "motor", name: "Motor" },
-  { slug: "ruitenwissers", name: "Ruitenwissers" },
-];
+const categoriesByFamily: Record<ProductFamily, Category[]> = {
+  onderdelen: [
+    { slug: "remmen", name: "Remmen" },
+    { slug: "filters", name: "Filters" },
+    { slug: "elektra", name: "Elektra" },
+    { slug: "motor", name: "Motor" },
+    { slug: "ruitenwissers", name: "Ruitenwissers" },
+  ],
+  banden: [
+    { slug: "auto-suv", name: "Auto / SUV" },
+    { slug: "tweewieler", name: "Tweewieler" },
+  ],
+};
 
 const parts: Part[] = [
   {
@@ -15,7 +22,9 @@ const parts: Part[] = [
     name: "Remblokkenset vooras",
     brand: "Brembo",
     oeNumber: "P 85 020",
+    family: "onderdelen",
     categorySlug: "remmen",
+    categoryName: "Remmen",
     priceCents: 4295,
     availability: "in-stock",
   },
@@ -25,7 +34,9 @@ const parts: Part[] = [
     name: "Remschijven vooras (set van 2)",
     brand: "Bosch",
     oeNumber: "0 986 479 B93",
+    family: "onderdelen",
     categorySlug: "remmen",
+    categoryName: "Remmen",
     priceCents: 8990,
     availability: "in-stock",
   },
@@ -35,7 +46,9 @@ const parts: Part[] = [
     name: "Oliefilter",
     brand: "MANN-FILTER",
     oeNumber: "HU 719/7 x",
+    family: "onderdelen",
     categorySlug: "filters",
+    categoryName: "Filters",
     priceCents: 1195,
     availability: "in-stock",
   },
@@ -45,7 +58,9 @@ const parts: Part[] = [
     name: "Interieurfilter met actieve koolstof",
     brand: "MANN-FILTER",
     oeNumber: "CUK 26 009",
+    family: "onderdelen",
     categorySlug: "filters",
+    categoryName: "Filters",
     priceCents: 1890,
     availability: "ordered",
   },
@@ -55,7 +70,9 @@ const parts: Part[] = [
     name: "Accu 12V 70Ah",
     brand: "Varta",
     oeNumber: "577 400 078",
+    family: "onderdelen",
     categorySlug: "elektra",
+    categoryName: "Elektra",
     priceCents: 12950,
     availability: "in-stock",
   },
@@ -65,7 +82,9 @@ const parts: Part[] = [
     name: "Bougieset (4 stuks)",
     brand: "NGK",
     oeNumber: "94833",
+    family: "onderdelen",
     categorySlug: "motor",
+    categoryName: "Motor",
     priceCents: 3160,
     availability: "in-stock",
   },
@@ -75,7 +94,9 @@ const parts: Part[] = [
     name: "Multiriem",
     brand: "Continental",
     oeNumber: "6PK1153",
+    family: "onderdelen",
     categorySlug: "motor",
+    categoryName: "Motor",
     priceCents: 2245,
     availability: "ordered",
   },
@@ -85,27 +106,77 @@ const parts: Part[] = [
     name: "Ruitenwisserset voor",
     brand: "Bosch",
     oeNumber: "3 397 007 620",
+    family: "onderdelen",
     categorySlug: "ruitenwissers",
+    categoryName: "Ruitenwissers",
     priceCents: 2795,
     availability: "out-of-stock",
+  },
+  // Banden, zodat beide families ook zonder API-token werken
+  {
+    id: "t-001",
+    slug: "continental-ecocontact-6-195-65-r15-91h",
+    name: "CONTINENTAL ECOCONTACT 6 195/65 R15 91 H",
+    brand: "CONTINENTAL",
+    oeNumber: "0311770",
+    family: "banden",
+    categorySlug: "auto-suv",
+    categoryName: "Auto / SUV",
+    priceCents: 8495,
+    availability: "in-stock",
+  },
+  {
+    id: "t-002",
+    slug: "michelin-primacy-4-205-55-r16-91v",
+    name: "MICHELIN PRIMACY 4 205/55 R16 91 V",
+    brand: "MICHELIN",
+    oeNumber: "925619",
+    family: "banden",
+    categorySlug: "auto-suv",
+    categoryName: "Auto / SUV",
+    priceCents: 10750,
+    availability: "in-stock",
+  },
+  {
+    id: "t-003",
+    slug: "michelin-city-grip-2-120-70-12-58p",
+    name: "MICHELIN CITY GRIP 2 120/70 -12 58 P",
+    brand: "MICHELIN",
+    oeNumber: "410352",
+    family: "banden",
+    categorySlug: "tweewieler",
+    categoryName: "Tweewieler",
+    priceCents: 5495,
+    availability: "ordered",
   },
 ];
 
 export const mockProvider: CatalogProvider = {
-  async getCategories() {
-    return categories;
+  async getCategories(family) {
+    return categoriesByFamily[family];
   },
   async getParts(query) {
-    let result = parts;
-    if (query?.categorySlug) {
+    let result = parts.filter((p) => p.family === query.family);
+    if (query.categorySlug) {
       result = result.filter((p) => p.categorySlug === query.categorySlug);
     }
-    if (query?.limit !== undefined) {
+    if (query.brand) {
+      result = result.filter((p) => p.brand === query.brand);
+    }
+    if (query.search) {
+      // Zoals de echte API: exacte match op OE-nummer
+      const term = query.search.trim().toUpperCase();
+      result = result.filter((p) => p.oeNumber.toUpperCase() === term);
+    }
+    if (query.limit !== undefined) {
       result = result.slice(0, query.limit);
     }
     return result;
   },
-  async getPartBySlug(slug) {
-    return parts.find((p) => p.slug === slug) ?? null;
+  async getPartBySlug(family, slug) {
+    return parts.find((p) => p.family === family && p.slug === slug) ?? null;
+  },
+  async getPartById(family, id) {
+    return parts.find((p) => p.family === family && p.id === id) ?? null;
   },
 };

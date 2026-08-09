@@ -1,11 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import {
-  addItem,
-  removeItem,
-  setItemQuantity,
-} from "@/lib/cart/cart";
+import { addItem, removeItem, setItemQuantity } from "@/lib/cart/cart";
 import {
   getCartSnapshot,
   loadCart,
@@ -13,6 +9,7 @@ import {
   subscribeToCart,
 } from "@/lib/cart/storage";
 import { type Cart, EMPTY_CART } from "@/lib/cart/types";
+import type { Part } from "@/lib/catalog/types";
 
 // localStorage ís de store; React abonneert zich er alleen op. Server-
 // snapshot is de lege wagen — na hydration verschijnt de echte inhoud.
@@ -22,8 +19,8 @@ export function useCart(): Cart {
 
 // Acties lezen altijd de actuele opgeslagen staat (niet de render-snapshot),
 // zodat twee snelle kliks elkaar niet overschrijven.
-export function addToCart(partId: string, quantity = 1): void {
-  saveCart(addItem(loadCart(), partId, quantity));
+export function addToCart(part: Part, quantity = 1): void {
+  saveCart(addItem(loadCart(), part.id, part.family, quantity));
 }
 
 export function removeFromCart(partId: string): void {

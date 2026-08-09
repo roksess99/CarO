@@ -1,0 +1,24 @@
+export default function Loading() {
+  return (
+    <div className="site-container py-12 md:py-16" aria-busy="true">
+      <div className="h-10 w-64 animate-pulse rounded bg-surface" />
+      <div className="mt-6 flex gap-2">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="h-8 w-24 animate-pulse rounded-md bg-surface" />
+        ))}
+      </div>
+      <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 xl:grid-cols-4">
+        {Array.from({ length: 8 }, (_, i) => (
+          <div key={i} className="animate-pulse rounded-lg border border-border">
+            <div className="aspect-4/3 rounded-t-lg bg-surface" />
+            <div className="space-y-2 p-4">
+              <div className="h-3 w-1/2 rounded bg-surface" />
+              <div className="h-4 w-3/4 rounded bg-surface" />
+              <div className="h-4 w-1/3 rounded bg-surface" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

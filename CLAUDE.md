@@ -1,6 +1,16 @@
 # CarO — Onderdelen webshop (NL)
 
 Webshop voor auto-onderdelen. Markt: Nederland. UI-taal: NL primair, EN secundair.
+
+**Assortiment: alleen personenauto's en tweewielers.** Geen vrachtwagens,
+landbouw, grondverzet of industrie. Afgedwongen als allowlist in
+`src/lib/catalog/assortment.ts` — zie @docs/DECISIONS.md #7.
+
+**Twee productfamilies: onderdelen en banden.** Dat onderscheid loopt door de
+hele site: eigen navigatie-ingang, eigen URL-tak, eigen sectie op de homepage
+en zichtbaar in het kruimelpad. Elke familie hangt aan een eigen Tyre24
+productArea (`src/lib/catalog/families.ts`). Een familie zonder bron toont een
+eerlijke lege staat, geen verzonnen producten.
 Huisstijl: @docs/BRAND.md — wijk hier nooit vanaf.
 Openstaande beslissingen: @docs/DECISIONS.md — niet gokken, vragen.
 
@@ -10,19 +20,23 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 
 | Fase | Wat | Status |
 |---|---|---|
-| 1 | UI, routing, i18n, thema, componenten — op mockdata | ACTIEF |
-| 2 | Winkelwagen (client-side, cookie/localStorage) | |
-| 3 | Externe onderdelen-API achter de bestaande provider-interface | |
-| 4 | Database (PostgreSQL + Prisma): orders, klanten, voorraad | |
+| 1 | UI, routing, i18n, thema, componenten — op mockdata | KLAAR |
+| 2 | Winkelwagen (client-side, cookie/localStorage) | KLAAR |
+| 3 | Tyre24/ALZURA-API achter de provider-interface (docs/api/TYRE24.md) | ACTIEF |
+| 4 | Database (PostgreSQL + Prisma): orders, klanten; inkoop via Tyre24 POST /order | |
 | 5 | Betaling (Mollie, iDEAL) | |
+| 6 | Velgen: Tyre24 Alloys-API — voertuigselectie (carID), matching, 3D-beelden | |
 
-**Regels tijdens fase 1 en 2:**
-- Bouw geen Prisma-schema, geen API-routes naar een echte catalogus, geen betaalcode.
-- Alle productdata komt uit `src/lib/catalog/mock-provider.ts`.
-- Componenten importeren **alleen** types uit `src/lib/catalog/types.ts`, nooit uit de mock zelf.
-- Het datacontract in `types.ts` is leidend. Past de echte API daar straks niet op,
-  dan passen we de adapter aan — nooit de componenten.
-- Waar later serverwerk komt (prijsberekening, voorraadcheck, order aanmaken):
+**Regels tijdens fase 3:**
+- Het datacontract in `types.ts` is leidend. Past de echte API daar niet op,
+  dan passen we de **adapter** aan — nooit de componenten.
+- Componenten importeren **alleen** types uit `src/lib/catalog/types.ts`.
+- Alle Tyre24-calls lopen **server-side** door `tyre24-provider.ts`; de browser
+  praat nooit rechtstreeks met Tyre24 (token is een secret, rate limit 100/min).
+- `TYRE24_API_TOKEN` ontbreekt nog → `getCatalogProvider()` valt terug op de mock.
+  De site moet altijd zonder token blijven werken.
+- Nog geen Prisma-schema en geen betaalcode. Order plaatsen (Tyre24 POST /order) is fase 4.
+- Waar later serverwerk komt (ordercreatie, voorraadreservering):
   zet een functie in `src/lib/` met een `// TODO fase X` comment, geen halve implementatie.
 
 ## Stack
@@ -34,6 +48,10 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
   layout + `theme-toggle.tsx`). next-themes is verwijderd: verlaten package,
   gaf een React 19-warning door zijn client-side geïnjecteerde script.
 - **Package manager**: pnpm
+- **Catalogus**: Tyre24/ALZURA REST API v1.3 — zie @docs/api/TYRE24.md.
+  Zod valideert alle API-responses aan de rand, daarna is alles getypeerd.
+- **Kentekenzoeker**: overheid.io (RDW-voertuiggegevens) — zie @docs/api/OVERHEID-IO.md.
+  Een kenteken is persoonsgegeven: nooit in een URL, nooit in een logregel.
 - Later: PostgreSQL + Prisma (fase 4), Mollie (fase 5)
 
 Voeg geen libraries toe zonder te vragen. Geen state-manager, geen UI-kit.
@@ -52,15 +70,26 @@ Draai `pnpm typecheck && pnpm lint` voordat je zegt dat werk af is.
 
 ## Structuur
 
+URL-structuur (drie niveaus, taalafhankelijke familieslug):
+
+```
+/nl/banden                              /en/tyres
+/nl/banden/auto-suv-1                   /en/tyres/auto-suv-1
+/nl/banden/auto-suv-1/<product>-<id>    /en/tyres/auto-suv-1/<product>-<id>
+/nl/onderdelen                          /en/parts
+```
+
 ```
 src/
   app/[locale]/          # routes
+  app/[locale]/[family]/ # familie > categorie > product
   components/            # herbruikbare UI
   components/brand/      # logo-componenten
   lib/                   # domeinlogica, geen React
-  lib/catalog/           # types.ts (contract) + mock-provider.ts
+  lib/catalog/           # types.ts (contract) + mock-provider.ts + tyre24-provider.ts
   lib/cart/              # winkelwagenlogica, framework-onafhankelijk
 public/brand/            # logo SVG's
+docs/api/                # Tyre24 swagger + integratienotities
 messages/nl.json, en.json
 ```
 

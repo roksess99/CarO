@@ -2,31 +2,35 @@
 
 import { useTranslations } from "next-intl";
 import { CaroMark } from "@/components/brand/caro-mark";
-import {
-  removeFromCart,
-  setCartQuantity,
-  useCart,
-} from "@/components/cart/use-cart";
+import { removeFromCart, setCartQuantity } from "@/components/cart/use-cart";
+import { useCartParts } from "@/components/cart/use-cart-parts";
 import { subtotalCents } from "@/lib/cart/cart";
 import { MAX_QUANTITY } from "@/lib/cart/types";
-import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents } from "@/lib/format";
 import { Link } from "@/i18n/navigation";
 
-// De wagen leeft in localStorage, dus alleen de client kent de inhoud.
-// De server-page geeft de catalogus mee voor de artikel-lookup.
-// TODO fase 3: lookup per id via de provider i.p.v. de hele catalogus.
-export function CartView({ parts }: { parts: Part[] }) {
+// De wagen leeft in localStorage; useCartParts zoekt de artikelen op via
+// een Server Action (op id, niet door een catalogus te doorzoeken).
+export function CartView() {
   const t = useTranslations("cart");
-  const cart = useCart();
+  const { entries, loading } = useCartParts();
 
-  const partById = new Map(parts.map((p) => [p.id, p]));
-  // Items waarvan het onderdeel niet (meer) bestaat tonen we niet;
-  // ze verdwijnen definitief zodra de gebruiker de wagen aanpast.
-  const entries = cart.items.flatMap((item) => {
-    const part = partById.get(item.partId);
-    return part ? [{ item, part }] : [];
-  });
+  if (loading) {
+    return (
+      <div className="space-y-4" aria-busy="true">
+        {Array.from({ length: 2 }, (_, i) => (
+          <div key={i} className="flex gap-4 py-4">
+            <div className="size-20 animate-pulse rounded-md bg-surface" />
+            <div className="flex-1 space-y-2">
+              <div className="h-3 w-24 animate-pulse rounded bg-surface" />
+              <div className="h-4 w-2/3 animate-pulse rounded bg-surface" />
+              <div className="h-8 w-32 animate-pulse rounded bg-surface" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (entries.length === 0) {
     return (
@@ -43,8 +47,8 @@ export function CartView({ parts }: { parts: Part[] }) {
   }
 
   const subtotal = subtotalCents(
-    entries.map(({ item, part }) => ({
-      quantity: item.quantity,
+    entries.map(({ part, quantity }) => ({
+      quantity,
       priceCents: part.priceCents,
     })),
   );
@@ -52,7 +56,7 @@ export function CartView({ parts }: { parts: Part[] }) {
   return (
     <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12">
       <ul className="flex-1 divide-y divide-border border-y border-border">
-        {entries.map(({ item, part }) => (
+        {entries.map(({ part, quantity }) => (
           <li key={part.id} className="flex gap-4 py-4">
             <div className="flex size-20 shrink-0 items-center justify-center rounded-md bg-surface">
               <CaroMark variant="line" className="size-6 opacity-30" />
@@ -70,20 +74,20 @@ export function CartView({ parts }: { parts: Part[] }) {
                   <button
                     type="button"
                     aria-label={t("decrease", { name: part.name })}
-                    disabled={item.quantity <= 1}
-                    onClick={() => setCartQuantity(part.id, item.quantity - 1)}
+                    disabled={quantity <= 1}
+                    onClick={() => setCartQuantity(part.id, quantity - 1)}
                     className="size-8 text-foreground hover:bg-surface disabled:cursor-not-allowed disabled:text-muted"
                   >
                     −
                   </button>
                   <span className="w-8 text-center text-sm font-medium tabular-nums">
-                    {item.quantity}
+                    {quantity}
                   </span>
                   <button
                     type="button"
                     aria-label={t("increase", { name: part.name })}
-                    disabled={item.quantity >= MAX_QUANTITY}
-                    onClick={() => setCartQuantity(part.id, item.quantity + 1)}
+                    disabled={quantity >= MAX_QUANTITY}
+                    onClick={() => setCartQuantity(part.id, quantity + 1)}
                     className="size-8 text-foreground hover:bg-surface disabled:cursor-not-allowed disabled:text-muted"
                   >
                     +
@@ -100,7 +104,7 @@ export function CartView({ parts }: { parts: Part[] }) {
               </div>
             </div>
             <p className="text-sm font-bold tabular-nums">
-              {formatPriceCents(part.priceCents * item.quantity)}
+              {formatPriceCents(part.priceCents * quantity)}
             </p>
           </li>
         ))}
@@ -118,15 +122,12 @@ export function CartView({ parts }: { parts: Part[] }) {
         {/* Verplicht vóór de laatste checkoutstap (CLAUDE.md, NL-recht) */}
         <p className="mt-4 text-sm text-muted">{t("shippingNote")}</p>
         <p className="mt-2 text-sm text-muted">{t("withdrawalNote")}</p>
-        {/* TODO fase 5: echte checkout via Mollie (iDEAL) */}
-        <button
-          type="button"
-          disabled
-          className="mt-6 w-full cursor-not-allowed rounded-md bg-surface px-6 py-3 font-semibold text-muted"
+        <Link
+          href="/checkout"
+          className="mt-6 block w-full rounded-md bg-caro-orange px-6 py-3 text-center font-semibold text-caro-ink"
         >
           {t("checkout")}
-        </button>
-        <p className="mt-2 text-xs text-muted">{t("checkoutUnavailable")}</p>
+        </Link>
       </aside>
     </div>
   );

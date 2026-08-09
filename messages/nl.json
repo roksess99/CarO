@@ -5,6 +5,54 @@
   "header": {
     "homeAria": "CarO — naar de homepage"
   },
+  "family": {
+    "eyebrow": "Assortiment",
+    "categoriesAria": "Categorieën",
+    "featuredTitle": "Veelgekocht",
+    "viewAll": "Alles bekijken",
+    "allIn": "Alles in {family}",
+    "onderdelen": {
+      "title": "Onderdelen",
+      "intro": "Onderhoudsdelen en reparatieonderdelen. Zoek op onderdeel of OE-nummer.",
+      "menuAria": "Onderdelencategorieën",
+      "empty": "Er is nog geen onderdelenaanbod. Zodra de koppeling met de onderdelencatalogus er is, vind je hier remmen, filters, elektra en meer."
+    },
+    "banden": {
+      "title": "Banden",
+      "intro": "Banden voor auto, SUV, bestelwagen en tweewieler.",
+      "menuAria": "Bandencategorieën",
+      "empty": "Er is nog geen bandenaanbod beschikbaar."
+    },
+    "oenLabel": "Zoek op OE-nummer",
+    "oenPlaceholder": "bv. 06A115561B",
+    "oenSubmit": "Zoeken",
+    "oenHint": "Vul het volledige OE-nummer in zoals het op het onderdeel staat. Zoeken op productnaam of een deel van het nummer werkt niet.",
+    "oenResults": "Resultaten voor {term}",
+    "oenNoResults": "Geen onderdelen gevonden voor {term}. Controleer het OE-nummer — het moet volledig en exact kloppen."
+  },
+  "vehicle": {
+    "title": "Past het op jouw auto?",
+    "label": "Vul je kenteken in",
+    "placeholder": "AB-123-C",
+    "search": "Zoek auto",
+    "searching": "Zoeken…",
+    "yourCar": "Jouw auto",
+    "changeCar": "Andere auto kiezen",
+    "clearAria": "Auto {plate} wissen",
+    "fitmentPending": "Onderdelen filteren op jouw auto komt beschikbaar zodra de koppeling met de onderdelencatalogus er is.",
+    "errors": {
+      "invalidPlate": "Een Nederlands kenteken heeft 6 tekens, bijvoorbeeld AB-123-C.",
+      "notFound": "Dit kenteken staat niet in de RDW-gegevens. Controleer of je het goed hebt ingevuld.",
+      "unavailable": "De kentekenzoeker is tijdelijk niet beschikbaar. Probeer het later opnieuw."
+    }
+  },
+  "category": {
+    "metaDescription": "{category} voor jouw auto. Alle prijzen inclusief 21% btw.",
+    "brandFilterLabel": "Filter op merk",
+    "allBrands": "Alle merken",
+    "breadcrumbAria": "Kruimelpad",
+    "breadcrumbHome": "Home"
+  },
   "localeSwitcher": {
     "label": "Taal",
     "nl": "Nederlands",
@@ -19,12 +67,21 @@
     "metaDescription": "Auto-onderdelen voor de Nederlandse markt. Zoek op onderdeel of OE-nummer. Alle prijzen inclusief 21% btw.",
     "eyebrow": "Auto-onderdelen",
     "title": "Het juiste onderdeel, zonder gedoe",
-    "intro": "Zoek op onderdeel of OE-nummer. Alle prijzen zijn inclusief 21% btw en verzendkosten zie je vóór het afrekenen.",
-    "cta": "Bekijk het aanbod",
-    "featuredTitle": "Veelgekocht"
+    "intro": "Zoek op onderdeel of OE-nummer. Alle prijzen zijn inclusief 21% btw en verzendkosten zie je vóór het afrekenen."
   },
   "product": {
     "empty": "Geen onderdelen gevonden. Probeer een andere categorie.",
+    "view": "Bekijken",
+    "viewAria": "Bekijk {name}",
+    "metaDescription": "{name} van {brand}, OE-nummer {oeNumber}. Prijs inclusief 21% btw.",
+    "detailsTitle": "Artikelgegevens",
+    "brandLabel": "Merk",
+    "quantityLabel": "Aantal",
+    "shippingNote": "Verzendkosten zie je vóór het afrekenen.",
+    "withdrawalNote": "14 dagen bedenktijd op elke bestelling.",
+    "breadcrumbAria": "Kruimelpad",
+    "breadcrumbHome": "Home",
+    "noImage": "Geen afbeelding beschikbaar",
     "oeLabel": "OE-nummer",
     "inclVat": "incl. 21% btw",
     "availability": {
@@ -52,8 +109,43 @@
     "inclVat": "Inclusief 21% btw",
     "shippingNote": "Verzendkosten zie je vóór het afrekenen.",
     "withdrawalNote": "14 dagen bedenktijd op elke bestelling.",
-    "checkout": "Afrekenen",
-    "checkoutUnavailable": "Afrekenen komt beschikbaar zodra de betaalkoppeling er is."
+    "checkout": "Afrekenen"
+  },
+  "checkout": {
+    "metaTitle": "Afrekenen — CarO",
+    "metaDescription": "Vul je gegevens in om je bestelling af te ronden. Alle prijzen inclusief 21% btw.",
+    "title": "Afrekenen",
+    "contactTitle": "Contactgegevens",
+    "addressTitle": "Bezorgadres",
+    "email": "E-mailadres",
+    "phone": "Telefoonnummer",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "street": "Straat",
+    "houseNumber": "Huisnummer",
+    "houseNumberAddition": "Toevoeging",
+    "postcode": "Postcode",
+    "city": "Plaats",
+    "country": "Land",
+    "countryNl": "Nederland",
+    "optional": "(optioneel)",
+    "errors": {
+      "required": "Dit veld is verplicht.",
+      "invalid": "Deze waarde is ongeldig.",
+      "email": "Vul een geldig e-mailadres in.",
+      "postcode": "Vul een geldige postcode in, bijvoorbeeld 1234 AB."
+    },
+    "errorSummary": "Controleer de rood gemarkeerde velden.",
+    "summaryTitle": "Je bestelling",
+    "subtotal": "Subtotaal",
+    "inclVat": "Inclusief 21% btw",
+    "shippingNote": "Verzendkosten worden getoond vóór de betaalstap.",
+    "withdrawalNote": "14 dagen bedenktijd op elke bestelling.",
+    "submit": "Bestelling plaatsen",
+    "savedNotice": "Je gegevens zijn gecontroleerd en opgeslagen. Bestellen en betalen (iDEAL) komen beschikbaar zodra de betaalkoppeling er is.",
+    "emptyCart": "Je winkelwagen is leeg — er valt nog niets af te rekenen.",
+    "emptyCta": "Bekijk het aanbod",
+    "backToCart": "Terug naar winkelwagen"
   },
   "footer": {
     "vat": "Alle prijzen zijn inclusief 21% btw.",

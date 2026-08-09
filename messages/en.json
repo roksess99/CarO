@@ -5,6 +5,54 @@
   "header": {
     "homeAria": "CarO — go to homepage"
   },
+  "family": {
+    "eyebrow": "Range",
+    "categoriesAria": "Categories",
+    "featuredTitle": "Frequently bought",
+    "viewAll": "View all",
+    "allIn": "All in {family}",
+    "onderdelen": {
+      "title": "Parts",
+      "intro": "Maintenance and repair parts. Search by part or OE number.",
+      "menuAria": "Part categories",
+      "empty": "No parts are available yet. Once the parts catalogue is connected, you will find brakes, filters, electrics and more here."
+    },
+    "banden": {
+      "title": "Tyres",
+      "intro": "Tyres for cars, SUVs, vans and two-wheelers.",
+      "menuAria": "Tyre categories",
+      "empty": "No tyres are available yet."
+    },
+    "oenLabel": "Search by OE number",
+    "oenPlaceholder": "e.g. 06A115561B",
+    "oenSubmit": "Search",
+    "oenHint": "Enter the full OE number exactly as it appears on the part. Searching by product name or a partial number does not work.",
+    "oenResults": "Results for {term}",
+    "oenNoResults": "No parts found for {term}. Check the OE number — it must be complete and exact."
+  },
+  "vehicle": {
+    "title": "Does it fit your car?",
+    "label": "Enter your licence plate",
+    "placeholder": "AB-123-C",
+    "search": "Find car",
+    "searching": "Searching…",
+    "yourCar": "Your car",
+    "changeCar": "Choose another car",
+    "clearAria": "Clear car {plate}",
+    "fitmentPending": "Filtering parts for your car becomes available once the parts catalogue is connected.",
+    "errors": {
+      "invalidPlate": "A Dutch licence plate has 6 characters, for example AB-123-C.",
+      "notFound": "This licence plate is not in the RDW data. Please check your input.",
+      "unavailable": "The licence plate search is temporarily unavailable. Please try again later."
+    }
+  },
+  "category": {
+    "metaDescription": "{category} for your car. All prices include 21% VAT.",
+    "brandFilterLabel": "Filter by brand",
+    "allBrands": "All brands",
+    "breadcrumbAria": "Breadcrumb",
+    "breadcrumbHome": "Home"
+  },
   "localeSwitcher": {
     "label": "Language",
     "nl": "Dutch",
@@ -19,12 +67,21 @@
     "metaDescription": "Car parts for the Dutch market. Search by part or OE number. All prices include 21% VAT.",
     "eyebrow": "Car parts",
     "title": "The right part, no hassle",
-    "intro": "Search by part or OE number. All prices include 21% VAT and shipping costs are shown before checkout.",
-    "cta": "Browse the range",
-    "featuredTitle": "Frequently bought"
+    "intro": "Search by part or OE number. All prices include 21% VAT and shipping costs are shown before checkout."
   },
   "product": {
     "empty": "No parts found. Try a different category.",
+    "view": "View",
+    "viewAria": "View {name}",
+    "metaDescription": "{name} by {brand}, OE number {oeNumber}. Price includes 21% VAT.",
+    "detailsTitle": "Item details",
+    "brandLabel": "Brand",
+    "quantityLabel": "Quantity",
+    "shippingNote": "Shipping costs are shown before checkout.",
+    "withdrawalNote": "14-day right of withdrawal on every order.",
+    "breadcrumbAria": "Breadcrumb",
+    "breadcrumbHome": "Home",
+    "noImage": "No image available",
     "oeLabel": "OE number",
     "inclVat": "incl. 21% VAT",
     "availability": {
@@ -52,8 +109,43 @@
     "inclVat": "Including 21% VAT",
     "shippingNote": "Shipping costs are shown before checkout.",
     "withdrawalNote": "14-day right of withdrawal on every order.",
-    "checkout": "Checkout",
-    "checkoutUnavailable": "Checkout becomes available once the payment integration is in place."
+    "checkout": "Checkout"
+  },
+  "checkout": {
+    "metaTitle": "Checkout — CarO",
+    "metaDescription": "Enter your details to complete your order. All prices include 21% VAT.",
+    "title": "Checkout",
+    "contactTitle": "Contact details",
+    "addressTitle": "Delivery address",
+    "email": "Email address",
+    "phone": "Phone number",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "street": "Street",
+    "houseNumber": "House number",
+    "houseNumberAddition": "Addition",
+    "postcode": "Postal code",
+    "city": "City",
+    "country": "Country",
+    "countryNl": "Netherlands",
+    "optional": "(optional)",
+    "errors": {
+      "required": "This field is required.",
+      "invalid": "This value is invalid.",
+      "email": "Enter a valid email address.",
+      "postcode": "Enter a valid postal code, for example 1234 AB."
+    },
+    "errorSummary": "Please check the highlighted fields.",
+    "summaryTitle": "Your order",
+    "subtotal": "Subtotal",
+    "inclVat": "Including 21% VAT",
+    "shippingNote": "Shipping costs are shown before the payment step.",
+    "withdrawalNote": "14-day right of withdrawal on every order.",
+    "submit": "Place order",
+    "savedNotice": "Your details have been validated and saved. Ordering and payment (iDEAL) become available once the payment integration is in place.",
+    "emptyCart": "Your cart is empty — there is nothing to check out yet.",
+    "emptyCta": "Browse the range",
+    "backToCart": "Back to cart"
   },
   "footer": {
     "vat": "All prices include 21% VAT.",

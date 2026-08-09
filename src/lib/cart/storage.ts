@@ -8,7 +8,9 @@ import { type Cart, EMPTY_CART } from "./types";
 const STORAGE_KEY = "caro-cart";
 /** Zelfde tab: "storage" vuurt alleen in ándere tabs, dus eigen event */
 export const CART_EVENT = "caro-cart";
-const SCHEMA_VERSION = 1;
+// v2: CartItem heeft nu een `family`. Oude wagens (v1) worden genegeerd —
+// beter een lege wagen dan artikelen die we niet kunnen opzoeken.
+const SCHEMA_VERSION = 2;
 
 // localStorage is externe input: alles wat niet exact klopt → lege wagen.
 // Handmatige validatie i.p.v. Zod zolang die dependency er nog niet in zit.
