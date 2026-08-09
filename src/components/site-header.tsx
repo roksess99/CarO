@@ -1,8 +1,10 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { CaroLockup } from "@/components/brand/caro-lockup";
 import { CartButton } from "@/components/cart/cart-button";
 import { FamilyNav, type FamilyNavItem } from "@/components/family-nav";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { MobileNav } from "@/components/mobile-nav";
+import { SiteSearch } from "@/components/site-search";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SelectedVehicle } from "@/components/vehicle/selected-vehicle";
 import { Link } from "@/i18n/navigation";
@@ -11,6 +13,7 @@ import { getCatalogProvider } from "@/lib/catalog/provider";
 
 export async function SiteHeader() {
   const t = await getTranslations("header");
+  const locale = await getLocale();
   const provider = getCatalogProvider();
   const items: FamilyNavItem[] = await Promise.all(
     PRODUCT_FAMILIES.map(async (family) => ({
@@ -20,20 +23,36 @@ export async function SiteHeader() {
   );
 
   return (
-    <header className="border-b border-border">
-      <div className="site-container flex h-16 items-center justify-between gap-4">
-        <div className="flex items-center gap-2 md:gap-6">
-          <Link href="/" aria-label={t("homeAria")} className="rounded-sm">
-            <CaroLockup className="text-2xl md:text-3xl" />
-          </Link>
+    // Sticky: zoeken, navigatie en winkelwagen blijven bereikbaar bij scrollen
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
+      <div className="site-container flex h-16 items-center gap-3">
+        <MobileNav items={items} locale={locale} />
+
+        <Link href="/" aria-label={t("homeAria")} className="shrink-0 rounded-sm">
+          <CaroLockup className="text-2xl md:text-3xl" />
+        </Link>
+
+        <div className="hidden md:block">
           <FamilyNav items={items} />
         </div>
-        <div className="flex items-center gap-2 md:gap-4">
+
+        {/* Zoekbalk krijgt de vrije ruimte; op mobiel staat hij eronder */}
+        <div className="ml-auto hidden max-w-md flex-1 md:block">
+          <SiteSearch locale={locale} id="header-search-desktop" />
+        </div>
+
+        <div className="ml-auto flex items-center gap-1 md:ml-0 md:gap-2">
           <SelectedVehicle />
-          <LocaleSwitcher />
-          <ThemeToggle />
+          <div className="hidden md:flex md:items-center md:gap-2">
+            <LocaleSwitcher />
+            <ThemeToggle />
+          </div>
           <CartButton />
         </div>
+      </div>
+
+      <div className="site-container pb-3 md:hidden">
+        <SiteSearch locale={locale} id="header-search-mobile" />
       </div>
     </header>
   );

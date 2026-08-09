@@ -94,19 +94,23 @@ export function FamilyNav({ items }: { items: FamilyNavItem[] }) {
               <nav
                 id={menuId}
                 aria-label={t(`${family}.menuAria`)}
-                className="absolute left-0 z-40 mt-2 w-60 rounded-lg border border-border bg-background p-2 shadow-lg"
+                className={`absolute left-0 z-40 mt-2 rounded-lg border border-border bg-background p-2 shadow-lg ${
+                  // Meer dan vier categorieën: twee kolommen, zodat alles
+                  // in één oogopslag zichtbaar is (mega-menu-patroon)
+                  categories.length > 4 ? "w-[32rem]" : "w-60"
+                }`}
               >
-                <ul>
-                  <li>
-                    <Link
-                      href={{ pathname: "/[family]", params: { family: slug } }}
-                      onClick={() => setOpenFamily(null)}
-                      className="block rounded-md px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface"
-                    >
-                      {t("allIn", { family: t(`${family}.title`) })}
-                    </Link>
-                  </li>
-                  <li aria-hidden="true" className="my-1 border-t border-border" />
+                {/* "Alles in X" staat buiten het grid, anders wordt het
+                    een losse kolomcel in het mega-menu */}
+                <Link
+                  href={{ pathname: "/[family]", params: { family: slug } }}
+                  onClick={() => setOpenFamily(null)}
+                  className="block rounded-md px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface"
+                >
+                  {t("allIn", { family: t(`${family}.title`) })}
+                </Link>
+                <div aria-hidden="true" className="my-1 border-t border-border" />
+                <ul className={categories.length > 4 ? "grid grid-cols-2 gap-x-2" : ""}>
                   {categories.map((category) => (
                     <li key={category.slug}>
                       <Link

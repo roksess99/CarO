@@ -5,6 +5,24 @@
   "header": {
     "homeAria": "CarO — go to homepage"
   },
+  "nav": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menuAria": "Main menu"
+  },
+  "search": {
+    "label": "Search the shop",
+    "placeholder": "Tyre size, OE number or brand",
+    "submit": "Search",
+    "title": "Search",
+    "metaDescription": "Search parts and tyres by size, OE number or brand.",
+    "resultsFor": "Results for “{term}”",
+    "noResults": "Nothing found for “{term}”.",
+    "tipsTitle": "What can you search for?",
+    "tipSize": "Tyre size, for example 195/65 R15 or 1956515",
+    "tipOen": "OE number of a part, for example 06A115561B — complete and exact",
+    "tipBrand": "Brand name, for example Continental or Bosch"
+  },
   "family": {
     "eyebrow": "Range",
     "categoriesAria": "Categories",

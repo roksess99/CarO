@@ -5,6 +5,24 @@
   "header": {
     "homeAria": "CarO — naar de homepage"
   },
+  "nav": {
+    "openMenu": "Menu openen",
+    "closeMenu": "Menu sluiten",
+    "menuAria": "Hoofdmenu"
+  },
+  "search": {
+    "label": "Zoek in de webshop",
+    "placeholder": "Bandenmaat, OE-nummer of merk",
+    "submit": "Zoek",
+    "title": "Zoeken",
+    "metaDescription": "Zoek onderdelen en banden op maat, OE-nummer of merk.",
+    "resultsFor": "Resultaten voor “{term}”",
+    "noResults": "Niets gevonden voor “{term}”.",
+    "tipsTitle": "Waarop kun je zoeken?",
+    "tipSize": "Bandenmaat, bijvoorbeeld 195/65 R15 of 1956515",
+    "tipOen": "OE-nummer van een onderdeel, bijvoorbeeld 06A115561B — volledig en exact",
+    "tipBrand": "Merknaam, bijvoorbeeld Continental of Bosch"
+  },
   "family": {
     "eyebrow": "Assortiment",
     "categoriesAria": "Categorieën",
