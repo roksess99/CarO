@@ -169,7 +169,62 @@
     "vat": "Alle prijzen zijn inclusief 21% btw.",
     "shipping": "Verzendkosten zie je vóór het afrekenen.",
     "withdrawal": "14 dagen bedenktijd op elke bestelling.",
-    "copyright": "© {year} CarO Onderdelen"
+    "copyright": "© {year} CarO Onderdelen",
+    "privacyLink": "Privacy en cookies"
+  },
+  "privacy": {
+    "title": "Privacy en cookies",
+    "intro": "Deze webshop slaat zo min mogelijk op. Hieronder staat precies wat er op je apparaat wordt bewaard, waarom, en hoe lang.",
+    "lastUpdated": "Laatst bijgewerkt: 7 augustus 2026",
+    "storageTitle": "Wat we op je apparaat opslaan",
+    "storageIntro": "De wet maakt geen onderscheid tussen cookies en andere opslag in je browser: voor localStorage gelden dezelfde regels. Daarom staat alles hier in één overzicht.",
+    "tableName": "Naam",
+    "tableKind": "Soort",
+    "tablePurpose": "Waarvoor",
+    "tableRetention": "Hoe lang",
+    "kind": {
+      "cookie": "Cookie",
+      "local": "localStorage"
+    },
+    "items": {
+      "NEXT_LOCALE": {
+        "purpose": "Onthoudt of je de site in het Nederlands of Engels bekijkt.",
+        "retention": "Tot je je browser sluit (sessiecookie)."
+      },
+      "caro-cart": {
+        "purpose": "Je winkelwagen: welke artikelen je hebt gekozen en hoeveel.",
+        "retention": "Tot je de winkelwagen leegt of je browsergegevens wist."
+      },
+      "caro-checkout": {
+        "purpose": "De bezorggegevens die je zelf invult, zodat je ze niet opnieuw hoeft te typen.",
+        "retention": "Tot je je browsergegevens wist."
+      },
+      "caro-vehicle": {
+        "purpose": "De auto die je hebt opgezocht, zodat we passende onderdelen kunnen tonen.",
+        "retention": "Tot je een andere auto kiest of je browsergegevens wist."
+      },
+      "theme": {
+        "purpose": "Je keuze voor het lichte of donkere thema.",
+        "retention": "Tot je je browsergegevens wist."
+      }
+    },
+    "noBannerTitle": "Waarom je geen cookiebanner ziet",
+    "noBannerBody": "Toestemming vragen is verplicht voor opslag die niet nodig is om de site te laten werken — denk aan het meten van bezoekersgedrag of advertenties. Alles in de tabel hierboven is óf noodzakelijk om de webshop te laten functioneren, óf een keuze die je zelf hebt gemaakt. Daarvoor geldt een wettelijke uitzondering en hoeven we geen toestemming te vragen. We vinden het bovendien misleidend om toestemming te vragen voor iets dat je niet kunt weigeren zonder dat de winkelwagen stopt met werken.",
+    "noTracking": "We gebruiken geen analytics, geen advertentiecookies, geen social-mediaknoppen en geen trackers van derden. De site laadt ook geen lettertypen of scripts van externe servers.",
+    "personalDataTitle": "Persoonsgegevens die we verwerken",
+    "personalDataBody": "Zolang je alleen rondkijkt, verwerken we geen persoonsgegevens. Dat verandert op twee momenten:",
+    "personalCheckout": "Bij het afrekenen vul je je naam, adres, e-mailadres en eventueel telefoonnummer in. Die gegevens hebben we nodig om je bestelling te bezorgen en een factuur te maken.",
+    "personalPlate": "Als je een kenteken invult, sturen we dat naar de RDW-voertuigendatabase om je auto op te zoeken. Een kenteken is een persoonsgegeven, daarom staat het nooit in een webadres en bewaren we het niet in onze logboeken.",
+    "thirdPartiesTitle": "Partijen die gegevens van ons ontvangen",
+    "thirdPartiesBody": "We verkopen je gegevens niet en delen ze alleen waar dat nodig is om je bestelling uit te voeren:",
+    "thirdTyre24": "Tyre24 / ALZURA — onze leverancier. Ontvangt bij een bestelling de gegevens die nodig zijn om het pakket bij jou te bezorgen.",
+    "thirdRdw": "overheid.io — levert de RDW-voertuiggegevens. Ontvangt het kenteken dat je invult, en verder niets over jou.",
+    "thirdHosting": "Onze hostingpartij — verwerkt technische gegevens zoals je IP-adres om de site te kunnen serveren.",
+    "rightsTitle": "Je rechten",
+    "rightsBody": "Je mag opvragen welke gegevens we van je hebben, ze laten corrigeren of laten verwijderen, en bezwaar maken tegen de verwerking. Neem daarvoor contact met ons op. Kom je er met ons niet uit, dan kun je een klacht indienen bij de Autoriteit Persoonsgegevens.",
+    "contactTitle": "Contact",
+    "contactBody": "Vragen over je gegevens? Neem contact op met:",
+    "contactPlaceholder": "Nog in te vullen: bedrijfsnaam, adres, KvK-nummer, btw-nummer en e-mailadres. Deze verklaring is pas compleet als die gegevens erin staan."
   },
   "error": {
     "title": "Er ging iets mis",

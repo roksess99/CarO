@@ -18,6 +18,10 @@ export const routing = defineRouting({
       nl: "/zoeken",
       en: "/search",
     },
+    "/privacy": {
+      nl: "/privacy-en-cookies",
+      en: "/privacy-and-cookies",
+    },
     // Drie niveaus: familie / categorie / product. De familieslug is
     // taalafhankelijk (onderdelen|banden vs parts|tyres, zie families.ts);
     // categorie- en productslugs komen uit de catalogus en zijn al
