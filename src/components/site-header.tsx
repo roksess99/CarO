@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CaroLockup } from "@/components/brand/caro-lockup";
 import { CartButton } from "@/components/cart/cart-button";
@@ -32,7 +33,7 @@ export async function SiteHeader() {
           <CaroLockup className="text-2xl md:text-3xl" />
         </Link>
 
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <FamilyNav items={items} />
         </div>
 
@@ -44,7 +45,12 @@ export async function SiteHeader() {
         <div className="ml-auto flex items-center gap-1 md:ml-0 md:gap-2">
           <SelectedVehicle />
           <div className="hidden md:flex md:items-center md:gap-2">
-            <LocaleSwitcher />
+            {/* De taalwisselaar leest de querystring om filters mee te nemen
+                naar de andere taal; dat vraagt een Suspense-grens zodat
+                pagina's statisch voorgerenderd kunnen blijven. */}
+            <Suspense fallback={null}>
+              <LocaleSwitcher />
+            </Suspense>
             <ThemeToggle />
           </div>
           <CartButton />

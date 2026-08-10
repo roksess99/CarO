@@ -1,22 +1,98 @@
-// Productfamilies: de shop verkoopt twee soorten dingen en dat onderscheid
-// loopt door de hele site (navigatie, URL's, kruimelpad).
+// Productfamilies: elke familie is één Tyre24 productArea. Het onderscheid
+// loopt door de hele site (navigatie, URL's, kruimelpad, homepage).
 //
-// Elke familie hangt aan een eigen Tyre24 productArea. Let op: die kunnen op
-// een ánder platform zitten — gebruikte onderdelen (area 10) bestaan alleen
-// op /de/de/, banden (area 6) op /nl/nl/. Zie docs/api/TYRE24.md.
+// De area's staan hier in code en niet in .env: welk assortiment we verkopen
+// is een winkelkeuze, net als src/lib/catalog/assortment.ts. In .env staat
+// alleen het token (en desgewenst een afwijkende platform-URL).
+//
+// Alle waarden hieronder zijn gemeten op het echte account (2026-08-07),
+// zie docs/api/TYRE24.md. Area's die we bewust NIET verkopen:
+//   4  "Flowers"      — bloemen, geen auto-onderdelen
+//   5  "Services"     — dienstverlening, 0 artikelen op het NL-platform
+//   8  "Alufelgen"    — leeg op beide platformen
+// Lichtmetalen velgen komen via de aparte Alloys-API (docs/api/TYRE24.md).
 
-export const PRODUCT_FAMILIES = ["onderdelen", "banden"] as const;
+/** Op welk landplatform de area actief is */
+type Platform = "nl" | "de";
 
-export type ProductFamily = (typeof PRODUCT_FAMILIES)[number];
+/** Hoe je in deze familie producten vindt */
+type Browse =
+  /** Categorieën doorbladeren */
+  | "categories"
+  /** Alleen zoeken (area 3: searchableByCategory=false, searchPrefix=OEN) */
+  | "search";
 
-/** URL-segment per taal. NL is leidend (SEO-regel: Nederlandse slugs). */
-const FAMILY_SLUGS: Record<ProductFamily, Record<string, string>> = {
-  onderdelen: { nl: "onderdelen", en: "parts" },
-  banden: { nl: "banden", en: "tyres" },
-};
+interface FamilyDefinition {
+  areaId: string;
+  platform: Platform;
+  browse: Browse;
+  /** URL-segment per taal; NL is leidend (SEO-regel) */
+  slugs: { nl: string; en: string };
+}
+
+const FAMILIES = {
+  onderdelen: {
+    areaId: "3",
+    platform: "de",
+    browse: "search",
+    slugs: { nl: "onderdelen", en: "parts" },
+  },
+  gebruikt: {
+    areaId: "10",
+    platform: "de",
+    browse: "categories",
+    slugs: { nl: "gebruikte-onderdelen", en: "used-parts" },
+  },
+  banden: {
+    areaId: "6",
+    platform: "nl",
+    browse: "categories",
+    slugs: { nl: "banden", en: "tyres" },
+  },
+  velgen: {
+    areaId: "7",
+    platform: "nl",
+    browse: "categories",
+    slugs: { nl: "velgen", en: "wheels" },
+  },
+  toebehoren: {
+    areaId: "1",
+    platform: "de",
+    browse: "categories",
+    slugs: { nl: "toebehoren", en: "accessories" },
+  },
+  gereedschap: {
+    areaId: "9",
+    platform: "de",
+    browse: "categories",
+    slugs: { nl: "gereedschap", en: "tools" },
+  },
+} as const satisfies Record<string, FamilyDefinition>;
+
+export type ProductFamily = keyof typeof FAMILIES;
+
+export const PRODUCT_FAMILIES = Object.keys(FAMILIES) as ProductFamily[];
+
+/**
+ * Indeling van de hoofdnavigatie. Eén familie = een eigen knop; meerdere
+ * families onder één noemer = een groepsknop met die families eronder.
+ * Losse knoppen voor de grote productgroepen zijn sneller dan alles in
+ * één menu wegstoppen.
+ */
+export const NAV_GROUPS = [
+  { key: "assortiment", families: ["onderdelen", "gebruikt"] },
+  { key: "banden", families: ["banden"] },
+  { key: "velgen", families: ["velgen"] },
+  { key: "gereedschap", families: ["gereedschap"] },
+  { key: "toebehoren", families: ["toebehoren"] },
+] as const satisfies ReadonlyArray<{
+  key: string;
+  families: ReadonlyArray<ProductFamily>;
+}>;
 
 export function familySlug(family: ProductFamily, locale: string): string {
-  return FAMILY_SLUGS[family][locale] ?? FAMILY_SLUGS[family].nl;
+  const slugs = FAMILIES[family].slugs;
+  return locale === "en" ? slugs.en : slugs.nl;
 }
 
 /** URL-segment → familie. Onbekend segment → null (pagina geeft 404). */
@@ -30,42 +106,40 @@ export function familyFromSlug(
   return null;
 }
 
+/** Familie waarin alleen gezocht kan worden, niet gebladerd */
+export function isSearchOnly(family: ProductFamily): boolean {
+  return FAMILIES[family].browse === "search";
+}
+
 export interface FamilySource {
-  /** Tyre24 productAreaId */
   productAreaId: string;
   baseUrl: string;
 }
 
-const NL_BASE = "https://tyre24.alzura.com/nl/nl/rest/v13/products";
-
-/**
- * Waar de data van een familie vandaan komt. `null` = nog geen bron, de
- * familie toont dan een eerlijke lege staat in plaats van verzonnen producten.
- *
- * Banden: area 6 op het NL-platform, werkt.
- * Onderdelen: dit account heeft geen area met nieuwe onderdelen. Zetten we
- * TYRE24_PARTS_AREA_ID (+ eventueel TYRE24_PARTS_BASE_URL voor het
- * DE-platform), dan vult de familie zich. Zie docs/DECISIONS.md #7.
- */
-/** Heeft deze familie een databron? (los van of er categorieën zijn) */
-export function familyHasSource(family: ProductFamily): boolean {
-  return familySource(family) !== null;
+function platformBaseUrl(platform: Platform): string {
+  const override =
+    platform === "nl"
+      ? process.env.TYRE24_BASE_URL_NL
+      : process.env.TYRE24_BASE_URL_DE;
+  return (
+    override ??
+    `https://tyre24.alzura.com/${platform}/${platform}/rest/v13/products`
+  );
 }
 
+/**
+ * Waar de data van een familie vandaan komt. `null` als er geen token is;
+ * de shop valt dan terug op de mock (CLAUDE.md, fase 3).
+ */
 export function familySource(family: ProductFamily): FamilySource | null {
-  if (family === "banden") {
-    const productAreaId = process.env.TYRE24_PRODUCT_AREA_ID;
-    if (!productAreaId) return null;
-    return {
-      productAreaId,
-      baseUrl: process.env.TYRE24_BASE_URL ?? NL_BASE,
-    };
-  }
-
-  const productAreaId = process.env.TYRE24_PARTS_AREA_ID;
-  if (!productAreaId) return null;
+  if (!process.env.TYRE24_API_TOKEN) return null;
+  const definition = FAMILIES[family];
   return {
-    productAreaId,
-    baseUrl: process.env.TYRE24_PARTS_BASE_URL ?? NL_BASE,
+    productAreaId: definition.areaId,
+    baseUrl: platformBaseUrl(definition.platform),
   };
+}
+
+export function familyHasSource(family: ProductFamily): boolean {
+  return familySource(family) !== null;
 }

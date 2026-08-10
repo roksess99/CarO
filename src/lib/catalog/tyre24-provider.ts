@@ -2,7 +2,14 @@ import { z } from "zod";
 import { consumerPriceCents } from "../pricing";
 import { isCategoryInAssortment } from "./assortment";
 import { type FamilySource, familySource, type ProductFamily } from "./families";
-import type { CatalogProvider, Category, Part, PartQuery } from "./types";
+import type {
+  CatalogProvider,
+  Category,
+  FilterGroup,
+  Part,
+  PartQuery,
+  SelectedFilters,
+} from "./types";
 
 // Tyre24/ALZURA-adapter (docs/api/TYRE24.md). Draait UITSLUITEND server-side:
 // het token is een secret en de rate limit is 100 requests/minuut.
@@ -35,6 +42,11 @@ const tyreCategorySchema = z.object({
 // GEMETEN 2026-08-07: paginering is 0-geïndexeerd. `page=1` levert de TWEEDE
 // pagina — bij weinig treffers dus een lege lijst. De default is 0.
 const FIRST_PAGE = 0;
+
+/** Groepssleutel van het merkfilter; die gaat naar een eigen parameter */
+const MANUFACTURER_KEY = "manufacturer";
+/** Aantal artikelen waarover de attribuutfilters worden berekend */
+const FILTER_SAMPLE_SIZE = 100;
 
 const PURCHASE_PRICE_TYPE = "ek";
 const RETAIL_PRICE_PREFIX = "evp";
@@ -71,34 +83,98 @@ const tyreItemSchema = z.object({
   media: z.array(tyreMediaSchema).optional(),
 });
 
+// GEMETEN: elke filtergroep geeft per optie een base64-"identifier"
+// (bv. "NjE3fkFMVEVOWk8" = "617~ALTENZO"). /items verwacht die identifier,
+// niet de leesbare waarde: merken via `manufacturer`, alle overige
+// eigenschappen via `attributeStrings`.
+//
+// Sommige opties hebben een `values`-array met de vertaalde weergavetekst
+// ("Winterbanden"); anders is `value` zelf de tekst.
+const filterOptionSchema = z.object({
+  identifier: z.string().optional(),
+  value: z.string().optional(),
+  count: z.coerce.number().optional(),
+  values: z
+    .array(z.object({ translated_value: z.string().optional() }))
+    .optional(),
+});
+
+const filterGroupSchema = z.object({
+  name: z.string().optional(),
+  filter: z.array(filterOptionSchema).optional(),
+});
+
 const itemsResponseSchema = z.object({
   result: z.array(z.unknown()).optional(),
-  // GEMETEN: het filterblok geeft per merk een base64-"identifier"
-  // (bv. "NjE3fkFMVEVOWk8" = "617~ALTENZO"). Het manufacturer-filter van
-  // /items verwacht die identifier, niet de merknaam.
-  //
   // LET OP: het type van `filter` wisselt! Bij een categorie-query is het een
   // object, bij een itemId-query een lege array. `.catch()` zorgt dat een
   // afwijkend filterblok nooit de hele response — en dus alle producten —
   // ongeldig maakt. Het filter is een bonus, geen voorwaarde.
   filter: z
-    .object({
-      manufacturer: z
-        .object({
-          filter: z
-            .array(
-              z.object({
-                identifier: z.string().optional(),
-                value: z.string().optional(),
-              }),
-            )
-            .optional(),
-        })
-        .optional(),
-    })
+    .record(z.string(), filterGroupSchema)
     .optional()
     .catch(undefined),
 });
+
+/**
+ * GEMETEN 2026-08-07: de identifier is base64 van "id~waarde" en is in elke
+ * taal identiek. De groepsnáám niet: "Inzet" heet "Einsatz" op het Duitse
+ * platform en "Utilisation" op het Franse. Zouden we op de naam sleutelen,
+ * dan verliest een klant al zijn filters zodra hij van taal wisselt.
+ * Daarom leiden we sleutel én waarde af uit de identifier.
+ */
+function decodeIdentifier(
+  identifier: string,
+): { groupId: string; valueId: string } | null {
+  try {
+    // base64url zonder padding; atob is beschikbaar in de Node-runtime
+    const decoded = atob(identifier.replace(/-/g, "+").replace(/_/g, "/"));
+    const separator = decoded.indexOf("~");
+    if (separator <= 0) return null;
+    return {
+      groupId: decoded.slice(0, separator),
+      valueId: decoded.slice(separator + 1),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Taalonafhankelijke sleutel van een filtergroep. Merken houden "merk":
+ * merknamen vertalen niet en lezen prettiger in de URL dan een nummer.
+ */
+function filterKey(
+  apiKey: string,
+  options: ReadonlyArray<z.infer<typeof filterOptionSchema>>,
+): string {
+  if (apiKey === MANUFACTURER_KEY) return "merk";
+  for (const option of options) {
+    const decoded = option.identifier ? decodeIdentifier(option.identifier) : null;
+    if (decoded) return `a${decoded.groupId}`;
+  }
+  // Geen bruikbare identifier: terugvallen op de naam, met het risico dat
+  // deze groep bij een taalwissel zijn selectie verliest.
+  return slugify(apiKey) || apiKey.toLowerCase();
+}
+
+/**
+ * Taalonafhankelijke waarde. Merken gebruiken de merknaam, attributen het
+ * id uit de identifier ("241~4" → "4").
+ */
+function optionValue(
+  apiKey: string,
+  option: z.infer<typeof filterOptionSchema>,
+): string {
+  if (apiKey === MANUFACTURER_KEY) return option.value ?? "";
+  const decoded = option.identifier ? decodeIdentifier(option.identifier) : null;
+  return decoded?.valueId ?? option.value ?? "";
+}
+
+/** Weergavetekst van een optie: vertaalde waarde als die er is */
+function optionLabel(option: z.infer<typeof filterOptionSchema>): string {
+  return option.values?.[0]?.translated_value ?? option.value ?? "";
+}
 
 const errorResponseSchema = z.object({
   errorMessage: z.string().optional(),
@@ -148,14 +224,22 @@ function idFromSlug(slug: string): number | null {
 async function apiGet(
   source: FamilySource & { token: string },
   path: string,
-  params: Record<string, string | number | undefined>,
+  params: Record<string, string | number | string[] | undefined>,
   revalidateSeconds: number,
 ): Promise<unknown> {
   const { token, productAreaId, baseUrl } = source;
   const url = new URL(baseUrl + path);
   url.searchParams.set("productAreaId", productAreaId);
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined) url.searchParams.set(key, String(value));
+    if (value === undefined) continue;
+    if (Array.isArray(value)) {
+      // GEMETEN: meerdere waarden MOETEN als `key[]=a&key[]=b`. Een
+      // kommalijst pakt stil alleen de eerste, en `key=a&key=b` alleen de
+      // laatste — beide leveren zwijgend verkeerde resultaten op.
+      for (const entry of value) url.searchParams.append(`${key}[]`, entry);
+    } else {
+      url.searchParams.set(key, String(value));
+    }
   }
 
   // Server-side cache tegen de rate limit van 100 req/min
@@ -254,37 +338,23 @@ function toPart(
 async function fetchParts(
   source: FamilySource & { token: string },
   family: ProductFamily,
-  params: Record<string, string | number | undefined>,
+  params: Record<string, string | number | string[] | undefined>,
 ): Promise<Part[]> {
-  const data = await apiGet(source, "/items", params, 300);
+  // GEMETEN: sommige categorieën geven HTTP 500 bij Tyre24 (bv. area 9,
+  // categorie 1 "Handwerkzeuge") terwijl de rest van de area het wel doet.
+  // Eén kapotte categorie mag geen foutpagina opleveren.
+  let data: unknown;
+  try {
+    data = await apiGet(source, "/items", params, 300);
+  } catch (error) {
+    console.error("Tyre24 /items faalde:", error instanceof Error ? error.message : error);
+    return [];
+  }
   const parsed = itemsResponseSchema.safeParse(data);
   if (!parsed.success) return [];
   return (parsed.data.result ?? [])
     .map((raw) => toPart(raw, source, family))
     .filter((part): part is Part => part !== null);
-}
-
-/**
- * Merknaam → base64-identifier die het manufacturer-filter verwacht.
- * Kost een extra ongefilterde call; die is gecacht, dus dat is acceptabel.
- */
-async function brandIdentifier(
-  source: FamilySource & { token: string },
-  parentNodeId: number,
-  brand: string,
-): Promise<string | null> {
-  const data = await apiGet(
-    source,
-    "/items",
-    { parentNodeId, limit: 1, page: 1 },
-    3600,
-  );
-  const parsed = itemsResponseSchema.safeParse(data);
-  if (!parsed.success) return null;
-  const match = parsed.data.filter?.manufacturer?.filter?.find(
-    (entry) => entry.value?.toUpperCase() === brand.toUpperCase(),
-  );
-  return match?.identifier ?? null;
 }
 
 async function fetchCategories(
@@ -319,6 +389,82 @@ async function fetchCategories(
       },
     ];
   });
+}
+
+/** Ruw filterblok van een categorie ophalen (gecacht) */
+async function fetchFilterBlock(
+  source: FamilySource & { token: string },
+  parentNodeId: number,
+): Promise<Record<string, z.infer<typeof filterGroupSchema>>> {
+  let data: unknown;
+  try {
+    // Volle pagina: de attribuutfilters worden over de opgehaalde
+    // artikelen berekend, niet over de hele categorie.
+    data = await apiGet(
+      source,
+      "/items",
+      { parentNodeId, limit: FILTER_SAMPLE_SIZE, page: FIRST_PAGE },
+      3600,
+    );
+  } catch {
+    return {};
+  }
+  const parsed = itemsResponseSchema.safeParse(data);
+  return parsed.success ? (parsed.data.filter ?? {}) : {};
+}
+
+/** Filterblok → groepen voor de UI. Groepen met één optie filteren niets. */
+function toFilterGroups(
+  block: Record<string, z.infer<typeof filterGroupSchema>>,
+): FilterGroup[] {
+  const groups: FilterGroup[] = [];
+  for (const [apiKey, group] of Object.entries(block)) {
+    const raw = group.filter ?? [];
+    const options = raw
+      .map((option) => ({
+        value: optionValue(apiKey, option),
+        label: optionLabel(option),
+        count: option.count,
+      }))
+      .filter((option) => option.value !== "" && option.label !== "");
+    if (options.length < 2) continue;
+    groups.push({
+      key: filterKey(apiKey, raw),
+      label: group.name ?? apiKey,
+      options,
+    });
+  }
+  return groups;
+}
+
+/**
+ * Gekozen waarden → de queryparameters die /items verwacht. Merken gaan naar
+ * `manufacturer`, alle overige eigenschappen naar `attributeStrings`.
+ */
+function toFilterParams(
+  block: Record<string, z.infer<typeof filterGroupSchema>>,
+  selected: SelectedFilters,
+): { manufacturer?: string[]; attributeStrings?: string[] } {
+  const manufacturer: string[] = [];
+  const attributeStrings: string[] = [];
+
+  for (const [apiKey, group] of Object.entries(block)) {
+    const raw = group.filter ?? [];
+    const chosen = selected[filterKey(apiKey, raw)];
+    if (!chosen?.length) continue;
+    const wanted = new Set(chosen.map((v) => v.toLowerCase()));
+    for (const option of raw) {
+      if (!option.identifier) continue;
+      if (!wanted.has(optionValue(apiKey, option).toLowerCase())) continue;
+      if (apiKey === MANUFACTURER_KEY) manufacturer.push(option.identifier);
+      else attributeStrings.push(option.identifier);
+    }
+  }
+
+  return {
+    manufacturer: manufacturer.length ? manufacturer : undefined,
+    attributeStrings: attributeStrings.length ? attributeStrings : undefined,
+  };
 }
 
 // ---------- provider ----------
@@ -360,15 +506,18 @@ export const tyre24Provider: CatalogProvider = {
     }
     if (parentNodeId === undefined) return [];
 
-    // GEMETEN: manufacturer wil de base64-identifier, niet de merknaam.
-    // Onbekend merk → geen filter meesturen i.p.v. een lege lijst tonen.
-    const manufacturer = query.brand
-      ? ((await brandIdentifier(source, parentNodeId, query.brand)) ?? undefined)
-      : undefined;
+    // Filters (incl. merk) willen base64-identifiers, geen leesbare namen.
+    // Die staan in het filterblok, dus dat halen we eerst op — gecacht.
+    const selected: SelectedFilters = { ...(query.filters ?? {}) };
+    if (query.brand) selected[MANUFACTURER_KEY] = [query.brand];
+
+    const filterParams = Object.keys(selected).length
+      ? toFilterParams(await fetchFilterBlock(source, parentNodeId), selected)
+      : {};
 
     return fetchParts(source, query.family, {
       parentNodeId,
-      manufacturer,
+      ...filterParams,
       limit: query.limit,
       page: FIRST_PAGE,
     });
@@ -381,6 +530,14 @@ export const tyre24Provider: CatalogProvider = {
     if (itemId === null) return null;
     const parts = await fetchParts(source, family, { itemId });
     return parts[0] ?? null;
+  },
+
+  async getFilters(family, categorySlug) {
+    const source = getSource(family);
+    if (!source) return [];
+    const parentNodeId = idFromSlug(categorySlug);
+    if (parentNodeId === null) return [];
+    return toFilterGroups(await fetchFilterBlock(source, parentNodeId));
   },
 
   async getPartById(family, id) {

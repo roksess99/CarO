@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Link, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { familyFromSlug, familySlug } from "@/lib/catalog/families";
@@ -11,6 +11,16 @@ export function LocaleSwitcher() {
   const locale = useLocale();
   const pathname = usePathname();
   const params = useParams();
+  const searchParams = useSearchParams();
+
+  // Filters en zoektermen staan in de querystring en moeten de taalwissel
+  // overleven; de filtersleutels zijn daarvoor taalonafhankelijk gemaakt.
+  const query = Object.fromEntries(
+    [...new Set(searchParams.keys())].map((key) => {
+      const values = searchParams.getAll(key);
+      return [key, values.length > 1 ? values : values[0]];
+    }),
+  );
 
   /**
    * De familieslug is taalafhankelijk (banden ↔ tyres). Zonder deze
@@ -30,7 +40,7 @@ export function LocaleSwitcher() {
         <Link
           key={l}
           // @ts-expect-error -- params horen bij het huidige pathname (next-intl-patroon voor dynamische routes)
-          href={{ pathname, params: paramsForLocale(l) }}
+          href={{ pathname, params: paramsForLocale(l), query }}
           locale={l}
           aria-label={t(l)}
           aria-current={l === locale ? "true" : undefined}

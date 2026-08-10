@@ -30,11 +30,35 @@ export interface Part {
   imageUrl?: string;
 }
 
+/** Eén keuzemogelijkheid binnen een filtergroep */
+export interface FilterOption {
+  /** Waarde zoals die in de URL staat, bv. "Winterbanden" of "CONTINENTAL" */
+  value: string;
+  /** Wat de klant leest; vaak gelijk aan value */
+  label: string;
+  /** Aantal artikelen met deze waarde, als de bron dat meegeeft */
+  count?: number;
+}
+
+/** Een filterblok, bv. "Merk" of "Inzet" (seizoen) */
+export interface FilterGroup {
+  /** Stabiele sleutel voor de URL, bv. "merk" of "inzet" */
+  key: string;
+  /** Kop boven het blok, komt uit de API en is dus al vertaald */
+  label: string;
+  options: FilterOption[];
+}
+
+/** Gekozen filters: groepssleutel → gekozen waarden */
+export type SelectedFilters = Record<string, string[]>;
+
 export interface PartQuery {
   family: ProductFamily;
   categorySlug?: string;
   /** Exacte fabrikantnaam, bv. "Bosch" */
   brand?: string;
+  /** Actieve filters uit de URL */
+  filters?: SelectedFilters;
   /**
    * Vrije zoekterm. Bij Tyre24 area 3 (nieuwe onderdelen) is dit het enige
    * ingangspunt en moet het een VOLLEDIG OE-nummer zijn — deelnummers,
@@ -53,4 +77,13 @@ export interface CatalogProvider {
    * mag niet afhangen van "staat het toevallig in de opgehaalde lijst".
    */
   getPartById(family: ProductFamily, id: string): Promise<Part | null>;
+  /**
+   * Beschikbare filters binnen een categorie. Welke groepen er zijn bepaalt
+   * de bron, niet wij — bij banden levert Tyre24 o.a. merk, seizoen,
+   * laadindex, M+S en 3PMSF.
+   */
+  getFilters(
+    family: ProductFamily,
+    categorySlug: string,
+  ): Promise<FilterGroup[]>;
 }

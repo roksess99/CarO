@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import type { FamilyNavItem } from "@/components/family-nav";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -43,7 +43,7 @@ export function MobileNav({
   }, [open]);
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         ref={triggerRef}
         type="button"
@@ -140,7 +140,9 @@ export function MobileNav({
             </nav>
 
             <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-              <LocaleSwitcher />
+              <Suspense fallback={null}>
+                <LocaleSwitcher />
+              </Suspense>
               <ThemeToggle />
             </div>
           </div>

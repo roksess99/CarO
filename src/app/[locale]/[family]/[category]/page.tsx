@@ -1,15 +1,21 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { ProductFilters } from "@/components/product-filters";
 import { ProductGrid } from "@/components/product-grid";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { familyFromSlug, familySlug } from "@/lib/catalog/families";
+import {
+  countActiveFilters,
+  FILTER_PARAM,
+  parseFilterParam,
+} from "@/lib/catalog/filter-params";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 
 type Props = {
   params: Promise<{ locale: string; family: string; category: string }>;
-  searchParams: Promise<{ merk?: string | string[] }>;
+  searchParams: Promise<{ f?: string | string[] }>;
 };
 
 // TODO: echte domeinnaam zodra hosting vaststaat (docs/DECISIONS.md #2)
@@ -55,25 +61,30 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const category = categories.find((c) => c.slug === slug);
   if (!category) notFound();
 
-  const { merk } = await searchParams;
-  const activeBrand = Array.isArray(merk) ? merk[0] : merk;
+  const selected = parseFilterParam((await searchParams)[FILTER_PARAM]);
+  const activeCount = countActiveFilters(selected);
 
   const t = await getTranslations("category");
+  const tFilters = await getTranslations("filters");
   const tFamily = await getTranslations("family");
-  // Ongefilterd voor de merkchips; gefilterd voor het grid
-  const allParts = await provider.getParts({ family, categorySlug: slug });
-  const parts = activeBrand
-    ? await provider.getParts({ family, categorySlug: slug, brand: activeBrand })
-    : allParts;
-  const brands = [...new Set(allParts.map((p) => p.brand))].sort();
 
-  const chipBase = "rounded-md border border-border px-3 py-1 text-sm";
-  const chipActive = `${chipBase} font-semibold text-foreground underline decoration-caro-orange decoration-2 underline-offset-4`;
-  const chipInactive = `${chipBase} text-muted hover:text-foreground`;
+  // Filters en producten parallel: beide raken dezelfde gecachte API-call
+  const [filterGroups, parts] = await Promise.all([
+    provider.getFilters(family, slug),
+    provider.getParts({ family, categorySlug: slug, filters: selected }),
+  ]);
+
+  const filters = (
+    <ProductFilters
+      groups={filterGroups}
+      selected={selected}
+      family={familyParam}
+      category={slug}
+    />
+  );
 
   return (
     <div className="site-container py-8 md:py-12">
-      {/* Kruimelpad maakt de familie overal zichtbaar */}
       <nav aria-label={t("breadcrumbAria")}>
         <ol className="flex flex-wrap items-center gap-2 text-sm text-muted">
           <li>
@@ -95,42 +106,35 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
       <h1 className="mt-6 text-3xl md:text-4xl">{category.name}</h1>
 
-      {brands.length > 1 && (
-        <nav aria-label={t("brandFilterLabel")} className="mt-6">
-          <ul className="flex flex-wrap gap-2">
-            <li>
-              <Link
-                href={{
-                  pathname: "/[family]/[category]",
-                  params: { family: familyParam, category: slug },
-                }}
-                aria-current={!activeBrand ? "true" : undefined}
-                className={!activeBrand ? chipActive : chipInactive}
-              >
-                {t("allBrands")}
-              </Link>
-            </li>
-            {brands.map((brand) => (
-              <li key={brand}>
-                <Link
-                  href={{
-                    pathname: "/[family]/[category]",
-                    params: { family: familyParam, category: slug },
-                    query: { merk: brand },
-                  }}
-                  aria-current={brand === activeBrand ? "true" : undefined}
-                  className={brand === activeBrand ? chipActive : chipInactive}
-                >
-                  {brand}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
+      <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+        {filterGroups.length > 0 && (
+          <>
+            {/* Mobiel: uitklapbaar, zodat de producten bovenaan blijven staan */}
+            <details className="rounded-lg border border-border lg:hidden">
+              <summary className="cursor-pointer px-4 py-3 font-semibold">
+                {tFilters("toggle")}
+                {activeCount > 0 && (
+                  <span className="ml-2 rounded-full bg-caro-orange px-2 py-0.5 text-xs text-caro-ink tabular-nums">
+                    {activeCount}
+                  </span>
+                )}
+              </summary>
+              <div className="border-t border-border p-4">{filters}</div>
+            </details>
 
-      <div className="mt-8">
-        <ProductGrid parts={parts} />
+            {/* Desktop: vaste zijbalk naast het grid */}
+            <aside className="hidden w-64 shrink-0 lg:block">{filters}</aside>
+          </>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-muted">
+            {tFilters("resultCount", { count: parts.length })}
+          </p>
+          <div className="mt-4">
+            <ProductGrid parts={parts} />
+          </div>
+        </div>
       </div>
     </div>
   );

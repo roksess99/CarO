@@ -1,7 +1,9 @@
 import type { ProductFamily } from "./families";
 import type { CatalogProvider, Category, Part } from "./types";
 
-const categoriesByFamily: Record<ProductFamily, Category[]> = {
+// Mock heeft alleen data voor twee families; de rest is leeg. De mock is
+// er voor ontwikkelen zonder token, niet om het hele assortiment na te bouwen.
+const categoriesByFamily: Partial<Record<ProductFamily, Category[]>> = {
   onderdelen: [
     { slug: "remmen", name: "Remmen" },
     { slug: "filters", name: "Filters" },
@@ -153,7 +155,7 @@ const parts: Part[] = [
 
 export const mockProvider: CatalogProvider = {
   async getCategories(family) {
-    return categoriesByFamily[family];
+    return categoriesByFamily[family] ?? [];
   },
   async getParts(query) {
     let result = parts.filter((p) => p.family === query.family);
@@ -162,6 +164,10 @@ export const mockProvider: CatalogProvider = {
     }
     if (query.brand) {
       result = result.filter((p) => p.brand === query.brand);
+    }
+    const merken = query.filters?.merk;
+    if (merken?.length) {
+      result = result.filter((p) => merken.includes(p.brand));
     }
     if (query.search) {
       // Zoals de echte API: exacte match op OE-nummer
@@ -176,6 +182,27 @@ export const mockProvider: CatalogProvider = {
   async getPartBySlug(family, slug) {
     return parts.find((p) => p.family === family && p.slug === slug) ?? null;
   },
+  async getFilters(family, categorySlug) {
+    // Mock: merkfilter afgeleid uit de eigen data, zodat de UI ook
+    // zonder API-token iets te filteren heeft.
+    const inCategory = parts.filter(
+      (p) => p.family === family && p.categorySlug === categorySlug,
+    );
+    const brands = [...new Set(inCategory.map((p) => p.brand))].sort();
+    if (brands.length < 2) return [];
+    return [
+      {
+        key: "merk",
+        label: "Merk",
+        options: brands.map((brand) => ({
+          value: brand,
+          label: brand,
+          count: inCategory.filter((p) => p.brand === brand).length,
+        })),
+      },
+    ];
+  },
+
   async getPartById(family, id) {
     return parts.find((p) => p.family === family && p.id === id) ?? null;
   },

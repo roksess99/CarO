@@ -1,0 +1,157 @@
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+import {
+  countActiveFilters,
+  FILTER_PARAM,
+  isFilterActive,
+  toFilterParam,
+  toggleFilter,
+} from "@/lib/catalog/filter-params";
+import type { FilterGroup, SelectedFilters } from "@/lib/catalog/types";
+
+/** Groepen met veel opties (merk!) krijgen een scrollbaar vak */
+const SCROLL_AFTER_OPTIONS = 10;
+
+type Props = {
+  groups: FilterGroup[];
+  selected: SelectedFilters;
+  /** Route-params van de categoriepagina waar de links naartoe wijzen */
+  family: string;
+  category: string;
+};
+
+/**
+ * Filterpaneel. Bewust server-gerenderde links in plaats van checkboxes met
+ * JavaScript: filteren werkt zo zonder JS, elke combinatie heeft een eigen
+ * URL en is deelbaar, en de resultaten komen server-side uit de API.
+ */
+export async function ProductFilters({
+  groups,
+  selected,
+  family,
+  category,
+}: Props) {
+  const t = await getTranslations("filters");
+  if (groups.length === 0) return null;
+
+  const activeCount = countActiveFilters(selected);
+
+  const hrefFor = (next: SelectedFilters) => ({
+    pathname: "/[family]/[category]" as const,
+    params: { family, category },
+    query: { [FILTER_PARAM]: toFilterParam(next) },
+  });
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-4">
+        <h2 className="text-lg">{t("title")}</h2>
+        {activeCount > 0 && (
+          <Link
+            href={hrefFor({})}
+            className="text-sm text-muted underline underline-offset-4 hover:text-foreground"
+          >
+            {t("clearAll")}
+          </Link>
+        )}
+      </div>
+
+      {activeCount > 0 && (
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {Object.entries(selected).flatMap(([key, values]) =>
+            values.map((value) => {
+              // De waarde in de URL is een taalonafhankelijk id ("5"); de
+              // klant hoort het label te zien ("Winterbanden").
+              const label =
+                groups
+                  .find((group) => group.key === key)
+                  ?.options.find((option) => option.value === value)?.label ??
+                value;
+              return (
+                <li key={`${key}:${value}`}>
+                  <Link
+                    href={hrefFor(toggleFilter(selected, key, value))}
+                    className="inline-flex items-center gap-1 rounded-md border border-caro-orange px-2 py-1 text-xs font-medium text-foreground hover:bg-surface"
+                    aria-label={t("removeFilter", { value: label })}
+                  >
+                    {label}
+                    <span aria-hidden="true">×</span>
+                  </Link>
+                </li>
+              );
+            }),
+          )}
+        </ul>
+      )}
+
+      <div className="mt-4 space-y-3">
+        {groups.map((group) => {
+          const activeInGroup = selected[group.key]?.length ?? 0;
+          return (
+            // <details> geeft in- en uitklappen zonder JavaScript
+            <details
+              key={group.key}
+              open={activeInGroup > 0}
+              className="rounded-lg border border-border"
+            >
+              <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">
+                {group.label}
+                {activeInGroup > 0 && (
+                  <span className="ml-2 rounded-full bg-caro-orange px-2 py-0.5 text-xs text-caro-ink tabular-nums">
+                    {activeInGroup}
+                  </span>
+                )}
+              </summary>
+              <ul
+                className={`space-y-1 px-4 pb-3 ${
+                  group.options.length > SCROLL_AFTER_OPTIONS
+                    ? "max-h-64 overflow-y-auto"
+                    : ""
+                }`}
+              >
+                {group.options.map((option) => {
+                  const active = isFilterActive(selected, group.key, option.value);
+                  return (
+                    <li key={option.value}>
+                      <Link
+                        href={hrefFor(
+                          toggleFilter(selected, group.key, option.value),
+                        )}
+                        aria-current={active ? "true" : undefined}
+                        className={`flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-surface ${
+                          active
+                            ? "font-semibold text-foreground"
+                            : "text-muted hover:text-foreground"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          {/* Vinkje: actieve staat niet alleen met kleur tonen */}
+                          <span
+                            aria-hidden="true"
+                            className={`flex size-4 shrink-0 items-center justify-center rounded border text-xs ${
+                              active
+                                ? "border-caro-orange bg-caro-orange text-caro-ink"
+                                : "border-border"
+                            }`}
+                          >
+                            {active ? "✓" : ""}
+                          </span>
+                          <span className="truncate">{option.label}</span>
+                        </span>
+                        {option.count !== undefined && (
+                          <span className="shrink-0 text-xs text-muted tabular-nums">
+                            {option.count}
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </details>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

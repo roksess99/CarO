@@ -29,11 +29,24 @@
     "featuredTitle": "Frequently bought",
     "viewAll": "View all",
     "allIn": "All in {family}",
+    "menuTitle": "Range",
+    "oenLabel": "Search by OE number",
+    "oenPlaceholder": "e.g. 06A115561B",
+    "oenSubmit": "Search",
+    "oenHint": "Enter the full OE number exactly as it appears on the part. Searching by product name or a partial number does not work.",
+    "oenResults": "Results for {term}",
+    "oenNoResults": "No parts found for {term}. Check the OE number — it must be complete and exact.",
     "onderdelen": {
       "title": "Parts",
-      "intro": "Maintenance and repair parts. Search by part or OE number.",
-      "menuAria": "Part categories",
-      "empty": "No parts are available yet. Once the parts catalogue is connected, you will find brakes, filters, electrics and more here."
+      "intro": "New original spare parts. Search by the OE number as printed on the part.",
+      "menuAria": "Parts",
+      "empty": "No parts are available yet."
+    },
+    "gebruikt": {
+      "title": "Used parts",
+      "intro": "Second-hand parts with OE numbers. Each item is unique stock: once sold, it is gone.",
+      "menuAria": "Used parts",
+      "empty": "No used parts are available right now."
     },
     "banden": {
       "title": "Tyres",
@@ -41,12 +54,27 @@
       "menuAria": "Tyre categories",
       "empty": "No tyres are available yet."
     },
-    "oenLabel": "Search by OE number",
-    "oenPlaceholder": "e.g. 06A115561B",
-    "oenSubmit": "Search",
-    "oenHint": "Enter the full OE number exactly as it appears on the part. Searching by product name or a partial number does not work.",
-    "oenResults": "Results for {term}",
-    "oenNoResults": "No parts found for {term}. Check the OE number — it must be complete and exact."
+    "velgen": {
+      "title": "Wheels",
+      "intro": "Steel wheels in all common sizes.",
+      "menuAria": "Wheel categories",
+      "empty": "No wheels are available yet."
+    },
+    "toebehoren": {
+      "title": "Accessories",
+      "intro": "Wheel and tyre accessories, from valves to storage systems.",
+      "menuAria": "Accessory categories",
+      "empty": "No accessories are available yet."
+    },
+    "gereedschap": {
+      "title": "Tools",
+      "intro": "Hand tools, power tools and workshop supplies.",
+      "menuAria": "Tool categories",
+      "empty": "No tools are available yet."
+    },
+    "group": {
+      "assortiment": "Range"
+    }
   },
   "vehicle": {
     "title": "Does it fit your car?",
@@ -70,6 +98,13 @@
     "allBrands": "All brands",
     "breadcrumbAria": "Breadcrumb",
     "breadcrumbHome": "Home"
+  },
+  "filters": {
+    "title": "Filters",
+    "toggle": "Filters",
+    "clearAll": "Clear all",
+    "removeFilter": "Remove filter {value}",
+    "resultCount": "{count, plural, =0 {No items found} =1 {1 item} other {First # items}}"
   },
   "localeSwitcher": {
     "label": "Language",
