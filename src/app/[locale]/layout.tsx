@@ -3,8 +3,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Anton, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
+import { BottomNav } from "@/components/bottom-nav";
 import { SiteHeader } from "@/components/site-header";
 import { routing } from "@/i18n/routing";
+import type { FamilyNavItem } from "@/components/family-nav";
+import { PRODUCT_FAMILIES } from "@/lib/catalog/families";
+import { getCatalogProvider } from "@/lib/catalog/provider";
 import "../globals.css";
 
 const inter = Inter({
@@ -42,6 +46,15 @@ export default async function LocaleLayout({
   }
   setRequestLocale(locale);
   const t = await getTranslations("common");
+  // De tabbalk toont het assortiment; die categorieen komen gecacht uit de
+  // provider, dezelfde bron als de header gebruikt.
+  const provider = getCatalogProvider();
+  const navItems: FamilyNavItem[] = await Promise.all(
+    PRODUCT_FAMILIES.map(async (family) => ({
+      family,
+      categories: await provider.getCategories(family),
+    })),
+  );
 
   return (
     <html
@@ -59,10 +72,12 @@ export default async function LocaleLayout({
             {t("skipToContent")}
           </a>
           <SiteHeader />
-          <main id="main" className="flex-1">
+          {/* pb-28 op mobiel: de zwevende tabbalk mag niets afdekken */}
+          <main id="main" className="flex-1 pb-28 lg:pb-0">
             {children}
           </main>
           <SiteFooter />
+          <BottomNav items={navItems} />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -72,20 +72,49 @@ op de mock. Geen enkele andere plek in de code weet waar de data vandaan komt.
 
 ---
 
-## 5. Prijsstrategie — GROTENDEELS OPGELOST, één vraag open
+## 5. Prijsstrategie — VASTGESTELD 2026-08-07
 
-Gemeten 2026-08-07: de API levert per artikel **twee** prijzen — `type: "ek"`
-(inkoop) en `type: "evp_3"` (adviesverkoopprijs van de leverancier). Voorbeeld
-band: ek 27,63 / evp_3 48,00.
+**Btw**: de klant heeft bevestigd dat de API-bedragen **exclusief btw** zijn.
+Wij tellen er 21% bij op. Daarmee is dit punt niet langer blokkerend.
 
-**Gekozen regel** (in `src/lib/pricing.ts`): volg de adviesverkoopprijs als die
-er is, anders inkoop + `CARO_MARGIN_PERCENT`. Daarna 21% btw erbovenop. Uit te
-zetten met `CARO_USE_RECOMMENDED_PRICE=false`.
+**Marge**: gemeten over 100 artikelen per familie ligt de adviesverkoopprijs
+(`evp`) structureel boven de inkoopprijs (`ek`), en élk artikel heeft er een:
 
-**⚠️ Nog te verifiëren bij Tyre24 — blokkerend voor livegang**: zijn de
-API-bedragen exclusief btw? B2B-marktplaatsen noteren standaard ex btw en wij
-rekenen daarom 21% erbij. Blijken ze al inclusief te zijn, dan staat **elke
-prijs in de shop 21% te hoog**.
+| Familie | Opslag evp t.o.v. ek (mediaan) | p25 – p75 |
+|---|---|---|
+| Banden | +66% | 64% – 69% |
+| Velgen | +71% | 69% – 77% |
+| Gebruikte onderdelen | +85% | 81% – 86% |
+| Toebehoren | +395% | kleine artikelen, inkoop ~€1 |
+
+**Gekozen regel**: we volgen de adviesprijs en zetten daar géén eigen opslag
+bovenop. Die prijs is marktconform én levert al 66–85% brutomarge; er nog een
+marge bovenop doen zou ons boven de markt prijzen. Als vangnet geldt een
+**ondergrens van 25% op de inkoopprijs** (`CARO_MIN_MARGIN_PERCENT`), voor het
+geval een adviesprijs ontbreekt of te dicht op de inkoop ligt.
+
+Implementatie: `src/lib/pricing.ts`.
+
+---
+
+## 8. Verzendkosten — VASTGESTELD 2026-08-07
+
+| Wat | Waarde |
+|---|---|
+| Verzendkosten | **€ 7,45** |
+| Gratis vanaf | **€ 100** |
+
+Onderbouwing: onderzocht bij bekende NL/EU onderdelenshops — Winparts € 6,95,
+Autodoc € 9,95 (gratis vanaf € 120). Gemiddelde € 8,45, wij gaan daar € 1
+onder zitten. Tyre24 rekent óns € 6,90 per zending (gratis boven € 60
+inkoopwaarde), dus het tarief dekt de kosten.
+
+Implementatie: `src/lib/shipping.ts`. Zichtbaar in winkelwagen en checkout,
+met "nog € X tot gratis verzending".
+
+**Nog te doen bij livegang**: verzendkosten voor België/EU en eventuele
+toeslagen voor pallets (banden/velgen kunnen als pallet verzonden worden —
+de API heeft daar een `isPalletDelivery`-vlag voor die we nog niet gebruiken).
 
 ---
 

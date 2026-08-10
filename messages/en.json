@@ -8,7 +8,20 @@
   "nav": {
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "menuAria": "Main menu"
+    "menuAria": "Main menu",
+    "back": "Back"
+  },
+  "bottomNav": {
+    "label": "Main navigation",
+    "home": "Home",
+    "assortment": "Range",
+    "search": "Search",
+    "cart": "Cart",
+    "cartAria": "Shopping cart, {count, plural, =0 {empty} =1 {1 item} other {# items}}",
+    "vehicle": "My car",
+    "vehicleSelected": "Your car: {plate}",
+    "back": "Back",
+    "close": "Close"
   },
   "search": {
     "label": "Search the shop",
@@ -163,6 +176,14 @@
     "shippingNote": "Shipping costs are shown before checkout.",
     "withdrawalNote": "14-day right of withdrawal on every order.",
     "checkout": "Checkout"
+  },
+  "totals": {
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "freeShipping": "Free",
+    "total": "Total",
+    "vatIncluded": "Including {amount} VAT",
+    "remainingForFree": "Add {amount} more and your order ships free."
   },
   "checkout": {
     "metaTitle": "Checkout — CarO",
