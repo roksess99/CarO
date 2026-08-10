@@ -17,21 +17,33 @@ Dit is de gekozen catalogus-leverancier (docs/DECISIONS.md #1).
 | Rate limit | **100 requests/minuut** (`ERR_TOO_MANY_REQUESTS`) — cachen is verplicht, geen client-side calls |
 | Formaat | JSON. Let op: veel numerieke velden komen als **string** terug (o.a. prijzen, quantity) |
 
-## Wat dit account écht kan (gemeten 2026-08-07 via `GET /areas` + `/categories`)
+## Wat dit account écht kan (volledig gemeten 2026-08-07)
 
-Dit is de belangrijkste bevinding: **er is geen area met nieuwe auto-onderdelen.**
+Alle negen area's doorgemeten op beide platformen, met `GET /areas`,
+`/categories?hideEmpty=true` en een `/items`-proef per eerste categorie.
 
 | id | afk | Naam | NL-platform | DE-platform |
 |---|---|---|---|---|
-| 6 | `ty` | **Banden** | ✅ 11 categorieën, 1.567 items in Auto/SUV, 191 merken | ✅ |
-| 7 | `sr` | Stalen velgen | ✅ 1 categorie | ✅ |
-| 5 | `sv` | Services | ✅ 1 categorie ("Gegevens & analyses") | ✅ |
-| 1 | `ac` | Toebehoor / Zubehör | ❌ leeg | ✅ "Rad & Reifenzubehör" |
-| 10 | `up` | **Gebruikte onderdelen** | ❌ leeg | ✅ **31 categorieën** (Bremsanlage, Filter, Elektrik, Lenkung…), 19.122 items in Bremsanlage alleen |
-| 3 | `oe` | OE | ❌ `ERR_B2B_PRODUCTAREA_INACTIVE` | ⚠️ actief, maar `ERROR_SEARCH_BY_CATEGORY_DISALBED` en `search` geeft 0 resultaten |
-| 4 | `fl` | — | ❌ inactief | ❌ leeg |
-| 8 | `aw` | Lichtmetalen wielen | ❌ leeg | ❌ leeg |
-| 9 | `to` | Tools | ❌ leeg | ❌ leeg |
+| 1 | `ac` | Toebehoren / Zubehör | ❌ `ERR_NO_CATEGORIES_FOUND` | ✅ 14 categorieën, 7.410 items in "Rad & Reifenzubehör" |
+| 3 | `oe` | **Original-Ersatzteile** | ❌ `ERR_B2B_PRODUCTAREA_INACTIVE` | ⚠️ actief, maar `searchableByCategory: false` → alleen zoeken op OE-nummer |
+| 4 | `fl` | Flowers (bloemen) | ❌ inactief | ❌ geen categorieën |
+| 5 | `sv` | Services | ⚠️ 1 categorie, **0 items** | ⚠️ 3 categorieën, 24 items |
+| 6 | `ty` | **Banden** | ✅ 11 categorieën, 1.567 items in Auto/SUV, 191 merken | ✅ 11 categorieën, 1.651 items |
+| 7 | `sr` | **Stalen velgen** | ✅ 1 categorie, 874 items | ✅ 947 items |
+| 8 | `aw` | Lichtmetalen velgen | ❌ leeg | ❌ leeg |
+| 9 | `to` | **Gereedschap** | ❌ leeg | ✅ 22 categorieën |
+| 10 | `up` | **Gebruikte onderdelen** | ❌ leeg | ✅ 31 categorieën, 10.191 items in Bremsanlage |
+
+Eigenschappen die het winkelmodel bepalen:
+
+| id | `searchableByCategory` | `searchPrefix` | `agreementNeeded` | TecDoc |
+|---|---|---|---|---|
+| 1 | true | — | false | true |
+| 3 | **false** | **OEN** | **true** | true |
+| 6 | true | — | false | true |
+| 7 | true | — | false | true |
+| 9 | true | — | false | false |
+| 10 | true | — | false | true |
 
 ### Nieuwe onderdelen: area 3 "Original-Ersatzteile" (onderzocht 2026-08-07)
 
@@ -86,6 +98,30 @@ categorie-navigatie werken. Onderdelen vragen een ander winkelmodel: klant
 voert kenteken of OE-nummer in → passende artikelen. De categoriebrowsing die
 we nu hebben werkt alleen voor banden (area 6) en gebruikte onderdelen (area 10).
 
+### Wat de shop nu verkoopt (besloten 2026-08-07)
+
+Alle area's met echte data zijn ontsloten als productfamilie
+(src/lib/catalog/families.ts). CarO kan alles zelf inkopen, dus er is geen
+reden om area's ongebruikt te laten:
+
+| Familie | Area | Platform | Aanbod |
+|---|---|---|---|
+| Onderdelen | 3 | DE | nieuwe originele onderdelen, alleen op OE-nummer |
+| Gebruikte onderdelen | 10 | DE | 31 categorieen, 10.191 items in Bremsanlage alleen |
+| Banden | 6 | NL | 11 categorieen, 1.567 items |
+| Velgen | 7 | NL | stalen velgen, 874 items |
+| Toebehoren | 1 | DE | 14 categorieen, 7.410 items |
+| Gereedschap | 9 | DE | 22 categorieen |
+
+Niet verkocht: area 4 (Flowers — bloemen), area 5 (Services, 0 artikelen op
+NL) en area 8 (Alufelgen, leeg op beide platformen). Lichtmetalen velgen lopen
+via de aparte Alloys-API.
+
+⚠️ **Sommige categorieen geven HTTP 500.** Gemeten: area 9 categorie 1
+(Handwerkzeuge) faalt consequent terwijl de andere 21 categorieen werken.
+De adapter vangt dat af en levert een lege lijst — een kapotte categorie
+mag geen foutpagina opleveren.
+
 Gevolgen:
 - **Banden** is de enige goed gevulde area op het NL-platform.
 - **Gebruikte onderdelen** (area 10, DE-platform) is de enige bron van echte
@@ -93,6 +129,55 @@ Gevolgen:
   Let op: `stock: 1` per artikel — elk exemplaar is uniek en na verkoop weg.
 - Wil je **nieuwe** onderdelen verkopen, dan moet er iets bij: area 3 (`oe`)
   laten activeren door Tyre24, of een andere leverancier.
+
+## Taal: wat de API wel en niet kan (gemeten 2026-08-07)
+
+De taal hangt aan het landplatform in het base path, niet aan een parameter.
+
+**Beschikbare platformen** (getest met hetzelfde token):
+
+| Platform | Werkt | Taal van categorieën/filters |
+|---|---|---|
+| `nl/nl` | ✅ | Nederlands |
+| `de/de`, `at/de` | ✅ | Duits |
+| `be/nl` | ✅ | Nederlands |
+| `fr/fr` | ✅ | Frans |
+| `it/it`, `es/es`, `pl/pl` | ✅ | Italiaans / Spaans / Pools |
+| `nl/en`, `de/en`, `gb/en`, `uk/en`, `en/en` | ❌ | **Er is geen Engels platform** |
+
+Gevolgen voor de shop:
+
+1. **Engels bestaat niet in deze API.** Op `/en` tonen we daarom Nederlandse
+   categorie- en filternamen (voor de DE-only area's: Duitse). Alleen onze
+   eigen UI-teksten zijn vertaald.
+2. **Duitse teksten zijn onvermijdelijk** voor area's die alleen op het
+   DE-platform bestaan (1 toebehoren, 3 nieuwe onderdelen, 9 gereedschap,
+   10 gebruikte onderdelen). Banden (6) en velgen (7) zijn wel Nederlands.
+3. **Filternamen zijn per taal anders**: "Inzet" (nl) = "Einsatz" (de) =
+   "Utilisation" (fr). Zie hieronder waarom dat belangrijk is.
+
+### Filtersleutels: gebruik de identifier, nooit de naam
+
+GEMETEN: de `identifier` van een filteroptie is base64 van `id~waarde` en is
+**in elke taal identiek**:
+
+| Groep (nl / de / fr) | identifier | gedecodeerd |
+|---|---|---|
+| laadindex / Loadindex / Indice de charge | `MjQ3fjkx` | `247~91` |
+| Inzet / Einsatz / Utilisation | `MjQxfjQ` | `241~4` |
+
+De adapter leidt sleutel én waarde af uit de identifier (`a241:4`), niet uit
+de groepsnaam. Zonder dat verliest een klant al zijn filters zodra hij van
+taal wisselt — de URL `?f=inzet:...` bestaat immers niet op het Duitse
+platform.
+
+### Area 3 is definitief niet doorbladerbaar
+
+Getest met `parentNodeId` 0, 1 en 13: alle drie geven
+`ERROR_SEARCH_BY_CATEGORY_DISALBED`. Er is geen manier om nieuwe onderdelen
+te tonen zonder dat de klant een volledig OE-nummer intypt. De
+`/items`-response bevat wél een `categories`-blok (bv. "Volkswagen"), maar
+dat beschrijft alleen de gevonden treffers en is geen bladerbare boom.
 
 ## Gemeten datastructuur (belangrijk, wijkt af van de swagger)
 

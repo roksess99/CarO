@@ -159,10 +159,16 @@ export default async function FamilyPage({ params, searchParams }: Props) {
             </ul>
           </nav>
 
-          <h2 className="mt-12 text-2xl">{t("featuredTitle")}</h2>
-          <div className="mt-6">
-            <ProductGrid parts={parts} />
-          </div>
+          {/* Alleen tonen als er echt iets is: de eerste categorie van een
+              familie kan leeg zijn of (bij Tyre24) een 500 geven */}
+          {parts.length > 0 && (
+            <>
+              <h2 className="mt-12 text-2xl">{t("featuredTitle")}</h2>
+              <div className="mt-6">
+                <ProductGrid parts={parts} />
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

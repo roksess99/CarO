@@ -6,11 +6,11 @@ Webshop voor auto-onderdelen. Markt: Nederland. UI-taal: NL primair, EN secundai
 landbouw, grondverzet of industrie. Afgedwongen als allowlist in
 `src/lib/catalog/assortment.ts` — zie @docs/DECISIONS.md #7.
 
-**Twee productfamilies: onderdelen en banden.** Dat onderscheid loopt door de
-hele site: eigen navigatie-ingang, eigen URL-tak, eigen sectie op de homepage
-en zichtbaar in het kruimelpad. Elke familie hangt aan een eigen Tyre24
-productArea (`src/lib/catalog/families.ts`). Een familie zonder bron toont een
-eerlijke lege staat, geen verzonnen producten.
+**Zes productfamilies**: onderdelen, gebruikte onderdelen, banden, velgen,
+toebehoren en gereedschap. Elke familie hangt aan één Tyre24 productArea
+(`src/lib/catalog/families.ts`) en loopt door de hele site: eigen URL-tak,
+eigen kolom in het assortimentsmenu en zichtbaar in het kruimelpad. Een familie
+zonder aanbod toont een eerlijke lege staat, geen verzonnen producten.
 Huisstijl: @docs/BRAND.md — wijk hier nooit vanaf.
 Openstaande beslissingen: @docs/DECISIONS.md — niet gokken, vragen.
 
@@ -33,7 +33,7 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 - Componenten importeren **alleen** types uit `src/lib/catalog/types.ts`.
 - Alle Tyre24-calls lopen **server-side** door `tyre24-provider.ts`; de browser
   praat nooit rechtstreeks met Tyre24 (token is een secret, rate limit 100/min).
-- `TYRE24_API_TOKEN` ontbreekt nog → `getCatalogProvider()` valt terug op de mock.
+- Zonder `TYRE24_API_TOKEN` valt `getCatalogProvider()` terug op de mock.
   De site moet altijd zonder token blijven werken.
 - Nog geen Prisma-schema en geen betaalcode. Order plaatsen (Tyre24 POST /order) is fase 4.
 - Waar later serverwerk komt (ordercreatie, voorraadreservering):

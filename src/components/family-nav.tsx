@@ -2,7 +2,11 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import { familySlug, type ProductFamily } from "@/lib/catalog/families";
+import {
+  familySlug,
+  NAV_GROUPS,
+  type ProductFamily,
+} from "@/lib/catalog/families";
 import type { Category } from "@/lib/catalog/types";
 import { Link } from "@/i18n/navigation";
 
@@ -11,27 +15,28 @@ export interface FamilyNavItem {
   categories: Category[];
 }
 
-// Eén uitklapmenu per productfamilie, zodat "Onderdelen" en "Banden"
-// zichtbaar twee aparte ingangen zijn (disclosure-patroon: aria-expanded,
-// Escape en klik-buiten). Categorieën komen server-side uit de provider.
+/** Categorieën per familie in het paneel; de rest via "alles bekijken" */
+const CATEGORIES_PER_FAMILY = 8;
+
+// Eén knop per productgroep in plaats van alles onder één menu. De groep
+// "Assortiment" bundelt de twee onderdelen-families; de rest zijn losse
+// knoppen met hun eigen categorieën eronder.
 export function FamilyNav({ items }: { items: FamilyNavItem[] }) {
   const t = useTranslations("family");
   const locale = useLocale();
-  const [openFamily, setOpenFamily] = useState<ProductFamily | null>(null);
+  const [openKey, setOpenKey] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  const triggerRefs = useRef<Partial<Record<ProductFamily, HTMLButtonElement | null>>>({});
+  const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   useEffect(() => {
-    if (!openFamily) return;
+    if (!openKey) return;
     function onPointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpenFamily(null);
-      }
+      if (!rootRef.current?.contains(event.target as Node)) setOpenKey(null);
     }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        triggerRefs.current[openFamily as ProductFamily]?.focus();
-        setOpenFamily(null);
+        triggerRefs.current[openKey as string]?.focus();
+        setOpenKey(null);
       }
     }
     document.addEventListener("pointerdown", onPointerDown);
@@ -40,42 +45,56 @@ export function FamilyNav({ items }: { items: FamilyNavItem[] }) {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [openFamily]);
+  }, [openKey]);
+
+  const byFamily = new Map(items.map((item) => [item.family, item.categories]));
 
   return (
-    <div ref={rootRef} className="flex items-center gap-1">
-      {items.map(({ family, categories }) => {
-        const slug = familySlug(family, locale);
-        const open = openFamily === family;
-        const menuId = `family-menu-${family}`;
+    <div ref={rootRef} className="flex items-center gap-0.5">
+      {NAV_GROUPS.map((group) => {
+        const families = group.families.filter((f) => byFamily.has(f));
+        if (families.length === 0) return null;
 
-        // Familie zonder categorieën: alleen een link naar de
-        // overzichtspagina, die legt uit dat er nog geen aanbod is
-        if (categories.length === 0) {
+        const open = openKey === group.key;
+        const menuId = `nav-menu-${group.key}`;
+        // Eén familie in de groep: de knop draagt de familienaam.
+        // Meerdere: een groepsnaam met de families als kopjes eronder.
+        const single = families.length === 1 ? families[0] : null;
+        const label = single ? t(`${single}.title`) : t(`group.${group.key}`);
+        const totalCategories = families.reduce(
+          (sum, f) => sum + (byFamily.get(f)?.length ?? 0),
+          0,
+        );
+
+        // Geen categorieën én één familie: gewoon een link, geen leeg menu
+        if (single && totalCategories === 0) {
           return (
             <Link
-              key={family}
-              href={{ pathname: "/[family]", params: { family: slug } }}
-              className="rounded-md px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface"
+              key={group.key}
+              href={{
+                pathname: "/[family]",
+                params: { family: familySlug(single, locale) },
+              }}
+              className="rounded-md px-3 py-2 text-sm font-semibold whitespace-nowrap text-foreground hover:bg-surface"
             >
-              {t(`${family}.title`)}
+              {label}
             </Link>
           );
         }
 
         return (
-          <div key={family} className="relative">
+          <div key={group.key} className="relative">
             <button
               ref={(node) => {
-                triggerRefs.current[family] = node;
+                triggerRefs.current[group.key] = node;
               }}
               type="button"
               aria-expanded={open}
               aria-controls={menuId}
-              onClick={() => setOpenFamily(open ? null : family)}
-              className="inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface"
+              onClick={() => setOpenKey(open ? null : group.key)}
+              className="inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-semibold whitespace-nowrap text-foreground hover:bg-surface"
             >
-              {t(`${family}.title`)}
+              {label}
               <svg
                 aria-hidden="true"
                 viewBox="0 0 24 24"
@@ -93,39 +112,65 @@ export function FamilyNav({ items }: { items: FamilyNavItem[] }) {
             {open && (
               <nav
                 id={menuId}
-                aria-label={t(`${family}.menuAria`)}
-                className={`absolute left-0 z-40 mt-2 rounded-lg border border-border bg-background p-2 shadow-lg ${
-                  // Meer dan vier categorieën: twee kolommen, zodat alles
-                  // in één oogopslag zichtbaar is (mega-menu-patroon)
-                  categories.length > 4 ? "w-[32rem]" : "w-60"
+                aria-label={label}
+                className={`absolute left-0 z-40 mt-2 rounded-lg border border-border bg-background p-4 shadow-xl ${
+                  families.length > 1 || totalCategories > 6
+                    ? "w-[min(40rem,calc(100vw-2rem))]"
+                    : "w-64"
                 }`}
               >
-                {/* "Alles in X" staat buiten het grid, anders wordt het
-                    een losse kolomcel in het mega-menu */}
-                <Link
-                  href={{ pathname: "/[family]", params: { family: slug } }}
-                  onClick={() => setOpenFamily(null)}
-                  className="block rounded-md px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface"
+                <div
+                  className={
+                    families.length > 1 || totalCategories > 6
+                      ? "grid grid-cols-2 gap-6"
+                      : ""
+                  }
                 >
-                  {t("allIn", { family: t(`${family}.title`) })}
-                </Link>
-                <div aria-hidden="true" className="my-1 border-t border-border" />
-                <ul className={categories.length > 4 ? "grid grid-cols-2 gap-x-2" : ""}>
-                  {categories.map((category) => (
-                    <li key={category.slug}>
-                      <Link
-                        href={{
-                          pathname: "/[family]/[category]",
-                          params: { family: slug, category: category.slug },
-                        }}
-                        onClick={() => setOpenFamily(null)}
-                        className="block rounded-md px-3 py-2 text-sm text-foreground hover:bg-surface"
-                      >
-                        {category.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                  {families.map((family) => {
+                    const slug = familySlug(family, locale);
+                    const categories = byFamily.get(family) ?? [];
+                    return (
+                      <div key={family}>
+                        <Link
+                          href={{ pathname: "/[family]", params: { family: slug } }}
+                          onClick={() => setOpenKey(null)}
+                          className="block rounded-md px-2 py-1 text-sm font-bold text-foreground hover:bg-surface"
+                        >
+                          {t(`${family}.title`)}
+                        </Link>
+                        {categories.length > 0 && (
+                          <ul className="mt-1">
+                            {categories.slice(0, CATEGORIES_PER_FAMILY).map((category) => (
+                              <li key={category.slug}>
+                                <Link
+                                  href={{
+                                    pathname: "/[family]/[category]",
+                                    params: { family: slug, category: category.slug },
+                                  }}
+                                  onClick={() => setOpenKey(null)}
+                                  className="block truncate rounded-md px-2 py-1.5 text-sm text-muted hover:bg-surface hover:text-foreground"
+                                >
+                                  {category.name}
+                                </Link>
+                              </li>
+                            ))}
+                            {categories.length > CATEGORIES_PER_FAMILY && (
+                              <li>
+                                <Link
+                                  href={{ pathname: "/[family]", params: { family: slug } }}
+                                  onClick={() => setOpenKey(null)}
+                                  className="block rounded-md px-2 py-1.5 text-sm text-muted underline underline-offset-4 hover:text-foreground"
+                                >
+                                  {t("viewAll")}
+                                </Link>
+                              </li>
+                            )}
+                          </ul>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </nav>
             )}
           </div>

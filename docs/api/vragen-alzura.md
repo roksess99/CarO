@@ -132,7 +132,21 @@ Area 3 has `agreementNeeded: true`. We see the endpoints `/agreementList`,
 
 ---
 
-**6. Two documentation details we found by testing**
+**6. Is there an English platform, and can Dutch-language areas be extended?**
+
+The language appears to be tied to the country platform in the base path. We
+tested `nl/en`, `de/en`, `gb/en`, `uk/en` and `en/en` — none of them respond.
+Working platforms return `nl`, `de`, `fr`, `it`, `es` and `pl`.
+
+- a. Is there an English platform we missed? Our shop serves customers in both
+  Dutch and English, and right now our English visitors see Dutch (or German)
+  category and filter names.
+- b. Product areas 1 (accessories), 9 (tools) and 10 (used parts) return
+  categories only on `de/de`, so all their category names, product
+  descriptions and filter labels are German — including for Dutch customers.
+  Can those areas be made available on the `nl` platform?
+
+**7. Two documentation details we found by testing**
 
 Not questions, but perhaps useful for your documentation:
 

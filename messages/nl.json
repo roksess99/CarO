@@ -29,11 +29,24 @@
     "featuredTitle": "Veelgekocht",
     "viewAll": "Alles bekijken",
     "allIn": "Alles in {family}",
+    "menuTitle": "Assortiment",
+    "oenLabel": "Zoek op OE-nummer",
+    "oenPlaceholder": "bv. 06A115561B",
+    "oenSubmit": "Zoeken",
+    "oenHint": "Vul het volledige OE-nummer in zoals het op het onderdeel staat. Zoeken op productnaam of een deel van het nummer werkt niet.",
+    "oenResults": "Resultaten voor {term}",
+    "oenNoResults": "Geen onderdelen gevonden voor {term}. Controleer het OE-nummer — het moet volledig en exact kloppen.",
     "onderdelen": {
       "title": "Onderdelen",
-      "intro": "Onderhoudsdelen en reparatieonderdelen. Zoek op onderdeel of OE-nummer.",
-      "menuAria": "Onderdelencategorieën",
-      "empty": "Er is nog geen onderdelenaanbod. Zodra de koppeling met de onderdelencatalogus er is, vind je hier remmen, filters, elektra en meer."
+      "intro": "Nieuwe originele onderdelen. Zoek op OE-nummer zoals het op het onderdeel staat.",
+      "menuAria": "Onderdelen",
+      "empty": "Er is nog geen onderdelenaanbod beschikbaar."
+    },
+    "gebruikt": {
+      "title": "Gebruikte onderdelen",
+      "intro": "Tweedehands onderdelen met OE-nummer. Elk exemplaar is unieke voorraad: eenmaal verkocht is het weg.",
+      "menuAria": "Gebruikte onderdelen",
+      "empty": "Er zijn nu geen gebruikte onderdelen beschikbaar."
     },
     "banden": {
       "title": "Banden",
@@ -41,12 +54,27 @@
       "menuAria": "Bandencategorieën",
       "empty": "Er is nog geen bandenaanbod beschikbaar."
     },
-    "oenLabel": "Zoek op OE-nummer",
-    "oenPlaceholder": "bv. 06A115561B",
-    "oenSubmit": "Zoeken",
-    "oenHint": "Vul het volledige OE-nummer in zoals het op het onderdeel staat. Zoeken op productnaam of een deel van het nummer werkt niet.",
-    "oenResults": "Resultaten voor {term}",
-    "oenNoResults": "Geen onderdelen gevonden voor {term}. Controleer het OE-nummer — het moet volledig en exact kloppen."
+    "velgen": {
+      "title": "Velgen",
+      "intro": "Stalen velgen in alle gangbare maten.",
+      "menuAria": "Velgencategorieën",
+      "empty": "Er is nog geen velgenaanbod beschikbaar."
+    },
+    "toebehoren": {
+      "title": "Toebehoren",
+      "intro": "Wiel- en bandenaccessoires, van ventielen tot opbergsystemen.",
+      "menuAria": "Toebehorencategorieën",
+      "empty": "Er is nog geen aanbod aan toebehoren beschikbaar."
+    },
+    "gereedschap": {
+      "title": "Gereedschap",
+      "intro": "Handgereedschap, elektrisch gereedschap en werkplaatsbenodigdheden.",
+      "menuAria": "Gereedschapcategorieën",
+      "empty": "Er is nog geen gereedschapsaanbod beschikbaar."
+    },
+    "group": {
+      "assortiment": "Assortiment"
+    }
   },
   "vehicle": {
     "title": "Past het op jouw auto?",
@@ -70,6 +98,13 @@
     "allBrands": "Alle merken",
     "breadcrumbAria": "Kruimelpad",
     "breadcrumbHome": "Home"
+  },
+  "filters": {
+    "title": "Filters",
+    "toggle": "Filters",
+    "clearAll": "Alles wissen",
+    "removeFilter": "Filter {value} verwijderen",
+    "resultCount": "{count, plural, =0 {Geen artikelen gevonden} =1 {1 artikel} other {Eerste # artikelen}}"
   },
   "localeSwitcher": {
     "label": "Taal",
