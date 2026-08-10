@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { CaroMark } from "@/components/brand/caro-mark";
+import { OrderTotals } from "@/components/cart/order-totals";
 import { removeFromCart, setCartQuantity } from "@/components/cart/use-cart";
 import { useCartParts } from "@/components/cart/use-cart-parts";
 import { subtotalCents } from "@/lib/cart/cart";
@@ -112,16 +113,11 @@ export function CartView() {
 
       <aside className="w-full rounded-lg border border-border p-6 lg:max-w-sm">
         <h2 className="text-lg">{t("summaryTitle")}</h2>
-        <dl className="mt-4 flex justify-between text-sm">
-          <dt>{t("subtotal")}</dt>
-          <dd className="font-bold tabular-nums">
-            {formatPriceCents(subtotal)}
-          </dd>
-        </dl>
-        <p className="mt-1 text-xs text-muted">{t("inclVat")}</p>
+        <div className="mt-4">
+          <OrderTotals subtotalCents={subtotal} />
+        </div>
         {/* Verplicht vóór de laatste checkoutstap (CLAUDE.md, NL-recht) */}
-        <p className="mt-4 text-sm text-muted">{t("shippingNote")}</p>
-        <p className="mt-2 text-sm text-muted">{t("withdrawalNote")}</p>
+        <p className="mt-4 text-sm text-muted">{t("withdrawalNote")}</p>
         <Link
           href="/checkout"
           className="mt-6 block w-full rounded-md bg-caro-orange px-6 py-3 text-center font-semibold text-caro-ink"

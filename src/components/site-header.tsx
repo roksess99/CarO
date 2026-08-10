@@ -4,7 +4,6 @@ import { CaroLockup } from "@/components/brand/caro-lockup";
 import { CartButton } from "@/components/cart/cart-button";
 import { FamilyNav, type FamilyNavItem } from "@/components/family-nav";
 import { LocaleSwitcher } from "@/components/locale-switcher";
-import { MobileNav } from "@/components/mobile-nav";
 import { SiteSearch } from "@/components/site-search";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SelectedVehicle } from "@/components/vehicle/selected-vehicle";
@@ -27,8 +26,6 @@ export async function SiteHeader() {
     // Sticky: zoeken, navigatie en winkelwagen blijven bereikbaar bij scrollen
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
       <div className="site-container flex h-16 items-center gap-3">
-        <MobileNav items={items} locale={locale} />
-
         <Link href="/" aria-label={t("homeAria")} className="shrink-0 rounded-sm">
           <CaroLockup className="text-2xl md:text-3xl" />
         </Link>
@@ -53,7 +50,9 @@ export async function SiteHeader() {
             </Suspense>
             <ThemeToggle />
           </div>
-          <CartButton />
+          <div className="hidden lg:block">
+            <CartButton />
+          </div>
         </div>
       </div>
 

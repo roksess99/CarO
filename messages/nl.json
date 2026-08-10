@@ -8,7 +8,20 @@
   "nav": {
     "openMenu": "Menu openen",
     "closeMenu": "Menu sluiten",
-    "menuAria": "Hoofdmenu"
+    "menuAria": "Hoofdmenu",
+    "back": "Terug"
+  },
+  "bottomNav": {
+    "label": "Hoofdnavigatie",
+    "home": "Home",
+    "assortment": "Assortiment",
+    "search": "Zoeken",
+    "cart": "Wagen",
+    "cartAria": "Winkelwagen, {count, plural, =0 {leeg} =1 {1 artikel} other {# artikelen}}",
+    "vehicle": "Mijn auto",
+    "vehicleSelected": "Jouw auto: {plate}",
+    "back": "Terug",
+    "close": "Sluiten"
   },
   "search": {
     "label": "Zoek in de webshop",
@@ -163,6 +176,14 @@
     "shippingNote": "Verzendkosten zie je vóór het afrekenen.",
     "withdrawalNote": "14 dagen bedenktijd op elke bestelling.",
     "checkout": "Afrekenen"
+  },
+  "totals": {
+    "subtotal": "Subtotaal",
+    "shipping": "Verzendkosten",
+    "freeShipping": "Gratis",
+    "total": "Totaal",
+    "vatIncluded": "Inclusief {amount} btw",
+    "remainingForFree": "Nog {amount} en je bestelling wordt gratis verzonden."
   },
   "checkout": {
     "metaTitle": "Afrekenen — CarO",
