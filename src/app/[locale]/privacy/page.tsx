@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
-import type { Locale } from "@/i18n/routing";
+import { localizedMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string }>;
 };
-
-// TODO: echte domeinnaam zodra hosting vaststaat (docs/DECISIONS.md #2)
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 /**
  * Wat de shop op het apparaat van de bezoeker opslaat. Gemeten 2026-08-07,
@@ -34,14 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${t("title")} — CarO`,
     description: t("intro"),
-    metadataBase: new URL(SITE_URL),
-    alternates: {
-      canonical: getPathname({ locale: locale as Locale, href }),
-      languages: {
-        nl: getPathname({ locale: "nl", href }),
-        en: getPathname({ locale: "en", href }),
-      },
-    },
+    ...localizedMetadata(locale, (l) => getPathname({ locale: l, href })),
   };
 }
 

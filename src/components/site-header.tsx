@@ -30,12 +30,8 @@ export async function SiteHeader() {
           <CaroLockup className="text-2xl md:text-3xl" />
         </Link>
 
-        <div className="hidden lg:block">
-          <FamilyNav items={items} />
-        </div>
-
         {/* Zoekbalk krijgt de vrije ruimte; op mobiel staat hij eronder */}
-        <div className="ml-auto hidden max-w-md flex-1 md:block">
+        <div className="ml-auto hidden max-w-xl flex-1 md:block">
           <SiteSearch locale={locale} id="header-search-desktop" />
         </div>
 
@@ -53,6 +49,15 @@ export async function SiteHeader() {
           <div className="hidden lg:block">
             <CartButton />
           </div>
+        </div>
+      </div>
+
+      {/* Eigen rij voor de zes families: naast logo en zoekbalk passen ze niet
+          op 1024px, en een categoriebalk over de volle breedte is bovendien
+          wat klanten van een onderdelenshop gewend zijn. */}
+      <div className="hidden border-t border-border lg:block">
+        <div className="site-container">
+          <FamilyNav items={items} />
         </div>
       </div>
 

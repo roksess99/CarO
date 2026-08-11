@@ -12,14 +12,12 @@ import {
   parseFilterParam,
 } from "@/lib/catalog/filter-params";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import { localizedMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string; family: string; category: string }>;
   searchParams: Promise<{ f?: string | string[] }>;
 };
-
-// TODO: echte domeinnaam zodra hosting vaststaat (docs/DECISIONS.md #2)
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, family: familyParam, category: slug } = await params;
@@ -42,11 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${category.name} — CarO`,
     description: t("metaDescription", { category: category.name }),
-    metadataBase: new URL(SITE_URL),
-    alternates: {
-      canonical: localizedHref(locale),
-      languages: { nl: localizedHref("nl"), en: localizedHref("en") },
-    },
+    ...localizedMetadata(locale, localizedHref),
   };
 }
 

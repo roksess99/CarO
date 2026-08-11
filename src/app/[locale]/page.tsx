@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Hero } from "@/components/home/hero";
 import { ProductGrid } from "@/components/product-grid";
-import { VehicleSearch } from "@/components/vehicle/vehicle-search";
 import { Link } from "@/i18n/navigation";
 import {
   familySlug,
@@ -9,13 +9,11 @@ import {
   type ProductFamily,
 } from "@/lib/catalog/families";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import { localizedMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string }>;
 };
-
-// TODO: echte domeinnaam zodra hosting vaststaat (docs/DECISIONS.md #2)
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 /** Familie waarvan we op de homepage producten uitlichten */
 const FEATURED_FAMILY: ProductFamily = "banden";
@@ -27,18 +25,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
-    metadataBase: new URL(SITE_URL),
-    alternates: {
-      canonical: `/${locale}`,
-      languages: { nl: "/nl", en: "/en" },
-    },
+    ...localizedMetadata(locale, (l) => `/${l}`),
   };
 }
 
 export default async function HomePage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("home");
   const tFamily = await getTranslations("family");
 
   // Alleen één familie ophalen voor de uitgelichte rij: zes productsecties
@@ -50,18 +43,10 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <>
-      <section className="site-container py-16 md:py-24">
-        <p className="eyebrow text-sm">{t("eyebrow")}</p>
-        <h1 className="mt-3 max-w-2xl text-4xl md:text-5xl">{t("title")}</h1>
-        <p className="mt-4 max-w-xl text-muted">{t("intro")}</p>
-        {/* Kentekenzoeker eerst: hiermee begint de klant */}
-        <div className="mt-8 max-w-lg">
-          <VehicleSearch />
-        </div>
-      </section>
+      <Hero />
 
       {/* Tegel per familie: het hele assortiment in één oogopslag */}
-      <section className="site-container pb-16 md:pb-24">
+      <section className="site-container py-16 md:py-24">
         <h2 className="text-2xl">{tFamily("menuTitle")}</h2>
         <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {PRODUCT_FAMILIES.map((family) => (

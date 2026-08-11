@@ -11,14 +11,12 @@ import {
   PRODUCT_FAMILIES,
 } from "@/lib/catalog/families";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import { localizedMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string; family: string }>;
   searchParams: Promise<{ oen?: string | string[] }>;
 };
-
-// TODO: echte domeinnaam zodra hosting vaststaat (docs/DECISIONS.md #2)
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 // Next geeft de locale van de bovenliggende route mee, zodat we per taal
 // alleen de juiste familieslugs genereren (nl → onderdelen/banden,
@@ -35,24 +33,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!family) return {};
   const t = await getTranslations({ locale, namespace: "family" });
 
-  const href = { pathname: "/[family]", params: { family: slug } } as const;
   return {
     title: `${t(`${family}.title`)} — CarO`,
     description: t(`${family}.intro`),
-    metadataBase: new URL(SITE_URL),
-    alternates: {
-      canonical: getPathname({ locale: locale as Locale, href }),
-      languages: {
-        nl: getPathname({
-          locale: "nl",
-          href: { pathname: "/[family]", params: { family: familySlug(family, "nl") } },
-        }),
-        en: getPathname({
-          locale: "en",
-          href: { pathname: "/[family]", params: { family: familySlug(family, "en") } },
-        }),
-      },
-    },
+    ...localizedMetadata(locale, (l) =>
+      getPathname({
+        locale: l,
+        href: { pathname: "/[family]", params: { family: familySlug(family, l) } },
+      }),
+    ),
   };
 }
 

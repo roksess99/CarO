@@ -72,8 +72,7 @@ export default async function LocaleLayout({
             {t("skipToContent")}
           </a>
           <SiteHeader />
-          {/* pb-28 op mobiel: de zwevende tabbalk mag niets afdekken */}
-          <main id="main" className="flex-1 pb-28 lg:pb-0">
+          <main id="main" className="flex-1">
             {children}
           </main>
           <SiteFooter />

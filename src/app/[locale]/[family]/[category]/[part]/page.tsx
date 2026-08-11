@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CaroMark } from "@/components/brand/caro-mark";
+import { AvailabilityBadge } from "@/components/availability-badge";
 import { AddToCartWithQuantity } from "@/components/cart/add-to-cart-with-quantity";
+import { ProductImagePlaceholder } from "@/components/product-image-placeholder";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -14,6 +15,7 @@ import {
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents, priceCentsToDecimalString } from "@/lib/format";
+import { localizedMetadata, SITE_URL } from "@/lib/site";
 
 type Props = {
   params: Promise<{
@@ -23,9 +25,6 @@ type Props = {
     part: string;
   }>;
 };
-
-// TODO: echte domeinnaam zodra hosting vaststaat (docs/DECISIONS.md #2)
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 // Bewust geen generateStaticParams: de echte catalogus heeft te veel
 // artikelen om voor te renderen. De adapter cachet de API-calls al.
@@ -78,11 +77,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       brand: part.brand,
       oeNumber: part.oeNumber,
     }),
-    metadataBase: new URL(SITE_URL),
-    alternates: {
-      canonical: localizedHref(locale),
-      languages: { nl: localizedHref("nl"), en: localizedHref("en") },
-    },
+    ...localizedMetadata(locale, localizedHref),
   };
 }
 
@@ -188,13 +183,11 @@ export default async function ProductPage({ params }: Props) {
               className="w-full rounded-lg border border-border bg-surface object-contain"
             />
           ) : (
-            <div
-              role="img"
-              aria-label={t("noImage")}
-              className="flex aspect-4/3 w-full items-center justify-center rounded-lg border border-border bg-surface"
-            >
-              <CaroMark variant="line" className="size-16 opacity-30" />
-            </div>
+            <ProductImagePlaceholder
+              label={t("noImage")}
+              className="aspect-4/3 w-full rounded-lg border border-border"
+              iconClassName="size-20"
+            />
           )}
         </div>
 
@@ -208,15 +201,9 @@ export default async function ProductPage({ params }: Props) {
             </span>{" "}
             <span className="text-sm text-muted">{t("inclVat")}</span>
           </p>
-          <p
-            className={
-              part.availability === "out-of-stock"
-                ? "mt-2 text-sm text-muted"
-                : "mt-2 text-sm font-medium"
-            }
-          >
-            {t(`availability.${part.availability}`)}
-          </p>
+          <div className="mt-3">
+            <AvailabilityBadge availability={part.availability} />
+          </div>
 
           <div className="mt-8">
             <AddToCartWithQuantity part={part} />
