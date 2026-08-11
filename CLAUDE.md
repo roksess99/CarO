@@ -52,6 +52,10 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
   Zod valideert alle API-responses aan de rand, daarna is alles getypeerd.
 - **Kentekenzoeker**: overheid.io (RDW-voertuiggegevens) — zie @docs/api/OVERHEID-IO.md.
   Een kenteken is persoonsgegeven: nooit in een URL, nooit in een logregel.
+- **Autokiezer zonder kenteken**: merk/model-catalogus geoogst uit RDW open
+  data — zie @docs/api/VOERTUIGCATALOGUS.md. Statisch bestand, geen runtime-API.
+  Import `src/lib/vehicle/catalog.ts` alleen server-side (~90 kB); de kiezer
+  haalt modellen en bouwjaren per stap op via een Server Action.
 - Later: PostgreSQL + Prisma (fase 4), Mollie (fase 5)
 
 Voeg geen libraries toe zonder te vragen. Geen state-manager, geen UI-kit.

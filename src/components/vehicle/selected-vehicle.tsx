@@ -16,17 +16,27 @@ export function SelectedVehicle() {
     // Ook op mobiel zichtbaar: de gekozen auto stuurt het hele koopproces.
     // Daar tonen we alleen de plaat, op desktop ook het merk.
     <div className="flex items-center gap-1 md:gap-2">
-      <PlateBadge plate={vehicle.plateFormatted} className="text-xs" />
+      {/* Zonder kenteken is er geen plaat om te tonen; dan draagt het merk
+          de herkenning. */}
+      {vehicle.plateFormatted ? (
+        <PlateBadge plate={vehicle.plateFormatted} className="text-xs" />
+      ) : (
+        <span className="max-w-32 truncate text-sm font-semibold">
+          {vehicle.brand}
+        </span>
+      )}
       <span
         className="hidden max-w-32 truncate text-sm text-muted lg:inline"
         title={`${vehicle.brand} ${vehicle.model}`}
       >
-        {vehicle.brand}
+        {vehicle.plateFormatted ? vehicle.brand : vehicle.model}
       </span>
       <button
         type="button"
         onClick={clearVehicle}
-        aria-label={t("clearAria", { plate: vehicle.plateFormatted })}
+        aria-label={t("clearAria", {
+          plate: vehicle.plateFormatted ?? `${vehicle.brand} ${vehicle.model}`,
+        })}
         className="rounded-md p-1 text-muted hover:bg-surface hover:text-foreground"
       >
         <svg

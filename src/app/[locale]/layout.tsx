@@ -9,6 +9,7 @@ import { routing } from "@/i18n/routing";
 import type { FamilyNavItem } from "@/components/family-nav";
 import { PRODUCT_FAMILIES } from "@/lib/catalog/families";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import { listMakes } from "@/lib/vehicle/catalog";
 import "../globals.css";
 
 const inter = Inter({
@@ -76,7 +77,7 @@ export default async function LocaleLayout({
             {children}
           </main>
           <SiteFooter />
-          <BottomNav items={navItems} />
+          <BottomNav items={navItems} makes={listMakes()} />
         </NextIntlClientProvider>
       </body>
     </html>

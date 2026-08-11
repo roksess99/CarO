@@ -9,7 +9,10 @@ import type { Vehicle } from "@/lib/vehicle/types";
 
 const STORAGE_KEY = "caro-vehicle";
 const VEHICLE_EVENT = "caro-vehicle";
-const SCHEMA_VERSION = 1;
+// v2: een auto kan ook zonder kenteken gekozen zijn (merk/model/bouwjaar).
+// Opgeslagen auto's van v1 vervallen; dat is een gemaksinstelling, geen
+// gegevens die de klant kwijt kan raken.
+const SCHEMA_VERSION = 2;
 
 function parseVehicle(json: string | null): Vehicle | null {
   if (!json) return null;
@@ -19,10 +22,10 @@ function parseVehicle(json: string | null): Vehicle | null {
     const record = data as Record<string, unknown>;
     if (record.v !== SCHEMA_VERSION) return null;
     const vehicle = record.vehicle as Vehicle | undefined;
-    // Minimale sanity check; de bron is onze eigen Server Action
-    if (!vehicle || typeof vehicle.plate !== "string" || !vehicle.plate) {
-      return null;
-    }
+    // Minimale sanity check; de bron is onze eigen Server Action. Merk en
+    // model hebben beide routes altijd — een kenteken alleen de eerste.
+    if (!vehicle || !vehicle.brand || !vehicle.model) return null;
+    if (vehicle.source === "plate" && !vehicle.plate) return null;
     return vehicle;
   } catch {
     return null;

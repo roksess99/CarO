@@ -72,7 +72,10 @@ export function VehicleSearch({
       <div className="rounded-lg border border-border bg-surface p-4">
         <p className="eyebrow text-xs">{t("yourCar")}</p>
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-          <PlateBadge plate={vehicle.plateFormatted} />
+          {/* Alleen een plaat als er een kenteken achter zit */}
+          {vehicle.plateFormatted && (
+            <PlateBadge plate={vehicle.plateFormatted} />
+          )}
           <p className="font-bold">
             {vehicle.brand} {vehicle.model}
           </p>
