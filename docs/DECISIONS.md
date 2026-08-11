@@ -139,6 +139,27 @@ uitvoering) te herleiden is.
 **Tot dat vaststaat**: de gekozen auto wordt bewaard en getoond, met een
 eerlijke melding dat filteren nog niet werkt. Niet doen alsof het al kan.
 
+### Deelbesluit 2026-08-11: auto kiezen zonder kenteken — VASTGESTELD
+
+De klant kan zijn auto nu ook opgeven via merk → model → bouwjaar, uit een
+catalogus geoogst uit RDW open data (docs/api/VOERTUIGCATALOGUS.md). Dat is
+dezelfde bron als de kentekenzoeker, dus beide routes leveren identieke merk-
+en modelteksten op.
+
+Twee commerciële voertuig-API's zijn hiervoor gemeten en afgevallen omdat het
+Noord-Amerikaanse databases zijn: **carapi.dev** (advertentiefeed, 100
+requests/maand gratis, geen foto's, geen NL-kenteken→VIN) en **carapi.app**
+(echte catalogus, maar zonder Peugeot, Renault, Citroën, Opel, Škoda, SEAT en
+Dacia). Bewijs staat in docs/api/VOERTUIGCATALOGUS.md.
+
+**Dit lost #6 niet op.** De catalogus zegt wélke auto de klant heeft, niet
+welke onderdelen erop passen. Ook bandenmaat zit er niet in: RDW open data
+heeft die niet — gecontroleerd, de enige band-datasets gaan over rupsbanden.
+
+**Autofoto's blijven onmogelijk** met de onderzochte bronnen: er is geen route
+van een Nederlands kenteken naar een VIN, en de foto's van carapi.dev zijn
+opnames van individuele advertentievoertuigen, niet van het model.
+
 ---
 
 ## 2. Hosting — OPEN

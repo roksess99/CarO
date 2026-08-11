@@ -38,6 +38,7 @@ function toVehicle(
   const year = raw.datum_eerste_toelating?.slice(0, 4);
 
   return {
+    source: "plate",
     plate,
     plateFormatted: raw.kentekenplaat ?? plate,
     brand: raw.merk ?? "",

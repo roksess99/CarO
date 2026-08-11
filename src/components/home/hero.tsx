@@ -1,5 +1,6 @@
-import { useTranslations } from "next-intl";
-import { VehicleSearch } from "@/components/vehicle/vehicle-search";
+import { getTranslations } from "next-intl/server";
+import { VehicleFinder } from "@/components/vehicle/vehicle-finder";
+import { listMakes } from "@/lib/vehicle/catalog";
 
 /**
  * Startpunt van de shop: de kentekencheck.
@@ -8,12 +9,13 @@ import { VehicleSearch } from "@/components/vehicle/vehicle-search";
  * en de gele plaat springt er beter uit dan op wit. Bovendien scheidt het de
  * "wat zoek je"-stap zichtbaar van het assortiment eronder.
  *
- * Nog geen tweede tab "selecteer op merk/model/bouwjaar": daarvoor is een
- * voertuig-API nodig die er nog niet is (docs/DECISIONS.md #6). Eén tab
- * tekenen die niets doet is erger dan hem weglaten.
+ * Twee routes naar dezelfde uitkomst: kenteken (één handeling, meeste
+ * gegevens) of zelf merk, model en bouwjaar kiezen.
  */
-export function Hero() {
-  const t = useTranslations("home");
+export async function Hero() {
+  const t = await getTranslations("home");
+  // Alleen de merknamen naar de browser; modellen volgen per stap
+  const makes = listMakes();
 
   return (
     <section className="bg-caro-ink">
@@ -26,12 +28,10 @@ export function Hero() {
 
         {/* Lichte kaart op het donkere vlak: de plaat en de knop houden zo
             hun eigen contrastverhoudingen uit BRAND.md. */}
-        <div className="mt-8 max-w-2xl rounded-xl bg-background p-5 shadow-lg md:p-6">
+        <div className="mt-8 max-w-3xl rounded-xl bg-background p-5 shadow-lg md:p-6">
           <h2 className="text-lg">{t("plateTitle")}</h2>
-          <p className="mt-1 text-sm text-muted">{t("plateIntro")}</p>
-          <div className="mt-5">
-            <VehicleSearch />
-          </div>
+          <p className="mt-1 mb-4 text-sm text-muted">{t("plateIntro")}</p>
+          <VehicleFinder makes={makes} />
         </div>
       </div>
     </section>

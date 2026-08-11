@@ -6,7 +6,7 @@ import { BottomSheet } from "@/components/bottom-sheet";
 import type { FamilyNavItem } from "@/components/family-nav";
 import { useCart } from "@/components/cart/use-cart";
 import { useVehicle } from "@/components/vehicle/use-vehicle";
-import { VehicleSearch } from "@/components/vehicle/vehicle-search";
+import { VehicleFinder } from "@/components/vehicle/vehicle-finder";
 import { countItems } from "@/lib/cart/cart";
 import { familySlug, NAV_GROUPS } from "@/lib/catalog/families";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -29,7 +29,14 @@ function Indicator() {
   );
 }
 
-export function BottomNav({ items }: { items: FamilyNavItem[] }) {
+export function BottomNav({
+  items,
+  /** Merknamen voor de autokiezer; de rest volgt per stap uit een actie */
+  makes,
+}: {
+  items: FamilyNavItem[];
+  makes: string[];
+}) {
   const t = useTranslations("bottomNav");
   const tFamily = useTranslations("family");
   const locale = useLocale();
@@ -59,6 +66,12 @@ export function BottomNav({ items }: { items: FamilyNavItem[] }) {
     group.families.length === 1
       ? tFamily(`${group.families[0]}.title`)
       : tFamily(`group.${group.key}`);
+
+  // Een kenteken is korter en herkenbaarder dan "Volkswagen Golf"; zonder
+  // kenteken is het merk het enige dat in een tab past.
+  const vehicleLabel = vehicle
+    ? (vehicle.plateFormatted ?? vehicle.brand)
+    : null;
 
   const isHome = pathname === "/";
   const isSearch = pathname === "/search";
@@ -180,7 +193,7 @@ export function BottomNav({ items }: { items: FamilyNavItem[] }) {
           returnFocusTo={vehicleRef}
         >
           <div className="overflow-y-auto p-4">
-            <VehicleSearch autoFocus onSelected={closeVehicle} />
+            <VehicleFinder makes={makes} autoFocus onSelected={closeVehicle} />
           </div>
         </BottomSheet>
       )}
@@ -301,7 +314,9 @@ export function BottomNav({ items }: { items: FamilyNavItem[] }) {
             onClick={() => setVehicleOpen(true)}
             className={`${tab} ${vehicleOpen ? active : inactive}`}
             aria-label={
-              vehicle ? t("vehicleSelected", { plate: vehicle.plateFormatted }) : t("vehicle")
+              vehicle
+                ? t("vehicleSelected", { plate: vehicleLabel ?? "" })
+                : t("vehicle")
             }
           >
             {vehicleOpen && <Indicator />}
@@ -320,8 +335,11 @@ export function BottomNav({ items }: { items: FamilyNavItem[] }) {
               <circle cx="7.5" cy="17" r="1" />
               <circle cx="16.5" cy="17" r="1" />
             </svg>
-            <span aria-hidden="true" className={vehicle ? "text-caro-orange" : ""}>
-              {vehicle ? vehicle.plateFormatted : t("vehicle")}
+            <span
+              aria-hidden="true"
+              className={`max-w-full truncate ${vehicle ? "text-caro-orange" : ""}`}
+            >
+              {vehicleLabel ?? t("vehicle")}
             </span>
           </button>
         </nav>
