@@ -5,12 +5,6 @@
   "header": {
     "homeAria": "CarO — naar de homepage"
   },
-  "nav": {
-    "openMenu": "Menu openen",
-    "closeMenu": "Menu sluiten",
-    "menuAria": "Hoofdmenu",
-    "back": "Terug"
-  },
   "bottomNav": {
     "label": "Hoofdnavigatie",
     "home": "Home",
@@ -27,6 +21,9 @@
     "label": "Zoek in de webshop",
     "placeholder": "Bandenmaat, OE-nummer of merk",
     "submit": "Zoek",
+    "suggestionsLabel": "Zoeksuggesties",
+    "suggestionsLoading": "Zoeken…",
+    "suggestionsEmpty": "Geen directe treffers. Klik op Zoek voor alle resultaten.",
     "title": "Zoeken",
     "metaDescription": "Zoek onderdelen en banden op maat, OE-nummer of merk.",
     "resultsFor": "Resultaten voor “{term}”",
@@ -84,9 +81,6 @@
       "intro": "Handgereedschap, elektrisch gereedschap en werkplaatsbenodigdheden.",
       "menuAria": "Gereedschapcategorieën",
       "empty": "Er is nog geen gereedschapsaanbod beschikbaar."
-    },
-    "group": {
-      "assortiment": "Assortiment"
     }
   },
   "vehicle": {
@@ -94,6 +88,8 @@
     "label": "Vul je kenteken in",
     "placeholder": "AB-123-C",
     "search": "Zoek auto",
+    "searchForMyCar": "Zoek onderdelen voor mijn auto",
+    "browseParts": "Zoek onderdelen voor deze auto",
     "searching": "Zoeken…",
     "yourCar": "Jouw auto",
     "changeCar": "Andere auto kiezen",
@@ -132,6 +128,8 @@
     "metaTitle": "CarO — Auto-onderdelen",
     "metaDescription": "Auto-onderdelen voor de Nederlandse markt. Zoek op onderdeel of OE-nummer. Alle prijzen inclusief 21% btw.",
     "eyebrow": "Auto-onderdelen",
+    "plateTitle": "Check op kenteken",
+    "plateIntro": "Vul je kenteken in en we halen merk, model en motorgegevens op bij de RDW.",
     "title": "Het juiste onderdeel, zonder gedoe",
     "intro": "Zoek op onderdeel of OE-nummer. Alle prijzen zijn inclusief 21% btw en verzendkosten zie je vóór het afrekenen."
   },
@@ -222,6 +220,15 @@
     "backToCart": "Terug naar winkelwagen"
   },
   "footer": {
+    "termsTitle": "Voorwaarden",
+    "shippingTitle": "Verzending",
+    "shippingPending": "Definitieve vervoerder en tarieven volgen bij livegang.",
+    "contactTitle": "Contact en bedrijfsgegevens",
+    "companyLabel": "Bedrijfsnaam",
+    "emailLabel": "E-mail",
+    "kvkLabel": "KvK-nummer",
+    "vatNumberLabel": "Btw-nummer",
+    "placeholder": "Volgt nog",
     "vat": "Alle prijzen zijn inclusief 21% btw.",
     "shipping": "Verzendkosten zie je vóór het afrekenen.",
     "withdrawal": "14 dagen bedenktijd op elke bestelling.",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { PlateBadge } from "@/components/vehicle/plate";
 import { clearVehicle, useVehicle } from "@/components/vehicle/use-vehicle";
 
 // Compacte weergave van de gekozen auto in de header. Verschijnt pas na
@@ -15,9 +16,7 @@ export function SelectedVehicle() {
     // Ook op mobiel zichtbaar: de gekozen auto stuurt het hele koopproces.
     // Daar tonen we alleen de plaat, op desktop ook het merk.
     <div className="flex items-center gap-1 md:gap-2">
-      <span className="inline-block rounded border-2 border-[#0e1013] bg-[#f7d117] px-1.5 py-0.5 text-xs font-bold tracking-wider text-[#0e1013]">
-        {vehicle.plateFormatted}
-      </span>
+      <PlateBadge plate={vehicle.plateFormatted} className="text-xs" />
       <span
         className="hidden max-w-32 truncate text-sm text-muted lg:inline"
         title={`${vehicle.brand} ${vehicle.model}`}

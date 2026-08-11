@@ -74,18 +74,15 @@ export type ProductFamily = keyof typeof FAMILIES;
 export const PRODUCT_FAMILIES = Object.keys(FAMILIES) as ProductFamily[];
 
 /**
- * Indeling van de hoofdnavigatie. Eén familie = een eigen knop; meerdere
- * families onder één noemer = een groepsknop met die families eronder.
- * Losse knoppen voor de grote productgroepen zijn sneller dan alles in
- * één menu wegstoppen.
+ * Indeling van de hoofdnavigatie. Elke familie heeft een eigen knop: de klant
+ * ziet het hele assortiment in één oogopslag en hoeft niet te raden onder
+ * welke noemer "gebruikte onderdelen" verstopt zit. De groepsvorm blijft
+ * bestaan zodat families later alsnog gebundeld kunnen worden.
  */
-export const NAV_GROUPS = [
-  { key: "assortiment", families: ["onderdelen", "gebruikt"] },
-  { key: "banden", families: ["banden"] },
-  { key: "velgen", families: ["velgen"] },
-  { key: "gereedschap", families: ["gereedschap"] },
-  { key: "toebehoren", families: ["toebehoren"] },
-] as const satisfies ReadonlyArray<{
+export const NAV_GROUPS = PRODUCT_FAMILIES.map((family) => ({
+  key: family,
+  families: [family],
+})) satisfies ReadonlyArray<{
   key: string;
   families: ReadonlyArray<ProductFamily>;
 }>;

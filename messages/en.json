@@ -5,12 +5,6 @@
   "header": {
     "homeAria": "CarO — go to homepage"
   },
-  "nav": {
-    "openMenu": "Open menu",
-    "closeMenu": "Close menu",
-    "menuAria": "Main menu",
-    "back": "Back"
-  },
   "bottomNav": {
     "label": "Main navigation",
     "home": "Home",
@@ -27,6 +21,9 @@
     "label": "Search the shop",
     "placeholder": "Tyre size, OE number or brand",
     "submit": "Search",
+    "suggestionsLabel": "Search suggestions",
+    "suggestionsLoading": "Searching…",
+    "suggestionsEmpty": "No direct matches. Press Search for all results.",
     "title": "Search",
     "metaDescription": "Search parts and tyres by size, OE number or brand.",
     "resultsFor": "Results for “{term}”",
@@ -84,9 +81,6 @@
       "intro": "Hand tools, power tools and workshop supplies.",
       "menuAria": "Tool categories",
       "empty": "No tools are available yet."
-    },
-    "group": {
-      "assortiment": "Range"
     }
   },
   "vehicle": {
@@ -94,6 +88,8 @@
     "label": "Enter your licence plate",
     "placeholder": "AB-123-C",
     "search": "Find car",
+    "searchForMyCar": "Find parts for my car",
+    "browseParts": "Find parts for this car",
     "searching": "Searching…",
     "yourCar": "Your car",
     "changeCar": "Choose another car",
@@ -132,6 +128,8 @@
     "metaTitle": "CarO — Car parts",
     "metaDescription": "Car parts for the Dutch market. Search by part or OE number. All prices include 21% VAT.",
     "eyebrow": "Car parts",
+    "plateTitle": "Check by licence plate",
+    "plateIntro": "Enter your licence plate and we look up the make, model and engine details at the RDW.",
     "title": "The right part, no hassle",
     "intro": "Search by part or OE number. All prices include 21% VAT and shipping costs are shown before checkout."
   },
@@ -222,6 +220,15 @@
     "backToCart": "Back to cart"
   },
   "footer": {
+    "termsTitle": "Terms",
+    "shippingTitle": "Shipping",
+    "shippingPending": "Final carrier and rates follow at launch.",
+    "contactTitle": "Contact and company details",
+    "companyLabel": "Company name",
+    "emailLabel": "Email",
+    "kvkLabel": "Chamber of Commerce",
+    "vatNumberLabel": "VAT number",
+    "placeholder": "To follow",
     "vat": "All prices include 21% VAT.",
     "shipping": "Shipping costs are shown before checkout.",
     "withdrawal": "14-day right of withdrawal on every order.",

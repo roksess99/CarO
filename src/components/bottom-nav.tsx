@@ -1,10 +1,12 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { BottomSheet } from "@/components/bottom-sheet";
 import type { FamilyNavItem } from "@/components/family-nav";
 import { useCart } from "@/components/cart/use-cart";
 import { useVehicle } from "@/components/vehicle/use-vehicle";
+import { VehicleSearch } from "@/components/vehicle/vehicle-search";
 import { countItems } from "@/lib/cart/cart";
 import { familySlug, NAV_GROUPS } from "@/lib/catalog/families";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -36,32 +38,16 @@ export function BottomNav({ items }: { items: FamilyNavItem[] }) {
   const vehicle = useVehicle();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [vehicleOpen, setVehicleOpen] = useState(false);
   const [groupKey, setGroupKey] = useState<string | null>(null);
-  const drawerRef = useRef<HTMLDivElement>(null);
   const assortmentRef = useRef<HTMLButtonElement>(null);
+  const vehicleRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (!drawerOpen) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setDrawerOpen(false);
-        assortmentRef.current?.focus();
-      }
-    }
-    document.addEventListener("keydown", onKeyDown);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    drawerRef.current?.focus();
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previous;
-    };
-  }, [drawerOpen]);
-
-  function closeDrawer() {
+  const closeDrawer = useCallback(() => {
     setDrawerOpen(false);
     setGroupKey(null);
-  }
+  }, []);
+  const closeVehicle = useCallback(() => setVehicleOpen(false), []);
 
   const byFamily = new Map(items.map((item) => [item.family, item.categories]));
   const groups = NAV_GROUPS.map((group) => ({
@@ -86,66 +72,36 @@ export function BottomNav({ items }: { items: FamilyNavItem[] }) {
   return (
     <>
       {drawerOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-50 bg-caro-ink/70"
-            onClick={closeDrawer}
-            aria-hidden="true"
-          />
-          <div
-            ref={drawerRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label={t("assortment")}
-            tabIndex={-1}
-            // Onderin verankerd: begint waar de duim al is
-            className="fixed inset-x-0 bottom-0 z-50 flex max-h-[80vh] flex-col rounded-t-2xl border-t border-border bg-background pb-24"
-          >
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              {activeGroup ? (
-                <button
-                  type="button"
-                  onClick={() => setGroupKey(null)}
-                  className="-ml-2 inline-flex items-center gap-1 rounded-md px-2 py-2 text-sm font-semibold text-foreground hover:bg-surface"
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    className="size-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="m15 18-6-6 6-6" />
-                  </svg>
-                  {t("back")}
-                </button>
-              ) : (
-                <span className="eyebrow text-xs">{t("assortment")}</span>
-              )}
+        <BottomSheet
+          label={t("assortment")}
+          closeLabel={t("close")}
+          onClose={closeDrawer}
+          returnFocusTo={assortmentRef}
+          header={
+            activeGroup ? (
               <button
                 type="button"
-                aria-label={t("close")}
-                onClick={closeDrawer}
-                className="-mr-2 inline-flex size-10 items-center justify-center rounded-md text-foreground hover:bg-surface"
+                onClick={() => setGroupKey(null)}
+                className="-ml-2 inline-flex items-center gap-1 rounded-md px-2 py-2 text-sm font-semibold text-foreground hover:bg-surface"
               >
                 <svg
                   aria-hidden="true"
                   viewBox="0 0 24 24"
-                  className="size-5"
+                  className="size-4"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <path d="M18 6 6 18M6 6l12 12" />
+                  <path d="m15 18-6-6 6-6" />
                 </svg>
+                {t("back")}
               </button>
-            </div>
-
-            <nav aria-label={t("assortment")} className="flex-1 overflow-y-auto p-2">
+            ) : undefined
+          }
+        >
+          <nav aria-label={t("assortment")} className="flex-1 overflow-y-auto p-2">
               {!activeGroup ? (
                 <ul className="space-y-0.5">
                   {groups.map((group) => (
@@ -211,10 +167,22 @@ export function BottomNav({ items }: { items: FamilyNavItem[] }) {
                     );
                   })}
                 </div>
-              )}
-            </nav>
+            )}
+          </nav>
+        </BottomSheet>
+      )}
+
+      {vehicleOpen && (
+        <BottomSheet
+          label={t("vehicle")}
+          closeLabel={t("close")}
+          onClose={closeVehicle}
+          returnFocusTo={vehicleRef}
+        >
+          <div className="overflow-y-auto p-4">
+            <VehicleSearch autoFocus onSelected={closeVehicle} />
           </div>
-        </>
+        </BottomSheet>
       )}
 
       {/* pb-[env(safe-area-inset-bottom)]: ruimte voor de home-indicator op iOS */}
@@ -324,15 +292,19 @@ export function BottomNav({ items }: { items: FamilyNavItem[] }) {
             <span aria-hidden="true">{t("cart")}</span>
           </Link>
 
-          {/* Kentekenzoeker staat op de homepage; de gekozen auto tonen we
-              hier als bevestiging dat hij actief is */}
-          <Link
-            href="/"
-            className={`${tab} ${inactive}`}
+          {/* Opent de kentekenzoeker ter plekke. Doorlinken naar de homepage
+              zou de klant uit zijn categorie trekken en zijn plek kwijtmaken. */}
+          <button
+            ref={vehicleRef}
+            type="button"
+            aria-expanded={vehicleOpen}
+            onClick={() => setVehicleOpen(true)}
+            className={`${tab} ${vehicleOpen ? active : inactive}`}
             aria-label={
               vehicle ? t("vehicleSelected", { plate: vehicle.plateFormatted }) : t("vehicle")
             }
           >
+            {vehicleOpen && <Indicator />}
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
@@ -351,7 +323,7 @@ export function BottomNav({ items }: { items: FamilyNavItem[] }) {
             <span aria-hidden="true" className={vehicle ? "text-caro-orange" : ""}>
               {vehicle ? vehicle.plateFormatted : t("vehicle")}
             </span>
-          </Link>
+          </button>
         </nav>
       </div>
     </>
