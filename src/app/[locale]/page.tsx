@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CategoryGrid } from "@/components/home/category-grid";
 import { Hero } from "@/components/home/hero";
 import { ProductGrid } from "@/components/product-grid";
 import { Link } from "@/i18n/navigation";
@@ -45,8 +46,10 @@ export default async function HomePage({ params }: Props) {
     <>
       <Hero />
 
+      <CategoryGrid />
+
       {/* Tegel per familie: het hele assortiment in één oogopslag */}
-      <section className="site-container py-16 md:py-24">
+      <section className="site-container pb-16 md:pb-24">
         <h2 className="text-2xl">{tFamily("menuTitle")}</h2>
         <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {PRODUCT_FAMILIES.map((family) => (
