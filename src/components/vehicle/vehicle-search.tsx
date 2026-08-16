@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { lookupVehicleAction } from "@/components/vehicle/actions";
 import {
   EuStrip,
@@ -22,12 +22,24 @@ export function VehicleSearch({
   autoFocus = false,
   /** Roept de drawer aan zodra er een auto gekozen is, zodat die kan sluiten */
   onSelected,
+  /**
+   * In het zoekpaneel staat de kentekenzoeker naast andere blokken en heeft
+   * hij zijn eigen kop al boven zich; dan hoeft het veldlabel niet zichtbaar
+   * en past de knop met een kort woord.
+   */
+  compact = false,
 }: {
   autoFocus?: boolean;
   onSelected?: () => void;
+  compact?: boolean;
 } = {}) {
   const t = useTranslations("vehicle");
   const locale = useLocale();
+  // De kentekenzoeker staat sinds de headerknop meerdere keren op één pagina
+  // (header en hero). Vaste id's zouden dan dubbel voorkomen en labels naar
+  // het verkeerde veld laten wijzen.
+  const fieldId = useId();
+  const errorId = `${fieldId}-error`;
   const [plate, setPlate] = useState("");
   const [error, setError] = useState<VehicleLookupError | null>(null);
   const [pending, startTransition] = useTransition();
@@ -109,25 +121,26 @@ export function VehicleSearch({
     );
   }
 
-  const errorId = "vehicle-search-error";
-
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <label htmlFor="plate" className="mb-2 block text-sm font-medium">
+      <label
+        htmlFor={fieldId}
+        className={compact ? "sr-only" : "mb-2 block text-sm font-medium"}
+      >
         {t("label")}
       </label>
-      <div className="flex flex-wrap items-start gap-3">
+      <div className="flex flex-wrap items-start gap-2">
         {/* De hele plaat is één vlak: blauwe EU-strook tegen het gele veld,
             met de rand eromheen. Zo leest het als een kentekenplaat en niet
             als een invoerveld met een plaatje ernaast. */}
         <div
-          className="flex h-14 overflow-hidden rounded-md border-2 focus-within:ring-2 focus-within:ring-caro-orange focus-within:ring-offset-2"
+          className="flex h-12 min-w-0 flex-1 overflow-hidden rounded-md border-2 focus-within:ring-2 focus-within:ring-caro-orange focus-within:ring-offset-2"
           style={{ borderColor: PLATE_INK, backgroundColor: PLATE_YELLOW }}
         >
-          <EuStrip className="w-9" />
+          <EuStrip className="w-8" />
           <input
             ref={inputRef}
-            id="plate"
+            id={fieldId}
             name="plate"
             value={plate}
             onChange={(event) => setPlate(event.target.value)}
@@ -138,16 +151,16 @@ export function VehicleSearch({
             maxLength={10}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
-            className="w-44 bg-transparent px-3 text-2xl font-bold tracking-widest uppercase outline-none placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-[#0e1013]/45"
+            className="w-full min-w-0 bg-transparent px-3 text-center text-xl font-bold tracking-widest uppercase outline-none placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-[#0e1013]/45"
             style={{ color: PLATE_INK }}
           />
         </div>
         <button
           type="submit"
           disabled={pending || plate.trim().length === 0}
-          className="h-14 rounded-md bg-caro-orange px-6 font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
+          className="h-12 shrink-0 rounded-md bg-caro-orange px-6 font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
         >
-          {pending ? t("searching") : t("searchForMyCar")}
+          {pending ? t("searching") : compact ? t("search") : t("searchForMyCar")}
         </button>
       </div>
 

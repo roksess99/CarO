@@ -66,78 +66,100 @@ export function VehiclePicker({
     onSelected?.();
   }
 
-  const select =
-    "w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm disabled:cursor-not-allowed disabled:text-muted";
+  // Genummerde stappen onder elkaar: de klant ziet in één oogopslag hoeveel
+  // keuzes er nog volgen, en welke aan de beurt is.
+  const steps = [
+    {
+      id: `${baseId}-make`,
+      label: t("makeLabel"),
+      value: make,
+      onChange: chooseMake,
+      options: makes.map(String),
+      placeholder: t("chooseMake"),
+      disabled: false,
+    },
+    {
+      id: `${baseId}-model`,
+      label: t("modelLabel"),
+      value: model,
+      onChange: chooseModel,
+      options: models,
+      placeholder: t("chooseModel"),
+      disabled: models.length === 0,
+    },
+    {
+      id: `${baseId}-year`,
+      label: t("yearLabel"),
+      value: year,
+      onChange: setYear,
+      options: years.map(String),
+      placeholder: t("chooseYear"),
+      disabled: years.length === 0,
+    },
+  ];
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div>
-          <label htmlFor={`${baseId}-make`} className="mb-1.5 block text-sm font-medium">
-            {t("makeLabel")}
-          </label>
-          <select
-            id={`${baseId}-make`}
-            value={make}
-            onChange={(event) => chooseMake(event.target.value)}
-            className={select}
+    <form onSubmit={handleSubmit} className="space-y-2">
+      {steps.map((step, index) => {
+        const active = !step.disabled && !step.value;
+        return (
+          <div
+            key={step.id}
+            className={`flex items-center gap-3 rounded-md border bg-background pr-1 pl-3 ${
+              active ? "border-caro-orange" : "border-border"
+            }`}
           >
-            <option value="">{t("choose")}</option>
-            {makes.map((name) => (
-              <option key={name} value={name}>
-                {name}
+            {/* Stapnummer: oranje vlak met inkt-tekst zodra de stap aan de
+                beurt is, anders neutraal (BRAND.md-contrastregel). */}
+            <span
+              aria-hidden="true"
+              className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${
+                active
+                  ? "bg-caro-orange text-caro-ink"
+                  : "bg-surface text-muted"
+              }`}
+            >
+              {index + 1}
+            </span>
+            <label htmlFor={step.id} className="sr-only">
+              {step.label}
+            </label>
+            <select
+              id={step.id}
+              value={step.value}
+              disabled={step.disabled}
+              onChange={(event) => step.onChange(event.target.value)}
+              // Geen bg-transparent: dan rendert de browser het uitklapmenu
+              // met zijn eigen lichte achtergrond terwijl de tekstkleur van
+              // het donkere thema wordt geërfd — grijs op wit, onleesbaar.
+              // Een expliciete achtergrond laat color-scheme zijn werk doen.
+              className="w-full min-w-0 bg-background py-3 text-sm text-foreground outline-none disabled:cursor-not-allowed disabled:text-muted"
+            >
+              {/* Ook de opties krijgen expliciete kleuren; browsers nemen die
+                  van het <select> niet automatisch over in het popupvenster. */}
+              <option value="" className="bg-background text-foreground">
+                {step.placeholder}
               </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor={`${baseId}-model`} className="mb-1.5 block text-sm font-medium">
-            {t("modelLabel")}
-          </label>
-          <select
-            id={`${baseId}-model`}
-            value={model}
-            disabled={models.length === 0}
-            onChange={(event) => chooseModel(event.target.value)}
-            className={select}
-          >
-            <option value="">{make ? t("choose") : t("chooseMakeFirst")}</option>
-            {models.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor={`${baseId}-year`} className="mb-1.5 block text-sm font-medium">
-            {t("yearLabel")}
-          </label>
-          <select
-            id={`${baseId}-year`}
-            value={year}
-            disabled={years.length === 0}
-            onChange={(event) => setYear(event.target.value)}
-            className={select}
-          >
-            <option value="">{model ? t("choose") : t("chooseModelFirst")}</option>
-            {years.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+              {step.options.map((option) => (
+                <option
+                  key={option}
+                  value={option}
+                  className="bg-background text-foreground"
+                >
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+        );
+      })}
 
       <button
         type="submit"
         disabled={!make || !model || pending}
-        className="mt-4 w-full rounded-md bg-caro-orange px-6 py-3 font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted sm:w-auto"
+        className="!mt-4 w-full rounded-md bg-caro-orange px-6 py-3 font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
       >
-        {t("searchForMyCar")}
+        {t("search")}
       </button>
     </form>
   );

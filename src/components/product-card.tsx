@@ -7,6 +7,17 @@ import { familySlug } from "@/lib/catalog/families";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents } from "@/lib/format";
 
+/**
+ * Productkaart, bewust kaal gehouden.
+ *
+ * Een klant scant een grid op beeld, naam en prijs — al het andere vertraagt
+ * dat. Vandaar geen merkregel boven de titel (het merk staat al vooraan in
+ * de naam die de leverancier levert) en twee knoppen zonder tekst: het
+ * winkelwagentje spreekt voor zich en scheelt vertaalruimte.
+ *
+ * De voorraadbadge blijft wel staan. Die is één woord en bepaalt mede of
+ * iemand op kopen klikt; hem weglaten zou de klant iets onthouden.
+ */
 export function ProductCard({ part }: { part: Part }) {
   const t = useTranslations("product");
   const locale = useLocale();
@@ -20,49 +31,63 @@ export function ProductCard({ part }: { part: Part }) {
   } as const;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-border transition-colors hover:border-caro-orange">
+    <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-border bg-background transition-colors hover:border-caro-orange">
       <Link href={href} tabIndex={-1} aria-hidden="true">
         {/* Placeholder zolang Tyre24 geen bruikbare foto-URL's levert
             (docs/api/TYRE24.md) */}
         <ProductImagePlaceholder
           label={t("noImage")}
-          className="aspect-4/3 opacity-60 transition-opacity group-hover:opacity-100"
+          className="aspect-square opacity-60 transition-opacity group-hover:opacity-100"
         />
       </Link>
-      <div className="flex flex-1 flex-col gap-1 p-4">
-        <p className="eyebrow text-xs">{part.brand}</p>
-        <h3 className="text-sm">
+
+      <div className="flex flex-1 flex-col p-3">
+        {/* line-clamp: twee regels houdt elke kaart in het grid even hoog */}
+        <h3 className="line-clamp-2 text-sm font-semibold">
           <Link href={href} className="hover:underline">
             {part.name}
           </Link>
         </h3>
+
         {part.oeNumber && (
-          <p className="text-xs text-muted tabular-nums">
-            {t("oeLabel")}: {part.oeNumber}
+          <p className="mt-1 truncate text-xs text-muted tabular-nums">
+            {part.oeNumber}
           </p>
         )}
 
-        <p className="mt-3">
-          <span className="text-lg font-bold tabular-nums">
-            {formatPriceCents(part.priceCents)}
-          </span>{" "}
-          <span className="text-xs text-muted">{t("inclVat")}</span>
-        </p>
-
-        <div className="mt-2">
+        {/* mt-auto duwt prijs en knoppen naar onderen, zodat ze in het hele
+            grid op één lijn staan ongeacht de lengte van de titel */}
+        <div className="mt-auto pt-3">
           <AvailabilityBadge availability={part.availability} />
-        </div>
 
-        {/* mt-auto: knoppen op één lijn ook als titels verschillend lang zijn */}
-        <div className="mt-auto grid grid-cols-2 gap-2 pt-3">
-          <Link
-            href={href}
-            aria-label={t("viewAria", { name: part.name })}
-            className="inline-flex items-center justify-center rounded-md border border-border px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface"
-          >
-            {t("view")}
-          </Link>
-          <AddToCartButton part={part} variant="compact" />
+          <p className="mt-2 text-xl font-bold tabular-nums">
+            {formatPriceCents(part.priceCents)}
+          </p>
+          <p className="text-xs text-muted">{t("inclVat")}</p>
+
+          <div className="mt-3 flex gap-2">
+            <AddToCartButton part={part} variant="icon" className="flex-1" />
+            <Link
+              href={href}
+              aria-label={t("viewAria", { name: part.name })}
+              title={t("view")}
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-md border border-border text-foreground hover:bg-surface"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="size-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </Link>
+          </div>
         </div>
       </div>
     </article>
