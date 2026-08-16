@@ -12,7 +12,7 @@ import { Link } from "@/i18n/navigation";
  * bewust nog niet: die volgen met de Mollie-integratie in fase 5. Een
  * betaalmethode tonen die nog niet werkt is misleidend.
  */
-const CARRIERS = ["PostNL", "DHL"] as const;
+const CARRIERS = ["PostNL", "DHL", "DPD"] as const;
 
 export function SiteFooter() {
   const t = useTranslations("footer");
@@ -90,6 +90,12 @@ export function SiteFooter() {
             className="underline underline-offset-4 hover:text-foreground"
           >
             {t("privacyLink")}
+          </Link>
+          <Link
+            href="/terms"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            {t("termsLink")}
           </Link>
         </div>
       </div>

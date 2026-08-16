@@ -2,7 +2,8 @@
   "common": {
     "skipToContent": "Naar inhoud",
     "filterPlaceholder": "Typ om te zoeken…",
-    "noMatches": "Niets gevonden. Probeer een ander woord."
+    "noMatches": "Niets gevonden. Probeer een ander woord.",
+    "backToTop": "Terug naar boven"
   },
   "header": {
     "homeAria": "CarO — naar de homepage"
@@ -87,12 +88,7 @@
   },
   "categoryTiles": {
     "title": "Auto-onderdelen vinden in de catalogus",
-    "banden": "Banden",
-    "velgen": "Velgen",
-    "remmen": "Remmen",
-    "motor": "Motor",
-    "filters": "Filters",
-    "verlichting": "Verlichting"
+    "close": "Sluiten"
   },
   "vehicle": {
     "title": "Past het op jouw auto?",
@@ -133,7 +129,8 @@
     "toggle": "Filters",
     "clearAll": "Alles wissen",
     "removeFilter": "Filter {value} verwijderen",
-    "resultCount": "{count, plural, =0 {Geen artikelen gevonden} =1 {1 artikel} other {Eerste # artikelen}}"
+    "resultCount": "{count, plural, =0 {Geen artikelen gevonden} =1 {1 artikel} other {Eerste # artikelen}}",
+    "moreBrands": "Nog {count} merken in de lijst hieronder."
   },
   "localeSwitcher": {
     "label": "Taal",
@@ -257,7 +254,50 @@
     "shipping": "Verzendkosten zie je vóór het afrekenen.",
     "withdrawal": "14 dagen bedenktijd op elke bestelling.",
     "copyright": "© {year} CarO Onderdelen",
-    "privacyLink": "Privacy en cookies"
+    "privacyLink": "Privacy en cookies",
+    "termsLink": "Algemene voorwaarden"
+  },
+  "terms": {
+    "title": "Algemene voorwaarden",
+    "lastUpdated": "Laatst bijgewerkt: 16 augustus 2026",
+    "intro": "Deze voorwaarden gelden voor elke bestelling bij CarO. Ze zijn geschreven voor consumenten en volgen het Nederlandse consumentenrecht (Boek 6 en 7 BW) en de Europese regels voor verkoop op afstand.",
+    "placeholderNotice": "Bedrijfsnaam, adres, KvK-nummer en btw-nummer worden ingevuld zodra de inschrijving rond is. Zonder die gegevens zijn deze voorwaarden nog niet compleet.",
+    "identity": {
+      "title": "Wie wij zijn",
+      "body": "CarO verkoopt auto-onderdelen, banden, velgen, gereedschap en toebehoren aan particulieren in Nederland. Onze contactgegevens en inschrijvingsnummers staan onderaan elke pagina."
+    },
+    "scope": {
+      "title": "Waarop deze voorwaarden van toepassing zijn",
+      "body": "Op elk aanbod in deze webshop en op elke overeenkomst die daaruit volgt. Wijken wij en jij samen af van deze voorwaarden, dan leggen we dat schriftelijk vast."
+    },
+    "offer": {
+      "title": "Aanbod en bestelling",
+      "body": "Een aanbod geldt zolang de voorraad strekt. Wij halen voorraad en prijzen live bij onze leverancier op, maar een artikel kan tussen jouw bestelling en onze inkoop alsnog uitverkocht raken. Gebeurt dat, dan melden wij het en storten we het bedrag terug. Een overeenkomst komt tot stand zodra wij je bestelling bevestigen."
+    },
+    "prices": {
+      "title": "Prijzen",
+      "body": "Alle getoonde prijzen zijn inclusief 21% btw. Kennelijke vergissingen en typefouten binden ons niet: staat er een prijs die duidelijk niet klopt, dan mogen wij de bestelling annuleren en betalen we het volledige bedrag terug."
+    },
+    "payment": {
+      "title": "Betaling",
+      "body": "Betalen doe je vooraf via de betaalmethoden die in de checkout staan. Je bestelling gaat de deur uit zodra de betaling binnen is."
+    },
+    "delivery": {
+      "title": "Levering en verzendkosten",
+      "body": "Wij verzenden binnen Nederland via PostNL, DHL of DPD. Verzendkosten bedragen {shipping} en vervallen bij bestellingen vanaf {freeFrom}. Wij streven naar levering binnen dertig dagen; lukt dat niet, dan hoor je dat van ons en kun je de bestelling kosteloos annuleren. Het risico van beschadiging of verlies ligt bij ons tot het moment dat jij het pakket ontvangt."
+    },
+    "withdrawal": {
+      "title": "Herroepingsrecht",
+      "body": "Je mag de bestelling binnen veertien dagen na ontvangst zonder opgaaf van reden annuleren, en hebt daarna nog veertien dagen om te retourneren. Wij betalen binnen veertien dagen na de melding terug. Onderdelen die gemonteerd zijn geweest of waarvan de verzegeling verbroken is, kunnen wij niet terugnemen. De kosten van de retourzending zijn voor jou, tenzij het artikel verkeerd of beschadigd geleverd is."
+    },
+    "conformity": {
+      "title": "Garantie en conformiteit",
+      "body": "Elk artikel moet doen wat je er redelijkerwijs van mag verwachten. Is dat niet zo, dan heb je recht op herstel, vervanging of terugbetaling. Dit wettelijke recht staat los van een eventuele fabrieksgarantie. Voor gebruikte onderdelen geldt hetzelfde recht, waarbij de staat waarin het artikel is verkocht meeweegt."
+    },
+    "complaints": {
+      "title": "Klachten en geschillen",
+      "body": "Meld een klacht bij ons via de contactgegevens onderaan de pagina; wij reageren binnen veertien dagen. Komen we er samen niet uit, dan kun je terecht bij het Europese ODR-platform of bij de Nederlandse rechter. Op deze overeenkomst is Nederlands recht van toepassing."
+    }
   },
   "privacy": {
     "title": "Privacy en cookies",

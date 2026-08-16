@@ -2,6 +2,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Anton, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
+import { BackToTop } from "@/components/back-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { BottomNav } from "@/components/bottom-nav";
 import { SiteHeader } from "@/components/site-header";
@@ -77,6 +78,7 @@ export default async function LocaleLayout({
             {children}
           </main>
           <SiteFooter />
+          <BackToTop />
           <BottomNav items={navItems} makes={listMakes()} />
         </NextIntlClientProvider>
       </body>
