@@ -25,6 +25,26 @@ Laadt alleen bij UI-werk. Huisstijl staat volledig in `docs/BRAND.md`.
 - Oranje op `--caro-ink` mag wel (6,6:1) — dat is het dark-mode accent.
 - Alle kleuren via CSS-variabelen, zodat dark mode één plek raakt.
 
+### Thema — vaste kleuren zijn bijna altijd fout
+
+Gebruik `bg-background`, `bg-surface`, `text-foreground`, `text-muted` en
+`border-border`. Een blok met `bg-caro-ink` of `text-white` blijft donker in
+lichte modus en leest dan als een fout. Dit is twee keer misgegaan (hero-vlak
+en hero-banner).
+
+Drie plekken mogen wél een vaste kleur hebben, met reden:
+- de zwevende tabbalk onderaan — die is als donkere app-balk ontworpen;
+- de scrim achter een paneel (`bg-caro-ink/70`) — dat is een schaduw;
+- de kentekenplaat — geel met blauwe EU-strook is wettelijk vastgelegd.
+
+### Native formulierelementen
+
+Geef `<select>` nooit `bg-transparent`. De browser rendert het uitklapmenu dan
+met zijn eigen lichte achtergrond terwijl de tekstkleur van het donkere thema
+wordt geërfd: grijs op wit, onleesbaar. Zet een expliciete `bg-background
+text-foreground` op zowel het `<select>` als de `<option>`s — browsers nemen de
+kleuren van het select-element niet automatisch over in het popupvenster.
+
 ## Logo
 
 - Logo's staan in `public/brand/`, geladen via componenten in `src/components/brand/`.

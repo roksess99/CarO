@@ -118,7 +118,9 @@ export async function ProductFilters({
                           toggleFilter(selected, group.key, option.value),
                         )}
                         aria-current={active ? "true" : undefined}
-                        className={`flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-surface ${
+                        // min-h-11 op mobiel: py-1.5 gaf rijen van ~30px en
+                        // die zijn met een duim niet betrouwbaar te raken
+                        className={`flex min-h-11 items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-surface sm:min-h-0 ${
                           active
                             ? "font-semibold text-foreground"
                             : "text-muted hover:text-foreground"

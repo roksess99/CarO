@@ -1,6 +1,8 @@
 {
   "common": {
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "filterPlaceholder": "Type to search…",
+    "noMatches": "Nothing found. Try another word."
   },
   "header": {
     "homeAria": "CarO — go to homepage"
@@ -83,21 +85,30 @@
       "empty": "No tools are available yet."
     }
   },
+  "categoryTiles": {
+    "title": "Find car parts in the catalogue",
+    "banden": "Tyres",
+    "velgen": "Wheels",
+    "remmen": "Brakes",
+    "motor": "Engine",
+    "filters": "Filters",
+    "verlichting": "Lighting"
+  },
   "vehicle": {
     "title": "Does it fit your car?",
     "label": "Enter your licence plate",
     "placeholder": "AB-123-C",
     "search": "Find car",
     "searchForMyCar": "Find parts for my car",
-    "tabsAria": "How to tell us your car",
-    "tabPlate": "By licence plate",
-    "tabPicker": "By make and model",
+    "addVehicle": "Add vehicle",
+    "plateHeading": "Find car parts by licence plate",
+    "pickerHeading": "Or select your car",
     "makeLabel": "Make",
     "modelLabel": "Model",
     "yearLabel": "Year",
-    "choose": "Choose…",
-    "chooseMakeFirst": "Choose a make first",
-    "chooseModelFirst": "Choose a model first",
+    "chooseMake": "Select make",
+    "chooseModel": "Select model",
+    "chooseYear": "Select year",
     "browseParts": "Find parts for this car",
     "searching": "Searching…",
     "yourCar": "Your car",
@@ -137,8 +148,11 @@
     "metaTitle": "CarO — Car parts",
     "metaDescription": "Car parts for the Dutch market. Search by part or OE number. All prices include 21% VAT.",
     "eyebrow": "Car parts",
-    "plateTitle": "Check by licence plate",
-    "plateIntro": "Enter your licence plate and we look up the make, model and engine details at the RDW.",
+    "bannerTitle": "Find the part, we handle the rest",
+    "bannerCta": "Browse the range",
+    "uspShipping": "Free shipping from {amount}",
+    "uspReturns": "14-day right of withdrawal on every order",
+    "uspVat": "All prices include 21% VAT",
     "title": "The right part, no hassle",
     "intro": "Search by part or OE number. All prices include 21% VAT and shipping costs are shown before checkout."
   },
@@ -169,6 +183,7 @@
     "title": "Shopping cart",
     "buttonAria": "Shopping cart, {count, plural, =0 {empty} =1 {1 item} other {# items}}",
     "addToCart": "Add to cart",
+    "addToCartAria": "Add {name} to cart",
     "added": "Added",
     "addedAnnouncement": "{name} added to cart",
     "empty": "Your cart is empty.",

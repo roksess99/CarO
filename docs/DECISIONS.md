@@ -162,6 +162,24 @@ opnames van individuele advertentievoertuigen, niet van het model.
 
 ---
 
+## 9. Beeldrechten categoriefoto's — OPEN — blokkerend voor livegang
+
+Het categorieraster op de homepage draait op foto's in `public/categorieen/`.
+De zes die er nu staan zijn aangeleverd als `istockphoto-{id}-612x612.jpg` —
+dat is het **gratis previewformaat** van iStock, bedoeld om te bladeren, niet
+voor publicatie. Getty/iStock treedt hier actief tegen op.
+
+**Vóór livegang**: vervangen door gelicentieerde versies, of door beeld van
+Pexels, Unsplash of Pixabay (die staan commercieel gebruik toe). De code
+verandert niet mee; het zijn alleen bestanden. Noteer de herkomst per foto in
+`public/categorieen/BRONNEN.md`.
+
+Zes van de twaalf tegels hebben nog geen foto: elektrisch, vering/demping,
+carrosserie, uitlaat, koeling/airco en gereedschap. Een tegel toevoegen is één
+regel in `src/lib/catalog/category-tiles.ts` plus een bestand.
+
+---
+
 ## 2. Hosting — OPEN
 
 Vercel (simpelst voor Next.js) vs. een EU-VPS. Let op AVG: klantdata bij voorkeur in de EU.

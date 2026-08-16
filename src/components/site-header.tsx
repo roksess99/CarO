@@ -7,13 +7,16 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SiteSearch } from "@/components/site-search";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SelectedVehicle } from "@/components/vehicle/selected-vehicle";
+import { VehicleButton } from "@/components/vehicle/vehicle-button";
 import { Link } from "@/i18n/navigation";
 import { PRODUCT_FAMILIES } from "@/lib/catalog/families";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import { listMakes } from "@/lib/vehicle/catalog";
 
 export async function SiteHeader() {
   const t = await getTranslations("header");
   const locale = await getLocale();
+  const makes = listMakes();
   const provider = getCatalogProvider();
   const items: FamilyNavItem[] = await Promise.all(
     PRODUCT_FAMILIES.map(async (family) => ({
@@ -30,14 +33,26 @@ export async function SiteHeader() {
           <CaroLockup className="text-2xl md:text-3xl" />
         </Link>
 
+        {/* Voertuigknop direct naast het logo: het opgeven van je auto is de
+            eerste stap van vrijwel elke aankoop, dus die verdient de plek
+            vóór het zoeken. Onder md is er de tabbalk onderaan. */}
+        <div className="hidden shrink-0 md:block">
+          <VehicleButton makes={makes} />
+        </div>
+
         {/* Zoekbalk krijgt de vrije ruimte; op mobiel staat hij eronder */}
-        <div className="ml-auto hidden max-w-xl flex-1 md:block">
+        <div className="hidden max-w-xl flex-1 md:block">
           <SiteSearch locale={locale} id="header-search-desktop" />
         </div>
 
-        <div className="ml-auto flex items-center gap-1 md:ml-0 md:gap-2">
-          <SelectedVehicle />
-          <div className="hidden md:flex md:items-center md:gap-2">
+        <div className="ml-auto flex items-center gap-1 md:gap-2">
+          <div className="md:hidden">
+            <SelectedVehicle />
+          </div>
+          {/* Ook op mobiel zichtbaar: dit zijn de enige twee plekken waar taal
+              en thema te wijzigen zijn, en de tabbalk onderaan heeft er geen
+              ruimte voor. */}
+          <div className="flex items-center gap-0.5 md:gap-2">
             {/* De taalwisselaar leest de querystring om filters mee te nemen
                 naar de andere taal; dat vraagt een Suspense-grens zodat
                 pagina's statisch voorgerenderd kunnen blijven. */}
@@ -46,7 +61,7 @@ export async function SiteHeader() {
             </Suspense>
             <ThemeToggle />
           </div>
-          <div className="hidden lg:block">
+          <div className="hidden md:block">
             <CartButton />
           </div>
         </div>

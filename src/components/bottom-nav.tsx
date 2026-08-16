@@ -19,6 +19,9 @@ import { Link, usePathname } from "@/i18n/navigation";
  * Oranje op ink haalt 6,6:1 en is daarmee de enige toegestane combinatie
  * voor oranje tekst.
  */
+/** Vanaf dit aantal categorieën verschijnt er een zoekveld in de lade */
+const FILTER_FROM_CATEGORIES = 12;
+
 /** Streepje bovenaan de actieve tab, zoals in de referentie */
 function Indicator() {
   return (
@@ -39,6 +42,7 @@ export function BottomNav({
 }) {
   const t = useTranslations("bottomNav");
   const tFamily = useTranslations("family");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
   const pathname = usePathname();
   const cartCount = countItems(useCart());
@@ -50,9 +54,12 @@ export function BottomNav({
   const assortmentRef = useRef<HTMLButtonElement>(null);
   const vehicleRef = useRef<HTMLButtonElement>(null);
 
+  const [categoryQuery, setCategoryQuery] = useState("");
+
   const closeDrawer = useCallback(() => {
     setDrawerOpen(false);
     setGroupKey(null);
+    setCategoryQuery("");
   }, []);
   const closeVehicle = useCallback(() => setVehicleOpen(false), []);
 
@@ -62,6 +69,11 @@ export function BottomNav({
     families: group.families.filter((f) => byFamily.has(f)),
   })).filter((group) => group.families.length > 0);
   const activeGroup = groups.find((group) => group.key === groupKey);
+  const categoriesInGroup =
+    activeGroup?.families.reduce(
+      (sum, family) => sum + (byFamily.get(family)?.length ?? 0),
+      0,
+    ) ?? 0;
   const groupLabel = (group: (typeof groups)[number]) =>
     group.families.length === 1
       ? tFamily(`${group.families[0]}.title`)
@@ -114,6 +126,26 @@ export function BottomNav({
             ) : undefined
           }
         >
+          {/* Zoekveld zodra de lijst te lang wordt om te scannen: gebruikte
+              onderdelen heeft er 31, gereedschap 22. Scrollen naar "Kühlung"
+              is op een telefoon geen doen. */}
+          {activeGroup && categoriesInGroup > FILTER_FROM_CATEGORIES && (
+            <div className="border-b border-border p-2">
+              <label htmlFor="assortment-filter" className="sr-only">
+                {tCommon("filterPlaceholder")}
+              </label>
+              <input
+                id="assortment-filter"
+                type="search"
+                value={categoryQuery}
+                onChange={(event) => setCategoryQuery(event.target.value)}
+                placeholder={tCommon("filterPlaceholder")}
+                autoComplete="off"
+                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm"
+              />
+            </div>
+          )}
+
           <nav aria-label={t("assortment")} className="flex-1 overflow-y-auto p-2">
               {!activeGroup ? (
                 <ul className="space-y-0.5">
@@ -145,7 +177,11 @@ export function BottomNav({
                 <div className="space-y-4">
                   {activeGroup.families.map((family) => {
                     const slug = familySlug(family, locale);
-                    const categories = byFamily.get(family) ?? [];
+                    const needle = categoryQuery.trim().toLowerCase();
+                    const categories = (byFamily.get(family) ?? []).filter(
+                      (category) =>
+                        !needle || category.name.toLowerCase().includes(needle),
+                    );
                     return (
                       <div key={family}>
                         <Link
