@@ -23,6 +23,7 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 | 1 | UI, routing, i18n, thema, componenten — op mockdata | KLAAR |
 | 2 | Winkelwagen (client-side, cookie/localStorage) | KLAAR |
 | 3 | Tyre24/ALZURA-API achter de provider-interface (docs/api/TYRE24.md) | ACTIEF |
+| 3b | Voertuigidentificatie: kenteken (RDW) + autokiezer op merk/model/bouwjaar | KLAAR |
 | 4 | Database (PostgreSQL + Prisma): orders, klanten; inkoop via Tyre24 POST /order | |
 | 5 | Betaling (Mollie, iDEAL) | |
 | 6 | Velgen: Tyre24 Alloys-API — voertuigselectie (carID), matching, 3D-beelden | |
@@ -38,6 +39,23 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 - Nog geen Prisma-schema en geen betaalcode. Order plaatsen (Tyre24 POST /order) is fase 4.
 - Waar later serverwerk komt (ordercreatie, voorraadreservering):
   zet een functie in `src/lib/` met een `// TODO fase X` comment, geen halve implementatie.
+
+## Wat de shop nu doet
+
+Stand 2026-08-16. Handig bij het oppakken van werk; niet uitputtend.
+
+| Onderdeel | Waar | Bijzonderheid |
+|---|---|---|
+| Hero in twee kolommen | `components/home/hero.tsx` | Links kentekenzoeker **én** merk/model-kiezer zichtbaar (geen tabs), rechts een banner met echte voorwaarden — geen verzonnen acties |
+| Categorieraster | `components/home/category-grid.tsx` | Tegels uit `lib/catalog/category-tiles.ts`, foto's beeldvullend bijgesneden |
+| Header | `components/site-header.tsx` | Rij 1: logo, voertuigknop, zoekbalk, taal, thema, wagen. Rij 2: de zes families |
+| Zoeken met suggesties | `components/search/` | Server Action, vanaf 3 tekens met 350 ms debounce — elke aanroep raakt zes families en dus zes Tyre24-calls |
+| Voertuig opgeven | `components/vehicle/` | Kenteken via RDW, of merk/model/bouwjaar uit de geoogste catalogus. Beide leveren dezelfde tekst op |
+| Mobiele navigatie | `components/bottom-nav.tsx` | Zwevende tabbalk; assortiment en autokiezer openen als paneel vanaf de onderkant |
+| Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |
+
+**Nog niet waar**: onderdelen filteren op de gekozen auto. De auto wordt
+bewaard en getoond met een eerlijke melding — zie @docs/DECISIONS.md #6.
 
 ## Stack
 
@@ -89,16 +107,27 @@ src/
   app/[locale]/[family]/ # familie > categorie > product
   components/            # herbruikbare UI
   components/brand/      # logo-componenten
+  components/cart/       # winkelwagenknoppen en -weergave
+  components/checkout/   # klantgegevens en besteloverzicht
+  components/home/       # hero, achtergrondtekening, categorieraster
+  components/search/     # zoekveld met live suggesties (Server Action)
+  components/vehicle/    # kentekenzoeker, autokiezer, kentekenplaat
   lib/                   # domeinlogica, geen React
   lib/catalog/           # types.ts (contract) + mock-provider.ts + tyre24-provider.ts
   lib/cart/              # winkelwagenlogica, framework-onafhankelijk
+  lib/vehicle/           # RDW-adapter + geoogste merk/model-catalogus
+scripts/                 # eenmalige oogstscripts (geen runtime-code)
 public/brand/            # logo SVG's
+public/categorieen/      # foto's voor het categorieraster (zie LEESMIJ.md)
 docs/api/                # Tyre24 swagger + integratienotities
 messages/nl.json, en.json
 ```
 
 - Domeinlogica in `src/lib/`, nooit in een component.
 - Één plek waar productdata vandaan komt: `src/lib/catalog/`. Nergens anders.
+- Basis-URL en canonical/hreflang komen uit `src/lib/site.ts`. Nooit een
+  domeinnaam hardcoden in een pagina — dat stond eerder zevenmaal gekopieerd
+  met een localhost-fallback en verwees de hele site naar een dev-machine.
 
 ## Codeconventies
 
