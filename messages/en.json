@@ -2,7 +2,8 @@
   "common": {
     "skipToContent": "Skip to content",
     "filterPlaceholder": "Type to search…",
-    "noMatches": "Nothing found. Try another word."
+    "noMatches": "Nothing found. Try another word.",
+    "backToTop": "Back to top"
   },
   "header": {
     "homeAria": "CarO — go to homepage"
@@ -87,12 +88,7 @@
   },
   "categoryTiles": {
     "title": "Find car parts in the catalogue",
-    "banden": "Tyres",
-    "velgen": "Wheels",
-    "remmen": "Brakes",
-    "motor": "Engine",
-    "filters": "Filters",
-    "verlichting": "Lighting"
+    "close": "Close"
   },
   "vehicle": {
     "title": "Does it fit your car?",
@@ -133,7 +129,8 @@
     "toggle": "Filters",
     "clearAll": "Clear all",
     "removeFilter": "Remove filter {value}",
-    "resultCount": "{count, plural, =0 {No items found} =1 {1 item} other {First # items}}"
+    "resultCount": "{count, plural, =0 {No items found} =1 {1 item} other {First # items}}",
+    "moreBrands": "{count} more brands in the list below."
   },
   "localeSwitcher": {
     "label": "Language",
@@ -257,7 +254,50 @@
     "shipping": "Shipping costs are shown before checkout.",
     "withdrawal": "14-day right of withdrawal on every order.",
     "copyright": "© {year} CarO Onderdelen",
-    "privacyLink": "Privacy and cookies"
+    "privacyLink": "Privacy and cookies",
+    "termsLink": "Terms and conditions"
+  },
+  "terms": {
+    "title": "Terms and conditions",
+    "lastUpdated": "Last updated: 16 August 2026",
+    "intro": "These terms apply to every order placed with CarO. They are written for consumers and follow Dutch consumer law (Books 6 and 7 of the Civil Code) and the European rules on distance selling.",
+    "placeholderNotice": "Company name, address, Chamber of Commerce number and VAT number will be filled in once registration is complete. Without those details these terms are not yet complete.",
+    "identity": {
+      "title": "Who we are",
+      "body": "CarO sells car parts, tyres, wheels, tools and accessories to consumers in the Netherlands. Our contact details and registration numbers appear at the bottom of every page."
+    },
+    "scope": {
+      "title": "What these terms cover",
+      "body": "Every offer in this shop and every agreement that follows from it. If you and we agree to depart from these terms, we record that in writing."
+    },
+    "offer": {
+      "title": "Offers and orders",
+      "body": "An offer applies while stock lasts. We fetch stock and prices live from our supplier, but an item can still sell out between your order and our purchase. If that happens we tell you and refund the amount. An agreement is formed once we confirm your order."
+    },
+    "prices": {
+      "title": "Prices",
+      "body": "All prices shown include 21% VAT. Obvious mistakes and typing errors do not bind us: if a price is clearly wrong, we may cancel the order and refund you in full."
+    },
+    "payment": {
+      "title": "Payment",
+      "body": "You pay in advance using the methods shown at checkout. Your order ships once payment has been received."
+    },
+    "delivery": {
+      "title": "Delivery and shipping costs",
+      "body": "We ship within the Netherlands via PostNL, DHL or DPD. Shipping costs {shipping} and is free on orders from {freeFrom}. We aim to deliver within thirty days; if we cannot, we will tell you and you may cancel free of charge. The risk of damage or loss rests with us until you receive the parcel."
+    },
+    "withdrawal": {
+      "title": "Right of withdrawal",
+      "body": "You may cancel your order within fourteen days of receipt without giving a reason, and then have another fourteen days to return it. We refund within fourteen days of your notice. Parts that have been fitted, or whose seal has been broken, cannot be taken back. Return shipping is at your expense unless the item was delivered wrongly or damaged."
+    },
+    "conformity": {
+      "title": "Warranty and conformity",
+      "body": "Every item must do what you may reasonably expect of it. If it does not, you are entitled to repair, replacement or a refund. This statutory right is separate from any manufacturer warranty. The same right applies to used parts, taking into account the condition in which the item was sold."
+    },
+    "complaints": {
+      "title": "Complaints and disputes",
+      "body": "Report a complaint using the contact details at the bottom of the page; we respond within fourteen days. If we cannot resolve it together, you may turn to the European ODR platform or the Dutch courts. Dutch law applies to this agreement."
+    }
   },
   "privacy": {
     "title": "Privacy and cookies",

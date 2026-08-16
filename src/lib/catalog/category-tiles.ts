@@ -1,51 +1,20 @@
 import type { ProductFamily } from "./families";
 
 /**
- * Tegels voor het catalogusblok op de homepage.
+ * Beeld per productfamilie voor het catalogusblok op de homepage.
  *
- * Handmatig samengesteld en niet uit de API gegenereerd: de API levert
- * tientallen categorieën met Duitse namen, terwijl dit blok juist een korte,
- * Nederlandse ingang moet zijn voor wat mensen het vaakst zoeken.
+ * Eigen foto's en niet de `image`-URL uit de API: die levert voor élke
+ * categorie exact hetzelfde bestand van 1789 bytes (gemeten 2026-08-16),
+ * net als bij de productfoto's — een generieke placeholder.
  *
- * Elke tegel wijst naar een pagina die bestaat — de categorieslugs hieronder
- * zijn geverifieerd (HTTP 200). Een tegel toevoegen is één regel hier plus
- * een bestand in `public/categorieen/`.
+ * De tegels klappen uit naar de categorieën van de familie. Die komen uit de
+ * provider, dus een nieuwe categorie bij de leverancier verschijnt vanzelf.
  */
-export interface CategoryTile {
-  /** Sleutel in messages onder `categoryTiles` */
-  key: string;
-  /** Pad in `public/`; verhouding maakt niet uit, de tegel snijdt bij */
-  image: string;
-  family: ProductFamily;
-  /** Zonder categorie linkt de tegel naar de familie zelf */
-  category?: string;
-}
-
-export const CATEGORY_TILES: CategoryTile[] = [
-  { key: "banden", image: "/categorieen/banden.jpg", family: "banden" },
-  { key: "velgen", image: "/categorieen/velgen.jpg", family: "velgen" },
-  {
-    key: "remmen",
-    image: "/categorieen/remmen.jpg",
-    family: "gebruikt",
-    category: "bremsanlage-133",
-  },
-  {
-    key: "motor",
-    image: "/categorieen/motor.jpg",
-    family: "gebruikt",
-    category: "motor-512",
-  },
-  {
-    key: "filters",
-    image: "/categorieen/filters.jpg",
-    family: "gebruikt",
-    category: "filter-414",
-  },
-  {
-    key: "verlichting",
-    image: "/categorieen/verlichting.jpg",
-    family: "gebruikt",
-    category: "beleuchtung-99",
-  },
-];
+export const FAMILY_TILE_IMAGES: Record<ProductFamily, string> = {
+  onderdelen: "/categorieen/onderdelen.jpg",
+  gebruikt: "/categorieen/gebruikte-onderdelen.avif",
+  banden: "/categorieen/banden.jpg",
+  velgen: "/categorieen/velgen.jpg",
+  toebehoren: "/categorieen/toebehoren.jpg",
+  gereedschap: "/categorieen/gereedschap.jpg",
+};
