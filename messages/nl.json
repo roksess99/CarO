@@ -1,6 +1,8 @@
 {
   "common": {
-    "skipToContent": "Naar inhoud"
+    "skipToContent": "Naar inhoud",
+    "filterPlaceholder": "Typ om te zoeken…",
+    "noMatches": "Niets gevonden. Probeer een ander woord."
   },
   "header": {
     "homeAria": "CarO — naar de homepage"

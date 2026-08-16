@@ -1,6 +1,8 @@
 {
   "common": {
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "filterPlaceholder": "Type to search…",
+    "noMatches": "Nothing found. Try another word."
   },
   "header": {
     "homeAria": "CarO — go to homepage"

@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
+import { SearchableSelect } from "@/components/searchable-select";
 import {
   modelsForMakeAction,
   yearsForModelAction,
@@ -103,54 +104,30 @@ export function VehiclePicker({
       {steps.map((step, index) => {
         const active = !step.disabled && !step.value;
         return (
-          <div
+          <SearchableSelect
             key={step.id}
-            className={`flex items-center gap-3 rounded-md border bg-background pr-1 pl-3 ${
-              active ? "border-caro-orange" : "border-border"
-            }`}
-          >
-            {/* Stapnummer: oranje vlak met inkt-tekst zodra de stap aan de
-                beurt is, anders neutraal (BRAND.md-contrastregel). */}
-            <span
-              aria-hidden="true"
-              className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${
-                active
-                  ? "bg-caro-orange text-caro-ink"
-                  : "bg-surface text-muted"
-              }`}
-            >
-              {index + 1}
-            </span>
-            <label htmlFor={step.id} className="sr-only">
-              {step.label}
-            </label>
-            <select
-              id={step.id}
-              value={step.value}
-              disabled={step.disabled}
-              onChange={(event) => step.onChange(event.target.value)}
-              // Geen bg-transparent: dan rendert de browser het uitklapmenu
-              // met zijn eigen lichte achtergrond terwijl de tekstkleur van
-              // het donkere thema wordt geërfd — grijs op wit, onleesbaar.
-              // Een expliciete achtergrond laat color-scheme zijn werk doen.
-              className="w-full min-w-0 bg-background py-3 text-sm text-foreground outline-none disabled:cursor-not-allowed disabled:text-muted"
-            >
-              {/* Ook de opties krijgen expliciete kleuren; browsers nemen die
-                  van het <select> niet automatisch over in het popupvenster. */}
-              <option value="" className="bg-background text-foreground">
-                {step.placeholder}
-              </option>
-              {step.options.map((option) => (
-                <option
-                  key={option}
-                  value={option}
-                  className="bg-background text-foreground"
-                >
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
+            label={step.label}
+            value={step.value}
+            placeholder={step.placeholder}
+            options={step.options}
+            onChange={step.onChange}
+            disabled={step.disabled}
+            highlighted={active}
+            leading={
+              /* Stapnummer: oranje vlak met inkt-tekst zodra de stap aan de
+                 beurt is, anders neutraal (BRAND.md-contrastregel). */
+              <span
+                aria-hidden="true"
+                className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${
+                  active
+                    ? "bg-caro-orange text-caro-ink"
+                    : "bg-surface text-muted"
+                }`}
+              >
+                {index + 1}
+              </span>
+            }
+          />
         );
       })}
 
