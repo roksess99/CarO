@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { CompanyDetails } from "@/components/company-details";
 import { Link } from "@/i18n/navigation";
 
 /**
@@ -51,35 +52,7 @@ export function SiteFooter() {
 
           <section>
             <h2 className="eyebrow text-xs">{t("contactTitle")}</h2>
-            {/* TODO: vervangen zodra de KvK-inschrijving rond is
-                (docs/DECISIONS.md #3). Een webshop moet deze gegevens
-                wettelijk tonen — dit is dus geen optionele opsmuk. */}
-            <dl className="mt-3 space-y-2">
-              <div className="flex gap-2">
-                <dt className="font-semibold text-foreground">
-                  {t("companyLabel")}
-                </dt>
-                <dd>{t("placeholder")}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="font-semibold text-foreground">
-                  {t("emailLabel")}
-                </dt>
-                <dd>{t("placeholder")}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="font-semibold text-foreground">
-                  {t("kvkLabel")}
-                </dt>
-                <dd>{t("placeholder")}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="font-semibold text-foreground">
-                  {t("vatNumberLabel")}
-                </dt>
-                <dd>{t("placeholder")}</dd>
-              </div>
-            </dl>
+            <CompanyDetails className="mt-3" />
           </section>
         </div>
 

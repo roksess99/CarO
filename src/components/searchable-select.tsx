@@ -116,7 +116,7 @@ export function SearchableSelect({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         onClick={() => (open ? close() : setOpen(true))}
-        className={`flex min-h-12 w-full items-center gap-3 rounded-md border bg-background px-3 py-2 text-left disabled:cursor-not-allowed ${
+        className={`flex min-h-12 w-full items-center gap-3 rounded-md border bg-background px-3 py-2 text-start disabled:cursor-not-allowed ${
           highlighted ? "border-caro-orange" : "border-border"
         }`}
       >
@@ -195,7 +195,7 @@ export function SearchableSelect({
                         onClick={() => choose(option)}
                         onMouseEnter={() => setActiveIndex(index)}
                         // 48px hoog: betrouwbaar te raken met een duim
-                        className={`flex min-h-12 w-full items-center justify-between gap-2 rounded-md px-3 text-left text-sm ${
+                        className={`flex min-h-12 w-full items-center justify-between gap-2 rounded-md px-3 text-start text-sm ${
                           index === active ? "bg-surface" : ""
                         } ${selected ? "font-semibold" : ""}`}
                       >

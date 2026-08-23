@@ -184,10 +184,31 @@ regel in `src/lib/catalog/category-tiles.ts` plus een bestand.
 
 Vercel (simpelst voor Next.js) vs. een EU-VPS. Let op AVG: klantdata bij voorkeur in de EU.
 
-## 3. Bedrijfsvorm en betaalaccount — OPEN
+## 3. Bedrijfsvorm en betaalaccount — GEDEELTELIJK VASTGESTELD 2026-08-20
 
-Mollie vereist een KvK-inschrijving en zakelijke rekening. Dit blokkeert de betaal-integratie,
-niet de rest van de bouw. Bouw checkout eerst tegen Mollie test mode.
+De inschrijving is rond. Vastgelegd in `src/lib/company.ts` — één bron voor
+de orderbevestiging, de factuur en de footer.
+
+| Gegeven | Waarde |
+|---|---|
+| Rechtsvorm | Eenmanszaak |
+| Handelsnaam | Car Parts A-Z |
+| KvK-nummer | 93396252 |
+| Vestigingsnummer | 000058945644 |
+| Btw-nummer | NL005015784B71 |
+| Adres | Gildebongerd 2, 7038 DE Zeddam |
+
+**Nog open, blokkerend voor de betaalkoppeling (fase 5):** zakelijke rekening
+(IBAN) en het bedrijfs-e-mailadres. Zolang die ontbreken staat er een
+testwaarschuwing onderaan elke gegenereerde orderbevestiging.
+
+**Let op — de shop heet anders dan het bedrijf.** Bij de KvK staat
+"Car Parts A-Z"; de webshop heet overal CarO. Een factuur moet de
+geregistreerde handelsnaam dragen, dus die staat nu op het document. Wil je
+onder CarO factureren, dan moet CarO als (extra) handelsnaam ingeschreven
+worden bij de KvK. Dat is een formaliteit, maar wel een die vóór livegang moet.
+
+Bouw de checkout eerst tegen Mollie test mode.
 
 ## 4. Voorraadbeheer — OPEN, richting bekend
 
@@ -205,5 +226,6 @@ Tyre24 maakt dropshipping mogelijk: voorraad live opvragen (`stock` per item,
 | 2026-08-06 | Velgen komen in het assortiment | Tyre24 Alloys-API dekt matching (carID-flow) én 3D-beelden; zelfde leverancier en token. Eigen fase, na fase 3 |
 | — | Next.js + TypeScript + Tailwind | Grootste community, snelste iteratie met een agent, sterke SEO-ondersteuning |
 | — | PostgreSQL + Prisma | Type-safe, migraties, past bij bestaande SQL-kennis |
+| 2026-08-20 | Eenmanszaak Car Parts A-Z, KvK 93396252 | Inschrijving rond; deblokkeert de factuurgegevens, niet de betaalkoppeling |
 | — | Mollie boven Stripe | iDEAL is ~60% van NL online betalingen; Mollie is hier de standaard |
 | — | Prijzen in eurocenten (integer) | Voorkomt afrondingsfouten |

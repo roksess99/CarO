@@ -42,7 +42,7 @@ export function BackToTop() {
       onClick={toTop}
       aria-label={t("backToTop")}
       title={t("backToTop")}
-      className="fixed right-4 bottom-28 z-30 inline-flex size-11 items-center justify-center rounded-md bg-caro-orange text-caro-ink shadow-lg lg:bottom-6"
+      className="fixed end-4 bottom-28 z-30 inline-flex size-11 items-center justify-center rounded-md bg-caro-orange text-caro-ink shadow-lg lg:bottom-6"
     >
       <svg
         aria-hidden="true"

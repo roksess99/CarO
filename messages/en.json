@@ -135,7 +135,8 @@
   "localeSwitcher": {
     "label": "Language",
     "nl": "Dutch",
-    "en": "English"
+    "en": "English",
+    "ar": "Arabic"
   },
   "themeToggle": {
     "light": "Switch to light theme",
@@ -238,18 +239,22 @@
     "savedNotice": "Your details have been validated and saved. Ordering and payment (iDEAL) become available once the payment integration is in place.",
     "emptyCart": "Your cart is empty — there is nothing to check out yet.",
     "emptyCta": "Browse the range",
-    "backToCart": "Back to cart"
+    "backToCart": "Back to cart",
+    "testTools": "Test tool",
+    "downloadPdf": "Download order confirmation (PDF)",
+    "downloadPdfBusy": "Generating...",
+    "downloadPdfNote": "Temporary button to check the document. The confirmation will be emailed automatically later.",
+    "pdfErrors": {
+      "invalidDetails": "Please complete your details first.",
+      "emptyCart": "Your cart is empty, there is nothing to confirm.",
+      "failed": "The document could not be created. Please try again."
+    }
   },
   "footer": {
     "termsTitle": "Terms",
     "shippingTitle": "Shipping",
     "shippingPending": "Final carrier and rates follow at launch.",
     "contactTitle": "Contact and company details",
-    "companyLabel": "Company name",
-    "emailLabel": "Email",
-    "kvkLabel": "Chamber of Commerce",
-    "vatNumberLabel": "VAT number",
-    "placeholder": "To follow",
     "vat": "All prices include 21% VAT.",
     "shipping": "Shipping costs are shown before checkout.",
     "withdrawal": "14-day right of withdrawal on every order.",
@@ -261,7 +266,6 @@
     "title": "Terms and conditions",
     "lastUpdated": "Last updated: 16 August 2026",
     "intro": "These terms apply to every order placed with CarO. They are written for consumers and follow Dutch consumer law (Books 6 and 7 of the Civil Code) and the European rules on distance selling.",
-    "placeholderNotice": "Company name, address, Chamber of Commerce number and VAT number will be filled in once registration is complete. Without those details these terms are not yet complete.",
     "identity": {
       "title": "Who we are",
       "body": "CarO sells car parts, tyres, wheels, tools and accessories to consumers in the Netherlands. Our contact details and registration numbers appear at the bottom of every page."
@@ -350,8 +354,7 @@
     "rightsTitle": "Your rights",
     "rightsBody": "You may request which data we hold about you, have it corrected or deleted, and object to the processing. Contact us to do so. If we cannot resolve it together, you can file a complaint with the Dutch Data Protection Authority.",
     "contactTitle": "Contact",
-    "contactBody": "Questions about your data? Get in touch with:",
-    "contactPlaceholder": "Still to be filled in: company name, address, Chamber of Commerce number, VAT number and email address. This statement is only complete once those details are included."
+    "contactBody": "Questions about your data? Get in touch with:"
   },
   "error": {
     "title": "Something went wrong",
@@ -362,5 +365,15 @@
     "title": "Page not found",
     "description": "This page does not exist or has been moved.",
     "backHome": "Back to the homepage"
+  },
+  "company": {
+    "name": "Company name",
+    "address": "Address",
+    "email": "Email",
+    "phone": "Phone",
+    "coc": "Chamber of Commerce number",
+    "vat": "VAT number",
+    "pending": "To follow",
+    "incomplete": "A few details are still missing. They will be added once known."
   }
 }

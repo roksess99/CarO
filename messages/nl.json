@@ -135,7 +135,8 @@
   "localeSwitcher": {
     "label": "Taal",
     "nl": "Nederlands",
-    "en": "Engels"
+    "en": "Engels",
+    "ar": "Arabisch"
   },
   "themeToggle": {
     "light": "Schakel naar licht thema",
@@ -238,18 +239,22 @@
     "savedNotice": "Je gegevens zijn gecontroleerd en opgeslagen. Bestellen en betalen (iDEAL) komen beschikbaar zodra de betaalkoppeling er is.",
     "emptyCart": "Je winkelwagen is leeg — er valt nog niets af te rekenen.",
     "emptyCta": "Bekijk het aanbod",
-    "backToCart": "Terug naar winkelwagen"
+    "backToCart": "Terug naar winkelwagen",
+    "testTools": "Testfunctie",
+    "downloadPdf": "Orderbevestiging downloaden (PDF)",
+    "downloadPdfBusy": "Bezig met genereren...",
+    "downloadPdfNote": "Tijdelijke knop om het document te controleren. Straks krijg je de bevestiging automatisch per e-mail.",
+    "pdfErrors": {
+      "invalidDetails": "Vul eerst je gegevens volledig in.",
+      "emptyCart": "Je winkelwagen is leeg, er valt niets te bevestigen.",
+      "failed": "Het document kon niet gemaakt worden. Probeer het opnieuw."
+    }
   },
   "footer": {
     "termsTitle": "Voorwaarden",
     "shippingTitle": "Verzending",
     "shippingPending": "Definitieve vervoerder en tarieven volgen bij livegang.",
     "contactTitle": "Contact en bedrijfsgegevens",
-    "companyLabel": "Bedrijfsnaam",
-    "emailLabel": "E-mail",
-    "kvkLabel": "KvK-nummer",
-    "vatNumberLabel": "Btw-nummer",
-    "placeholder": "Volgt nog",
     "vat": "Alle prijzen zijn inclusief 21% btw.",
     "shipping": "Verzendkosten zie je vóór het afrekenen.",
     "withdrawal": "14 dagen bedenktijd op elke bestelling.",
@@ -261,7 +266,6 @@
     "title": "Algemene voorwaarden",
     "lastUpdated": "Laatst bijgewerkt: 16 augustus 2026",
     "intro": "Deze voorwaarden gelden voor elke bestelling bij CarO. Ze zijn geschreven voor consumenten en volgen het Nederlandse consumentenrecht (Boek 6 en 7 BW) en de Europese regels voor verkoop op afstand.",
-    "placeholderNotice": "Bedrijfsnaam, adres, KvK-nummer en btw-nummer worden ingevuld zodra de inschrijving rond is. Zonder die gegevens zijn deze voorwaarden nog niet compleet.",
     "identity": {
       "title": "Wie wij zijn",
       "body": "CarO verkoopt auto-onderdelen, banden, velgen, gereedschap en toebehoren aan particulieren in Nederland. Onze contactgegevens en inschrijvingsnummers staan onderaan elke pagina."
@@ -350,8 +354,7 @@
     "rightsTitle": "Je rechten",
     "rightsBody": "Je mag opvragen welke gegevens we van je hebben, ze laten corrigeren of laten verwijderen, en bezwaar maken tegen de verwerking. Neem daarvoor contact met ons op. Kom je er met ons niet uit, dan kun je een klacht indienen bij de Autoriteit Persoonsgegevens.",
     "contactTitle": "Contact",
-    "contactBody": "Vragen over je gegevens? Neem contact op met:",
-    "contactPlaceholder": "Nog in te vullen: bedrijfsnaam, adres, KvK-nummer, btw-nummer en e-mailadres. Deze verklaring is pas compleet als die gegevens erin staan."
+    "contactBody": "Vragen over je gegevens? Neem contact op met:"
   },
   "error": {
     "title": "Er ging iets mis",
@@ -362,5 +365,15 @@
     "title": "Pagina niet gevonden",
     "description": "Deze pagina bestaat niet of is verplaatst.",
     "backHome": "Terug naar de homepage"
+  },
+  "company": {
+    "name": "Bedrijfsnaam",
+    "address": "Adres",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "coc": "KvK-nummer",
+    "vat": "Btw-nummer",
+    "pending": "Volgt nog",
+    "incomplete": "Een paar gegevens ontbreken nog. Ze worden aangevuld zodra ze bekend zijn."
   }
 }

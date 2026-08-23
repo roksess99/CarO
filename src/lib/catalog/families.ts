@@ -87,9 +87,15 @@ export const NAV_GROUPS = PRODUCT_FAMILIES.map((family) => ({
   families: ReadonlyArray<ProductFamily>;
 }>;
 
+/**
+ * URL-segment voor een familie.
+ *
+ * Arabisch deelt de Engelse slug: Arabisch schrift in een URL wordt
+ * percent-encoded en levert onleesbare links op (zie i18n/routing.ts).
+ */
 export function familySlug(family: ProductFamily, locale: string): string {
   const slugs = FAMILIES[family].slugs;
-  return locale === "en" ? slugs.en : slugs.nl;
+  return locale === "nl" ? slugs.nl : slugs.en;
 }
 
 /** URL-segment → familie. Onbekend segment → null (pagina geeft 404). */

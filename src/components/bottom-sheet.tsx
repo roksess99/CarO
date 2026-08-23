@@ -76,7 +76,7 @@ export function BottomSheet({
             type="button"
             aria-label={closeLabel}
             onClick={onClose}
-            className="-mr-2 inline-flex size-10 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-surface"
+            className="-me-2 inline-flex size-10 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-surface"
           >
             <svg
               aria-hidden="true"

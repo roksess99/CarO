@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { BrandTiles } from "@/components/brand-tiles";
 import { ProductFilters } from "@/components/product-filters";
 import { ProductGrid } from "@/components/product-grid";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -108,7 +109,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               <summary className="cursor-pointer px-4 py-3 font-semibold">
                 {tFilters("toggle")}
                 {activeCount > 0 && (
-                  <span className="ml-2 rounded-full bg-caro-orange px-2 py-0.5 text-xs text-caro-ink tabular-nums">
+                  <span className="ms-2 rounded-full bg-caro-orange px-2 py-0.5 text-xs text-caro-ink tabular-nums">
                     {activeCount}
                   </span>
                 )}
@@ -122,6 +123,16 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         )}
 
         <div className="min-w-0 flex-1">
+          {/* Merk boven de producten en over de volle breedte: in de 256px
+              brede zijbalk werden namen als "Alfa Romeo" afgekapt tot
+              "Alfa R…", en merk is waar de meeste klanten op filteren. */}
+          <BrandTiles
+            groups={filterGroups}
+            selected={selected}
+            family={familyParam}
+            category={slug}
+          />
+
           <p className="text-sm text-muted">
             {tFilters("resultCount", { count: parts.length })}
           </p>

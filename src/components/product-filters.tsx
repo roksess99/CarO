@@ -12,61 +12,6 @@ import type { FilterGroup, SelectedFilters } from "@/lib/catalog/types";
 /** Groepen met veel opties (merk!) krijgen een scrollbaar vak */
 const SCROLL_AFTER_OPTIONS = 10;
 
-/**
- * Sleutel van de merkgroep. Komt uit de Tyre24-filterrespons en is
- * taalonafhankelijk, in tegenstelling tot het label ("Merk" / "Marke").
- */
-const BRAND_GROUP_KEY = "merk";
-
-/**
- * Aantal merken als tegel. De rest blijft bereikbaar via de gewone
- * filterlijst eronder — 193 tegels zou het raster onbruikbaar maken.
- */
-const BRAND_TILES = 12;
-
-/**
- * Welke merken vooraan als tegel komen.
- *
- * Sorteren op populariteit kan niet: het `count`-veld van Tyre24 staat bij
- * álle 193 merken op 1 (gemeten 2026-08-16), dus het is een
- * beschikbaarheidsvlag en geen artikelaantal. Zonder deze lijst zouden de
- * tegels alfabetisch vollopen met ALTENZO en APLUS terwijl Continental en
- * Michelin buiten beeld vallen.
- *
- * Merken die de leverancier niet heeft, slaan we stil over; de lijst wordt
- * aangevuld met wat er verder in de filterrespons zit.
- */
-const PROMINENT_BRANDS = [
-  // Banden
-  "CONTINENTAL",
-  "MICHELIN",
-  "BRIDGESTONE",
-  "GOODYEAR",
-  "PIRELLI",
-  "DUNLOP",
-  "HANKOOK",
-  "VREDESTEIN",
-  "NOKIAN",
-  "FALKEN",
-  "TOYO",
-  "YOKOHAMA",
-  "UNIROYAL",
-  "KUMHO",
-  "SEMPERIT",
-  "BARUM",
-  // Onderdelen
-  "BOSCH",
-  "MANN-FILTER",
-  "MAHLE",
-  "FEBI BILSTEIN",
-  "VALEO",
-  "SACHS",
-  "BREMBO",
-  "TRW",
-  "NGK",
-  "DENSO",
-];
-
 type Props = {
   groups: FilterGroup[];
   selected: SelectedFilters;
@@ -90,20 +35,6 @@ export async function ProductFilters({
   if (groups.length === 0) return null;
 
   const activeCount = countActiveFilters(selected);
-  // Merken worden meest gebruikt; die halen we naar boven als tegelraster.
-  // De groep blijft óók in de lijst staan, zodat merk 13 en verder bereikbaar
-  // blijven en de pagina zonder JavaScript volledig bruikbaar is.
-  const brandGroup = groups.find((group) => group.key === BRAND_GROUP_KEY);
-  // Bekende merken eerst, daarna de rest zoals de API ze levert
-  const rank = (label: string) => {
-    const index = PROMINENT_BRANDS.indexOf(label.trim().toUpperCase());
-    return index === -1 ? Number.MAX_SAFE_INTEGER : index;
-  };
-  const topBrands = brandGroup
-    ? [...brandGroup.options]
-        .sort((a, b) => rank(a.label) - rank(b.label))
-        .slice(0, BRAND_TILES)
-    : [];
 
   const hrefFor = (next: SelectedFilters) => ({
     pathname: "/[family]/[category]" as const,
@@ -153,50 +84,6 @@ export async function ProductFilters({
         </ul>
       )}
 
-      {/* Merk als tegelraster boven de gewone filters: dat is waar klanten
-          op scannen, en 193 merknamen in een smalle lijst is onleesbaar.
-          Geen logo's — Tyre24 levert die niet (gemeten 2026-08-16, de
-          filterwaarden bevatten alleen naam en aantal). */}
-      {brandGroup && (
-        <section className="mt-4">
-          <h3 className="text-sm font-semibold">{brandGroup.label}</h3>
-          <ul className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {topBrands.map((option) => {
-              const active = isFilterActive(selected, brandGroup.key, option.value);
-              return (
-                <li key={option.value}>
-                  <Link
-                    href={hrefFor(
-                      toggleFilter(selected, brandGroup.key, option.value),
-                    )}
-                    aria-current={active ? "true" : undefined}
-                    className={`flex min-h-14 flex-col items-center justify-center rounded-lg border px-2 py-2 text-center ${
-                      active
-                        ? "border-caro-orange bg-surface"
-                        : "border-border hover:border-caro-orange hover:bg-surface"
-                    }`}
-                  >
-                    {/* Geen aantal onder de naam: Tyre24 zet `count` bij elk
-                        merk op 1, dus dat cijfer zou een artikelaantal
-                        suggereren dat het niet is. */}
-                    <span className="w-full truncate text-sm font-bold">
-                      {option.label}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-          {brandGroup.options.length > BRAND_TILES && (
-            <p className="mt-2 text-xs text-muted">
-              {t("moreBrands", {
-                count: brandGroup.options.length - BRAND_TILES,
-              })}
-            </p>
-          )}
-        </section>
-      )}
-
       <div className="mt-4 space-y-3">
         {groups.map((group) => {
           const activeInGroup = selected[group.key]?.length ?? 0;
@@ -210,7 +97,7 @@ export async function ProductFilters({
               <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">
                 {group.label}
                 {activeInGroup > 0 && (
-                  <span className="ml-2 rounded-full bg-caro-orange px-2 py-0.5 text-xs text-caro-ink tabular-nums">
+                  <span className="ms-2 rounded-full bg-caro-orange px-2 py-0.5 text-xs text-caro-ink tabular-nums">
                     {activeInGroup}
                   </span>
                 )}

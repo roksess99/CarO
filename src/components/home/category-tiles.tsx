@@ -63,7 +63,7 @@ export function CategoryTiles({
             </>
           );
 
-          const shell = `group flex h-full w-full flex-col overflow-hidden rounded-lg border bg-background text-left transition-colors ${
+          const shell = `group flex h-full w-full flex-col overflow-hidden rounded-lg border bg-background text-start transition-colors ${
             expanded ? "border-caro-orange" : "border-border hover:border-caro-orange"
           }`;
 
@@ -103,7 +103,7 @@ export function CategoryTiles({
             type="button"
             aria-label={closeLabel}
             onClick={() => setOpenFamily(null)}
-            className="absolute top-2 right-2 inline-flex size-10 items-center justify-center rounded-md text-muted hover:bg-surface hover:text-foreground"
+            className="absolute top-2 end-2 inline-flex size-10 items-center justify-center rounded-md text-muted hover:bg-surface hover:text-foreground"
           >
             <svg
               aria-hidden="true"
@@ -118,7 +118,7 @@ export function CategoryTiles({
             </svg>
           </button>
 
-          <p className="pr-12 font-bold">{open.label}</p>
+          <p className="pe-12 font-bold">{open.label}</p>
 
           <ul className="mt-4 grid gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-4">
             {open.categories.map((category) => (
