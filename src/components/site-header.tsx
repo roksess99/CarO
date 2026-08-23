@@ -45,7 +45,7 @@ export async function SiteHeader() {
           <SiteSearch locale={locale} id="header-search-desktop" />
         </div>
 
-        <div className="ml-auto flex items-center gap-1 md:gap-2">
+        <div className="ms-auto flex items-center gap-1 md:gap-2">
           <div className="md:hidden">
             <SelectedVehicle />
           </div>

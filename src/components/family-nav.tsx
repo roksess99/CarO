@@ -113,7 +113,7 @@ export function FamilyNav({ items }: { items: FamilyNavItem[] }) {
               <nav
                 id={menuId}
                 aria-label={label}
-                className={`absolute left-0 z-40 mt-2 rounded-lg border border-border bg-background p-4 shadow-xl ${
+                className={`absolute start-0 z-40 mt-2 rounded-lg border border-border bg-background p-4 shadow-xl ${
                   families.length > 1 || totalCategories > 6
                     ? "w-[min(40rem,calc(100vw-2rem))]"
                     : "w-64"

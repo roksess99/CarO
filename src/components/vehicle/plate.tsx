@@ -56,6 +56,10 @@ export function PlateBadge({
 }) {
   return (
     <span
+      // dir="ltr": een kentekenplaat heeft de EU-strook altijd links en het
+      // kenteken van links naar rechts, ook op een Arabische pagina. Zonder
+      // dit spiegelt de hele plaat mee met de tekstrichting.
+      dir="ltr"
       className={`inline-flex overflow-hidden rounded border-2 ${className}`}
       style={{ borderColor: PLATE_INK, backgroundColor: PLATE_YELLOW }}
     >

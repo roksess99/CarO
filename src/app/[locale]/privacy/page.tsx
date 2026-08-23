@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CompanyDetails } from "@/components/company-details";
 import { getPathname } from "@/i18n/navigation";
 import { localizedMetadata } from "@/lib/site";
 
@@ -52,14 +53,14 @@ export default async function PrivacyPage({ params }: Props) {
       <div className="mt-6 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="border-b border-border text-left">
-              <th scope="col" className="py-3 pr-4 font-semibold">
+            <tr className="border-b border-border text-start">
+              <th scope="col" className="py-3 pe-4 font-semibold">
                 {t("tableName")}
               </th>
-              <th scope="col" className="py-3 pr-4 font-semibold">
+              <th scope="col" className="py-3 pe-4 font-semibold">
                 {t("tableKind")}
               </th>
-              <th scope="col" className="py-3 pr-4 font-semibold">
+              <th scope="col" className="py-3 pe-4 font-semibold">
                 {t("tablePurpose")}
               </th>
               <th scope="col" className="py-3 font-semibold">
@@ -70,9 +71,9 @@ export default async function PrivacyPage({ params }: Props) {
           <tbody>
             {STORAGE_ITEMS.map(({ key, kind }) => (
               <tr key={key} className="border-b border-border align-top">
-                <td className="py-3 pr-4 font-medium tabular-nums">{key}</td>
-                <td className="py-3 pr-4 text-muted">{t(`kind.${kind}`)}</td>
-                <td className="py-3 pr-4 text-muted">{t(`items.${key}.purpose`)}</td>
+                <td className="py-3 pe-4 font-medium tabular-nums">{key}</td>
+                <td className="py-3 pe-4 text-muted">{t(`kind.${kind}`)}</td>
+                <td className="py-3 pe-4 text-muted">{t(`items.${key}.purpose`)}</td>
                 <td className="py-3 text-muted">{t(`items.${key}.retention`)}</td>
               </tr>
             ))}
@@ -86,14 +87,14 @@ export default async function PrivacyPage({ params }: Props) {
 
       <h2 className="mt-12 text-2xl">{t("personalDataTitle")}</h2>
       <p className="mt-3 text-muted">{t("personalDataBody")}</p>
-      <ul className="mt-4 list-disc space-y-2 pl-5 text-muted">
+      <ul className="mt-4 list-disc space-y-2 ps-5 text-muted">
         <li>{t("personalCheckout")}</li>
         <li>{t("personalPlate")}</li>
       </ul>
 
       <h2 className="mt-12 text-2xl">{t("thirdPartiesTitle")}</h2>
       <p className="mt-3 text-muted">{t("thirdPartiesBody")}</p>
-      <ul className="mt-4 list-disc space-y-2 pl-5 text-muted">
+      <ul className="mt-4 list-disc space-y-2 ps-5 text-muted">
         <li>{t("thirdTyre24")}</li>
         <li>{t("thirdRdw")}</li>
         <li>{t("thirdHosting")}</li>
@@ -104,10 +105,7 @@ export default async function PrivacyPage({ params }: Props) {
 
       <h2 className="mt-12 text-2xl">{t("contactTitle")}</h2>
       <p className="mt-3 text-muted">{t("contactBody")}</p>
-      {/* Bedrijfsgegevens moeten nog worden ingevuld (KvK, adres, e-mail) */}
-      <p className="mt-4 rounded-lg border border-border bg-surface p-4 text-sm text-muted">
-        {t("contactPlaceholder")}
-      </p>
+      <CompanyDetails className="mt-4 rounded-lg border border-border bg-surface p-4 text-sm text-muted" />
     </div>
   );
 }

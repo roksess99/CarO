@@ -122,7 +122,7 @@ export function SearchBox({
         <svg
           aria-hidden="true"
           viewBox="0 0 24 24"
-          className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted"
+          className="pointer-events-none absolute top-1/2 start-3 size-5 -translate-y-1/2 text-muted"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
@@ -152,11 +152,11 @@ export function SearchBox({
           aria-activedescendant={
             highlighted >= 0 ? `${listId}-${highlighted}` : undefined
           }
-          className="w-full rounded-md border border-border bg-background py-2 pr-20 pl-10 text-sm"
+          className="w-full rounded-md border border-border bg-background py-2 pe-20 ps-10 text-sm"
         />
         <button
           type="submit"
-          className="absolute top-1/2 right-1 -translate-y-1/2 rounded-md bg-caro-orange px-4 py-1.5 text-sm font-semibold text-caro-ink"
+          className="absolute top-1/2 end-1 -translate-y-1/2 rounded-md bg-caro-orange px-4 py-1.5 text-sm font-semibold text-caro-ink"
         >
           {t("submit")}
         </button>

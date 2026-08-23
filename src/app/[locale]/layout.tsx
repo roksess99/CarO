@@ -6,7 +6,7 @@ import { BackToTop } from "@/components/back-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { BottomNav } from "@/components/bottom-nav";
 import { SiteHeader } from "@/components/site-header";
-import { routing } from "@/i18n/routing";
+import { routing, textDirection } from "@/i18n/routing";
 import type { FamilyNavItem } from "@/components/family-nav";
 import { PRODUCT_FAMILIES } from "@/lib/catalog/families";
 import { getCatalogProvider } from "@/lib/catalog/provider";
@@ -61,6 +61,9 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
+      // Arabisch leest van rechts naar links; hiermee spiegelt de browser de
+      // hele layout, inclusief scrollbalk en formulierelementen.
+      dir={textDirection(locale)}
       suppressHydrationWarning
       className={`${inter.variable} ${anton.variable}`}
     >

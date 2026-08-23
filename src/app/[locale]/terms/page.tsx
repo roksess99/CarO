@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CompanyDetails } from "@/components/company-details";
 import { getPathname } from "@/i18n/navigation";
 import { localizedMetadata } from "@/lib/site";
 import { FREE_SHIPPING_THRESHOLD_CENTS, STANDARD_SHIPPING_CENTS } from "@/lib/shipping";
@@ -54,11 +55,8 @@ export default async function TermsPage({ params }: Props) {
       <p className="mt-2 text-sm text-muted">{t("lastUpdated")}</p>
       <p className="mt-6 text-muted">{t("intro")}</p>
 
-      {/* TODO: bedrijfsgegevens invullen zodra de KvK-inschrijving rond is
-          (docs/DECISIONS.md #3). Een webshop moet die wettelijk tonen. */}
-      <div className="mt-8 rounded-lg border border-border bg-surface p-4 text-sm text-muted">
-        {t("placeholderNotice")}
-      </div>
+      {/* Een webshop moet deze gegevens wettelijk tonen */}
+      <CompanyDetails className="mt-8 rounded-lg border border-border bg-surface p-4 text-sm text-muted" />
 
       <div className="mt-10 space-y-8">
         {SECTIONS.map((section, index) => (

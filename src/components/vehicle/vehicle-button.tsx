@@ -88,7 +88,7 @@ export function VehicleButton({ makes }: { makes: string[] }) {
           aria-label={t("addVehicle")}
           // Rechts uitlijnen zodat het paneel op smalle schermen niet buiten
           // beeld valt; de breedte volgt het venster met een bovengrens.
-          className="absolute top-full left-0 z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] rounded-lg border border-border bg-background p-4 shadow-xl"
+          className="absolute top-full start-0 z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] rounded-lg border border-border bg-background p-4 shadow-xl"
         >
           <VehicleFinder makes={makes} onSelected={() => setOpen(false)} />
           {vehicle && (

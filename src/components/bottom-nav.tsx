@@ -107,7 +107,7 @@ export function BottomNav({
               <button
                 type="button"
                 onClick={() => setGroupKey(null)}
-                className="-ml-2 inline-flex items-center gap-1 rounded-md px-2 py-2 text-sm font-semibold text-foreground hover:bg-surface"
+                className="-ms-2 inline-flex items-center gap-1 rounded-md px-2 py-2 text-sm font-semibold text-foreground hover:bg-surface"
               >
                 <svg
                   aria-hidden="true"
@@ -154,7 +154,7 @@ export function BottomNav({
                       <button
                         type="button"
                         onClick={() => setGroupKey(group.key)}
-                        className="flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3.5 text-left text-base font-semibold text-foreground hover:bg-surface"
+                        className="flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3.5 text-start text-base font-semibold text-foreground hover:bg-surface"
                       >
                         {groupLabel(group)}
                         <svg
@@ -329,7 +329,7 @@ export function BottomNav({
               {cartCount > 0 && (
                 <span
                   aria-hidden="true"
-                  className="absolute -top-1.5 -right-2 flex size-4.5 items-center justify-center rounded-full bg-caro-orange px-1 text-[0.625rem] font-bold text-caro-ink tabular-nums"
+                  className="absolute -top-1.5 -end-2 flex size-4.5 items-center justify-center rounded-full bg-caro-orange px-1 text-[0.625rem] font-bold text-caro-ink tabular-nums"
                 >
                   {cartCount > 9 ? "9+" : cartCount}
                 </span>

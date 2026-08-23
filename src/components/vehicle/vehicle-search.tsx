@@ -134,6 +134,8 @@ export function VehicleSearch({
             met de rand eromheen. Zo leest het als een kentekenplaat en niet
             als een invoerveld met een plaatje ernaast. */}
         <div
+          // Zie plate.tsx: de plaat spiegelt niet mee met de tekstrichting
+          dir="ltr"
           className="flex h-12 min-w-0 flex-1 overflow-hidden rounded-md border-2 focus-within:ring-2 focus-within:ring-caro-orange focus-within:ring-offset-2"
           style={{ borderColor: PLATE_INK, backgroundColor: PLATE_YELLOW }}
         >

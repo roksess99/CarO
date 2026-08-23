@@ -83,9 +83,23 @@ kleuren van het select-element niet automatisch over in het popupvenster.
 
 ## i18n
 
-- next-intl. Routes `/nl/...` en `/en/...`, NL is default.
-- Geen hardcoded tekst. Alles via `messages/nl.json` en `messages/en.json`.
-- Beide bestanden hebben dezelfde sleutels. Ontbrekende sleutel = build faalt.
+- next-intl. Routes `/nl/...`, `/en/...` en `/ar/...`, NL is default.
+- Geen hardcoded tekst. Alles via `messages/nl.json`, `en.json` en `ar.json`.
+- Alle drie de bestanden hebben dezelfde sleutels. Ontbrekende sleutel = build faalt.
+
+### Rechts-naar-links (Arabisch)
+
+- **Nooit `ml-`, `mr-`, `pl-`, `pr-`, `left-`, `right-` of `text-left`.** Gebruik
+  de logische varianten `ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`,
+  `text-start`. Die spiegelen mee met `dir`; de fysieke niet.
+- `dir` staat op `<html>` via `textDirection()` uit `i18n/routing.ts`.
+- Wat níet mag spiegelen krijgt een eigen `dir="ltr"`: de kentekenplaat heeft
+  de EU-strook altijd links, ook op een Arabische pagina.
+- Prijzen blijven `nl-NL` (`lib/format.ts`): euro-notatie met Latijnse cijfers,
+  ook in het Arabisch. Arabisch-Indische cijfers naast een €-teken lezen
+  verkeerd en wijken af van de factuur.
+- Arabische URL-slugs zijn Latijns (`/ar/tyres`): Arabisch schrift wordt in een
+  URL percent-encoded en levert onleesbare links op.
 
 ## Performance
 
