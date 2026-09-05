@@ -11,20 +11,27 @@ import {
   countActiveFilters,
   FILTER_PARAM,
   parseFilterParam,
+  toFilterParam,
 } from "@/lib/catalog/filter-params";
+import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import { localizedMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string; family: string; category: string }>;
-  searchParams: Promise<{ f?: string | string[] }>;
+  searchParams: Promise<{ f?: string | string[]; toon?: string }>;
 };
+
+/** Producten per stap. Meer laden telt hier telkens bij op. */
+const PAGE_SIZE = 20;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, family: familyParam, category: slug } = await params;
   const family = familyFromSlug(familyParam, locale);
   if (!family) return {};
-  const categories = await getCatalogProvider().getCategories(family);
+  const categories = await localizeCategories(
+    await getCatalogProvider().getCategories(family),
+  );
   const category = categories.find((c) => c.slug === slug);
   if (!category) return {};
   const t = await getTranslations({ locale, namespace: "category" });
@@ -52,12 +59,24 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   if (!family) notFound();
 
   const provider = getCatalogProvider();
-  const categories = await provider.getCategories(family);
+  const categories = await localizeCategories(
+    await provider.getCategories(family),
+  );
   const category = categories.find((c) => c.slug === slug);
   if (!category) notFound();
 
-  const selected = parseFilterParam((await searchParams)[FILTER_PARAM]);
+  const query = await searchParams;
+  const selected = parseFilterParam(query[FILTER_PARAM]);
   const activeCount = countActiveFilters(selected);
+
+  // "Meer laden" verhoogt het aantal in de URL. Bewust geen knop met state:
+  // zo blijft de lijst deelbaar, werkt terugnavigeren en is er geen
+  // JavaScript nodig — net als bij de filters.
+  const requested = Number(query.toon);
+  const limit =
+    Number.isInteger(requested) && requested > 0
+      ? Math.min(requested, PAGE_SIZE * 10)
+      : PAGE_SIZE;
 
   const t = await getTranslations("category");
   const tFilters = await getTranslations("filters");
@@ -66,7 +85,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   // Filters en producten parallel: beide raken dezelfde gecachte API-call
   const [filterGroups, parts] = await Promise.all([
     provider.getFilters(family, slug),
-    provider.getParts({ family, categorySlug: slug, filters: selected }),
+    provider.getParts({ family, categorySlug: slug, filters: selected, limit }),
   ]);
 
   const filters = (
@@ -100,6 +119,37 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       </nav>
 
       <h1 className="mt-6 text-3xl md:text-4xl">{category.name}</h1>
+
+      {/* Zustercategorieën. Bij banden is dit het verschil tussen Auto/SUV,
+          Offroad en Transporter — zonder deze rij kan de klant alleen via
+          het menu wisselen. */}
+      {categories.length > 1 && (
+        <nav aria-label={t("siblingsAria")} className="mt-6">
+          <ul className="flex flex-wrap gap-2">
+            {categories.map((sibling) => {
+              const current = sibling.slug === slug;
+              return (
+                <li key={sibling.slug}>
+                  <Link
+                    href={{
+                      pathname: "/[family]/[category]",
+                      params: { family: familyParam, category: sibling.slug },
+                    }}
+                    aria-current={current ? "page" : undefined}
+                    className={`inline-flex rounded-md border px-3 py-1.5 text-sm ${
+                      current
+                        ? "border-caro-orange bg-surface font-semibold"
+                        : "border-border text-muted hover:border-caro-orange hover:text-foreground"
+                    }`}
+                  >
+                    {sibling.name}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      )}
 
       <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
         {filterGroups.length > 0 && (
@@ -139,6 +189,29 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           <div className="mt-4">
             <ProductGrid parts={parts} />
           </div>
+
+          {/* Even veel treffers als gevraagd? Dan is er waarschijnlijk meer.
+              De leverancier geeft geen totaal mee, dus dit is het eerlijkste
+              signaal dat we hebben. */}
+          {parts.length >= limit && (
+            <div className="mt-8 flex justify-center">
+              <Link
+                href={{
+                  pathname: "/[family]/[category]",
+                  params: { family: familyParam, category: slug },
+                  query: {
+                    ...(activeCount > 0
+                      ? { [FILTER_PARAM]: toFilterParam(selected) }
+                      : {}),
+                    toon: String(limit + PAGE_SIZE),
+                  },
+                }}
+                className="rounded-md border border-border px-6 py-3 font-semibold hover:border-caro-orange hover:bg-surface"
+              >
+                {tFilters("loadMore", { count: PAGE_SIZE })}
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -126,9 +126,8 @@ export function BottomNav({
             ) : undefined
           }
         >
-          {/* Zoekveld zodra de lijst te lang wordt om te scannen: gebruikte
-              onderdelen heeft er 31, gereedschap 22. Scrollen naar "Kühlung"
-              is op een telefoon geen doen. */}
+          {/* Zoekveld zodra de lijst te lang wordt om te scannen. Op een
+              telefoon is scrollen door een lange categorielijst geen doen. */}
           {activeGroup && categoriesInGroup > FILTER_FROM_CATEGORIES && (
             <div className="border-b border-border p-2">
               <label htmlFor="assortment-filter" className="sr-only">

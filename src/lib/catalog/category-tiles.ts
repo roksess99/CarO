@@ -12,9 +12,7 @@ import type { ProductFamily } from "./families";
  */
 export const FAMILY_TILE_IMAGES: Record<ProductFamily, string> = {
   onderdelen: "/categorieen/onderdelen.jpg",
-  gebruikt: "/categorieen/gebruikte-onderdelen.avif",
   banden: "/categorieen/banden.jpg",
   velgen: "/categorieen/velgen.jpg",
   toebehoren: "/categorieen/toebehoren.jpg",
-  gereedschap: "/categorieen/gereedschap.jpg",
 };

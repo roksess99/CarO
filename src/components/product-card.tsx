@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { AvailabilityBadge } from "@/components/availability-badge";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
@@ -33,12 +34,24 @@ export function ProductCard({ part }: { part: Part }) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-border bg-background transition-colors hover:border-caro-orange">
       <Link href={href} tabIndex={-1} aria-hidden="true">
-        {/* Placeholder zolang Tyre24 geen bruikbare foto-URL's levert
-            (docs/api/TYRE24.md) */}
-        <ProductImagePlaceholder
-          label={t("noImage")}
-          className="aspect-square opacity-60 transition-opacity group-hover:opacity-100"
-        />
+        {/* object-contain: een band is rond en mag niet bijgesneden worden.
+            sizes volgt het grid (1 kolom mobiel → 4 op desktop), anders laadt
+            Next voor elke kaart een afbeelding op volle breedte. */}
+        {part.imageUrl ? (
+          <Image
+            src={part.imageUrl}
+            alt=""
+            width={400}
+            height={400}
+            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
+            className="aspect-square w-full bg-surface object-contain transition-opacity group-hover:opacity-90"
+          />
+        ) : (
+          <ProductImagePlaceholder
+            label={t("noImage")}
+            className="aspect-square opacity-60 transition-opacity group-hover:opacity-100"
+          />
+        )}
       </Link>
 
       <div className="flex flex-1 flex-col p-3">

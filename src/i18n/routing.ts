@@ -26,6 +26,14 @@ export const routing = defineRouting({
       en: "/search",
       ar: "/search",
     },
+    // Producten die bij de gekozen auto horen. Merk, model en bouwjaar staan
+    // in de querystring — dat mag: het zijn geen persoonsgegevens. Een
+    // kenteken hoort daar níet in (docs/api/OVERHEID-IO.md).
+    "/my-car": {
+      nl: "/mijn-auto",
+      en: "/my-car",
+      ar: "/my-car",
+    },
     "/privacy": {
       nl: "/privacy-en-cookies",
       en: "/privacy-and-cookies",

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { filterValueLabel } from "@/lib/catalog/filter-values";
 import { AvailabilityBadge } from "@/components/availability-badge";
 import { AddToCartWithQuantity } from "@/components/cart/add-to-cart-with-quantity";
 import { ProductImagePlaceholder } from "@/components/product-image-placeholder";
@@ -101,6 +102,7 @@ export default async function ProductPage({ params }: Props) {
   const part = await findPart(family, category, partSlug);
   const t = await getTranslations("product");
   const tFamily = await getTranslations("family");
+  const tFilters = await getTranslations("filters");
   // Het artikel kent zijn eigen categorienaam; niet elke area levert een
   // categorielijst om die in op te zoeken (area 3 bijvoorbeeld niet).
   const categoryName = part.categoryName || category;
@@ -210,15 +212,53 @@ export default async function ProductPage({ params }: Props) {
           </div>
 
           <h2 className="mt-10 text-lg">{t("detailsTitle")}</h2>
+          {/* De waarden komen van de leverancier en staan in diens taal;
+              dezelfde woordenlijst als bij de filters haalt er "kegel" en
+              "Winterreifen" uit. Wat we niet kennen blijft staan zoals het
+              geleverd is. */}
           <dl className="mt-4 divide-y divide-border border-y border-border text-sm">
             <div className="flex justify-between gap-4 py-3">
               <dt className="text-muted">{t("brandLabel")}</dt>
               <dd className="font-medium">{part.brand}</dd>
             </div>
-            <div className="flex justify-between gap-4 py-3">
-              <dt className="text-muted">{t("oeLabel")}</dt>
-              <dd className="font-medium tabular-nums">{part.oeNumber}</dd>
-            </div>
+
+            {(part.specs ?? []).map((spec) => (
+              <div key={spec.key} className="flex justify-between gap-4 py-3">
+                <dt className="text-muted">{t(`specs.${spec.key}`)}</dt>
+                <dd className="font-medium tabular-nums">
+                  {filterValueLabel(spec.value, tFilters)}
+                </dd>
+              </div>
+            ))}
+
+            {/* Alleen tonen als het écht een OE-nummer is. Bij banden staat
+                hier anders het leveranciersartikelnummer onder de verkeerde
+                kop — dat stond er eerder wel. */}
+            {part.oeNumber &&
+              !(part.specs ?? []).some(
+                (spec) => spec.key === "itemNumber" && spec.value === part.oeNumber,
+              ) && (
+                <div className="flex justify-between gap-4 py-3">
+                  <dt className="text-muted">{t("oeLabel")}</dt>
+                  <dd className="font-medium tabular-nums">{part.oeNumber}</dd>
+                </div>
+              )}
+
+            {part.categoryName && (
+              <div className="flex justify-between gap-4 py-3">
+                <dt className="text-muted">{t("categoryLabel")}</dt>
+                <dd className="font-medium">{categoryName}</dd>
+              </div>
+            )}
+
+            {part.stock !== undefined && part.stock > 0 && (
+              <div className="flex justify-between gap-4 py-3">
+                <dt className="text-muted">{t("stockLabel")}</dt>
+                <dd className="font-medium tabular-nums">
+                  {t("stockValue", { count: part.stock })}
+                </dd>
+              </div>
+            )}
           </dl>
 
           <p className="mt-6 text-sm text-muted">{t("shippingNote")}</p>

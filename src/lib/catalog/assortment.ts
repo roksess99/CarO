@@ -20,6 +20,22 @@ const ALLOWED_CATEGORIES: Record<string, ReadonlyMap<number, string>> = {
     [6, "Quad / ATV"],
     [11, "Kleine banden"],
   ]),
+  // Area 1 = Toebehoren (DE-platform). Zonder deze lijst stonden hier ook
+  // "LKW Ausstattung" (vrachtwagen — uitgesloten in DECISIONS #7) en de
+  // werkplaats- en gereedschapscategorieën, terwijl gereedschap 2026-09-05
+  // juist uit het assortiment is gehaald.
+  "1": new Map([
+    [22, "Rad & Reifenzubehör"],
+    [35, "PKW Ausstattung & Zubehör"],
+    [1554, "Zweirad Ausstattung & Zubehör"],
+    [38, "Batterien & Batterie-Ladegeräte"],
+    [1636, "Fahrzeugbeleuchtung"],
+    [69, "Öle / Schmier- und Betriebsstoffe"],
+    [89, "Autopflege & Wartung"],
+    [90, "Smart Repair"],
+    [325, "Befestigungstechnik"],
+    [484, "Schleifen & Lackieren"],
+  ]),
 };
 
 /**

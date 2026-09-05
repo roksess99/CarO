@@ -55,12 +55,6 @@
       "menuAria": "Onderdelen",
       "empty": "Er is nog geen onderdelenaanbod beschikbaar."
     },
-    "gebruikt": {
-      "title": "Gebruikte onderdelen",
-      "intro": "Tweedehands onderdelen met OE-nummer. Elk exemplaar is unieke voorraad: eenmaal verkocht is het weg.",
-      "menuAria": "Gebruikte onderdelen",
-      "empty": "Er zijn nu geen gebruikte onderdelen beschikbaar."
-    },
     "banden": {
       "title": "Banden",
       "intro": "Banden voor auto, SUV, bestelwagen en tweewieler.",
@@ -78,12 +72,6 @@
       "intro": "Wiel- en bandenaccessoires, van ventielen tot opbergsystemen.",
       "menuAria": "Toebehorencategorieën",
       "empty": "Er is nog geen aanbod aan toebehoren beschikbaar."
-    },
-    "gereedschap": {
-      "title": "Gereedschap",
-      "intro": "Handgereedschap, elektrisch gereedschap en werkplaatsbenodigdheden.",
-      "menuAria": "Gereedschapcategorieën",
-      "empty": "Er is nog geen gereedschapsaanbod beschikbaar."
     }
   },
   "categoryTiles": {
@@ -110,7 +98,7 @@
     "yourCar": "Jouw auto",
     "changeCar": "Andere auto kiezen",
     "clearAria": "Auto {plate} wissen",
-    "fitmentPending": "Onderdelen filteren op jouw auto komt beschikbaar zodra de koppeling met de onderdelencatalogus er is.",
+    "fitmentPending": "We zoeken op merk en model in de omschrijvingen van de leverancier. Geen harde garantie — controleer de maten voor je bestelt.",
     "errors": {
       "invalidPlate": "Een Nederlands kenteken heeft 6 tekens, bijvoorbeeld AB-123-C.",
       "notFound": "Dit kenteken staat niet in de RDW-gegevens. Controleer of je het goed hebt ingevuld.",
@@ -122,7 +110,8 @@
     "brandFilterLabel": "Filter op merk",
     "allBrands": "Alle merken",
     "breadcrumbAria": "Kruimelpad",
-    "breadcrumbHome": "Home"
+    "breadcrumbHome": "Home",
+    "siblingsAria": "Andere categorieën"
   },
   "filters": {
     "title": "Filters",
@@ -130,7 +119,72 @@
     "clearAll": "Alles wissen",
     "removeFilter": "Filter {value} verwijderen",
     "resultCount": "{count, plural, =0 {Geen artikelen gevonden} =1 {1 artikel} other {Eerste # artikelen}}",
-    "moreBrands": "Nog {count} merken in de lijst hieronder."
+    "moreBrands": "Nog {count} merken in de lijst hieronder.",
+    "labels": {
+      "manufacturer": "Merk",
+      "loadIndex": "Laadindex",
+      "boltPattern": "Steekcirkel",
+      "rimSize": "Velgmaat",
+      "offset": "Inpersdiepte (ET)",
+      "maxLoad": "Max. draagvermogen",
+      "wheelMounting": "Wielmontage",
+      "colour": "Kleur",
+      "material": "Materiaal",
+      "size": "Maat"
+    },
+    "values": {
+      "kegel": "kegel",
+      "kogel": "bol",
+      "kugel": "bol",
+      "m22": "M22",
+      "m22-d26": "M22 D26",
+      "anthrazit": "antraciet",
+      "schwarz": "zwart",
+      "black": "zwart",
+      "weiss": "wit",
+      "wei": "wit",
+      "blau": "blauw",
+      "rot": "rood",
+      "grun": "groen",
+      "gr-n": "groen",
+      "grau": "grijs",
+      "gelb": "geel",
+      "braun": "bruin",
+      "silber": "zilver",
+      "gold": "goud",
+      "kupfer": "koper",
+      "bronze": "brons",
+      "chrom": "chroom",
+      "chrome": "chroom",
+      "beige": "beige",
+      "lila": "lila",
+      "orange": "oranje",
+      "matt": "mat",
+      "dunkelblau": "donkerblauw",
+      "hellblau": "lichtblauw",
+      "dunkelgrau": "donkergrijs",
+      "hellgrau": "lichtgrijs",
+      "edelstahl": "roestvrij staal",
+      "stahl": "staal",
+      "aluminium": "aluminium",
+      "kunststoff": "kunststof",
+      "gummi": "rubber",
+      "metall": "metaal",
+      "messing": "messing",
+      "eisen": "ijzer",
+      "zink": "zink",
+      "blei": "lood",
+      "carbon": "carbon",
+      "nylon": "nylon",
+      "universalgroesse": "universeel",
+      "universalgr-e": "universeel",
+      "universal": "universeel",
+      "winterreifen": "winterband",
+      "sommerreifen": "zomerband",
+      "ganzjahresreifen": "vierseizoenenband",
+      "winterreifen_": "winterband"
+    },
+    "loadMore": "Nog {count} producten laden"
   },
   "localeSwitcher": {
     "label": "Taal",
@@ -173,6 +227,20 @@
       "in-stock": "Op voorraad",
       "ordered": "Levertijd 2–3 werkdagen",
       "out-of-stock": "Niet leverbaar"
+    },
+    "categoryLabel": "Categorie",
+    "stockLabel": "Voorraad",
+    "stockValue": "{count, plural, =1 {1 stuk} other {# stuks}}",
+    "specs": {
+      "size": "Maat",
+      "season": "Seizoen",
+      "speedIndex": "Snelheidsindex",
+      "loadIndex": "Laadindex",
+      "colour": "Kleur",
+      "material": "Materiaal",
+      "content": "Inhoud",
+      "packaging": "Verpakking",
+      "itemNumber": "Artikelnummer"
     }
   },
   "cart": {
@@ -268,7 +336,7 @@
     "intro": "Deze voorwaarden gelden voor elke bestelling bij CarO. Ze zijn geschreven voor consumenten en volgen het Nederlandse consumentenrecht (Boek 6 en 7 BW) en de Europese regels voor verkoop op afstand.",
     "identity": {
       "title": "Wie wij zijn",
-      "body": "CarO verkoopt auto-onderdelen, banden, velgen, gereedschap en toebehoren aan particulieren in Nederland. Onze contactgegevens en inschrijvingsnummers staan onderaan elke pagina."
+      "body": "CarO verkoopt auto-onderdelen, banden, velgen en toebehoren aan particulieren in Nederland. Onze contactgegevens en inschrijvingsnummers staan onderaan elke pagina."
     },
     "scope": {
       "title": "Waarop deze voorwaarden van toepassing zijn",
@@ -296,7 +364,7 @@
     },
     "conformity": {
       "title": "Garantie en conformiteit",
-      "body": "Elk artikel moet doen wat je er redelijkerwijs van mag verwachten. Is dat niet zo, dan heb je recht op herstel, vervanging of terugbetaling. Dit wettelijke recht staat los van een eventuele fabrieksgarantie. Voor gebruikte onderdelen geldt hetzelfde recht, waarbij de staat waarin het artikel is verkocht meeweegt."
+      "body": "Elk artikel moet doen wat je er redelijkerwijs van mag verwachten. Is dat niet zo, dan heb je recht op herstel, vervanging of terugbetaling. Dit wettelijke recht staat los van een eventuele fabrieksgarantie."
     },
     "complaints": {
       "title": "Klachten en geschillen",
@@ -375,5 +443,41 @@
     "vat": "Btw-nummer",
     "pending": "Volgt nog",
     "incomplete": "Een paar gegevens ontbreken nog. Ze worden aangevuld zodra ze bekend zijn."
+  },
+  "myCar": {
+    "eyebrow": "Jouw auto",
+    "title": "Producten voor jouw auto",
+    "titleFor": "Producten voor je {car}",
+    "metaTitle": "Producten voor jouw auto",
+    "metaDescription": "Onderdelen, velgen en toebehoren die bij de door jou gekozen auto horen.",
+    "noCar": "Er is nog geen auto gekozen. Geef eerst je kenteken op, of kies merk, model en bouwjaar.",
+    "chooseCar": "Auto kiezen",
+    "disclaimer": "We zoeken op merk, model en bouwjaar in de omschrijvingen van de leverancier. Dat is een sterke aanwijzing, geen garantie: controleer altijd de maten voordat je bestelt.",
+    "matchBrandModel": "Gevonden op merk en model van je {car}.",
+    "matchBrand": "Gevonden op merk {brand}. Controleer of het artikel bij jouw model past.",
+    "nothingFound": "We vonden niets dat aan je {car} gekoppeld is. Zoek op maat of OE-nummer om verder te komen.",
+    "viewAll": "Alles bekijken",
+    "limitsTitle": "Waar dit nog niet werkt",
+    "noMatchFor": "{family}: de leverancier koppelt deze artikelen niet aan een auto. Zoek op maat of OE-nummer.",
+    "loadMore": "Meer producten laden"
+  },
+  "categories": {
+    "tyresCar": "Auto / SUV",
+    "tyresOffroad": "Offroad",
+    "tyresVan": "Bestelwagen",
+    "tyresTwoWheeler": "Tweewieler",
+    "tyresQuad": "Quad / ATV",
+    "tyresSmall": "Kleine banden",
+    "steelWheels": "Staalvelgen",
+    "accWheelTyre": "Wiel- en bandenaccessoires",
+    "accCar": "Auto-uitrusting en accessoires",
+    "accTwoWheeler": "Tweewieleraccessoires",
+    "accBattery": "Accu's en acculaders",
+    "accLighting": "Voertuigverlichting",
+    "accOil": "Oliën en smeermiddelen",
+    "accCare": "Autoverzorging en onderhoud",
+    "accSmartRepair": "Smart repair",
+    "accFasteners": "Bevestigingsmateriaal",
+    "accPaint": "Schuren en lakken"
   }
 }

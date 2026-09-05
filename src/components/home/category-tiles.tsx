@@ -34,7 +34,10 @@ export function CategoryTiles({
 
   return (
     <div>
-      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      {/* Vier families passen niet vullend in zes kolommen; die lieten de
+          rij links uitlijnen met een gat ernaast. Kolommen volgen nu het
+          aantal tegels, met een maximumbreedte zodat ze gecentreerd staan. */}
+      <ul className="mx-auto grid max-w-4xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {tiles.map((tile) => {
           const expanded = tile.family === openFamily;
           // Zonder categorieën valt er niets uit te klappen; dan is een

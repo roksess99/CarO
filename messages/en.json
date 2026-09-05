@@ -55,12 +55,6 @@
       "menuAria": "Parts",
       "empty": "No parts are available yet."
     },
-    "gebruikt": {
-      "title": "Used parts",
-      "intro": "Second-hand parts with OE numbers. Each item is unique stock: once sold, it is gone.",
-      "menuAria": "Used parts",
-      "empty": "No used parts are available right now."
-    },
     "banden": {
       "title": "Tyres",
       "intro": "Tyres for cars, SUVs, vans and two-wheelers.",
@@ -78,12 +72,6 @@
       "intro": "Wheel and tyre accessories, from valves to storage systems.",
       "menuAria": "Accessory categories",
       "empty": "No accessories are available yet."
-    },
-    "gereedschap": {
-      "title": "Tools",
-      "intro": "Hand tools, power tools and workshop supplies.",
-      "menuAria": "Tool categories",
-      "empty": "No tools are available yet."
     }
   },
   "categoryTiles": {
@@ -110,7 +98,7 @@
     "yourCar": "Your car",
     "changeCar": "Choose another car",
     "clearAria": "Clear car {plate}",
-    "fitmentPending": "Filtering parts for your car becomes available once the parts catalogue is connected.",
+    "fitmentPending": "We search the supplier's descriptions for your make and model. Not a hard guarantee — check the dimensions before ordering.",
     "errors": {
       "invalidPlate": "A Dutch licence plate has 6 characters, for example AB-123-C.",
       "notFound": "This licence plate is not in the RDW data. Please check your input.",
@@ -122,7 +110,8 @@
     "brandFilterLabel": "Filter by brand",
     "allBrands": "All brands",
     "breadcrumbAria": "Breadcrumb",
-    "breadcrumbHome": "Home"
+    "breadcrumbHome": "Home",
+    "siblingsAria": "Other categories"
   },
   "filters": {
     "title": "Filters",
@@ -130,7 +119,72 @@
     "clearAll": "Clear all",
     "removeFilter": "Remove filter {value}",
     "resultCount": "{count, plural, =0 {No items found} =1 {1 item} other {First # items}}",
-    "moreBrands": "{count} more brands in the list below."
+    "moreBrands": "{count} more brands in the list below.",
+    "labels": {
+      "manufacturer": "Brand",
+      "loadIndex": "Load index",
+      "boltPattern": "Bolt pattern",
+      "rimSize": "Rim size",
+      "offset": "Offset (ET)",
+      "maxLoad": "Max. load",
+      "wheelMounting": "Wheel mounting",
+      "colour": "Colour",
+      "material": "Material",
+      "size": "Size"
+    },
+    "values": {
+      "kegel": "cone",
+      "kogel": "ball",
+      "kugel": "ball",
+      "m22": "M22",
+      "m22-d26": "M22 D26",
+      "anthrazit": "anthracite",
+      "schwarz": "black",
+      "black": "black",
+      "weiss": "white",
+      "wei": "white",
+      "blau": "blue",
+      "rot": "red",
+      "grun": "green",
+      "gr-n": "green",
+      "grau": "grey",
+      "gelb": "yellow",
+      "braun": "brown",
+      "silber": "silver",
+      "gold": "gold",
+      "kupfer": "copper",
+      "bronze": "bronze",
+      "chrom": "chrome",
+      "chrome": "chrome",
+      "beige": "beige",
+      "lila": "purple",
+      "orange": "orange",
+      "matt": "matt",
+      "dunkelblau": "dark blue",
+      "hellblau": "light blue",
+      "dunkelgrau": "dark grey",
+      "hellgrau": "light grey",
+      "edelstahl": "stainless steel",
+      "stahl": "steel",
+      "aluminium": "aluminium",
+      "kunststoff": "plastic",
+      "gummi": "rubber",
+      "metall": "metal",
+      "messing": "brass",
+      "eisen": "iron",
+      "zink": "zinc",
+      "blei": "lead",
+      "carbon": "carbon",
+      "nylon": "nylon",
+      "universalgroesse": "universal",
+      "universalgr-e": "universal",
+      "universal": "universal",
+      "winterreifen": "winter tyre",
+      "sommerreifen": "summer tyre",
+      "ganzjahresreifen": "all-season tyre",
+      "winterreifen_": "winter tyre"
+    },
+    "loadMore": "Load {count} more products"
   },
   "localeSwitcher": {
     "label": "Language",
@@ -173,6 +227,20 @@
       "in-stock": "In stock",
       "ordered": "Delivery in 2–3 working days",
       "out-of-stock": "Unavailable"
+    },
+    "categoryLabel": "Category",
+    "stockLabel": "In stock",
+    "stockValue": "{count, plural, =1 {1 item} other {# items}}",
+    "specs": {
+      "size": "Size",
+      "season": "Season",
+      "speedIndex": "Speed index",
+      "loadIndex": "Load index",
+      "colour": "Colour",
+      "material": "Material",
+      "content": "Contents",
+      "packaging": "Packaging",
+      "itemNumber": "Item number"
     }
   },
   "cart": {
@@ -268,7 +336,7 @@
     "intro": "These terms apply to every order placed with CarO. They are written for consumers and follow Dutch consumer law (Books 6 and 7 of the Civil Code) and the European rules on distance selling.",
     "identity": {
       "title": "Who we are",
-      "body": "CarO sells car parts, tyres, wheels, tools and accessories to consumers in the Netherlands. Our contact details and registration numbers appear at the bottom of every page."
+      "body": "CarO sells car parts, tyres, wheels and accessories to consumers in the Netherlands. Our contact details and registration numbers appear at the bottom of every page."
     },
     "scope": {
       "title": "What these terms cover",
@@ -296,7 +364,7 @@
     },
     "conformity": {
       "title": "Warranty and conformity",
-      "body": "Every item must do what you may reasonably expect of it. If it does not, you are entitled to repair, replacement or a refund. This statutory right is separate from any manufacturer warranty. The same right applies to used parts, taking into account the condition in which the item was sold."
+      "body": "Every item must do what you may reasonably expect of it. If it does not, you are entitled to repair, replacement or a refund. This statutory right is separate from any manufacturer warranty."
     },
     "complaints": {
       "title": "Complaints and disputes",
@@ -375,5 +443,41 @@
     "vat": "VAT number",
     "pending": "To follow",
     "incomplete": "A few details are still missing. They will be added once known."
+  },
+  "myCar": {
+    "eyebrow": "Your car",
+    "title": "Products for your car",
+    "titleFor": "Products for your {car}",
+    "metaTitle": "Products for your car",
+    "metaDescription": "Parts, wheels and accessories that match the car you selected.",
+    "noCar": "No car selected yet. Enter your licence plate, or pick make, model and year.",
+    "chooseCar": "Choose a car",
+    "disclaimer": "We search the supplier's descriptions for your make, model and year. That is a strong indication, not a guarantee: always check the dimensions before ordering.",
+    "matchBrandModel": "Matched on the make and model of your {car}.",
+    "matchBrand": "Matched on make {brand}. Check that the item suits your model.",
+    "nothingFound": "We found nothing linked to your {car}. Try searching by size or OE number.",
+    "viewAll": "View all",
+    "limitsTitle": "Where this does not work yet",
+    "noMatchFor": "{family}: the supplier does not link these items to a car. Search by size or OE number.",
+    "loadMore": "Load more products"
+  },
+  "categories": {
+    "tyresCar": "Car / SUV",
+    "tyresOffroad": "Off-road",
+    "tyresVan": "Van",
+    "tyresTwoWheeler": "Two-wheeler",
+    "tyresQuad": "Quad / ATV",
+    "tyresSmall": "Small tyres",
+    "steelWheels": "Steel wheels",
+    "accWheelTyre": "Wheel & tyre accessories",
+    "accCar": "Car equipment & accessories",
+    "accTwoWheeler": "Two-wheeler accessories",
+    "accBattery": "Batteries & chargers",
+    "accLighting": "Vehicle lighting",
+    "accOil": "Oils & lubricants",
+    "accCare": "Car care & maintenance",
+    "accSmartRepair": "Smart repair",
+    "accFasteners": "Fasteners",
+    "accPaint": "Sanding & painting"
   }
 }
