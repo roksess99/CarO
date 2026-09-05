@@ -10,6 +10,10 @@
 //   4  "Flowers"      — bloemen, geen auto-onderdelen
 //   5  "Services"     — dienstverlening, 0 artikelen op het NL-platform
 //   8  "Alufelgen"    — leeg op beide platformen
+//   9  "Werkzeuge"    — gereedschap; winkelkeuze 2026-09-05, we verkopen
+//                       geen gereedschap meer
+//  10  "Gebrauchtteile" — gebruikte onderdelen; winkelkeuze 2026-09-05,
+//                       tweedehands past niet bij het aanbod
 // Lichtmetalen velgen komen via de aparte Alloys-API (docs/api/TYRE24.md).
 
 /** Op welk landplatform de area actief is */
@@ -37,12 +41,6 @@ const FAMILIES = {
     browse: "search",
     slugs: { nl: "onderdelen", en: "parts" },
   },
-  gebruikt: {
-    areaId: "10",
-    platform: "de",
-    browse: "categories",
-    slugs: { nl: "gebruikte-onderdelen", en: "used-parts" },
-  },
   banden: {
     areaId: "6",
     platform: "nl",
@@ -61,12 +59,6 @@ const FAMILIES = {
     browse: "categories",
     slugs: { nl: "toebehoren", en: "accessories" },
   },
-  gereedschap: {
-    areaId: "9",
-    platform: "de",
-    browse: "categories",
-    slugs: { nl: "gereedschap", en: "tools" },
-  },
 } as const satisfies Record<string, FamilyDefinition>;
 
 export type ProductFamily = keyof typeof FAMILIES;
@@ -75,9 +67,8 @@ export const PRODUCT_FAMILIES = Object.keys(FAMILIES) as ProductFamily[];
 
 /**
  * Indeling van de hoofdnavigatie. Elke familie heeft een eigen knop: de klant
- * ziet het hele assortiment in één oogopslag en hoeft niet te raden onder
- * welke noemer "gebruikte onderdelen" verstopt zit. De groepsvorm blijft
- * bestaan zodat families later alsnog gebundeld kunnen worden.
+ * ziet het hele assortiment in één oogopslag. De groepsvorm blijft bestaan
+ * zodat families later alsnog gebundeld kunnen worden.
  */
 export const NAV_GROUPS = PRODUCT_FAMILIES.map((family) => ({
   key: family,

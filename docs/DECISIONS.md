@@ -32,6 +32,70 @@ auto-onderdelen.** Beschikbaar is:
 **Nu ingesteld**: `TYRE24_PRODUCT_AREA_ID=6` (banden), zodat de shop met echte
 data werkt. Dit is een **tijdelijke keuze om te kunnen bouwen**, geen besluit.
 
+### Vastgesteld 2026-09-05: toebehoren-categorieën beperkt
+
+Area 1 had geen allowlist en toonde daardoor **"LKW Ausstattung & Zubehör"**
+— vrachtwagen, terwijl dat hierboven expliciet is uitgesloten — plus de
+werkplaats-, gereedschap- en werkkledingcategorieën, vlak nadat gereedschap uit
+het assortiment is gehaald. De lijst staat nu in `assortment.ts`:
+
+| Wel | Niet |
+|---|---|
+| Wiel- en bandenaccessoires, auto-uitrusting, tweewieler, accu's, verlichting, oliën, autoverzorging, smart repair, bevestiging, schuren/lakken | LKW, Rund um die Werkstatt, Werkzeuge & Maschinen, Arbeitsbekleidung, Arbeitsschutz |
+
+**Categorienamen worden vertaald.** Tyre24 levert ze in de taal van het
+platform (Nederlands voor banden en velgen, Duits voor toebehoren), dus een
+Engelse bezoeker las "Rad & Reifenzubehör". De koppeling area+id → vertaalsleutel
+staat in `src/lib/catalog/category-labels.ts`, en `localizeCategories()` past
+hem toe vlak achter de provider — zo zijn navigatie, kruimelpad, tegels en
+koppen overal gelijk.
+
+### Vastgesteld 2026-09-05: welke filters de shop toont
+
+De filterrespons van Tyre24 bevat tientallen groepen per categorie, waarvan het
+merendeel onbruikbaar is voor een consument: "DA", "systeem", "RFID",
+"aanwijzing" en "Inzet 2" hebben waarden als `1 | 3` — codes zonder betekenis
+buiten hun eigen database. Daarom een allowlist per area in
+`src/lib/catalog/filter-groups.ts`, in dezelfde geest als het assortimentsfilter.
+
+| Area | Filters |
+|---|---|
+| 6 banden | merk, laadindex |
+| 7 velgen | merk, steekcirkel, velgmaat, ET, max. draagvermogen, wielmontage |
+| 1 toebehoren | merk, kleur, materiaal, maat |
+
+Twee dingen die hiermee samenhangen:
+
+- **Filterkoppen worden nu vertaald.** Behalve `manufacturer` gebruikt Tyre24
+  de attribuutnáám als sleutel, in de taal van het platform — Nederlands voor
+  banden en velgen, Duits voor toebehoren. Een Engelse bezoeker zag dus "Merk"
+  en "Velgverbinding". De allowlist koppelt elke groep aan een vertaalsleutel
+  onder `filters.labels`; onbekende groepen vallen terug op het API-label.
+- **De filterwáárden blijven leveranciertaal.** "kegel", "kugel",
+  "anthrazit matt": dat is vrije tekst van de groothandel en niet te vertalen
+  zonder een eigen woordenlijst. Bij velgen zijn de waarden gelukkig maten en
+  getallen.
+
+Het merkveld bevat ook omschrijvingen in plaats van merken
+("STAHLRAD OE QUALITÄT: ALCAR,KPZ,SÜDRAD,MWD"). Die worden eruit gefilterd:
+een merknaam bevat geen dubbele punt of opsomming.
+
+### Vastgesteld 2026-09-05: gereedschap en gebruikte onderdelen eruit
+
+Winkelkeuze: CarO verkoopt **geen gereedschap (area 9) en geen gebruikte
+onderdelen (area 10)** meer. Beide families zijn uit
+`src/lib/catalog/families.ts` verwijderd, met hun tegels en vertalingen. De
+URL's geven nu 404.
+
+Er blijven vier families over: onderdelen (3), banden (6), velgen (7) en
+toebehoren (1). Dat maakt het assortiment uitsluitend nieuw, wat het verhaal
+over garantie en herroeping eenvoudiger houdt — bij tweedehands weegt de staat
+waarin verkocht is mee, en dat vroeg om aparte voorwaardenteksten.
+
+Beide areas waren hoe dan ook alleen op het DE-platform gevuld, dus met Duitse
+categorienamen. De foto's in `public/categorieen/` voor deze twee zijn blijven
+staan maar worden nergens meer gebruikt.
+
 ### Vastgesteld 2026-08-07: alleen auto's en tweewielers
 
 CarO verkoopt uitsluitend voor personenauto's en tweewielers. Geen vrachtwagens,
@@ -139,6 +203,35 @@ uitvoering) te herleiden is.
 **Tot dat vaststaat**: de gekozen auto wordt bewaard en getoond, met een
 eerlijke melding dat filteren nog niet werkt. Niet doen alsof het al kan.
 
+### Deelbesluit 2026-09-05: zoeken op merk en model — VASTGESTELD
+
+Zolang de TecDoc-koppeling er niet is, voeden we de vrije-tekstzoekfunctie van
+Tyre24 met merk en model. Staalvelgen dragen de auto in hun artikelnaam
+("SF OPEL CORSA D, 6.0X15 ET39 5/110/65"), dus daar levert dat echte treffers.
+
+De pagina `/nl/mijn-auto` (`/en/my-car`) toont het resultaat per familie, met
+een terugvalladder van specifiek naar breed:
+
+| Familie | Niveau | Waarom |
+|---|---|---|
+| Velgen | merk + model | Naam bevat merk én model |
+| Toebehoren | alleen merk | "Autoschlüssel-Hülle für Opel" |
+| Banden | geen | Geen voertuigrelatie; maat staat niet in RDW |
+| Onderdelen | geen | Area 3 doorzoekt alleen exacte OE-nummers |
+
+Drie dingen die je moet weten voor je dit uitbreidt:
+
+- **De groothandel schrijft merken korter op.** "VOLKSWAGEN GOLF" geeft nul
+  treffers, "VW GOLF" wel. De aliassen staan in
+  `src/lib/catalog/vehicle-match.ts`; een ontbrekend alias is een stille
+  lege pagina.
+- **Bouwjaar is een verfijning, geen zeef.** Alleen namen met een leesbare
+  periode ("(2011-)", "08.13-") worden erop gefilterd. Een naam als
+  "SF VW GOLF VIII" heeft geen jaartal, dus die blijft staan — ook voor een
+  Golf 7. Vandaar de disclaimer op de pagina.
+- **Dit is geen fitment-garantie** en de UI zegt dat ook. Wordt de echte
+  koppeling alsnog geleverd, dan vervangt die deze zoekbrug.
+
 ### Deelbesluit 2026-08-11: auto kiezen zonder kenteken — VASTGESTELD
 
 De klant kan zijn auto nu ook opgeven via merk → model → bouwjaar, uit een
@@ -174,8 +267,8 @@ Pexels, Unsplash of Pixabay (die staan commercieel gebruik toe). De code
 verandert niet mee; het zijn alleen bestanden. Noteer de herkomst per foto in
 `public/categorieen/BRONNEN.md`.
 
-Zes van de twaalf tegels hebben nog geen foto: elektrisch, vering/demping,
-carrosserie, uitlaat, koeling/airco en gereedschap. Een tegel toevoegen is één
+Vijf tegels hebben nog geen foto: elektrisch, vering/demping, carrosserie,
+uitlaat en koeling/airco. Een tegel toevoegen is één
 regel in `src/lib/catalog/category-tiles.ts` plus een bestand.
 
 ---
@@ -226,6 +319,7 @@ Tyre24 maakt dropshipping mogelijk: voorraad live opvragen (`stock` per item,
 | 2026-08-06 | Velgen komen in het assortiment | Tyre24 Alloys-API dekt matching (carID-flow) én 3D-beelden; zelfde leverancier en token. Eigen fase, na fase 3 |
 | — | Next.js + TypeScript + Tailwind | Grootste community, snelste iteratie met een agent, sterke SEO-ondersteuning |
 | — | PostgreSQL + Prisma | Type-safe, migraties, past bij bestaande SQL-kennis |
+| 2026-09-05 | Geen gereedschap en geen gebruikte onderdelen meer | Winkelkeuze; alleen nieuw assortiment houdt garantie- en herroepingsteksten eenduidig. Beide areas waren alleen op DE gevuld |
 | 2026-08-20 | Eenmanszaak Car Parts A-Z, KvK 93396252 | Inschrijving rond; deblokkeert de factuurgegevens, niet de betaalkoppeling |
 | — | Mollie boven Stripe | iDEAL is ~60% van NL online betalingen; Mollie is hier de standaard |
 | — | Prijzen in eurocenten (integer) | Voorkomt afrondingsfouten |

@@ -8,7 +8,10 @@ export type Availability = "in-stock" | "ordered" | "out-of-stock";
 
 export interface Category {
   slug: string;
+  /** Naam zoals de leverancier hem levert, in de taal van zijn platform */
   name: string;
+  /** Sleutel onder `categories` in messages/; ontbreekt hij, dan wint `name` */
+  labelKey?: string;
 }
 
 export interface Part {
@@ -28,6 +31,14 @@ export interface Part {
   priceCents: number;
   availability: Availability;
   imageUrl?: string;
+  /**
+   * Extra regels voor de productpagina. `key` verwijst naar
+   * `product.specs.<key>` in messages/; `value` is tekst van de
+   * leverancier en kan dus in diens taal staan.
+   */
+  specs?: ReadonlyArray<{ key: string; value: string }>;
+  /** Aantal op voorraad bij de groothandel, als de bron dat meegeeft */
+  stock?: number;
 }
 
 /** Eén keuzemogelijkheid binnen een filtergroep */
@@ -44,8 +55,10 @@ export interface FilterOption {
 export interface FilterGroup {
   /** Stabiele sleutel voor de URL, bv. "merk" of "inzet" */
   key: string;
-  /** Kop boven het blok, komt uit de API en is dus al vertaald */
+  /** Kop uit de API, in de taal van het leveranciersplatform */
   label: string;
+  /** Sleutel onder `filters.labels`; ontbreekt hij, dan wint `label` */
+  labelKey?: string;
   options: FilterOption[];
 }
 

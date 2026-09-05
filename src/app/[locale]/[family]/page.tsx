@@ -10,6 +10,7 @@ import {
   familySlug,
   PRODUCT_FAMILIES,
 } from "@/lib/catalog/families";
+import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import { localizedMetadata } from "@/lib/site";
 
@@ -53,7 +54,9 @@ export default async function FamilyPage({ params, searchParams }: Props) {
 
   const t = await getTranslations("family");
   const provider = getCatalogProvider();
-  const categories = await provider.getCategories(family);
+  const categories = await localizeCategories(
+    await provider.getCategories(family),
+  );
 
   const { oen } = await searchParams;
   const searchTerm = (Array.isArray(oen) ? oen[0] : oen)?.trim();

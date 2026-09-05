@@ -6,6 +6,7 @@ import {
   toFilterParam,
   toggleFilter,
 } from "@/lib/catalog/filter-params";
+import { filterGroupLabel } from "@/lib/catalog/filter-label";
 import type { FilterGroup, SelectedFilters } from "@/lib/catalog/types";
 
 /**
@@ -113,7 +114,9 @@ export async function BrandTiles({
 
   return (
     <section className="mb-8">
-      <h2 className="text-center text-sm font-semibold">{group.label}</h2>
+      <h2 className="text-center text-sm font-semibold">
+        {filterGroupLabel(group, t)}
+      </h2>
 
       <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
         {tiles.map((option) => {
@@ -125,13 +128,13 @@ export async function BrandTiles({
                 aria-current={active ? "true" : undefined}
                 // Geen aantal onder de naam: Tyre24 zet `count` bij elk merk
                 // op 1, dus dat cijfer zou een artikelaantal suggereren.
-                className={`flex min-h-14 items-center justify-center rounded-lg border px-2 py-2 text-center text-sm font-bold hyphens-auto ${
+                className={`flex min-h-14 items-center justify-center overflow-hidden rounded-lg border px-2 py-2 text-center text-sm font-bold break-words hyphens-auto ${
                   active
                     ? "border-caro-orange bg-surface"
                     : "border-border hover:border-caro-orange hover:bg-surface"
                 }`}
               >
-                {option.label}
+                <span className="line-clamp-2">{option.label}</span>
               </Link>
             </li>
           );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { lookupVehicleAction } from "@/components/vehicle/actions";
 import {
@@ -15,7 +15,6 @@ import {
   useVehicle,
 } from "@/components/vehicle/use-vehicle";
 import { Link } from "@/i18n/navigation";
-import { familySlug } from "@/lib/catalog/families";
 import type { VehicleLookupError } from "@/lib/vehicle/types";
 
 export function VehicleSearch({
@@ -34,7 +33,6 @@ export function VehicleSearch({
   compact?: boolean;
 } = {}) {
   const t = useTranslations("vehicle");
-  const locale = useLocale();
   // De kentekenzoeker staat sinds de headerknop meerdere keren op één pagina
   // (header en hero). Vaste id's zouden dan dubbel voorkomen en labels naar
   // het verkeerde veld laten wijzen.
@@ -96,19 +94,28 @@ export function VehicleSearch({
           <p className="mt-2 text-sm text-muted">{specs.join(" · ")}</p>
         )}
 
+        {/* Merk, model en bouwjaar in de querystring: dat zijn geen
+            persoonsgegevens, in tegenstelling tot het kenteken — dat blijft
+            in localStorage (docs/api/OVERHEID-IO.md). */}
         <Link
           href={{
-            pathname: "/[family]",
-            params: { family: familySlug("onderdelen", locale) },
+            pathname: "/my-car",
+            query: {
+              merk: vehicle.brand,
+              ...(vehicle.model ? { model: vehicle.model } : {}),
+              ...(vehicle.firstAdmissionYear
+                ? { jaar: String(vehicle.firstAdmissionYear) }
+                : {}),
+            },
           }}
           className="mt-4 inline-flex rounded-md bg-caro-orange px-5 py-2.5 font-semibold text-caro-ink"
         >
           {t("browseParts")}
         </Link>
 
-        {/* TODO fase 3: passende onderdelen filteren zodra de TecDoc-koppeling
-            via Tyre24 er is (docs/DECISIONS.md #6). Tot die tijd zegt deze
-            regel eerlijk dat de match nog handwerk is. */}
+        {/* Geen harde fitment: we zoeken op merk en model in de teksten van
+            de leverancier (docs/DECISIONS.md #6). Dat zegt deze regel er
+            eerlijk bij. */}
         <p className="mt-3 text-sm text-muted">{t("fitmentPending")}</p>
         <button
           type="button"

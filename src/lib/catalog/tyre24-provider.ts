@@ -1,5 +1,13 @@
 import { z } from "zod";
 import { consumerPriceCents } from "../pricing";
+import { categoryLabelKey } from "./category-labels";
+import {
+  API_MANUFACTURER_KEY,
+  filterGroupOrder,
+  filterLabelKey,
+  isFilterGroupAllowed,
+  isRealBrand,
+} from "./filter-groups";
 import { isCategoryInAssortment } from "./assortment";
 import { type FamilySource, familySource, type ProductFamily } from "./families";
 import type {
@@ -81,7 +89,89 @@ const tyreItemSchema = z.object({
   categories: z.array(tyreCategorySchema).optional(),
   distributors: z.array(tyreDistributorSchema).optional(),
   media: z.array(tyreMediaSchema).optional(),
+  // Attributen en maten voeden de specificatietabel op de productpagina.
+  attributeValues: z
+    .record(
+      z.string(),
+      z.object({
+        name: z.string().optional(),
+        value: z.string().optional(),
+        values: z
+          .array(z.object({ translated_value: z.string().optional() }))
+          .optional(),
+      }),
+    )
+    .optional()
+    .catch(undefined),
+  sizes: z
+    .array(
+      z.object({
+        tyreWidth: z.coerce.number().optional(),
+        tyreHeight: z.coerce.number().optional(),
+        design: z.string().optional(),
+        tyreDiameter: z.coerce.number().optional(),
+      }),
+    )
+    .optional()
+    .catch(undefined),
 });
+
+/**
+ * Attribuutnamen die we op de productpagina tonen, met hun vertaalsleutel
+ * onder `product.specs`. Net als bij de filters is de sleutel van de API de
+ * attribuutnaam in de taal van het platform (nl voor banden en velgen, de
+ * voor toebehoren). Alles wat hier niet staat laten we weg: het merendeel is
+ * interne codering ("systeem: 73", "DA: 3").
+ */
+const SPEC_KEYS: Record<string, string> = {
+  Inzet: "season",
+  Snelheidsindex: "speedIndex",
+  laadindex: "loadIndex",
+  Farbe: "colour",
+  Material: "material",
+  "Größe": "size",
+  Inhalt: "content",
+  Verpackungseinheit: "packaging",
+};
+
+/** Bandenmaat uit het `sizes`-blok: 195/65 R15 */
+function sizeLabel(item: z.infer<typeof tyreItemSchema>): string | null {
+  const size = item.sizes?.[0];
+  if (!size?.tyreWidth || !size.tyreHeight || !size.tyreDiameter) return null;
+  return `${size.tyreWidth}/${size.tyreHeight} ${size.design ?? ""}${size.tyreDiameter}`.replace(
+    /s+/g,
+    " ",
+  );
+}
+
+/**
+ * Specificaties voor de productpagina. De waarden blijven staan zoals de
+ * leverancier ze schrijft; de UI haalt ze door dezelfde woordenlijst als de
+ * filterwaarden, zodat "Winterreifen" alsnog "winterband" wordt.
+ */
+function toSpecs(
+  item: z.infer<typeof tyreItemSchema>,
+): Array<{ key: string; value: string }> {
+  const specs: Array<{ key: string; value: string }> = [];
+
+  const size = sizeLabel(item);
+  if (size) specs.push({ key: "size", value: size });
+
+  for (const attribute of Object.values(item.attributeValues ?? {})) {
+    const key = attribute.name ? SPEC_KEYS[attribute.name] : undefined;
+    if (!key || specs.some((spec) => spec.key === key)) continue;
+    const value = attribute.values?.[0]?.translated_value ?? attribute.value;
+    // "Keine Angabe" is de leverancier die zegt dat hij het niet weet; dat is
+    // geen specificatie maar ruis.
+    if (!value || /^keine angabe$/i.test(value)) continue;
+    specs.push({ key, value });
+  }
+
+  if (item.manufacturerItemNumber) {
+    specs.push({ key: "itemNumber", value: item.manufacturerItemNumber });
+  }
+  return specs;
+}
 
 // GEMETEN: elke filtergroep geeft per optie een base64-"identifier"
 // (bv. "NjE3fkFMVEVOWk8" = "617~ALTENZO"). /items verwacht die identifier,
@@ -282,6 +372,22 @@ function lowestPriceCents(
   return cheapest;
 }
 
+/**
+ * Formaat dat we bij de leverancier opvragen. De productpagina toont de foto
+ * op 800px breed; Next optimaliseert daarna zelf naar het schermformaat.
+ */
+const IMAGE_SIZE = "w800-H800";
+
+/**
+ * `imageLink` bevat twee `%s`-plaatshouders voor het formaat. ALZURA
+ * bevestigde 2026-09-05 dat daar `w<breedte>-H<hoogte>` hoort (kleine w,
+ * hoofdletter H). GEMETEN: onbewerkt geeft de URL HTTP 400 en een ander
+ * patroon HTTP 500 — alleen deze vorm levert een echte foto op.
+ */
+function imageUrl(link: string): string {
+  return link.replace("%s-%s", IMAGE_SIZE);
+}
+
 function toPart(
   raw: unknown,
   source: FamilySource & { token: string },
@@ -313,10 +419,8 @@ function toPart(
     return null;
   }
 
-  // GEMETEN: bij banden bevat imageLink placeholders ("...-%s-%s-br1.jpg").
-  // Die URL is onbruikbaar en zou een gebroken afbeelding opleveren.
   const image = item.media?.find(
-    (m) => m.isDefault && !m.isDeleted && m.imageLink && !m.imageLink.includes("%s"),
+    (m) => m.isDefault && !m.isDeleted && m.imageLink,
   );
 
   return {
@@ -331,7 +435,9 @@ function toPart(
     categoryName: category?.name ?? "",
     priceCents: consumerPriceCents({ purchaseCents, recommendedCents }),
     availability: (item.stock ?? 0) > 0 ? "in-stock" : "out-of-stock",
-    imageUrl: image?.imageLink,
+    imageUrl: image?.imageLink ? imageUrl(image.imageLink) : undefined,
+    specs: toSpecs(item),
+    stock: item.stock,
   };
 }
 
@@ -386,6 +492,7 @@ async function fetchCategories(
       {
         slug: `${slugify(category.data.name)}-${category.data.categoryId}`,
         name: category.data.name,
+        labelKey: categoryLabelKey(productAreaId, category.data.categoryId),
       },
     ];
   });
@@ -416,9 +523,11 @@ async function fetchFilterBlock(
 /** Filterblok → groepen voor de UI. Groepen met één optie filteren niets. */
 function toFilterGroups(
   block: Record<string, z.infer<typeof filterGroupSchema>>,
+  productAreaId: string,
 ): FilterGroup[] {
-  const groups: FilterGroup[] = [];
+  const groups: Array<{ order: number; group: FilterGroup }> = [];
   for (const [apiKey, group] of Object.entries(block)) {
+    if (!isFilterGroupAllowed(productAreaId, apiKey)) continue;
     const raw = group.filter ?? [];
     const options = raw
       .map((option) => ({
@@ -426,15 +535,26 @@ function toFilterGroups(
         label: optionLabel(option),
         count: option.count,
       }))
-      .filter((option) => option.value !== "" && option.label !== "");
+      .filter((option) => option.value !== "" && option.label !== "")
+      // Het merkveld bevat ook omschrijvingen van de leverancier; die horen
+      // niet tussen de merken te staan.
+      .filter(
+        (option) =>
+          apiKey !== API_MANUFACTURER_KEY || isRealBrand(option.label),
+      );
     if (options.length < 2) continue;
     groups.push({
-      key: filterKey(apiKey, raw),
-      label: group.name ?? apiKey,
-      options,
+      order: filterGroupOrder(productAreaId, apiKey),
+      group: {
+        key: filterKey(apiKey, raw),
+        label: group.name ?? apiKey,
+        labelKey: filterLabelKey(apiKey),
+        options,
+      },
     });
   }
-  return groups;
+  // Volgorde van de allowlist, niet die van de API: merk hoort bovenaan.
+  return groups.sort((a, b) => a.order - b.order).map((entry) => entry.group);
 }
 
 /**
@@ -537,7 +657,10 @@ export const tyre24Provider: CatalogProvider = {
     if (!source) return [];
     const parentNodeId = idFromSlug(categorySlug);
     if (parentNodeId === null) return [];
-    return toFilterGroups(await fetchFilterBlock(source, parentNodeId));
+    return toFilterGroups(
+      await fetchFilterBlock(source, parentNodeId),
+      source.productAreaId,
+    );
   },
 
   async getPartById(family, id) {

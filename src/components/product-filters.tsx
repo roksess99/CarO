@@ -7,6 +7,8 @@ import {
   toFilterParam,
   toggleFilter,
 } from "@/lib/catalog/filter-params";
+import { filterGroupLabel } from "@/lib/catalog/filter-label";
+import { filterValueLabel } from "@/lib/catalog/filter-values";
 import type { FilterGroup, SelectedFilters } from "@/lib/catalog/types";
 
 /** Groepen met veel opties (merk!) krijgen een scrollbaar vak */
@@ -62,11 +64,12 @@ export async function ProductFilters({
             values.map((value) => {
               // De waarde in de URL is een taalonafhankelijk id ("5"); de
               // klant hoort het label te zien ("Winterbanden").
-              const label =
+              const raw =
                 groups
                   .find((group) => group.key === key)
                   ?.options.find((option) => option.value === value)?.label ??
                 value;
+              const label = filterValueLabel(raw, t);
               return (
                 <li key={`${key}:${value}`}>
                   <Link
@@ -95,7 +98,7 @@ export async function ProductFilters({
               className="rounded-lg border border-border"
             >
               <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">
-                {group.label}
+                {filterGroupLabel(group, t)}
                 {activeInGroup > 0 && (
                   <span className="ms-2 rounded-full bg-caro-orange px-2 py-0.5 text-xs text-caro-ink tabular-nums">
                     {activeInGroup}
@@ -138,7 +141,9 @@ export async function ProductFilters({
                           >
                             {active ? "✓" : ""}
                           </span>
-                          <span className="truncate">{option.label}</span>
+                          <span className="truncate">
+                            {filterValueLabel(option.label, t)}
+                          </span>
                         </span>
                         {option.count !== undefined && (
                           <span className="shrink-0 text-xs text-muted tabular-nums">

@@ -1,168 +1,181 @@
 # E-mail aan ALZURA / Tyre24 — openstaande vragen
 
-Concept om te versturen naar de support-/API-afdeling. In het Engels, omdat dat
-bij een internationale B2B-helpdesk het veiligst is. Vul je klantnummer in en
-haal weg wat je niet wilt vragen.
+Concept om te versturen naar de support-/API-afdeling. In het Nederlands, na
+telefonisch contact met de Nederlandse vestiging. Vul je klantnummer in en haal
+weg wat je niet wilt vragen.
 
 **Belangrijk**: zet je API-token nooit in een e-mail. Verwijs naar je klant- of
 accountnummer; support kan het token daaraan koppelen.
 
 ---
 
-**Subject:** REST API v1.3 (Products) — questions about product images, product
-area activation and vehicle search
+**Onderwerp:** REST API v1.3 (Products) — vragen over productfoto's, activatie van
+product areas en voertuigzoeken
 
 ---
 
-Dear ALZURA / Tyre24 team,
+Beste ALZURA / Tyre24,
 
-We are building a Dutch webshop on top of your Products REST API v1.3. Our API
-token is active and working — we can successfully retrieve areas, categories,
-items and prices. Before we go live we have a few questions we could not answer
-from the Swagger documentation.
+Wij bouwen een Nederlandse webshop op uw Products REST API v1.3. Ons API-token
+werkt: we kunnen areas, categorieën, artikelen en prijzen ophalen. Voordat we
+live gaan hebben we een aantal vragen die we niet uit de Swagger-documentatie
+konden beantwoorden.
 
-Our account/customer number: **[VUL IN]**
+Ons klant-/accountnummer: **[VUL IN]**
 
 ---
 
-**1. Product images: what should replace the `%s` placeholders?**
+**1. Productfoto's: wat moet er op de plaats van de `%s` komen?**
 
-This is our most urgent question, because we currently cannot show any product
-photos at all.
+Dit is onze meest urgente vraag, omdat we op dit moment helemaal geen
+productfoto's kunnen tonen.
 
-Every `media[].imageLink` we receive contains two `%s` placeholders, in every
-product area we have access to:
+Elke `media[].imageLink` die we ontvangen bevat twee `%s`-plaatshouders, in elke
+product area waar we toegang toe hebben:
 
-- Tyres (area 6):
+- Banden (area 6):
   `https://media3.tyre-shopping.com/images/tyre/26064-PTY-%s-%s-br1.jpg`
-- Used parts (area 10):
+- Gebruikte onderdelen (area 10):
   `https://media1.tyre-shopping.com/mediamanagement/b2b_productarea_up/2026/5/26/33/255333/3947354-X-%s-%s-br1.jpeg`
-- OE parts (area 3):
+- OE-onderdelen (area 3):
   `https://media1.tyre-shopping.com/mediamanagement/category_logo_neutral/2025/7/7/10/13/666081-X-%s-%s-br1.jpg`
 
-What we tried:
+Wat we hebben geprobeerd:
 
-- Requesting the URL unchanged (with `%s` still in it) returns **HTTP 400**.
-- Substituting width and height (`200-200`, `400-400`, `800-600`, `1-1`, `0-0`)
-  returns **HTTP 500** with a response body that is always exactly the same
-  12,240 bytes: a generic 300×225 JPEG, regardless of the size requested.
+- De URL ongewijzigd opvragen (met `%s` er nog in) geeft **HTTP 400**.
+- Breedte en hoogte invullen (`200-200`, `400-400`, `800-600`, `1-1`, `0-0`)
+  geeft **HTTP 500**, met een responsebody die altijd exact 12.240 bytes is:
+  een algemene JPEG van 300×225, ongeacht het gevraagde formaat.
 
-Could you tell us:
+Kunt u ons vertellen:
 
-- a. What values belong in the two `%s` placeholders (and are there fixed
-  allowed sizes)?
-- b. Are real product photos available for tyres and OE parts at all, or is
-  `category_logo_neutral` (as in the area 3 example above) the only image we
-  will receive for those articles?
-- c. Is there a separate media/CDN endpoint we should be using instead?
+- a. Welke waarden horen er in de twee `%s`-plaatshouders, en zijn er vaste
+  toegestane formaten?
+- b. Zijn er überhaupt echte productfoto's beschikbaar voor banden en
+  OE-onderdelen, of is `category_logo_neutral` (zoals in het area 3-voorbeeld
+  hierboven) het enige beeld dat we voor die artikelen krijgen?
+- c. Is er een apart media-/CDN-endpoint dat we zouden moeten gebruiken?
 
 ---
 
-**2. Can product area 3 ("Original-Ersatzteile") be activated on the NL platform?**
+**2. Kan product area 3 ("Original-Ersatzteile") op het NL-platform geactiveerd
+worden?**
 
-We sell to Dutch consumers, so we work against
+Wij verkopen aan Nederlandse consumenten en werken dus tegen
 `https://tyre24.alzura.com/nl/nl/rest/v13/products`.
 
-- On `/de/de/` area 3 works: searching for OE number `06A115561B` returns two
-  Volkswagen oil filters with stock and prices.
-- On `/nl/nl/`, `/be/nl/` and `/fr/fr/` the same request returns
+- Op `/de/de/` werkt area 3: zoeken op OE-nummer `06A115561B` geeft twee
+  Volkswagen-oliefilters met voorraad en prijzen.
+- Op `/nl/nl/`, `/be/nl/` en `/fr/fr/` geeft hetzelfde verzoek
   `ERR_B2B_PRODUCTAREA_INACTIVE` ("Requested b2b productarea is not active on
   platform 'nl'!").
 
-Can product area 3 be activated for our account on the **nl** platform? If that
-requires a different contract or agreement, please let us know what is needed.
+Kan product area 3 voor ons account op het **nl**-platform geactiveerd worden?
+Als daar een ander contract of een overeenkomst voor nodig is, horen we graag
+wat er nodig is.
 
-The same question applies to **area 10 (used parts)** and **area 1
-(accessories)**: both return categories on `/de/de/` but are empty on `/nl/nl/`.
-Activating them on nl would also give us Dutch category names instead of German
-ones.
+Dezelfde vraag geldt voor **area 10 (gebruikte onderdelen)** en **area 1
+(toebehoren)**: beide geven categorieën op `/de/de/` maar zijn leeg op
+`/nl/nl/`. Activering op nl zou ons ook Nederlandse categorienamen geven in
+plaats van Duitse.
 
 ---
 
-**3. Documentation for the TecDoc vehicle search**
+**3. Documentatie van het voertuigzoeken (TecDoc)**
 
-Area 3 reports `showTecDocVehicleSearch: true`, but it also has
-`searchableByCategory: false`, and searching only works with a complete,
-exact OE number (partial numbers, wildcards and product names all return 0
-results). That means our customers cannot browse or find parts unless they
-already know the exact OE number.
+Area 3 meldt `showTecDocVehicleSearch: true`, maar heeft ook
+`searchableByCategory: false`, en zoeken werkt alleen met een volledig, exact
+OE-nummer (gedeeltelijke nummers, wildcards en productnamen geven allemaal 0
+resultaten). Onze klanten kunnen dus niet bladeren of zoeken tenzij ze het exacte
+OE-nummer al kennen.
 
-The Products API does not appear to contain vehicle endpoints — `/carBrands`,
-`/carModels`, `/carTypes`, `/vehicles`, `/articles` and `/tecdoc` all return
-HTTP 400. At the same time the Swagger file contains definitions that are not
-used by any documented endpoint (`assemblyGroup`, `CategoryBySearchString`,
-`ArticlesDirectSearch`, `vehicleIdentification`), which suggests a separate API
-exists.
+De Products API lijkt geen voertuig-endpoints te bevatten — `/carBrands`,
+`/carModels`, `/carTypes`, `/vehicles`, `/articles` en `/tecdoc` geven allemaal
+HTTP 400. Tegelijk bevat het Swagger-bestand definities die door geen enkel
+gedocumenteerd endpoint gebruikt worden (`assemblyGroup`,
+`CategoryBySearchString`, `ArticlesDirectSearch`, `vehicleIdentification`), wat
+erop wijst dat er een aparte API bestaat.
 
-- a. Is there a separate parts/TecDoc API, and could you send us its
-  documentation?
-- b. Is it possible to look up parts by vehicle (brand → model → type, or by
-  TecDoc vehicle ID) the way the Alloys API does with
+- a. Bestaat er een aparte onderdelen-/TecDoc-API, en kunt u ons de documentatie
+  daarvan sturen?
+- b. Is het mogelijk om onderdelen op voertuig op te zoeken (merk → model →
+  type, of via een TecDoc-voertuig-id), zoals de Alloys API dat doet met
   `carBrands` / `carModels` / `carTypes`?
-- c. Our customers enter a Dutch licence plate, from which we obtain make,
-  model, type, engine capacity and power via the Dutch RDW register. Is there a
-  supported way to translate that into a TecDoc vehicle ID so we can show only
-  parts that fit that car?
+- c. Onze klanten voeren een Nederlands kenteken in, waarmee wij via het RDW
+  merk, model, type, cilinderinhoud en vermogen ophalen. Is er een ondersteunde
+  manier om dat om te zetten naar een TecDoc-voertuig-id, zodat we alleen
+  passende onderdelen tonen?
+- d. **Heeft u zelf een kentekenzoeker?** Verschillende TecDoc-licentiehouders
+  bieden een zoekfunctie op kenteken (kenteken → voertuig). Is zoiets voor ons
+  beschikbaar, in de Products API, de Alloys API of als losse ALZURA-dienst? En
+  zo ja, wordt Nederland ondersteund?
+- e. Als die bestaat: geeft hij direct een TecDoc-voertuig-id terug (zodat we
+  daarmee op onderdelen kunnen filteren), zit het in ons huidige abonnement of
+  wordt het apart gefactureerd, en gelden er limieten per aanroep of per maand?
 
 ---
 
-**4. Are the prices in the API excluding VAT?**
+**4. Zijn de prijzen in de API exclusief btw?**
 
-Each article returns a price block with `type: "ek"` and one with `type: "evp_3"`
-(for example `ek 27.63` and `evp_3 48.00` for a tyre).
+Elk artikel geeft een prijsblok met `type: "ek"` en één met `type: "evp_3"`
+(bijvoorbeeld `ek 27.63` en `evp_3 48.00` voor een band).
 
-- a. Can you confirm that both amounts are **excluding VAT**?
-- b. Is `evp_3` the recommended retail price (and what do the other `evp_*`
-  variants mean)?
+- a. Kunt u bevestigen dat beide bedragen **exclusief btw** zijn?
+- b. Is `evp_3` de adviesverkoopprijs, en wat betekenen de andere
+  `evp_*`-varianten?
 
-We need certainty here, because Dutch consumer law requires us to display prices
-including VAT. If we add 21% VAT to an amount that already includes it, every
-price in our shop would be wrong.
-
----
-
-**5. Which agreements do we need before we can place orders?**
-
-Area 3 has `agreementNeeded: true`. We see the endpoints `/agreementList`,
-`/agreementPdfs` and `/newPdfAgreement` in the documentation.
-
-- a. Which agreements must be in place before `POST /order` will succeed?
-- b. Is this per wholesaler, and can it be arranged entirely through the API, or
-  does it require manual steps on your side?
+We hebben hier zekerheid over nodig, omdat Nederlandse consumenten prijzen
+inclusief btw getoond moeten krijgen. Tellen we 21% btw op bij een bedrag waar
+die al in zit, dan klopt elke prijs in onze shop niet.
 
 ---
 
-**6. Is there an English platform, and can Dutch-language areas be extended?**
+**5. Welke overeenkomsten hebben we nodig voordat we kunnen bestellen?**
 
-The language appears to be tied to the country platform in the base path. We
-tested `nl/en`, `de/en`, `gb/en`, `uk/en` and `en/en` — none of them respond.
-Working platforms return `nl`, `de`, `fr`, `it`, `es` and `pl`.
+Area 3 heeft `agreementNeeded: true`. We zien de endpoints `/agreementList`,
+`/agreementPdfs` en `/newPdfAgreement` in de documentatie.
 
-- a. Is there an English platform we missed? Our shop serves customers in both
-  Dutch and English, and right now our English visitors see Dutch (or German)
-  category and filter names.
-- b. Product areas 1 (accessories), 9 (tools) and 10 (used parts) return
-  categories only on `de/de`, so all their category names, product
-  descriptions and filter labels are German — including for Dutch customers.
-  Can those areas be made available on the `nl` platform?
-
-**7. Two documentation details we found by testing**
-
-Not questions, but perhaps useful for your documentation:
-
-- Pagination is **zero-based**: `page=1` returns the *second* page. This is not
-  stated in the Swagger and cost us some time to find.
-- The `filter` field in the `/items` response is an **object** for a
-  category query but an **empty array** for an `itemId` query. Strictly typed
-  clients break on this.
+- a. Welke overeenkomsten moeten er liggen voordat `POST /order` slaagt?
+- b. Is dat per groothandel, en kan het volledig via de API geregeld worden, of
+  zijn er handmatige stappen aan uw kant nodig?
 
 ---
 
-Thank you very much for your help. If it is easier to discuss this by phone or
-in a call, we are happy to do so.
+**6. Is er een Engels platform, en kunnen Nederlandstalige areas uitgebreid
+worden?**
 
-Kind regards,
+De taal lijkt vast te zitten aan het landplatform in het base path. We hebben
+`nl/en`, `de/en`, `gb/en`, `uk/en` en `en/en` geprobeerd — geen daarvan
+reageert. Werkende platformen geven `nl`, `de`, `fr`, `it`, `es` en `pl`.
+
+- a. Is er een Engels platform dat we over het hoofd zien? Onze shop bedient
+  klanten in het Nederlands én Engels, en op dit moment zien onze Engelstalige
+  bezoekers Nederlandse (of Duitse) categorie- en filternamen.
+- b. Product areas 1 (toebehoren), 9 (gereedschap) en 10 (gebruikte onderdelen)
+  geven alleen categorieën op `de/de`, waardoor al hun categorienamen,
+  productomschrijvingen en filterlabels Duits zijn — ook voor Nederlandse
+  klanten. Kunnen die areas op het `nl`-platform beschikbaar gemaakt worden?
+
+---
+
+**7. Twee documentatiedetails die we al testend vonden**
+
+Geen vragen, maar mogelijk nuttig voor uw documentatie:
+
+- Paginering is **nul-gebaseerd**: `page=1` geeft de *tweede* pagina. Dit staat
+  niet in de Swagger en heeft ons wat tijd gekost.
+- Het veld `filter` in de `/items`-respons is een **object** bij een
+  categorie-verzoek, maar een **lege array** bij een `itemId`-verzoek. Strikt
+  getypeerde clients lopen daarop stuk.
+
+---
+
+Alvast hartelijk dank. Is het makkelijker om dit telefonisch of in een call door
+te nemen, dan doen we dat graag.
+
+Met vriendelijke groet,
 
 **[NAAM]**
-CarO Onderdelen
+CarO — Car Parts A-Z
+KvK 93396252
 **[E-MAIL / TELEFOON]**

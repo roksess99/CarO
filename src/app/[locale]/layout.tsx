@@ -2,6 +2,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Anton, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
+import Script from "next/script";
 import { BackToTop } from "@/components/back-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { BottomNav } from "@/components/bottom-nav";
@@ -9,6 +10,7 @@ import { SiteHeader } from "@/components/site-header";
 import { routing, textDirection } from "@/i18n/routing";
 import type { FamilyNavItem } from "@/components/family-nav";
 import { PRODUCT_FAMILIES } from "@/lib/catalog/families";
+import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import { listMakes } from "@/lib/vehicle/catalog";
 import "../globals.css";
@@ -54,7 +56,7 @@ export default async function LocaleLayout({
   const navItems: FamilyNavItem[] = await Promise.all(
     PRODUCT_FAMILIES.map(async (family) => ({
       family,
-      categories: await provider.getCategories(family),
+      categories: await localizeCategories(await provider.getCategories(family)),
     })),
   );
 
@@ -68,7 +70,12 @@ export default async function LocaleLayout({
       className={`${inter.variable} ${anton.variable}`}
     >
       <body className="flex min-h-screen flex-col font-sans antialiased">
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* beforeInteractive: het thema moet vaststaan vóór de eerste
+            schilderbeurt, anders flitst de pagina wit. Een gewone <script> in
+            de boom geeft sinds React 19 een console-waarschuwing. */}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeInitScript}
+        </Script>
         <NextIntlClientProvider>
           <a
             href="#main"

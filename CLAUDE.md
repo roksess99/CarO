@@ -6,8 +6,9 @@ Webshop voor auto-onderdelen. Markt: Nederland. UI-taal: NL primair, EN secundai
 landbouw, grondverzet of industrie. Afgedwongen als allowlist in
 `src/lib/catalog/assortment.ts` — zie @docs/DECISIONS.md #7.
 
-**Zes productfamilies**: onderdelen, gebruikte onderdelen, banden, velgen,
-toebehoren en gereedschap. Elke familie hangt aan één Tyre24 productArea
+**Vier productfamilies**: onderdelen, banden, velgen en toebehoren.
+Gebruikte onderdelen en gereedschap zijn 2026-09-05 uit het assortiment gehaald
+(winkelkeuze, zie @docs/DECISIONS.md #7). Elke familie hangt aan één Tyre24 productArea
 (`src/lib/catalog/families.ts`) en loopt door de hele site: eigen URL-tak,
 eigen kolom in het assortimentsmenu en zichtbaar in het kruimelpad. Een familie
 zonder aanbod toont een eerlijke lege staat, geen verzonnen producten.
@@ -48,14 +49,15 @@ Stand 2026-08-16. Handig bij het oppakken van werk; niet uitputtend.
 |---|---|---|
 | Hero in twee kolommen | `components/home/hero.tsx` | Links kentekenzoeker **én** merk/model-kiezer zichtbaar (geen tabs), rechts een banner met echte voorwaarden — geen verzonnen acties |
 | Categorieraster | `components/home/category-grid.tsx` | Tegels uit `lib/catalog/category-tiles.ts`, foto's beeldvullend bijgesneden |
-| Header | `components/site-header.tsx` | Rij 1: logo, voertuigknop, zoekbalk, taal, thema, wagen. Rij 2: de zes families |
-| Zoeken met suggesties | `components/search/` | Server Action, vanaf 3 tekens met 350 ms debounce — elke aanroep raakt zes families en dus zes Tyre24-calls |
+| Header | `components/site-header.tsx` | Rij 1: logo, voertuigknop, zoekbalk, taal, thema, wagen. Rij 2: de vier families |
+| Zoeken met suggesties | `components/search/` | Server Action, vanaf 3 tekens met 350 ms debounce — elke aanroep raakt vier families en dus vier Tyre24-calls |
 | Voertuig opgeven | `components/vehicle/` | Kenteken via RDW, of merk/model/bouwjaar uit de geoogste catalogus. Beide leveren dezelfde tekst op |
 | Mobiele navigatie | `components/bottom-nav.tsx` | Zwevende tabbalk; assortiment en autokiezer openen als paneel vanaf de onderkant |
 | Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |
 
-**Nog niet waar**: onderdelen filteren op de gekozen auto. De auto wordt
-bewaard en getoond met een eerlijke melding — zie @docs/DECISIONS.md #6.
+**Half waar**: `/nl/mijn-auto` zoekt op merk en model in de leveranciersteksten
+(velgen en toebehoren leveren treffers, banden en onderdelen niet). Dat is geen
+fitment-garantie; de pagina zegt dat er ook bij — zie @docs/DECISIONS.md #6.
 
 ## Stack
 

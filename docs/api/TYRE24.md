@@ -17,6 +17,29 @@ Dit is de gekozen catalogus-leverancier (docs/DECISIONS.md #1).
 | Rate limit | **100 requests/minuut** (`ERR_TOO_MANY_REQUESTS`) — cachen is verplicht, geen client-side calls |
 | Formaat | JSON. Let op: veel numerieke velden komen als **string** terug (o.a. prijzen, quantity) |
 
+## Productfoto's — OPGELOST 2026-09-05
+
+`media[].imageLink` bevat twee `%s`-plaatshouders. ALZURA gaf per e-mail het
+juiste patroon: **`w<breedte>-H<hoogte>`** — kleine w, hoofdletter H.
+
+```
+…/images/tyre/22282-PTY-%s-%s-br1.jpg   → HTTP 400
+…/images/tyre/22282-PTY-200-200-br1.jpg → HTTP 500 (12.240 bytes placeholder)
+…/images/tyre/22282-PTY-w800-H800-br1.jpg → HTTP 200, 102 kB, echte foto
+```
+
+Geïmplementeerd in `tyre24-provider.ts` (`imageUrl()`, `IMAGE_SIZE`).
+`next.config.ts` staat `**.tyre-shopping.com` toe, anders weigert next/image
+de externe bron.
+
+Twee aandachtspunten:
+
+- **De foto's dragen een oranje "24"-watermerk** van Tyre24. `br0` in plaats
+  van `br1` geeft een ander bestand, maar hetzelfde watermerk; `br2` geeft
+  HTTP 500. Er lijkt dus geen schone variant te zijn.
+- Volgens ALZURA zijn er **alleen foto's voor banden**. Voor OE-onderdelen komt
+  `category_logo_neutral` terug: een generiek categoriebeeld, geen productfoto.
+
 ## Wat dit account écht kan (volledig gemeten 2026-08-07)
 
 Alle negen area's doorgemeten op beide platformen, met `GET /areas`,
