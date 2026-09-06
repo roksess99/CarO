@@ -43,6 +43,8 @@ het assortiment is gehaald. De lijst staat nu in `assortment.ts`:
 |---|---|
 | Wiel- en bandenaccessoires, auto-uitrusting, tweewieler, accu's, verlichting, oliën, autoverzorging, smart repair, bevestiging, schuren/lakken | LKW, Rund um die Werkstatt, Werkzeuge & Maschinen, Arbeitsbekleidung, Arbeitsschutz |
 
+**Let op bij het uitbreiden van de allowlist:** area 1 heeft een categorieboom van drie niveaus. Een artikel draagt zijn blad-categorie ("Reifenreparaturkörper", id 944), niet de hoofdcategorie uit de navigatie. Toetsen op de hoofd-id alleen liet daar élk artikel afvallen — de toebehoren-pagina stond een dag leeg. `allowedCategoryIds()` in de provider loopt de boom af en verzamelt ook alle onderliggende ids.
+
 **Categorienamen worden vertaald.** Tyre24 levert ze in de taal van het
 platform (Nederlands voor banden en velgen, Duits voor toebehoren), dus een
 Engelse bezoeker las "Rad & Reifenzubehör". De koppeling area+id → vertaalsleutel

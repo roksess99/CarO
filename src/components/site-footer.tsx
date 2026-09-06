@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { CompanyDetails } from "@/components/company-details";
 import { Link } from "@/i18n/navigation";
@@ -5,15 +6,24 @@ import { Link } from "@/i18n/navigation";
 /**
  * Vervoerders waarmee we verzenden.
  *
- * Nog geen logo's: die zijn merkbeeldmateriaal van PostNL en DHL en mogen
- * pas gebruikt worden als er een vervoerdersovereenkomst ligt. Tot die tijd
- * de naam in tekst — dat mag wel en het is eerlijk.
+ * De logo's staan op een witte tegel: het zijn merkbeelden met vaste kleuren
+ * (PostNL-oranje, DHL-rood op geel, DPD-rood) die op onze donkere
+ * achtergrond onleesbaar worden. Wit is ook wat de merkrichtlijnen van deze
+ * vervoerders voorschrijven.
+ *
+ * Let op: dit is beeldmateriaal van derden. Het hoort pas op een live shop
+ * te staan als de vervoerdersovereenkomst rond is — zie de tekst eronder,
+ * die dat voorbehoud maakt.
  *
  * Betaaliconen (iDEAL, Bancontact, Visa, Mastercard, Klarna) staan hier
  * bewust nog niet: die volgen met de Mollie-integratie in fase 5. Een
  * betaalmethode tonen die nog niet werkt is misleidend.
  */
-const CARRIERS = ["PostNL", "DHL", "DPD"] as const;
+const CARRIERS = [
+  { name: "PostNL", logo: "/vervoerders/postnl.jpg" },
+  { name: "DHL", logo: "/vervoerders/dhl.png" },
+  { name: "DPD", logo: "/vervoerders/dpd.png" },
+] as const;
 
 export function SiteFooter() {
   const t = useTranslations("footer");
@@ -37,13 +47,19 @@ export function SiteFooter() {
 
           <section>
             <h2 className="eyebrow text-xs">{t("shippingTitle")}</h2>
-            <ul className="mt-3 flex flex-wrap gap-2">
+<ul className="mt-3 flex flex-wrap items-center gap-2">
               {CARRIERS.map((carrier) => (
                 <li
-                  key={carrier}
-                  className="rounded-md border border-border px-3 py-1.5 font-semibold text-foreground"
+                  key={carrier.name}
+                  className="flex h-12 w-24 items-center justify-center rounded-md border border-border bg-white p-2"
                 >
-                  {carrier}
+                  <Image
+                    src={carrier.logo}
+                    alt={carrier.name}
+                    width={96}
+                    height={48}
+                    className="h-full w-full object-contain"
+                  />
                 </li>
               ))}
             </ul>
@@ -52,7 +68,7 @@ export function SiteFooter() {
 
           <section>
             <h2 className="eyebrow text-xs">{t("contactTitle")}</h2>
-            <CompanyDetails className="mt-3" />
+            <CompanyDetails className="mt-3" showAddress={false} />
           </section>
         </div>
 

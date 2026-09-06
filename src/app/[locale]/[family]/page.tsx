@@ -70,6 +70,22 @@ export default async function FamilyPage({ params, searchParams }: Props) {
       : []
     : await provider.getParts({ family, limit: 8 });
 
+  // GEMETEN 2026-09-06: area 3 doorzoekt uitsluitend OE-nummers. Zoeken op
+  // "OELFILTER" of "VOLKSWAGEN" geeft nul treffers, óók al heet het artikel
+  // letterlijk zo. De andere families zijn wél op naam doorzoekbaar, dus
+  // vangen we een naam-zoekopdracht daar op in plaats van de klant met een
+  // lege pagina achter te laten.
+  const elsewhere =
+    searchOnly && searchTerm && parts.length === 0
+      ? (
+          await Promise.all(
+            PRODUCT_FAMILIES.filter((other) => other !== family).map((other) =>
+              provider.getParts({ family: other, search: searchTerm, limit: 4 }),
+            ),
+          )
+        ).flat()
+      : [];
+
   const formAction = getPathname({
     locale: locale as Locale,
     href: { pathname: "/[family]", params: { family: slug } },
@@ -111,9 +127,21 @@ export default async function FamilyPage({ params, searchParams }: Props) {
 
           <div className="mt-10">
             {!searchTerm ? null : parts.length === 0 ? (
-              <p className="max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
-                {t("oenNoResults", { term: searchTerm })}
-              </p>
+              <>
+                <p className="max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+                  {t("oenNoResults", { term: searchTerm })}
+                </p>
+                {elsewhere.length > 0 && (
+                  <section className="mt-10">
+                    <h2 className="text-2xl">
+                      {t("oenElsewhere", { term: searchTerm })}
+                    </h2>
+                    <div className="mt-6">
+                      <ProductGrid parts={elsewhere} />
+                    </div>
+                  </section>
+                )}
+              </>
             ) : (
               <>
                 <h2 className="text-2xl">

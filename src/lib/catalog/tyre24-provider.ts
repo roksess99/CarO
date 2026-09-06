@@ -8,7 +8,7 @@ import {
   isFilterGroupAllowed,
   isRealBrand,
 } from "./filter-groups";
-import { isCategoryInAssortment } from "./assortment";
+import { hasAssortmentFilter, isCategoryInAssortment } from "./assortment";
 import { type FamilySource, familySource, type ProductFamily } from "./families";
 import type {
   CatalogProvider,
@@ -76,6 +76,18 @@ const tyreMediaSchema = z.object({
   isDeleted: z.boolean().optional(),
   imageLink: z.string().optional(),
 });
+
+/** Categorieboom: /categories geeft de kinderen genest mee */
+type CategoryTree = {
+  categoryId: number;
+  children?: CategoryTree[];
+};
+const categoryTreeSchema: z.ZodType<CategoryTree> = z.lazy(() =>
+  z.object({
+    categoryId: z.coerce.number(),
+    children: z.array(categoryTreeSchema).optional(),
+  }),
+);
 
 const tyreItemSchema = z.object({
   itemId: z.coerce.number(),
@@ -392,6 +404,7 @@ function toPart(
   raw: unknown,
   source: FamilySource & { token: string },
   family: ProductFamily,
+  allowedCategoryIds: ReadonlySet<number> | null,
 ): Part | null {
   const parsed = tyreItemSchema.safeParse(raw);
   if (!parsed.success) return null;
@@ -412,10 +425,12 @@ function toPart(
   const category = item.categories?.[0];
   // Buiten het assortiment → niet verkopen. Hier i.p.v. alleen in de
   // navigatie, zodat ook een directe product-URL niets oplevert.
-  if (
-    category &&
-    !isCategoryInAssortment(source.productAreaId, category.categoryId)
-  ) {
+  // GEMETEN 2026-09-06: bij toebehoren (area 1) draagt een artikel zijn
+  // blad-categorie ("Reifenreparaturkörper", id 944), niet de hoofdcategorie
+  // uit de navigatie. Toetsen op de hoofd-id alleen liet daar élk artikel
+  // afvallen. Daarom de toegestane hoofdcategorieën mét al hun onderliggende
+  // ids — zie allowedCategoryIds().
+  if (category && allowedCategoryIds && !allowedCategoryIds.has(category.categoryId)) {
     return null;
   }
 
@@ -441,6 +456,40 @@ function toPart(
   };
 }
 
+/**
+ * Alle categorie-id's die we mogen verkopen, inclusief onderliggende niveaus.
+ *
+ * De categorieboom komt genest terug, dus we lopen hem één keer af (gecacht,
+ * net als /categories zelf). Heeft de area geen allowlist, dan is er niets te
+ * filteren en geven we null terug — dat scheelt een call.
+ */
+async function allowedCategoryIds(
+  source: FamilySource & { token: string },
+): Promise<ReadonlySet<number> | null> {
+  if (!hasAssortmentFilter(source.productAreaId)) return null;
+
+  let data: unknown;
+  try {
+    data = await apiGet(source, "/categories", { hideEmpty: "true" }, 3600);
+  } catch {
+    return null;
+  }
+  const tree = z.array(categoryTreeSchema).safeParse(data);
+  if (!tree.success) return null;
+
+  const ids = new Set<number>();
+  const collect = (node: z.infer<typeof categoryTreeSchema>) => {
+    ids.add(node.categoryId);
+    for (const child of node.children ?? []) collect(child);
+  };
+  for (const node of tree.data) {
+    if (isCategoryInAssortment(source.productAreaId, node.categoryId)) {
+      collect(node);
+    }
+  }
+  return ids;
+}
+
 async function fetchParts(
   source: FamilySource & { token: string },
   family: ProductFamily,
@@ -458,8 +507,9 @@ async function fetchParts(
   }
   const parsed = itemsResponseSchema.safeParse(data);
   if (!parsed.success) return [];
+  const allowed = await allowedCategoryIds(source);
   return (parsed.data.result ?? [])
-    .map((raw) => toPart(raw, source, family))
+    .map((raw) => toPart(raw, source, family, allowed))
     .filter((part): part is Part => part !== null);
 }
 
@@ -605,8 +655,23 @@ export const tyre24Provider: CatalogProvider = {
     // Zoeken op OE-nummer. Voor area 3 (nieuwe onderdelen) is dit het enige
     // ingangspunt; /items accepteert search óf parentNodeId óf itemId.
     if (query.search) {
+      const term = query.search.trim();
+      const found = await fetchParts(source, query.family, {
+        search: term,
+        limit: query.limit,
+        page: FIRST_PAGE,
+      });
+      if (found.length > 0) return found;
+
+      // GEMETEN 2026-09-06: de zoekfunctie is hoofdletterongevoelig en
+      // negeert spaties, maar struikelt over koppeltekens en punten —
+      // "90915-YZZE1" geeft niets, "90915YZZE1" één treffer. Klanten typen
+      // het nummer over zoals het op het onderdeel staat, dus proberen we
+      // het zonder scheidingstekens nog een keer.
+      const stripped = term.replace(/[^A-Za-z0-9]/g, "");
+      if (stripped === term || stripped === "") return found;
       return fetchParts(source, query.family, {
-        search: query.search.trim(),
+        search: stripped,
         limit: query.limit,
         page: FIRST_PAGE,
       });

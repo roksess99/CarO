@@ -13,6 +13,7 @@ import {
   familySlug,
   type ProductFamily,
 } from "@/lib/catalog/families";
+import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents, priceCentsToDecimalString } from "@/lib/format";
@@ -103,9 +104,17 @@ export default async function ProductPage({ params }: Props) {
   const t = await getTranslations("product");
   const tFamily = await getTranslations("family");
   const tFilters = await getTranslations("filters");
-  // Het artikel kent zijn eigen categorienaam; niet elke area levert een
-  // categorielijst om die in op te zoeken (area 3 bijvoorbeeld niet).
-  const categoryName = part.categoryName || category;
+  // Het artikel kent zijn eigen categorienaam, maar die komt in de taal van
+  // de leverancier. De categorielijst kent onze vertaling; lukt het opzoeken
+  // niet (area 3 levert geen lijst), dan valt hij terug op de naam van het
+  // artikel zelf.
+  const categories = await localizeCategories(
+    await getCatalogProvider().getCategories(family),
+  );
+  const categoryName =
+    categories.find((item) => item.slug === part.categorySlug)?.name ??
+    part.categoryName ??
+    category;
 
   const canonicalPath = getPathname({
     locale: locale as Locale,

@@ -72,7 +72,8 @@
       "intro": "Wiel- en bandenaccessoires, van ventielen tot opbergsystemen.",
       "menuAria": "Toebehorencategorieën",
       "empty": "Er is nog geen aanbod aan toebehoren beschikbaar."
-    }
+    },
+    "oenElsewhere": "Wel gevonden bij banden, velgen en toebehoren voor \"{term}\""
   },
   "categoryTiles": {
     "title": "Auto-onderdelen vinden in de catalogus",

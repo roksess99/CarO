@@ -3,6 +3,7 @@ import { CategoryTiles } from "@/components/home/category-tiles";
 import type { FamilyNavItem } from "@/components/family-nav";
 import { FAMILY_TILE_IMAGES } from "@/lib/catalog/category-tiles";
 import { familySlug, PRODUCT_FAMILIES } from "@/lib/catalog/families";
+import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 
 /**
@@ -21,7 +22,7 @@ export async function CategoryGrid() {
   const items: FamilyNavItem[] = await Promise.all(
     PRODUCT_FAMILIES.map(async (family) => ({
       family,
-      categories: await provider.getCategories(family),
+      categories: await localizeCategories(await provider.getCategories(family)),
     })),
   );
 

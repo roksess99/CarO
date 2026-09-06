@@ -72,7 +72,8 @@
       "intro": "Wheel and tyre accessories, from valves to storage systems.",
       "menuAria": "Accessory categories",
       "empty": "No accessories are available yet."
-    }
+    },
+    "oenElsewhere": "Found under tyres, wheels and accessories for \"{term}\""
   },
   "categoryTiles": {
     "title": "Find car parts in the catalogue",
