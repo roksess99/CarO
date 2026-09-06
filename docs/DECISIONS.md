@@ -17,7 +17,24 @@ TecDoc-data (voertuig-koppeling) en bestellen via de API (dropship mogelijk).
 
 ---
 
-## 7. Welk assortiment verkopen we? — OPEN — blokkerend voor de inhoud van de shop
+## 7. Welk assortiment verkopen we? — GROTENDEELS OPGELOST 2026-09-06
+
+**Onderdelen draaien niet langer op product area 3.** Die area kon alleen
+exacte OE-nummers zoeken en was niet actief op het NL-platform; de
+Wearparts-API v1.6 kan wél bladeren én zoeken op naam, in het Nederlands.
+Zie docs/api/WEARPARTS.md.
+
+| Familie | Bron |
+|---|---|
+| Onderdelen | Wearparts v1.6, `TYRE24_WEARPARTS_TOKEN` |
+| Banden, velgen, toebehoren | Products v1.3, `TYRE24_API_TOKEN` |
+
+De drie blokkades die hieronder bij area 3 staan (niet actief op nl, alleen
+OE-zoeken, `agreementNeeded`) gelden daarmee niet meer voor de catalogus. Voor
+het plaatsen van bestellingen is de overeenkomstenvraag nog wel open — dat is
+fase 4.
+
+### Oorspronkelijke analyse (2026-08-07)
 
 Gemeten op het echte account (docs/api/TYRE24.md): **er is geen area met nieuwe
 auto-onderdelen.** Beschikbaar is:
@@ -184,7 +201,29 @@ de API heeft daar een `isPalletDelivery`-vlag voor die we nog niet gebruiken).
 
 ---
 
-## 6. Fitment-koppeling: kenteken → passende onderdelen — OPEN — blokkerend voor de kernbelofte
+## 6. Fitment-koppeling: kenteken → passende onderdelen — OPGELOST 2026-09-06
+
+**De Wearparts-API v1.6 levert de koppeling die hieronder als ontbrekend staat
+beschreven.** `GET /vehicleByKey?keySystemType=1` zet een Nederlands kenteken
+rechtstreeks om in een TecDoc-voertuig-id; `/category?carId=` geeft de
+categorieboom van díe auto en `/articles?filter[carId]=` de onderdelen die
+erop passen. Gemeten en werkend, zie docs/api/WEARPARTS.md.
+
+Wat daarmee vervalt:
+
+- de zoekbrug op merk en model voor onderdelen (die blijft voor velgen en
+  toebehoren, want die families draaien nog op de Products-API);
+- de RDW-omweg als *koppeling*. overheid.io blijft wel de bron voor wat de
+  klant ziet — merk, model, brandstof, vermogen, APK — want dat leest
+  vertrouwder dan de TecDoc-typenaam;
+- de eerlijke melding "filteren werkt nog niet". Die is vervangen door
+  `vehicle.fitmentReady`.
+
+De oude analyse hieronder blijft staan als achtergrond bij de keuze.
+
+---
+
+### Oorspronkelijke analyse (2026-08-07) — kenteken → passende onderdelen
 
 De kentekenzoeker (overheid.io/RDW, docs/api/OVERHEID-IO.md) levert merk, model,
 motorgegevens en bouwjaar. Dat is **geen** koppeling naar passende onderdelen.
@@ -278,6 +317,34 @@ regel in `src/lib/catalog/category-tiles.ts` plus een bestand.
 ## 2. Hosting — OPEN
 
 Vercel (simpelst voor Next.js) vs. een EU-VPS. Let op AVG: klantdata bij voorkeur in de EU.
+
+### Environment variables bij een deploy
+
+Gemeten 2026-09-06: een deploy zonder deze variabelen draait gewoon door, maar
+op **mockdata** — de site ziet er dan compleet uit terwijl er geen enkel echt
+product in staat. Dat kostte een dag zoeken naar een verkeerd vermoeden
+("mijn deploy is niet doorgekomen"), dus hier de checklist.
+
+| Variabele | Waarvoor | Zonder |
+|---|---|---|
+| `TYRE24_API_TOKEN` | Products v1.3: banden, velgen, toebehoren | Hele catalogus valt terug op de mock |
+| `TYRE24_WEARPARTS_TOKEN` | Wearparts v1.6: onderdelen, kenteken → auto | Onderdelen leeg, geen fitment |
+| `OVERHEID_IO_API_KEY` | RDW-gegevens bij het kenteken | "Tijdelijk niet beschikbaar" |
+| `NEXT_PUBLIC_SITE_URL` | Canonical en hreflang | Verkeerde URL's in de SEO-tags |
+
+Optioneel: `CARO_MIN_MARGIN_PERCENT` en `CARO_USE_RECOMMENDED_PRICE` (#5),
+`TYRE24_BASE_URL_NL`/`_DE` als noodknop. `TYRE24_ALLOYS_TOKEN` wordt nog
+nergens gelezen (fase 6).
+
+Twee dingen die misgaan als je ze niet weet:
+
+- **Zet ze voor Production én Preview.** Anders werkt de hoofdsite wel en elke
+  pull-request-preview niet.
+- **Een env-wijziging werkt niet door in een bestaande build.** Na het
+  toevoegen opnieuw deployen.
+
+De waarden staan in `.env` (gitignored) en in het wachtwoordbeheer van de
+eigenaar — bewust niet hier, want dit bestand staat in Git.
 
 ## 3. Bedrijfsvorm en betaalaccount — GEDEELTELIJK VASTGESTELD 2026-08-20
 

@@ -1,8 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { lookupVehicleAction } from "@/components/vehicle/actions";
+import { familySlug } from "@/lib/catalog/families";
 import {
   EuStrip,
   PlateBadge,
@@ -33,6 +34,7 @@ export function VehicleSearch({
   compact?: boolean;
 } = {}) {
   const t = useTranslations("vehicle");
+  const locale = useLocale();
   // De kentekenzoeker staat sinds de headerknop meerdere keren op één pagina
   // (header en hero). Vaste id's zouden dan dubbel voorkomen en labels naar
   // het verkeerde veld laten wijzen.
@@ -94,29 +96,37 @@ export function VehicleSearch({
           <p className="mt-2 text-sm text-muted">{specs.join(" · ")}</p>
         )}
 
-        {/* Merk, model en bouwjaar in de querystring: dat zijn geen
-            persoonsgegevens, in tegenstelling tot het kenteken — dat blijft
-            in localStorage (docs/api/OVERHEID-IO.md). */}
+{/* Met een TecDoc-id gaan we rechtstreeks naar de onderdelencatalogus
+            van déze auto. Zonder id valt de klant terug op /mijn-auto, dat op
+            merk en model zoekt. Het id en het merk mogen in de URL; het
+            kenteken niet (docs/api/OVERHEID-IO.md). */}
         <Link
-          href={{
-            pathname: "/my-car",
-            query: {
-              merk: vehicle.brand,
-              ...(vehicle.model ? { model: vehicle.model } : {}),
-              ...(vehicle.firstAdmissionYear
-                ? { jaar: String(vehicle.firstAdmissionYear) }
-                : {}),
-            },
-          }}
+          href={
+            vehicle.carId
+              ? {
+                  pathname: "/[family]" as const,
+                  params: { family: familySlug("onderdelen", locale) },
+                  query: { auto: String(vehicle.carId) },
+                }
+              : {
+                  pathname: "/my-car" as const,
+                  query: {
+                    merk: vehicle.brand,
+                    ...(vehicle.model ? { model: vehicle.model } : {}),
+                    ...(vehicle.firstAdmissionYear
+                      ? { jaar: String(vehicle.firstAdmissionYear) }
+                      : {}),
+                  },
+                }
+          }
           className="mt-4 inline-flex rounded-md bg-caro-orange px-5 py-2.5 font-semibold text-caro-ink"
         >
           {t("browseParts")}
         </Link>
 
-        {/* Geen harde fitment: we zoeken op merk en model in de teksten van
-            de leverancier (docs/DECISIONS.md #6). Dat zegt deze regel er
-            eerlijk bij. */}
-        <p className="mt-3 text-sm text-muted">{t("fitmentPending")}</p>
+        <p className="mt-3 text-sm text-muted">
+          {vehicle.carId ? t("fitmentReady") : t("fitmentPending")}
+        </p>
         <button
           type="button"
           onClick={clearVehicle}

@@ -43,15 +43,15 @@
     "viewAll": "View all",
     "allIn": "All in {family}",
     "menuTitle": "Range",
-    "oenLabel": "Search by OE number",
-    "oenPlaceholder": "e.g. 06A115561B",
+    "oenLabel": "Search for a part",
+    "oenPlaceholder": "brake disc, oil filter or OE number",
     "oenSubmit": "Search",
-    "oenHint": "Enter the full OE number exactly as it appears on the part. Searching by product name or a partial number does not work.",
+    "oenHint": "Search by name, OE number or EAN. The prefixes OEN… and EAN… limit the search to that field.",
     "oenResults": "Results for {term}",
-    "oenNoResults": "No parts found for {term}. Check the OE number — it must be complete and exact.",
+    "oenNoResults": "Nothing found for {term}. Try another description or an OE number.",
     "onderdelen": {
       "title": "Parts",
-      "intro": "New original spare parts. Search by the OE number as printed on the part.",
+      "intro": "New original spare parts. Search by name or number, or pick your car and browse by category.",
       "menuAria": "Parts",
       "empty": "No parts are available yet."
     },
@@ -73,7 +73,9 @@
       "menuAria": "Accessory categories",
       "empty": "No accessories are available yet."
     },
-    "oenElsewhere": "Found under tyres, wheels and accessories for \"{term}\""
+    "oenElsewhere": "Found under tyres, wheels and accessories for \"{term}\"",
+    "groupsTitle": "Categories for your car",
+    "chooseCarToBrowse": "Pick your car first to browse the categories. Searching by name or number always works."
   },
   "categoryTiles": {
     "title": "Find car parts in the catalogue",
@@ -104,7 +106,8 @@
       "invalidPlate": "A Dutch licence plate has 6 characters, for example AB-123-C.",
       "notFound": "This licence plate is not in the RDW data. Please check your input.",
       "unavailable": "The licence plate search is temporarily unavailable. Please try again later."
-    }
+    },
+    "fitmentReady": "This car was recognised in the parts catalogue. You will only see parts that fit it."
   },
   "category": {
     "metaDescription": "{category} for your car. All prices include 21% VAT.",
@@ -241,7 +244,8 @@
       "material": "Material",
       "content": "Contents",
       "packaging": "Packaging",
-      "itemNumber": "Item number"
+      "itemNumber": "Item number",
+      "ean": "EAN"
     }
   },
   "cart": {

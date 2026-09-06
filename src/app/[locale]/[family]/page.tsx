@@ -1,23 +1,32 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import Image from "next/image";
 import { ProductGrid } from "@/components/product-grid";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
   familyFromSlug,
-  familyHasSource,
   familySlug,
   PRODUCT_FAMILIES,
+  usesVehicleCatalog,
 } from "@/lib/catalog/families";
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import {
+  groupSlug,
+  partGroups,
+  searchParts,
+} from "@/lib/catalog/wearparts-provider";
 import { localizedMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string; family: string }>;
-  searchParams: Promise<{ oen?: string | string[] }>;
+  searchParams: Promise<{ oen?: string | string[]; auto?: string }>;
 };
+
+/** Artikelen per zoekopdracht of categorie */
+const PAGE_SIZE = 20;
 
 // Next geeft de locale van de bovenliggende route mee, zodat we per taal
 // alleen de juiste familieslugs genereren (nl → onderdelen/banden,
@@ -58,16 +67,22 @@ export default async function FamilyPage({ params, searchParams }: Props) {
     await provider.getCategories(family),
   );
 
-  const { oen } = await searchParams;
+  const { oen, auto } = await searchParams;
   const searchTerm = (Array.isArray(oen) ? oen[0] : oen)?.trim();
 
-  // Zonder categorieën maar mét bron: alleen doorzoekbaar op OE-nummer
-  // (Tyre24 area 3). Dan tonen we een zoekformulier i.p.v. een grid.
-  const searchOnly = categories.length === 0 && familyHasSource(family);
-  const parts = searchOnly
-    ? searchTerm
-      ? await provider.getParts({ family, search: searchTerm })
-      : []
+  // Onderdelen komen uit de Wearparts-API: zoeken op naam kan altijd,
+  // bladeren pas als er een auto gekozen is (docs/api/WEARPARTS.md).
+  const vehicleCatalog = usesVehicleCatalog(family);
+  const carId = /^[0-9]+$/.test(auto ?? "") ? Number(auto) : null;
+
+  const searchResult =
+    vehicleCatalog && searchTerm
+      ? await searchParts(searchTerm, PAGE_SIZE)
+      : { parts: [], total: 0 };
+  const groups = vehicleCatalog && carId ? await partGroups(carId) : [];
+
+  const parts = vehicleCatalog
+    ? searchResult.parts
     : await provider.getParts({ family, limit: 8 });
 
   // GEMETEN 2026-09-06: area 3 doorzoekt uitsluitend OE-nummers. Zoeken op
@@ -76,7 +91,7 @@ export default async function FamilyPage({ params, searchParams }: Props) {
   // vangen we een naam-zoekopdracht daar op in plaats van de klant met een
   // lege pagina achter te laten.
   const elsewhere =
-    searchOnly && searchTerm && parts.length === 0
+    vehicleCatalog && searchTerm && parts.length === 0
       ? (
           await Promise.all(
             PRODUCT_FAMILIES.filter((other) => other !== family).map((other) =>
@@ -97,7 +112,7 @@ export default async function FamilyPage({ params, searchParams }: Props) {
       <h1 className="mt-3 text-3xl md:text-4xl">{t(`${family}.title`)}</h1>
       <p className="mt-4 max-w-xl text-muted">{t(`${family}.intro`)}</p>
 
-      {searchOnly ? (
+      {vehicleCatalog ? (
         <>
           {/* Gewoon een GET-formulier: werkt zonder JavaScript en het
               resultaat is deelbaar via de URL */}
@@ -113,7 +128,7 @@ export default async function FamilyPage({ params, searchParams }: Props) {
                 placeholder={t("oenPlaceholder")}
                 autoComplete="off"
                 spellCheck={false}
-                className="w-56 rounded-md border border-border bg-background px-3 py-2 font-medium tabular-nums"
+                className="w-72 max-w-full rounded-md border border-border bg-background px-3 py-2 font-medium"
               />
               <button
                 type="submit"
@@ -122,8 +137,49 @@ export default async function FamilyPage({ params, searchParams }: Props) {
                 {t("oenSubmit")}
               </button>
             </div>
+            {carId && <input type="hidden" name="auto" value={carId} />}
             <p className="mt-2 text-sm text-muted">{t("oenHint")}</p>
           </form>
+
+          {/* Categorieën met iconen. De boom hangt aan de auto: zonder
+              gekozen voertuig kan de leverancier hem niet leveren, dus dan
+              tonen we een uitnodiging in plaats van een lege rij. */}
+          {carId ? (
+            groups.length > 0 && (
+              <section className="mt-10">
+                <h2 className="text-2xl">{t("groupsTitle")}</h2>
+                <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {groups.map((group) => (
+                    <li key={group.id}>
+                      <Link
+                        href={{
+                          pathname: "/[family]/[category]",
+                          params: { family: slug, category: groupSlug(group) },
+                          query: { auto: String(carId) },
+                        }}
+                        className="flex h-full items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:border-caro-orange hover:bg-surface"
+                      >
+                        {group.iconUrl && (
+                          <Image
+                            src={group.iconUrl}
+                            alt=""
+                            width={40}
+                            height={40}
+                            className="size-10 shrink-0 rounded bg-white object-contain p-1"
+                          />
+                        )}
+                        <span className="text-sm font-semibold">{group.name}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )
+          ) : (
+            <p className="mt-8 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+              {t("chooseCarToBrowse")}
+            </p>
+          )}
 
           <div className="mt-10">
             {!searchTerm ? null : parts.length === 0 ? (

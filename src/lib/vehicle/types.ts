@@ -29,6 +29,14 @@ export interface Vehicle {
   color?: string;
   /** ISO-datum, bv. "2024-02-26" */
   apkExpiry?: string;
+  /**
+   * TecDoc-voertuig-id uit de Wearparts-API. Hiermee tonen we onderdelen die
+   * op déze auto passen; zonder dit id kan de catalogus alleen zoeken op naam
+   * (docs/api/WEARPARTS.md).
+   */
+  carId?: number;
+  /** Voertuignaam zoals TecDoc hem schrijft, bv. "CITROËN C3 AIRCROSS II 1.2" */
+  carName?: string;
 }
 
 export type VehicleLookupError =

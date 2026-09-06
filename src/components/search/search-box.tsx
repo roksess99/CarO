@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -8,6 +9,7 @@ import {
   searchSuggestionsAction,
   type SearchSuggestion,
 } from "@/components/search/actions";
+import { ProductImagePlaceholder } from "@/components/product-image-placeholder";
 import { formatPriceCents } from "@/lib/format";
 
 /** Wachten tot iemand uitgetypt is; elke aanroep kost zes Tyre24-calls */
@@ -178,7 +180,23 @@ export function SearchBox({
                     index === highlighted ? "bg-surface" : ""
                   }`}
                 >
-                  <span className="min-w-0">
+                  {/* Vaste maat met een kader: zonder die reservering
+                      verspringt de lijst zodra een foto binnenkomt, precies
+                      terwijl iemand met de pijltjes een rij aanwijst. */}
+                  <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-surface">
+                    {suggestion.imageUrl ? (
+                      <Image
+                        src={suggestion.imageUrl}
+                        alt=""
+                        width={44}
+                        height={44}
+                        className="size-full object-contain"
+                      />
+                    ) : (
+                      <ProductImagePlaceholder label="" className="size-full" iconClassName="size-5" />
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium text-foreground">
                       {suggestion.name}
                     </span>
