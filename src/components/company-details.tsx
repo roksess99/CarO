@@ -15,12 +15,23 @@ import {
  * Een veld dat nog niet is ingevuld toont "volgt nog" in plaats van de
  * PLACEHOLDER-tekst uit de bron.
  */
-export function CompanyDetails({ className }: { className?: string }) {
+export function CompanyDetails({
+  className,
+  // Een webshop moet zijn vestigingsadres tonen (art. 6:230m BW). Het staat
+  // daarom op de voorwaarden- en privacypagina en op de factuur; in de
+  // footer laten we het op verzoek weg, omdat het een woonadres is.
+  showAddress = true,
+}: {
+  className?: string;
+  showAddress?: boolean;
+}) {
   const t = useTranslations("company");
 
   const rows: Array<{ label: string; value: string | null }> = [
     { label: t("name"), value: companyValue(COMPANY.legalName) },
-    { label: t("address"), value: companyAddressLine() },
+    ...(showAddress
+      ? [{ label: t("address"), value: companyAddressLine() }]
+      : []),
     { label: t("email"), value: companyValue(COMPANY.email) },
     { label: t("phone"), value: companyValue(COMPANY.phone) },
     { label: t("coc"), value: companyValue(COMPANY.cocNumber) },

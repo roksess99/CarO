@@ -17,6 +17,23 @@ Dit is de gekozen catalogus-leverancier (docs/DECISIONS.md #1).
 | Rate limit | **100 requests/minuut** (`ERR_TOO_MANY_REQUESTS`) — cachen is verplicht, geen client-side calls |
 | Formaat | JSON. Let op: veel numerieke velden komen als **string** terug (o.a. prijzen, quantity) |
 
+## Area 3 doorzoekt alleen OE-nummers — GEMETEN 2026-09-06
+
+Zoeken op naam werkt daar niet, ook niet op de exacte artikelnaam of het merk:
+
+| Zoekterm | Treffers |
+|---|---|
+| `06A115561B` (OE-nummer) | 2 |
+| `OELFILTER` (de letterlijke artikelnaam) | 0 |
+| `VOLKSWAGEN` (de fabrikant) | 0 |
+| `FILTER`, `OEL`, `Ölfilter` | 0 |
+
+Ter vergelijking: op banden (area 6) werkt naamzoeken wél — `FALKEN` en `HS02` geven treffers.
+
+**Ook geprobeerd en mislukt:** area 10 (gebruikte onderdelen) als naam→OE-index gebruiken. Die area is wél op categorie doorzoekbaar en draagt OE-nummers, maar van de eerste 12 gevonden nummers leverde er **nul** een nieuw onderdeel op in area 3. Het assortiment daar overlapt niet.
+
+Het zoekveld tolereert hoofdletters en spaties, maar niet de koppeltekens waarmee klanten het nummer overtypen: `90915-YZZE1` geeft niets, `90915YZZE1` één treffer. De provider probeert daarom een tweede keer zonder scheidingstekens.
+
 ## Productfoto's — OPGELOST 2026-09-05
 
 `media[].imageLink` bevat twee `%s`-plaatshouders. ALZURA gaf per e-mail het
