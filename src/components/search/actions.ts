@@ -2,8 +2,13 @@
 
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
-import { familySlug, PRODUCT_FAMILIES } from "@/lib/catalog/families";
+import {
+  familySlug,
+  PRODUCT_FAMILIES,
+  usesVehicleCatalog,
+} from "@/lib/catalog/families";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import { searchParts } from "@/lib/catalog/wearparts-provider";
 
 /** Kortste term die we accepteren; korter levert alleen ruis op */
 const MIN_TERM_LENGTH = 3;
@@ -17,6 +22,8 @@ export interface SearchSuggestion {
   brand: string;
   oeNumber: string;
   priceCents: number;
+  /** Productfoto; ontbreekt bij artikelen waar de leverancier er geen heeft */
+  imageUrl?: string;
   /** Volledig pad naar het artikel, klaar om naartoe te navigeren */
   href: string;
 }
@@ -47,17 +54,22 @@ export async function searchSuggestionsAction(
   const provider = getCatalogProvider();
   const perFamily = await Promise.all(
     PRODUCT_FAMILIES.map(async (family) => {
-      const parts = await provider.getParts({
-        family,
-        search: trimmed,
-        limit: PER_FAMILY,
-      });
+      // Onderdelen komen uit de Wearparts-API; die kent de familie niet en
+      // zit niet achter de provider (docs/api/WEARPARTS.md).
+      const parts = usesVehicleCatalog(family)
+        ? (await searchParts(trimmed, PER_FAMILY)).parts
+        : await provider.getParts({
+            family,
+            search: trimmed,
+            limit: PER_FAMILY,
+          });
       return parts.map((part) => ({
         id: part.id,
         name: part.name,
         brand: part.brand,
         oeNumber: part.oeNumber,
         priceCents: part.priceCents,
+        imageUrl: part.imageUrl,
         href: getPathname({
           locale: targetLocale,
           href: {

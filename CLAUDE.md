@@ -55,9 +55,11 @@ Stand 2026-08-16. Handig bij het oppakken van werk; niet uitputtend.
 | Mobiele navigatie | `components/bottom-nav.tsx` | Zwevende tabbalk; assortiment en autokiezer openen als paneel vanaf de onderkant |
 | Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |
 
-**Half waar**: `/nl/mijn-auto` zoekt op merk en model in de leveranciersteksten
-(velgen en toebehoren leveren treffers, banden en onderdelen niet). Dat is geen
-fitment-garantie; de pagina zegt dat er ook bij — zie @docs/DECISIONS.md #6.
+**Fitment werkt** sinds 2026-09-06: een kenteken gaat via de Wearparts-API naar
+een TecDoc-voertuig-id, en daarmee toont `/nl/onderdelen?auto=<carId>` alleen
+onderdelen die op die auto passen — zie @docs/api/WEARPARTS.md en
+@docs/DECISIONS.md #6. `/nl/mijn-auto` blijft de zoekbrug op merk en model voor
+velgen en toebehoren.
 
 ## Stack
 
@@ -68,8 +70,12 @@ fitment-garantie; de pagina zegt dat er ook bij — zie @docs/DECISIONS.md #6.
   layout + `theme-toggle.tsx`). next-themes is verwijderd: verlaten package,
   gaf een React 19-warning door zijn client-side geïnjecteerde script.
 - **Package manager**: pnpm
-- **Catalogus**: Tyre24/ALZURA REST API v1.3 — zie @docs/api/TYRE24.md.
-  Zod valideert alle API-responses aan de rand, daarna is alles getypeerd.
+- **Catalogus**: twee API's van dezelfde leverancier, met **elk een eigen token**.
+  Banden, velgen en toebehoren komen uit **Products v1.3** (@docs/api/TYRE24.md,
+  `TYRE24_API_TOKEN`); onderdelen uit **Wearparts v1.6** (@docs/api/WEARPARTS.md,
+  `TYRE24_WEARPARTS_TOKEN`). Zod valideert alle API-responses aan de rand.
+  Onderdelen hangen aan een gekozen auto: bladeren vereist een `carId`, zoeken
+  op naam niet.
 - **Kentekenzoeker**: overheid.io (RDW-voertuiggegevens) — zie @docs/api/OVERHEID-IO.md.
   Een kenteken is persoonsgegeven: nooit in een URL, nooit in een logregel.
 - **Autokiezer zonder kenteken**: merk/model-catalogus geoogst uit RDW open

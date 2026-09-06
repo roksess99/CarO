@@ -7,9 +7,11 @@ import {
   familySlug,
   PRODUCT_FAMILIES,
   type ProductFamily,
+  usesVehicleCatalog,
 } from "@/lib/catalog/families";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
+import { searchParts } from "@/lib/catalog/wearparts-provider";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -46,11 +48,15 @@ export default async function SearchPage({ params, searchParams }: Props) {
     ? await Promise.all(
         PRODUCT_FAMILIES.map(async (family) => ({
           family,
-          parts: await provider.getParts({
-            family,
-            search: term,
-            limit: RESULTS_PER_FAMILY,
-          }),
+          // Onderdelen komen uit de Wearparts-API en zitten niet achter de
+          // provider. Zoeken op naam werkt daar zonder gekozen auto.
+          parts: usesVehicleCatalog(family)
+            ? (await searchParts(term, RESULTS_PER_FAMILY)).parts
+            : await provider.getParts({
+                family,
+                search: term,
+                limit: RESULTS_PER_FAMILY,
+              }),
         })),
       )
     : [];

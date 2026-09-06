@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     // Zonder deze regel weigert next/image een externe bron.
     remotePatterns: [
       { protocol: "https", hostname: "**.tyre-shopping.com", pathname: "/**" },
+      // Productfoto's van de Wearparts-API staan op een ander CDN
+      { protocol: "https", hostname: "**.alzura.com", pathname: "/**" },
     ],
   },
 };

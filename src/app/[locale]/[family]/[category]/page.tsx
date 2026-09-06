@@ -6,7 +6,12 @@ import { ProductFilters } from "@/components/product-filters";
 import { ProductGrid } from "@/components/product-grid";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { familyFromSlug, familySlug } from "@/lib/catalog/families";
+import { PartsCategoryPage } from "@/components/parts-category-page";
+import {
+  familyFromSlug,
+  familySlug,
+  usesVehicleCatalog,
+} from "@/lib/catalog/families";
 import {
   countActiveFilters,
   FILTER_PARAM,
@@ -19,7 +24,7 @@ import { localizedMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string; family: string; category: string }>;
-  searchParams: Promise<{ f?: string | string[]; toon?: string }>;
+  searchParams: Promise<{ f?: string | string[]; toon?: string; auto?: string }>;
 };
 
 /** Producten per stap. Meer laden telt hier telkens bij op. */
@@ -58,14 +63,34 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const family = familyFromSlug(familyParam, locale);
   if (!family) notFound();
 
+  const query = await searchParams;
+
+  // Onderdelen hebben een eigen catalogus met een eigen boom en een
+  // verplichte auto (docs/api/WEARPARTS.md); die pagina staat apart.
+  if (usesVehicleCatalog(family)) {
+    const auto = query.auto;
+    const requestedParts = Number(query.toon);
+    return (
+      <PartsCategoryPage
+        family={family}
+        familySlugParam={familyParam}
+        categorySlug={slug}
+        carId={/^[0-9]+$/.test(auto ?? "") ? Number(auto) : null}
+        limit={
+          Number.isInteger(requestedParts) && requestedParts > 0
+            ? Math.min(requestedParts, 200)
+            : 20
+        }
+      />
+    );
+  }
+
   const provider = getCatalogProvider();
   const categories = await localizeCategories(
     await provider.getCategories(family),
   );
   const category = categories.find((c) => c.slug === slug);
   if (!category) notFound();
-
-  const query = await searchParams;
   const selected = parseFilterParam(query[FILTER_PARAM]);
   const activeCount = countActiveFilters(selected);
 

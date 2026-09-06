@@ -12,9 +12,11 @@ import {
   familyFromSlug,
   familySlug,
   type ProductFamily,
+  usesVehicleCatalog,
 } from "@/lib/catalog/families";
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import { idFromPartSlug, partById } from "@/lib/catalog/wearparts-provider";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents, priceCentsToDecimalString } from "@/lib/format";
 import { localizedMetadata, SITE_URL } from "@/lib/site";
@@ -31,16 +33,36 @@ type Props = {
 // Bewust geen generateStaticParams: de echte catalogus heeft te veel
 // artikelen om voor te renderen. De adapter cachet de API-calls al.
 
-/** Onderdeel ophalen en controleren dat het in déze familie én categorie zit */
+/**
+ * Onderdeel ophalen op slug, ongeacht welke catalogus erachter zit.
+ *
+ * Bij onderdelen (Wearparts) hoort een artikel niet bij één vaste categorie:
+ * dezelfde remschijf hangt onder meerdere assemblagegroepen en past op
+ * meerdere auto's. De categorie in de URL is daar dus context, geen
+ * identiteit — vandaar dat alleen de andere families erop gecontroleerd
+ * worden.
+ */
+async function loadPart(
+  family: ProductFamily,
+  partSlug: string,
+): Promise<Part | null> {
+  if (usesVehicleCatalog(family)) {
+    const id = idFromPartSlug(partSlug);
+    return id ? partById(id) : null;
+  }
+  return getCatalogProvider().getPartBySlug(family, partSlug);
+}
+
 async function findPart(
   family: ProductFamily,
   categorySlug: string,
   partSlug: string,
 ): Promise<Part> {
-  const part = await getCatalogProvider().getPartBySlug(family, partSlug);
+  const part = await loadPart(family, partSlug);
+  if (!part || part.family !== family) notFound();
   // Mismatch → 404, anders is hetzelfde artikel op meerdere URL's
   // bereikbaar (dubbele content)
-  if (!part || part.categorySlug !== categorySlug || part.family !== family) {
+  if (!usesVehicleCatalog(family) && part.categorySlug !== categorySlug) {
     notFound();
   }
   return part;
@@ -55,8 +77,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   } = await params;
   const family = familyFromSlug(familyParam, locale);
   if (!family) return {};
-  const part = await getCatalogProvider().getPartBySlug(family, partSlug);
-  if (!part || part.categorySlug !== category) return {};
+  const part = await loadPart(family, partSlug);
+  if (!part) return {};
+  if (!usesVehicleCatalog(family) && part.categorySlug !== category) return {};
 
   const t = await getTranslations({ locale, namespace: "product" });
   const localizedHref = (targetLocale: string) =>

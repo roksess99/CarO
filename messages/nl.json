@@ -43,15 +43,15 @@
     "viewAll": "Alles bekijken",
     "allIn": "Alles in {family}",
     "menuTitle": "Assortiment",
-    "oenLabel": "Zoek op OE-nummer",
-    "oenPlaceholder": "bv. 06A115561B",
+    "oenLabel": "Zoek een onderdeel",
+    "oenPlaceholder": "remschijf, oliefilter of OE-nummer",
     "oenSubmit": "Zoeken",
-    "oenHint": "Vul het volledige OE-nummer in zoals het op het onderdeel staat. Zoeken op productnaam of een deel van het nummer werkt niet.",
+    "oenHint": "Zoek op naam, OE-nummer of EAN. Voorvoegsels OEN… en EAN… beperken de zoekopdracht tot dat veld.",
     "oenResults": "Resultaten voor {term}",
-    "oenNoResults": "Geen onderdelen gevonden voor {term}. Controleer het OE-nummer — het moet volledig en exact kloppen.",
+    "oenNoResults": "Niets gevonden voor {term}. Probeer een andere omschrijving of een OE-nummer.",
     "onderdelen": {
       "title": "Onderdelen",
-      "intro": "Nieuwe originele onderdelen. Zoek op OE-nummer zoals het op het onderdeel staat.",
+      "intro": "Nieuwe originele onderdelen. Zoek op naam of nummer, of kies je auto en blader per categorie.",
       "menuAria": "Onderdelen",
       "empty": "Er is nog geen onderdelenaanbod beschikbaar."
     },
@@ -73,7 +73,9 @@
       "menuAria": "Toebehorencategorieën",
       "empty": "Er is nog geen aanbod aan toebehoren beschikbaar."
     },
-    "oenElsewhere": "Wel gevonden bij banden, velgen en toebehoren voor \"{term}\""
+    "oenElsewhere": "Wel gevonden bij banden, velgen en toebehoren voor \"{term}\"",
+    "groupsTitle": "Categorieën voor jouw auto",
+    "chooseCarToBrowse": "Kies eerst je auto om door de categorieën te bladeren. Zoeken op naam of nummer kan altijd."
   },
   "categoryTiles": {
     "title": "Auto-onderdelen vinden in de catalogus",
@@ -104,7 +106,8 @@
       "invalidPlate": "Een Nederlands kenteken heeft 6 tekens, bijvoorbeeld AB-123-C.",
       "notFound": "Dit kenteken staat niet in de RDW-gegevens. Controleer of je het goed hebt ingevuld.",
       "unavailable": "De kentekenzoeker is tijdelijk niet beschikbaar. Probeer het later opnieuw."
-    }
+    },
+    "fitmentReady": "Deze auto is herkend in de onderdelencatalogus. Je ziet alleen onderdelen die erop passen."
   },
   "category": {
     "metaDescription": "{category} voor jouw auto. Alle prijzen inclusief 21% btw.",
@@ -241,7 +244,8 @@
       "material": "Materiaal",
       "content": "Inhoud",
       "packaging": "Verpakking",
-      "itemNumber": "Artikelnummer"
+      "itemNumber": "Artikelnummer",
+      "ean": "EAN"
     }
   },
   "cart": {

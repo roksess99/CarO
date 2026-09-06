@@ -23,40 +23,55 @@ type Platform = "nl" | "de";
 type Browse =
   /** Categorieën doorbladeren */
   | "categories"
-  /** Alleen zoeken (area 3: searchableByCategory=false, searchPrefix=OEN) */
-  | "search";
+  /** Zoeken op naam, en bladeren zodra er een auto gekozen is */
+  | "vehicle";
+
+/** Welke API de familie bedient */
+type Catalog =
+  /** Products REST API v1.3 — banden, velgen, toebehoren */
+  | "products"
+  /** Wearparts REST API v1.6 — onderdelen (docs/api/WEARPARTS.md) */
+  | "wearparts";
 
 interface FamilyDefinition {
   areaId: string;
   platform: Platform;
   browse: Browse;
+  catalog: Catalog;
   /** URL-segment per taal; NL is leidend (SEO-regel) */
   slugs: { nl: string; en: string };
 }
 
 const FAMILIES = {
+  // Onderdelen draaien sinds 2026-09-06 op de Wearparts-API. Die kent wél
+  // een categorieboom en zoeken op naam; product area 3 kon alleen exacte
+  // OE-nummers en was niet actief op het NL-platform (DECISIONS #7).
   onderdelen: {
-    areaId: "3",
-    platform: "de",
-    browse: "search",
+    areaId: "",
+    platform: "nl",
+    browse: "vehicle",
+    catalog: "wearparts",
     slugs: { nl: "onderdelen", en: "parts" },
   },
   banden: {
     areaId: "6",
     platform: "nl",
     browse: "categories",
+    catalog: "products",
     slugs: { nl: "banden", en: "tyres" },
   },
   velgen: {
     areaId: "7",
     platform: "nl",
     browse: "categories",
+    catalog: "products",
     slugs: { nl: "velgen", en: "wheels" },
   },
   toebehoren: {
     areaId: "1",
     platform: "de",
     browse: "categories",
+    catalog: "products",
     slugs: { nl: "toebehoren", en: "accessories" },
   },
 } as const satisfies Record<string, FamilyDefinition>;
@@ -100,9 +115,9 @@ export function familyFromSlug(
   return null;
 }
 
-/** Familie waarin alleen gezocht kan worden, niet gebladerd */
-export function isSearchOnly(family: ProductFamily): boolean {
-  return FAMILIES[family].browse === "search";
+/** Familie waarvan de catalogus aan een gekozen auto hangt */
+export function usesVehicleCatalog(family: ProductFamily): boolean {
+  return FAMILIES[family].catalog === "wearparts";
 }
 
 export interface FamilySource {
@@ -128,6 +143,9 @@ function platformBaseUrl(platform: Platform): string {
 export function familySource(family: ProductFamily): FamilySource | null {
   if (!process.env.TYRE24_API_TOKEN) return null;
   const definition = FAMILIES[family];
+  // Deze familie komt van een andere API; de Products-adapter heeft er niets
+  // te zoeken en zou anders area "" opvragen.
+  if (definition.catalog !== "products") return null;
   return {
     productAreaId: definition.areaId,
     baseUrl: platformBaseUrl(definition.platform),

@@ -50,31 +50,8 @@ export default async function HomePage({ params }: Props) {
 
       <CategoryGrid />
 
-      {/* Tegel per familie: het hele assortiment in één oogopslag */}
-      <section className="site-container pb-16 md:pb-24">
-        <h2 className="text-2xl">{tFamily("menuTitle")}</h2>
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {PRODUCT_FAMILIES.map((family) => (
-            <li key={family}>
-              <Link
-                href={{
-                  pathname: "/[family]",
-                  params: { family: familySlug(family, locale) },
-                }}
-                className="flex h-full flex-col rounded-lg border border-border p-5 transition-colors hover:border-caro-orange hover:bg-surface"
-              >
-                <span className="text-lg font-bold">
-                  {tFamily(`${family}.title`)}
-                </span>
-                <span className="mt-2 text-sm text-muted">
-                  {tFamily(`${family}.intro`)}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
+      {/* Geen tekstuele familielijst meer: het categorieraster hierboven
+          toont dezelfde vier families mét foto en uitklapbare categorieën. */}
       {featuredRows.map(({ family, parts }) => (
         <section key={family} className="site-container pb-16 md:pb-24">
           <div className="flex flex-wrap items-baseline justify-between gap-4">
