@@ -57,6 +57,39 @@ Twee aandachtspunten:
 - Volgens ALZURA zijn er **alleen foto's voor banden**. Voor OE-onderdelen komt
   `category_logo_neutral` terug: een generiek categoriebeeld, geen productfoto.
 
+## Banden zoeken op maat — GEMETEN 2026-09-07
+
+Area 6 heeft **geen maatfilter**: het `filter`-blok van `/items` kent alleen
+`manufacturer` en `filterByExpress`. De maat staat in de artikelnaam. Zoeken
+werkt wel, maar alleen in het formaat **mét spatie**:
+
+| `search=` | Treffers |
+|---|---|
+| `205/55 R16` | 1888 |
+| `205/55R16` | 3 |
+| `205/55` | 3011 |
+
+Het seizoen erachter plakken beperkt server-side, in het **Nederlands**:
+
+| `search=` | Treffers | Seizoen van de eerste 100 |
+|---|---|---|
+| `205/55 R16 winter` | 528 | 100× Winterreifen |
+| `205/55 R16 zomer` | 999 | 100× Sommerreifen |
+| `205/55 R16 all season` | 358 | 100× Ganzjahresreifen |
+| `205/55 R16 vierseizoenen` | 0 | — |
+| `205/55 R16 Winterreifen` | 2 | — |
+
+De zoekfunctie is nauwkeuriger dan verwacht: van 60 opgehaalde treffers zaten
+er 60 in de gevraagde maat. Toch rekent `src/lib/catalog/tyre-size.ts` het na
+op het `sizes`-blok van het artikel (`tyreWidth`, `tyreHeight`,
+`tyreDiameter` als getal) — vrije tekst is geen contract.
+
+Let op: `tyreWidth` komt als string mét decimalen terug (`"205.000"`).
+
+**Een voertuig levert géén bandenmaat.** Niet via deze API (geen
+voertuig-endpoints, zie hieronder) en niet via de RDW-registratie
+(DECISIONS.md #6). De klant leest zijn maat van de flank van de band.
+
 ## Wat dit account écht kan (volledig gemeten 2026-08-07)
 
 Alle negen area's doorgemeten op beide platformen, met `GET /areas`,

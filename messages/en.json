@@ -22,18 +22,19 @@
   },
   "search": {
     "label": "Search the shop",
-    "placeholder": "Tyre size, OE number or brand",
+    "placeholder": "Brake disc or 205/55 R16",
     "submit": "Search",
     "suggestionsLabel": "Search suggestions",
     "suggestionsLoading": "Searching…",
     "suggestionsEmpty": "No direct matches. Press Search for all results.",
     "title": "Search",
-    "metaDescription": "Search parts and tyres by size, OE number or brand.",
+    "metaDescription": "Search parts, tyres, wheels and accessories by name, tyre size, OE number or brand.",
     "resultsFor": "Results for “{term}”",
     "noResults": "Nothing found for “{term}”.",
     "tipsTitle": "What can you search for?",
+    "tipName": "Name of a part, for example brake disc or oil filter. Search one word at a time — a combination like “bosch brake disc” returns nothing.",
     "tipSize": "Tyre size, for example 195/65 R15 or 1956515",
-    "tipOen": "OE number of a part, for example 06A115561B — complete and exact",
+    "tipOen": "OE number, for example 06A115561B. Part of the number works too, and you can leave out the hyphens.",
     "tipBrand": "Brand name, for example Continental or Bosch"
   },
   "family": {
@@ -77,6 +78,24 @@
     "groupsTitle": "Categories for your car",
     "chooseCarToBrowse": "Pick your car first to browse the categories. Searching by name or number always works.",
     "viewAllOf": "View all {family}"
+  },
+  "tyres": {
+    "pickerTitle": "Choose your tyre size",
+    "width": "Width",
+    "height": "Height",
+    "diameter": "Diameter",
+    "season": "Season",
+    "seasons": {
+      "all": "All",
+      "zomer": "Summer",
+      "winter": "Winter",
+      "allseason": "All-season"
+    },
+    "submit": "Show tyres",
+    "results": "Tyres in size {size}",
+    "noResults": "No tyres found in size {size}. Check the size on your tyre's sidewall or pick another season.",
+    "helpTitle": "Where do I find my tyre size?",
+    "helpBody": "The size is on the sidewall of your tyre, for example 205/55 R16 91 V. 205 is the width in millimetres, 55 the height as a percentage of that width and 16 the rim diameter in inches. The number and letter after it are the load and speed rating."
   },
   "categoryTiles": {
     "title": "Find car parts in the catalogue",

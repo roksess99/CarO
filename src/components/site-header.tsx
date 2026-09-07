@@ -6,7 +6,7 @@ import { FamilyNav, type FamilyNavItem } from "@/components/family-nav";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SiteSearch } from "@/components/site-search";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { SelectedVehicle } from "@/components/vehicle/selected-vehicle";
+import { VehicleBar } from "@/components/vehicle/vehicle-bar";
 import { VehicleButton } from "@/components/vehicle/vehicle-button";
 import { Link } from "@/i18n/navigation";
 import { PRODUCT_FAMILIES } from "@/lib/catalog/families";
@@ -47,9 +47,6 @@ export async function SiteHeader() {
         </div>
 
         <div className="ms-auto flex items-center gap-1 md:gap-2">
-          <div className="md:hidden">
-            <SelectedVehicle />
-          </div>
           {/* Ook op mobiel zichtbaar: dit zijn de enige twee plekken waar taal
               en thema te wijzigen zijn, en de tabbalk onderaan heeft er geen
               ruimte voor. */}
@@ -77,7 +74,12 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className="site-container pb-3 md:hidden">
+      {/* Mobiel: de gekozen auto als balk boven de zoekbalk. Die volgorde
+          komt uit de apps van de grote onderdelenshops — eerst waarvoor je
+          zoekt, dan wat je zoekt. */}
+      <VehicleBar makes={makes} />
+
+      <div className="site-container py-3 md:hidden">
         <SiteSearch locale={locale} id="header-search-mobile" />
       </div>
     </header>

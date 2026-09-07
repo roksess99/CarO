@@ -1,13 +1,12 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { GroupList } from "@/components/catalog/group-list";
 import { ProductGrid } from "@/components/product-grid";
 import { SelectedCarInUrl } from "@/components/vehicle/use-selected-car";
 import { Link } from "@/i18n/navigation";
 import type { ProductFamily } from "@/lib/catalog/families";
 import {
   groupIdFromSlug,
-  groupSlug,
   partGroupById,
   partGroups,
   partsInGroup,
@@ -120,34 +119,11 @@ export async function PartsCategoryPage({
 
       {children.length > 0 && (
         <nav aria-label={t("siblingsAria")} className="mt-6">
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {children.map((group) => (
-              <li key={group.id}>
-                <Link
-                  href={{
-                    pathname: "/[family]/[category]",
-                    params: {
-                      family: familySlugParam,
-                      category: groupSlug(group),
-                    },
-                    query,
-                  }}
-                  className="flex h-full items-center gap-3 rounded-lg border border-border p-3 text-sm hover:border-caro-orange hover:bg-surface"
-                >
-                  {group.iconUrl && (
-                    <Image
-                      src={group.iconUrl}
-                      alt=""
-                      width={32}
-                      height={32}
-                      className="size-8 shrink-0 rounded bg-white object-contain p-0.5"
-                    />
-                  )}
-                  <span className="font-semibold">{group.name}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <GroupList
+            groups={children}
+            familySlugParam={familySlugParam}
+            carId={carId}
+          />
         </nav>
       )}
 

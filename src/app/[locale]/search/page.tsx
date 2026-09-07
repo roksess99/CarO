@@ -84,6 +84,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
         <div className="mt-10 max-w-2xl rounded-lg border border-border bg-surface p-6">
           <h2 className="text-lg">{t("tipsTitle")}</h2>
           <ul className="mt-4 space-y-2 text-sm text-muted">
+            <li>{t("tipName")}</li>
             <li>{t("tipSize")}</li>
             <li>{t("tipOen")}</li>
             <li>{t("tipBrand")}</li>
@@ -93,6 +94,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
         <div className="mt-10 max-w-2xl rounded-lg border border-border bg-surface p-6">
           <p className="text-muted">{t("noResults", { term })}</p>
           <ul className="mt-4 space-y-2 text-sm text-muted">
+            <li>{t("tipName")}</li>
             <li>{t("tipSize")}</li>
             <li>{t("tipOen")}</li>
             <li>{t("tipBrand")}</li>

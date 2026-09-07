@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import Image from "next/image";
+import { GroupList } from "@/components/catalog/group-list";
 import { ProductGrid } from "@/components/product-grid";
+import { TyreSizePicker } from "@/components/tyres/tyre-size-picker";
 import { SelectedCarInUrl } from "@/components/vehicle/use-selected-car";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -15,19 +16,37 @@ import {
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import {
-  groupSlug,
-  partGroups,
-  searchParts,
-} from "@/lib/catalog/wearparts-provider";
+  filterTyres,
+  formatTyreSize,
+  parseTyreSeason,
+  parseTyreSize,
+  tyreSearchTerm,
+} from "@/lib/catalog/tyre-size";
+import { partGroups, searchParts } from "@/lib/catalog/wearparts-provider";
 import { localizedMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string; family: string }>;
-  searchParams: Promise<{ oen?: string | string[]; auto?: string }>;
+  searchParams: Promise<{
+    oen?: string | string[];
+    auto?: string;
+    breedte?: string;
+    hoogte?: string;
+    diameter?: string;
+    seizoen?: string;
+  }>;
 };
 
 /** Artikelen per zoekopdracht of categorie */
 const PAGE_SIZE = 20;
+
+/**
+ * Banden halen we iets ruimer op dan we tonen. De zoekfunctie van de
+ * leverancier is op de maat verrassend nauwkeurig (gemeten: 60 van de 60
+ * treffers in de gevraagde maat), maar wij rekenen het na op het maatblok
+ * van het artikel — die marge vangt op wat daarbij afvalt.
+ */
+const TYRE_FETCH_SIZE = 30;
 
 // Next geeft de locale van de bovenliggende route mee, zodat we per taal
 // alleen de juiste familieslugs genereren (nl → onderdelen/banden,
@@ -63,13 +82,22 @@ export default async function FamilyPage({ params, searchParams }: Props) {
   if (!family) notFound();
 
   const t = await getTranslations("family");
+  const tTyres = await getTranslations("tyres");
   const provider = getCatalogProvider();
   const categories = await localizeCategories(
     await provider.getCategories(family),
   );
 
-  const { oen, auto } = await searchParams;
+  const { oen, auto, breedte, hoogte, diameter, seizoen } = await searchParams;
   const searchTerm = (Array.isArray(oen) ? oen[0] : oen)?.trim();
+
+  // Banden hebben een eigen ingang: de klant zoekt op de maat die op zijn
+  // band staat, niet op een categorie.
+  const tyreFamily = family === "banden";
+  const tyreSize = tyreFamily
+    ? parseTyreSize({ width: breedte, height: hoogte, diameter })
+    : null;
+  const tyreSeason = parseTyreSeason(seizoen);
 
   // Onderdelen komen uit de Wearparts-API: zoeken op naam kan altijd,
   // bladeren pas als er een auto gekozen is (docs/api/WEARPARTS.md).
@@ -85,6 +113,18 @@ export default async function FamilyPage({ params, searchParams }: Props) {
   const parts = vehicleCatalog
     ? searchResult.parts
     : await provider.getParts({ family, limit: 8 });
+
+  const tyres = tyreSize
+    ? filterTyres(
+        await provider.getParts({
+          family,
+          search: tyreSearchTerm(tyreSize, tyreSeason),
+          limit: TYRE_FETCH_SIZE,
+        }),
+        tyreSize,
+        tyreSeason,
+      ).slice(0, PAGE_SIZE)
+    : [];
 
   // GEMETEN 2026-09-06: area 3 doorzoekt uitsluitend OE-nummers. Zoeken op
   // "OELFILTER" of "VOLKSWAGEN" geeft nul treffers, óók al heet het artikel
@@ -112,6 +152,33 @@ export default async function FamilyPage({ params, searchParams }: Props) {
       <p className="eyebrow text-sm">{t("eyebrow")}</p>
       <h1 className="mt-3 text-3xl md:text-4xl">{t(`${family}.title`)}</h1>
       <p className="mt-4 max-w-xl text-muted">{t(`${family}.intro`)}</p>
+
+      {/* Banden: eerst de maat, dan pas categorieën. Wie banden koopt weet
+          welke maat hij nodig heeft en niets anders. */}
+      {tyreFamily && (
+        <TyreSizePicker
+          action={formAction}
+          size={tyreSize}
+          season={tyreSeason}
+        />
+      )}
+
+      {tyreSize && (
+        <section className="mt-10">
+          <h2 className="text-2xl">
+            {tTyres("results", { size: formatTyreSize(tyreSize) })}
+          </h2>
+          {tyres.length === 0 ? (
+            <p className="mt-6 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+              {tTyres("noResults", { size: formatTyreSize(tyreSize) })}
+            </p>
+          ) : (
+            <div className="mt-6">
+              <ProductGrid parts={tyres} />
+            </div>
+          )}
+        </section>
+      )}
 
       {vehicleCatalog ? (
         <>
@@ -149,31 +216,13 @@ export default async function FamilyPage({ params, searchParams }: Props) {
             groups.length > 0 && (
               <section className="mt-10">
                 <h2 className="text-2xl">{t("groupsTitle")}</h2>
-                <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                  {groups.map((group) => (
-                    <li key={group.id}>
-                      <Link
-                        href={{
-                          pathname: "/[family]/[category]",
-                          params: { family: slug, category: groupSlug(group) },
-                          query: { auto: String(carId) },
-                        }}
-                        className="flex h-full items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:border-caro-orange hover:bg-surface"
-                      >
-                        {group.iconUrl && (
-                          <Image
-                            src={group.iconUrl}
-                            alt=""
-                            width={40}
-                            height={40}
-                            className="size-10 shrink-0 rounded bg-white object-contain p-1"
-                          />
-                        )}
-                        <span className="text-sm font-semibold">{group.name}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-6">
+                  <GroupList
+                    groups={groups}
+                    familySlugParam={slug}
+                    carId={carId}
+                  />
+                </div>
               </section>
             )
           ) : (
@@ -240,8 +289,10 @@ export default async function FamilyPage({ params, searchParams }: Props) {
           </nav>
 
           {/* Alleen tonen als er echt iets is: de eerste categorie van een
-              familie kan leeg zijn of (bij Tyre24) een 500 geven */}
-          {parts.length > 0 && (
+              familie kan leeg zijn of (bij Tyre24) een 500 geven. Bij een
+              gekozen bandenmaat staan de treffers al boven; een blok
+              "veelgekocht" eronder leidt daar alleen van af. */}
+          {!tyreSize && parts.length > 0 && (
             <>
               <h2 className="mt-12 text-2xl">{t("featuredTitle")}</h2>
               <div className="mt-6">

@@ -194,10 +194,9 @@ function variantOf(
 function sizeLabel(item: z.infer<typeof tyreItemSchema>): string | null {
   const size = item.sizes?.[0];
   if (!size?.tyreWidth || !size.tyreHeight || !size.tyreDiameter) return null;
-  return `${size.tyreWidth}/${size.tyreHeight} ${size.design ?? ""}${size.tyreDiameter}`.replace(
-    /s+/g,
-    " ",
-  );
+  return `${size.tyreWidth}/${size.tyreHeight} ${size.design ?? ""}${size.tyreDiameter}`
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**

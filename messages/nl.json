@@ -22,18 +22,19 @@
   },
   "search": {
     "label": "Zoek in de webshop",
-    "placeholder": "Bandenmaat, OE-nummer of merk",
+    "placeholder": "Remschijf of 205/55 R16",
     "submit": "Zoek",
     "suggestionsLabel": "Zoeksuggesties",
     "suggestionsLoading": "Zoeken…",
     "suggestionsEmpty": "Geen directe treffers. Klik op Zoek voor alle resultaten.",
     "title": "Zoeken",
-    "metaDescription": "Zoek onderdelen en banden op maat, OE-nummer of merk.",
+    "metaDescription": "Zoek onderdelen, banden, velgen en toebehoren op naam, bandenmaat, OE-nummer of merk.",
     "resultsFor": "Resultaten voor “{term}”",
     "noResults": "Niets gevonden voor “{term}”.",
     "tipsTitle": "Waarop kun je zoeken?",
+    "tipName": "Naam van een onderdeel, bijvoorbeeld remschijf of oliefilter. Zoek op één woord — een combinatie als “bosch remschijf” geeft geen treffers.",
     "tipSize": "Bandenmaat, bijvoorbeeld 195/65 R15 of 1956515",
-    "tipOen": "OE-nummer van een onderdeel, bijvoorbeeld 06A115561B — volledig en exact",
+    "tipOen": "OE-nummer, bijvoorbeeld 06A115561B. Een deel van het nummer werkt ook, streepjes laat je weg.",
     "tipBrand": "Merknaam, bijvoorbeeld Continental of Bosch"
   },
   "family": {
@@ -77,6 +78,24 @@
     "groupsTitle": "Categorieën voor jouw auto",
     "chooseCarToBrowse": "Kies eerst je auto om door de categorieën te bladeren. Zoeken op naam of nummer kan altijd.",
     "viewAllOf": "Alle {family} bekijken"
+  },
+  "tyres": {
+    "pickerTitle": "Kies je bandenmaat",
+    "width": "Breedte",
+    "height": "Hoogte",
+    "diameter": "Diameter",
+    "season": "Seizoen",
+    "seasons": {
+      "all": "Alle",
+      "zomer": "Zomer",
+      "winter": "Winter",
+      "allseason": "Vierseizoenen"
+    },
+    "submit": "Banden bekijken",
+    "results": "Banden in maat {size}",
+    "noResults": "Geen banden gevonden in maat {size}. Controleer de maat op de flank van je band of kies een ander seizoen.",
+    "helpTitle": "Waar vind ik mijn bandenmaat?",
+    "helpBody": "De maat staat op de flank van je band, bijvoorbeeld 205/55 R16 91 V. 205 is de breedte in millimeter, 55 de hoogte als percentage van die breedte en 16 de velgdiameter in inch. Het getal en de letter erachter zijn de laad- en snelheidsindex."
   },
   "categoryTiles": {
     "title": "Auto-onderdelen vinden in de catalogus",
