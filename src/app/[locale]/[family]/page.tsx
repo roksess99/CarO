@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import Image from "next/image";
 import { ProductGrid } from "@/components/product-grid";
+import { SelectedCarInUrl } from "@/components/vehicle/use-selected-car";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -176,9 +177,12 @@ export default async function FamilyPage({ params, searchParams }: Props) {
               </section>
             )
           ) : (
-            <p className="mt-8 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
-              {t("chooseCarToBrowse")}
-            </p>
+            <>
+              <SelectedCarInUrl active />
+              <p className="mt-8 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+                {t("chooseCarToBrowse")}
+              </p>
+            </>
           )}
 
           <div className="mt-10">

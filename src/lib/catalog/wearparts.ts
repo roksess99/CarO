@@ -191,6 +191,10 @@ const articleSchema = z.object({
   id: z.string(),
   articleId: z.string().optional(),
   articleName: z.string(),
+  // Productlijn van de fabrikant, bv. "PROTRAC 4FUN". Pas samen met
+  // articleName onderscheidend: vijftig sneeuwkettingen heten allemaal
+  // "Sneeuwketting".
+  articleAddName: z.string().optional().catch(undefined),
   brandName: z.string().optional().catch(undefined),
   eanNumber: z.array(z.string()).optional().catch(undefined),
   // GEMETEN: quality komt als getal terug, niet als tekst. Een strikt
@@ -201,7 +205,21 @@ const articleSchema = z.object({
   image: z.string().optional().catch(undefined),
   offerList: z.array(offerSchema).optional(),
   thumbnails: z.array(thumbnailSchema).optional().catch(undefined),
-  attr: z.record(z.string(), z.unknown()).optional().catch(undefined),
+  // Attributen met een door de leverancier vertaald label:
+  // { "71": { translation: "Bandenmaat", value: "155/80-15", unit: "" } }
+  attr: z
+    .record(
+      z.string(),
+      z.object({
+        translation: z.string().optional(),
+        value: z.coerce.string().optional(),
+        unit: z.string().optional(),
+      }),
+    )
+    .optional()
+    .catch(undefined),
+  packingUnit: z.coerce.number().optional().catch(undefined),
+  quantityPerPackingUnit: z.coerce.number().optional().catch(undefined),
 });
 
 const articlesResponseSchema = z.object({
@@ -274,4 +292,168 @@ export async function articleById(
 ): Promise<WearpartsArticle | null> {
   const { articles } = await searchArticles({ search: `ID${id}`, limit: 1 });
   return articles[0] ?? null;
+}
+
+const vehicleDetailsSchema = z.object({
+  vehicleDetails: z
+    .object({
+      manuName: z.string().optional(),
+      modelName: z.string().optional(),
+      typeName: z.string().optional(),
+      fuelType: z.string().optional(),
+      powerKwFrom: z.coerce.number().optional(),
+      cylinderCapacityCcm: z.coerce.number().optional(),
+      constructionType: z.string().optional(),
+    })
+    .optional(),
+});
+
+export interface WearpartsVehicleDetails {
+  brand?: string;
+  model?: string;
+  /** Motorvariant, bv. "1.2 PureTech 110 (2RHNZB, …)" */
+  type?: string;
+  fuel?: string;
+  powerKw?: number;
+  engineCapacityCc?: number;
+  /** Carrosserievorm, bv. "SUV" */
+  bodyType?: string;
+}
+
+/**
+ * Details van één voertuig. Genoeg om de klant te laten herkennen dat dit
+ * zijn auto is, ook als de RDW-gegevens ontbreken.
+ *
+ * Let op: `yearOfConstrFrom` is het bouwjaar van het *model*, niet van dít
+ * exemplaar. Dat nemen we bewust niet over — anders zou de shop een bouwjaar
+ * tonen dat niet van de auto van de klant is.
+ */
+export async function vehicleDetailsByCarId(
+  carId: number,
+): Promise<WearpartsVehicleDetails | null> {
+  const data = await get(
+    "/vehiclesByCarIds",
+    { "carId[]": carId },
+    CACHE.vehicle,
+  );
+  const parsed = z.array(vehicleDetailsSchema).safeParse(data);
+  const details = parsed.success ? parsed.data[0]?.vehicleDetails : undefined;
+  if (!details) return null;
+  return {
+    brand: details.manuName,
+    model: details.modelName,
+    type: details.typeName,
+    fuel: details.fuelType,
+    powerKw: details.powerKwFrom,
+    engineCapacityCc: details.cylinderCapacityCcm,
+    bodyType: details.constructionType,
+  };
+}
+
+const manufacturerSchema = z.object({
+  manuId: z.coerce.number(),
+  manuName: z.string(),
+});
+
+const modelSeriesSchema = z.object({
+  modelId: z.coerce.number(),
+  modelname: z.string(),
+  yearOfConstrFrom: z.coerce.number().optional(),
+  yearOfConstrTo: z.coerce.number().optional().catch(undefined),
+});
+
+export interface VehicleMake {
+  id: number;
+  name: string;
+}
+
+export interface VehicleModel {
+  id: number;
+  name: string;
+  /** Bouwjaren van het model, als JJJJMM */
+  from?: number;
+  until?: number;
+}
+
+/** Alle voertuigmerken die TecDoc kent (469 op het NL-platform) */
+export async function vehicleMakes(): Promise<VehicleMake[]> {
+  const data = await get("/manufacturers", {}, CACHE.vehicle);
+  const parsed = z.array(manufacturerSchema).safeParse(data);
+  if (!parsed.success) return [];
+  return parsed.data.map((make) => ({ id: make.manuId, name: make.manuName }));
+}
+
+export async function vehicleModels(manuId: number): Promise<VehicleModel[]> {
+  const data = await get(
+    "/modelSeries",
+    { manufacturerId: manuId },
+    CACHE.vehicle,
+  );
+  const parsed = z.array(modelSeriesSchema).safeParse(data);
+  if (!parsed.success) return [];
+  return parsed.data.map((model) => ({
+    id: model.modelId,
+    name: model.modelname,
+    from: model.yearOfConstrFrom,
+    until: model.yearOfConstrTo,
+  }));
+}
+
+const vehicleTypeSchema = z.object({
+  carId: z.coerce.number(),
+  vehicleDetails: z
+    .object({
+      typeName: z.string().optional(),
+      fuelType: z.string().optional(),
+      powerKwFrom: z.coerce.number().optional(),
+      powerHpFrom: z.coerce.number().optional(),
+      cylinderCapacityCcm: z.coerce.number().optional(),
+      constructionType: z.string().optional(),
+      yearOfConstrFrom: z.coerce.number().optional(),
+      yearOfConstrTo: z.coerce.number().optional().catch(undefined),
+    })
+    .optional(),
+});
+
+export interface VehicleType {
+  carId: number;
+  /** Motorvariant, bv. "1.2 PureTech 110" */
+  name: string;
+  fuel?: string;
+  powerKw?: number;
+  powerHp?: number;
+  engineCapacityCc?: number;
+  bodyType?: string;
+  from?: number;
+  until?: number;
+}
+
+/**
+ * Uitvoeringen van één model. Dit is de stap die fitment mogelijk maakt: pas
+ * hier ontstaat een carId, en dat bepaalt welke onderdelen passen. Bouwjaar
+ * alleen is niet genoeg — een Golf uit 2015 heeft zes motorvarianten met
+ * verschillende remmen.
+ */
+export async function vehicleTypes(
+  manuId: number,
+  modelId: number,
+): Promise<VehicleType[]> {
+  const data = await get(
+    "/vehicles",
+    { manufacturerId: manuId, modelId },
+    CACHE.vehicle,
+  );
+  const parsed = z.array(vehicleTypeSchema).safeParse(data);
+  if (!parsed.success) return [];
+  return parsed.data.map((entry) => ({
+    carId: entry.carId,
+    name: entry.vehicleDetails?.typeName ?? "",
+    fuel: entry.vehicleDetails?.fuelType,
+    powerKw: entry.vehicleDetails?.powerKwFrom,
+    powerHp: entry.vehicleDetails?.powerHpFrom,
+    engineCapacityCc: entry.vehicleDetails?.cylinderCapacityCcm,
+    bodyType: entry.vehicleDetails?.constructionType,
+    from: entry.vehicleDetails?.yearOfConstrFrom,
+    until: entry.vehicleDetails?.yearOfConstrTo,
+  }));
 }

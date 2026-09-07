@@ -100,6 +100,39 @@ Elk artikel draagt een kant-en-klare URL in `image` (en dezelfde in `images` en 
 
 Er is ook een `manufacturerImage` — het merklogo, niet het product.
 
+### Artikelnamen en talen — GEMETEN 2026-09-07
+
+De naam zit in twee velden: `articleName` is de soortnaam ("Sneeuwketting") en `articleAddName` de productlijn ("PROTRAC 4FUN"). Los van elkaar heten tientallen artikelen in een categorie hetzelfde; wij plakken ze aan elkaar. Wat ze écht onderscheidt staat in `attr`, met een door de leverancier vertaald label:
+
+```json
+{ "71": { "translation": "Bandenmaat", "value": "155/80-15", "unit": "" },
+  "212": { "translation": "Gewicht [kg]", "value": "3.92", "unit": "kg" } }
+```
+
+Het eerste attribuut is in de praktijk de maat of uitvoering; dat tonen we als variant op de productkaart.
+
+**Talen: er is geen Engels platform.** Gemeten op hetzelfde artikel:
+
+| Platform | Naam |
+|---|---|
+| `nl/nl`, `be/nl` | Sneeuwketting |
+| `de/de` | Schneekette |
+| `fr/fr` | Chaîne à neige |
+| `es/es` | Cadena para la nieve |
+| `it/it` | Catena da neve |
+| `pl/pl` | werkt (JSON) |
+| `en/en`, `gb/en`, `uk/en`, `nl/en` | geen API — geven een HTML-pagina terug |
+
+De shop spreekt NL, EN en AR; de API dekt daarvan alleen NL. Voor Engelse en Arabische bezoekers blijven artikelnamen en attribuutlabels dus Nederlands. Dat is niet met een woordenlijst op te lossen: het gaat om miljoenen vrije-tekstvelden van honderden fabrikanten.
+
+### Autokiezer zonder kenteken — GEMETEN 2026-09-07
+
+Drie stappen: `/manufacturers` → `/modelSeries?manufacturerId=` → `/vehicles?manufacturerId=&modelId=`. Pas de laatste stap levert een `carId`, en dus fitment.
+
+De derde stap was eerder het bouwjaar (uit onze RDW-oogst). Dat is niet genoeg: een VW Polo 6 heeft tientallen uitvoeringen, en `1.0 TSI 70 kW` heeft andere remmen dan `1.0 TSI 85 kW`. Nu kiest de klant de uitvoering, met brandstof, vermogen en bouwperiode in het label.
+
+**Let op de merknamen.** TecDoc schrijft `VW`, niet `Volkswagen`. De merkenlijst komt daarom uit deze API en niet meer uit de RDW-oogst — anders zoekt de klant een merk dat de modellenstap niet kent. `src/lib/vehicle/makes.ts` valt terug op de oude lijst als de API wegvalt.
+
 ## Aandachtspunten
 
 - **Twee tokens, twee API's.** Verwar ze niet: dit token werkt niet op

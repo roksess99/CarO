@@ -46,7 +46,17 @@ function translateSegment(segment: string, t: Translator): string {
     : segment;
 }
 
+/**
+ * Bevat de waarde cijfers, dan is het een maat of code — "5*105*56,5",
+ * "3/4-16 UNF", "195/65 R15". Die moeten letterlijk blijven staan; de
+ * scheidingstekens hieronder zouden er anders spaties in zetten.
+ */
+function looksLikeMeasurement(value: string): boolean {
+  return /[0-9]/.test(value);
+}
+
 export function filterValueLabel(value: string, t: Translator): string {
+  if (looksLikeMeasurement(value)) return value;
   // Scheidingstekens behouden: "blau / schwarz" blijft twee kleuren.
   return value
     .split(/\s*([/,])\s*/)

@@ -33,6 +33,24 @@ voertuigen** uit de ~15 miljoen in het RDW-register. Praktische gevolgen:
 - Zodra er een abonnement is: opnieuw verifiëren of het lijst-endpoint werkt.
   Dat endpoint is interessant voor "zoek op merk" (`filters[merk]`).
 
+## Rol sinds 2026-09-07: verrijking, geen ingang
+
+De kentekenzoeker draait **niet meer op deze API als eerste bron**. Wearparts
+(docs/api/WEARPARTS.md) heeft zijn eigen Nederlandse kentekenlookup én levert het
+TecDoc-voertuig-id waarmee we passende onderdelen tonen. overheid.io vult aan wat
+TecDoc niet heeft: kleur, APK-vervaldatum, datum eerste toelating en de officiele
+kentekennotatie.
+
+**Waarom omgedraaid:** de actie bevroeg eerst het RDW en stopte bij een 404. Op
+de gratis tier is dat vrijwel elk kenteken — gemeten op XN331L, 84HKG6 en RZ874H
+gaf overheid.io drie keer 404 terwijl Wearparts alle drie de autos kende. De
+zoeker zei dus "onbekend kenteken" over autos die gewoon bestaan.
+
+Beide bronnen worden nu parallel bevraagd; RDW wint per veld waar hij iets heeft,
+want dat beschrijft dít exemplaar terwijl TecDoc het model beschrijft. Een
+abonnement op overheid.io is daarmee **niet nodig voor fitment**, alleen voor die
+extra velden.
+
 ## Onze aanpak — twee harde regels
 
 1. **De sleutel blijft server-side.** De browser praat nooit rechtstreeks met

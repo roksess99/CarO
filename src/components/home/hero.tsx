@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { familySlug } from "@/lib/catalog/families";
 import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/shipping";
 import { formatPriceCents } from "@/lib/format";
-import { listMakes } from "@/lib/vehicle/catalog";
+import { vehicleMakeNames } from "@/lib/vehicle/makes";
 
 /**
  * Startpunt van de shop, in twee kolommen.
@@ -21,7 +21,7 @@ export async function Hero() {
   const t = await getTranslations("home");
   const locale = await getLocale();
   // Alleen de merknamen naar de browser; modellen volgen per stap
-  const makes = listMakes();
+  const makes = await vehicleMakeNames();
 
   const usps = [
     t("uspShipping", { amount: formatPriceCents(FREE_SHIPPING_THRESHOLD_CENTS) }),

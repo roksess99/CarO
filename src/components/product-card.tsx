@@ -6,6 +6,7 @@ import { ProductImagePlaceholder } from "@/components/product-image-placeholder"
 import { Link } from "@/i18n/navigation";
 import { familySlug } from "@/lib/catalog/families";
 import type { Part } from "@/lib/catalog/types";
+import { filterValueLabel } from "@/lib/catalog/filter-values";
 import { formatPriceCents } from "@/lib/format";
 
 /**
@@ -21,6 +22,7 @@ import { formatPriceCents } from "@/lib/format";
  */
 export function ProductCard({ part }: { part: Part }) {
   const t = useTranslations("product");
+  const tFilters = useTranslations("filters");
   const locale = useLocale();
   const href = {
     pathname: "/[family]/[category]/[part]",
@@ -62,8 +64,18 @@ export function ProductCard({ part }: { part: Part }) {
           </Link>
         </h3>
 
-        {part.oeNumber && (
-          <p className="mt-1 truncate text-xs text-muted tabular-nums">
+        {/* De variant (bv. de bandenmaat) staat vóór het artikelnummer: in
+            een categorie waar vijftig artikelen "Sneeuwketting" heten is dát
+            het verschil waar de klant op scant. */}
+        {part.variant && (
+          <p className="mt-1 truncate text-xs font-medium text-foreground">
+            {filterValueLabel(part.variant, tFilters)}
+          </p>
+        )}
+        {/* Geen apart artikelnummer meer bij onderdelen: dat staat al in de
+            naam. Bij banden en velgen zit het daar niet in, dus daar wel. */}
+        {part.oeNumber && !part.name.includes(part.oeNumber) && (
+          <p className="mt-0.5 truncate text-xs text-muted tabular-nums">
             {part.oeNumber}
           </p>
         )}

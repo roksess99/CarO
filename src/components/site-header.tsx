@@ -12,12 +12,12 @@ import { Link } from "@/i18n/navigation";
 import { PRODUCT_FAMILIES } from "@/lib/catalog/families";
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
-import { listMakes } from "@/lib/vehicle/catalog";
+import { vehicleMakeNames } from "@/lib/vehicle/makes";
 
 export async function SiteHeader() {
   const t = await getTranslations("header");
   const locale = await getLocale();
-  const makes = listMakes();
+  const makes = await vehicleMakeNames();
   const provider = getCatalogProvider();
   const items: FamilyNavItem[] = await Promise.all(
     PRODUCT_FAMILIES.map(async (family) => ({
