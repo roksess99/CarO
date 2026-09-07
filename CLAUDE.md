@@ -23,8 +23,8 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 |---|---|---|
 | 1 | UI, routing, i18n, thema, componenten — op mockdata | KLAAR |
 | 2 | Winkelwagen (client-side, cookie/localStorage) | KLAAR |
-| 3 | Tyre24/ALZURA-API achter de provider-interface (docs/api/TYRE24.md) | ACTIEF |
-| 3b | Voertuigidentificatie: kenteken (RDW) + autokiezer op merk/model/bouwjaar | KLAAR |
+| 3 | Tyre24/ALZURA-API's achter de provider-interface (Products v1.3 + Wearparts v1.6) | KLAAR |
+| 3b | Voertuigidentificatie: kenteken → TecDoc, autokiezer op merk/model/uitvoering | KLAAR |
 | 4 | Database (PostgreSQL + Prisma): orders, klanten; inkoop via Tyre24 POST /order | |
 | 5 | Betaling (Mollie, iDEAL) | |
 | 6 | Velgen: Tyre24 Alloys-API — voertuigselectie (carID), matching, 3D-beelden | |
@@ -43,15 +43,15 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 
 ## Wat de shop nu doet
 
-Stand 2026-08-16. Handig bij het oppakken van werk; niet uitputtend.
+Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 
 | Onderdeel | Waar | Bijzonderheid |
 |---|---|---|
 | Hero in twee kolommen | `components/home/hero.tsx` | Links kentekenzoeker **én** merk/model-kiezer zichtbaar (geen tabs), rechts een banner met echte voorwaarden — geen verzonnen acties |
 | Categorieraster | `components/home/category-grid.tsx` | Tegels uit `lib/catalog/category-tiles.ts`, foto's beeldvullend bijgesneden |
 | Header | `components/site-header.tsx` | Rij 1: logo, voertuigknop, zoekbalk, taal, thema, wagen. Rij 2: de vier families |
-| Zoeken met suggesties | `components/search/` | Server Action, vanaf 3 tekens met 350 ms debounce — elke aanroep raakt vier families en dus vier Tyre24-calls |
-| Voertuig opgeven | `components/vehicle/` | Kenteken via RDW, of merk/model/bouwjaar uit de geoogste catalogus. Beide leveren dezelfde tekst op |
+| Zoeken met suggesties | `components/search/` | Server Action, vanaf 3 tekens met 350 ms debounce; toont thumbnail, merk en prijs. Elke aanroep raakt vier families |
+| Voertuig opgeven | `components/vehicle/` | Kenteken of merk/model/uitvoering; beide leveren een TecDoc-`carId` en dus passende onderdelen |
 | Mobiele navigatie | `components/bottom-nav.tsx` | Zwevende tabbalk; assortiment en autokiezer openen als paneel vanaf de onderkant |
 | Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |
 
@@ -78,10 +78,12 @@ velgen en toebehoren.
   op naam niet.
 - **Kentekenzoeker**: overheid.io (RDW-voertuiggegevens) — zie @docs/api/OVERHEID-IO.md.
   Een kenteken is persoonsgegeven: nooit in een URL, nooit in een logregel.
-- **Autokiezer zonder kenteken**: merk/model-catalogus geoogst uit RDW open
-  data — zie @docs/api/VOERTUIGCATALOGUS.md. Statisch bestand, geen runtime-API.
-  Import `src/lib/vehicle/catalog.ts` alleen server-side (~90 kB); de kiezer
-  haalt modellen en bouwjaren per stap op via een Server Action.
+- **Autokiezer zonder kenteken**: merk → model → uitvoering uit de
+  Wearparts-boom, per stap opgehaald met een Server Action. Levert een
+  `carId`, net als de kentekenzoeker. De eerder geoogste RDW-catalogus is
+  2026-09-07 verwijderd: die gaf alleen merknamen en liep dus dood
+  (@docs/api/VOERTUIGCATALOGUS.md beschrijft nog wel waarom RDW destijds
+  boven de commerciële voertuig-API's won).
 - Later: PostgreSQL + Prisma (fase 4), Mollie (fase 5)
 
 Voeg geen libraries toe zonder te vragen. Geen state-manager, geen UI-kit.
@@ -124,7 +126,6 @@ src/
   lib/catalog/           # types.ts (contract) + mock-provider.ts + tyre24-provider.ts
   lib/cart/              # winkelwagenlogica, framework-onafhankelijk
   lib/vehicle/           # RDW-adapter + geoogste merk/model-catalogus
-scripts/                 # eenmalige oogstscripts (geen runtime-code)
 public/brand/            # logo SVG's
 public/categorieen/      # foto's voor het categorieraster (zie LEESMIJ.md)
 docs/api/                # Tyre24 swagger + integratienotities

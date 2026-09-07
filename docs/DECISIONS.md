@@ -6,9 +6,16 @@ Zolang een beslissing hier op OPEN staat: **niet gokken, vragen.**
 
 ## 1. Onderdelen-catalogus API — VASTGESTELD → Tyre24/ALZURA
 
-Besloten 2026-08-06: **Tyre24 / ALZURA REST API v1.3** (zie docs/api/TYRE24.md en
-docs/api/tyre24-products-v13.yaml). Marketplace met groothandels, inclusief
-TecDoc-data (voertuig-koppeling) en bestellen via de API (dropship mogelijk).
+Besloten 2026-08-06: **Tyre24 / ALZURA**. Sinds 2026-09-06 zijn dat twee API's
+van dezelfde leverancier, elk met een eigen token:
+
+| API | Families | Documentatie |
+|---|---|---|
+| Products v1.3 | banden, velgen, toebehoren | docs/api/TYRE24.md |
+| Wearparts v1.6 | onderdelen, kenteken → auto | docs/api/WEARPARTS.md |
+
+Beide zijn marketplaces met groothandels; bestellen via de API (dropship) kan
+bij allebei.
 
 **Afgerond 2026-08-07** — de adapter draait op de live API:
 - [x] API-token geregeld → `TYRE24_API_TOKEN`
@@ -46,8 +53,9 @@ auto-onderdelen.** Beschikbaar is:
 | **Beide** | Banden + gebruikte onderdelen | Breedste aanbod | Twee areas betekent twee provider-instanties en gemengde UX |
 | **Nieuwe onderdelen** | area 3 (`oe`) laten activeren, of andere leverancier | Wat oorspronkelijk bedoeld was | Vereist actie van Tyre24 of een tweede leverancier |
 
-**Nu ingesteld**: `TYRE24_PRODUCT_AREA_ID=6` (banden), zodat de shop met echte
-data werkt. Dit is een **tijdelijke keuze om te kunnen bouwen**, geen besluit.
+**Achterhaald**: er stond hier een tijdelijke `TYRE24_PRODUCT_AREA_ID`. De
+areas staan sinds 2026-08-07 in `src/lib/catalog/families.ts` en onderdelen
+komen sinds 2026-09-06 helemaal niet meer uit een productArea.
 
 ### Vastgesteld 2026-09-05: toebehoren-categorieën beperkt
 
@@ -308,9 +316,11 @@ Pexels, Unsplash of Pixabay (die staan commercieel gebruik toe). De code
 verandert niet mee; het zijn alleen bestanden. Noteer de herkomst per foto in
 `public/categorieen/BRONNEN.md`.
 
-Vijf tegels hebben nog geen foto: elektrisch, vering/demping, carrosserie,
-uitlaat en koeling/airco. Een tegel toevoegen is één
-regel in `src/lib/catalog/category-tiles.ts` plus een bestand.
+Het raster heeft nu vier tegels — één per familie — en alle vier hebben een
+foto. De losse categoriefoto's die nergens meer gebruikt werden (filters,
+motor, remmen, verlichting, gereedschap, gebruikte onderdelen) zijn
+2026-09-07 verwijderd. Een tegel toevoegen is één regel in
+`src/lib/catalog/category-tiles.ts` plus een bestand.
 
 ---
 

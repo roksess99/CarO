@@ -44,7 +44,7 @@ function toCents(amount: number | undefined): number | null {
   return Math.round(amount * 100);
 }
 
-export function slugifyPart(text: string): string {
+function slugifyPart(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFD")

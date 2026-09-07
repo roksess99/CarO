@@ -1,23 +1,22 @@
 import { vehicleMakes } from "@/lib/catalog/wearparts";
-import { listMakes } from "@/lib/vehicle/catalog";
 
 /**
- * Merken voor de autokiezer.
+ * Merken voor de autokiezer, uit TecDoc.
  *
- * Uit TecDoc, want de kiezer moet uitkomen op een `carId` en dan moeten merk,
- * model en uitvoering uit dezelfde boom komen. De uit RDW open data geoogste
- * lijst blijft als vangnet: valt de API weg, dan kan de klant nog steeds een
- * auto kiezen — alleen zonder passende onderdelen.
+ * De kiezer moet uitkomen op een `carId`, dus merk, model en uitvoering komen
+ * alle drie uit dezelfde boom (docs/api/WEARPARTS.md). Er was een vangnet uit
+ * RDW open data, maar dat leverde alleen merknamen: de vervolgstappen konden
+ * er niets mee, dus dat eindigde in een doodlopende keuzelijst. Valt de API
+ * weg, dan is de lijst leeg en blijft de kentekenzoeker over.
  */
 export async function vehicleMakeNames(): Promise<string[]> {
   try {
-    const makes = await vehicleMakes();
-    if (makes.length > 0) return makes.map((make) => make.name);
+    return (await vehicleMakes()).map((make) => make.name);
   } catch (error) {
     console.error(
       "Merkenlijst uit Wearparts faalde:",
       error instanceof Error ? error.message : error,
     );
+    return [];
   }
-  return listMakes();
 }

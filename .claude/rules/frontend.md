@@ -24,6 +24,8 @@ Laadt alleen bij UI-werk. Huisstijl staat volledig in `docs/BRAND.md`.
 - Nooit oranje tekst op een lichte achtergrond. Gebruik `--caro-ink` met oranje onderlijn.
 - Oranje op `--caro-ink` mag wel (6,6:1) — dat is het dark-mode accent.
 - Alle kleuren via CSS-variabelen, zodat dark mode één plek raakt.
+- Secundaire tekst is `text-muted`, niet `text-caro-grey`: het merkgrijs
+  haalt 4,21:1 op wit en faalt AA. Zie docs/BRAND.md.
 
 ### Thema — vaste kleuren zijn bijna altijd fout
 

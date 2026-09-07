@@ -33,7 +33,7 @@ function followsRecommendedPrice(): boolean {
 }
 
 /** Bedrag in centen + 21% btw, afgerond op hele centen */
-export function addVat(cents: number): number {
+function addVat(cents: number): number {
   return Math.round((cents * (100 + VAT_PERCENT)) / 100);
 }
 

@@ -152,6 +152,3 @@ export function familySource(family: ProductFamily): FamilySource | null {
   };
 }
 
-export function familyHasSource(family: ProductFamily): boolean {
-  return familySource(family) !== null;
-}

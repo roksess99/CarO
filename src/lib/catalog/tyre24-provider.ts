@@ -329,7 +329,7 @@ const errorResponseSchema = z.object({
 // ---------- helpers ----------
 
 /** "12.34", "12,34" of "1.234,56" → centen. Stringrekenwerk, nooit floats. */
-export function euroStringToCents(value: string): number | null {
+function euroStringToCents(value: string): number | null {
   const cleaned = value.replace(/[^\d.,]/g, "");
   if (!cleaned) return null;
 

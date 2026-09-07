@@ -75,7 +75,8 @@
     },
     "oenElsewhere": "Wel gevonden bij banden, velgen en toebehoren voor \"{term}\"",
     "groupsTitle": "Categorieën voor jouw auto",
-    "chooseCarToBrowse": "Kies eerst je auto om door de categorieën te bladeren. Zoeken op naam of nummer kan altijd."
+    "chooseCarToBrowse": "Kies eerst je auto om door de categorieën te bladeren. Zoeken op naam of nummer kan altijd.",
+    "viewAllOf": "Alle {family} bekijken"
   },
   "categoryTiles": {
     "title": "Auto-onderdelen vinden in de catalogus",

@@ -27,10 +27,6 @@ function token(): string | null {
   return process.env.TYRE24_WEARPARTS_TOKEN ?? null;
 }
 
-export function hasWearpartsToken(): boolean {
-  return Boolean(token());
-}
-
 async function get(
   path: string,
   params: Record<string, string | number | undefined>,
