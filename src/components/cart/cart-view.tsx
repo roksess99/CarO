@@ -1,19 +1,36 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { CaroMark } from "@/components/brand/caro-mark";
+import Image from "next/image";
+import { useLocale, useTranslations } from "next-intl";
 import { OrderTotals } from "@/components/cart/order-totals";
 import { removeFromCart, setCartQuantity } from "@/components/cart/use-cart";
 import { useCartParts } from "@/components/cart/use-cart-parts";
+import { ProductImagePlaceholder } from "@/components/product-image-placeholder";
 import { subtotalCents } from "@/lib/cart/cart";
 import { MAX_QUANTITY } from "@/lib/cart/types";
+import { familySlug } from "@/lib/catalog/families";
+import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents } from "@/lib/format";
 import { Link } from "@/i18n/navigation";
+
+/** Zelfde route als de productkaart, zodat de klant terug kan naar het artikel */
+function partHref(part: Part, locale: string) {
+  return {
+    pathname: "/[family]/[category]/[part]",
+    params: {
+      family: familySlug(part.family, locale),
+      category: part.categorySlug,
+      part: part.slug,
+    },
+  } as const;
+}
 
 // De wagen leeft in localStorage; useCartParts zoekt de artikelen op via
 // een Server Action (op id, niet door een catalogus te doorzoeken).
 export function CartView() {
   const t = useTranslations("cart");
+  const tProduct = useTranslations("product");
+  const locale = useLocale();
   const { entries, loading } = useCartParts();
 
   if (loading) {
@@ -59,13 +76,45 @@ export function CartView() {
       <ul className="flex-1 divide-y divide-border border-y border-border">
         {entries.map(({ part, quantity }) => (
           <li key={part.id} className="flex gap-4 py-4">
-            <div className="flex size-20 shrink-0 items-center justify-center rounded-md bg-surface">
-              <CaroMark variant="line" className="size-6 opacity-30" />
-            </div>
+            <Link
+              href={partHref(part, locale)}
+              tabIndex={-1}
+              aria-hidden="true"
+              className="shrink-0"
+            >
+              {part.imageUrl ? (
+                <Image
+                  src={part.imageUrl}
+                  alt=""
+                  width={80}
+                  height={80}
+                  sizes="80px"
+                  className="size-20 rounded-md bg-surface object-contain"
+                />
+              ) : (
+                <ProductImagePlaceholder
+                  label={tProduct("noImage")}
+                  iconClassName="size-6"
+                  className="size-20 rounded-md opacity-60"
+                />
+              )}
+            </Link>
             <div className="flex flex-1 flex-col gap-1">
-              <p className="eyebrow text-xs">{part.brand}</p>
-              <h2 className="text-sm">{part.name}</h2>
-              <p className="text-xs text-muted tabular-nums">{part.oeNumber}</p>
+              {part.brand && <p className="eyebrow text-xs">{part.brand}</p>}
+              <h2 className="text-sm">
+                <Link
+                  href={partHref(part, locale)}
+                  className="hover:underline"
+                >
+                  {part.name}
+                </Link>
+              </h2>
+              {/* Bij onderdelen zit het artikelnummer al in de naam */}
+              {part.oeNumber && !part.name.includes(part.oeNumber) && (
+                <p className="text-xs text-muted tabular-nums">
+                  {part.oeNumber}
+                </p>
+              )}
               <div className="mt-2 flex flex-wrap items-center gap-4">
                 <div
                   className="inline-flex items-center rounded-md border border-border"

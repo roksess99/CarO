@@ -1,0 +1,30 @@
+# CarO
+
+> Nederlandse webshop voor auto-onderdelen, banden, velgen en toebehoren.
+> Onderdelen worden gekoppeld aan een specifiek voertuig: de bezoeker geeft
+> een kenteken op of kiest merk, model en uitvoering, waarna alleen passende
+> artikelen getoond worden.
+
+De site is beschikbaar in het Nederlands (`/nl`), Engels (`/en`) en Arabisch
+(`/ar`). Prijzen staan inclusief 21% btw. Levering en betaling zijn nog niet
+actief; de shop is in aanbouw.
+
+## Assortiment
+
+- [Onderdelen](/nl/onderdelen): zoeken op naam, OE-nummer of EAN. Bladeren per
+  categorie werkt zodra er een auto gekozen is.
+- [Banden](/nl/banden): auto, SUV, bestelwagen, tweewieler, quad.
+- [Velgen](/nl/velgen): stalen velgen.
+- [Toebehoren](/nl/toebehoren): wiel- en bandenaccessoires, accu's,
+  verlichting, oliën, autoverzorging.
+
+## Voorwaarden
+
+- [Algemene voorwaarden](/nl/algemene-voorwaarden)
+- [Privacy en cookies](/nl/privacy-en-cookies)
+
+## Opmerkingen
+
+- Voorraad en prijzen komen live van de groothandel en wijzigen dagelijks.
+- Een getoond onderdeel past bij het gekozen voertuig volgens de
+  fabrikantendata; controleer de maten voor je bestelt.
