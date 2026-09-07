@@ -75,7 +75,8 @@
     },
     "oenElsewhere": "Found under tyres, wheels and accessories for \"{term}\"",
     "groupsTitle": "Categories for your car",
-    "chooseCarToBrowse": "Pick your car first to browse the categories. Searching by name or number always works."
+    "chooseCarToBrowse": "Pick your car first to browse the categories. Searching by name or number always works.",
+    "viewAllOf": "View all {family}"
   },
   "categoryTiles": {
     "title": "Find car parts in the catalogue",

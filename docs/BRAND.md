@@ -8,7 +8,7 @@ Bron: `CarO_logo_brand.pdf` (Concept 02 — De Moer). Dit document is leidend vo
 |---|---|---|
 | `--caro-orange` | `#FF6A13` | Merkaccent. Alleen als **vlak**, zie contrastregels |
 | `--caro-ink` | `#0E1013` | Tekst, donkere achtergrond |
-| `--caro-grey` | `#767C85` | Secundaire tekst, labels, UI-lijnen |
+| `--caro-grey` | `#767C85` | Labels en UI-lijnen. **Niet als tekstkleur** — zie hieronder |
 | `--caro-zinc` | `#F5F6F7` | Lichte achtergrond, kaartvlakken |
 
 ## Contrast — hard afgedwongen
@@ -25,6 +25,13 @@ Bron: `CarO_logo_brand.pdf` (Concept 02 — De Moer). Dit document is leidend vo
 - Oranje als niet-tekstueel element: onderlijn, icoon, rand, badge-vlak
 
 De primaire knop is een **oranje vlak met zwarte tekst**. Niet wit.
+
+### Secundaire tekst
+
+`#767C85` haalt **4,21:1** op wit en zakt daarmee onder de AA-eis van 4,5:1
+(gemeten met Lighthouse, 2026-09-07). De token `--muted` staat daarom op
+`#646b75` in lichte modus (5,38:1) en `#9aa1aa` in donkere modus (7,31:1).
+Het merkgrijs zelf blijft ongewijzigd voor randen en vlakken.
 
 ## Logo
 

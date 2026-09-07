@@ -14,7 +14,10 @@
   --background: #ffffff;
   --foreground: var(--caro-ink);
   --surface: var(--caro-zinc);
-  --muted: var(--caro-grey);
+  /* GEMETEN met Lighthouse: --caro-grey (#767c85) haalt 4,21:1 op wit en
+     zakt daarmee onder de AA-eis van 4,5:1 voor tekst. Iets donkerder maakt
+     5,38:1. Het merkgrijs zelf blijft ongewijzigd voor randen en vlakken. */
+  --muted: #646b75;
   --border: color-mix(in srgb, var(--caro-grey) 25%, transparent);
   /* Functionele foutkleur (niet in BRAND.md; 4,5:1+ op beide achtergronden) */
   --danger: #b42318;

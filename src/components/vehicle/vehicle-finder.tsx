@@ -34,14 +34,17 @@ export function VehicleFinder({
 
   return (
     <div>
-      <h3 className="text-sm font-bold">{t("plateHeading")}</h3>
+      {/* h2 en niet h3: hierboven staat alleen de h1 van de pagina, en een
+          overgeslagen niveau maakt de structuur onleesbaar voor een
+          schermlezer (Lighthouse-bevinding). */}
+      <h2 className="text-sm font-bold">{t("plateHeading")}</h2>
       <div className="mt-3">
         <VehicleSearch autoFocus={autoFocus} onSelected={onSelected} compact />
       </div>
 
-      <h3 className="mt-6 border-t border-border pt-6 text-sm font-bold">
+      <h2 className="mt-6 border-t border-border pt-6 text-sm font-bold">
         {t("pickerHeading")}
-      </h3>
+      </h2>
       <div className="mt-3">
         <VehiclePicker makes={makes} onSelected={onSelected} />
       </div>

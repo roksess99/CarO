@@ -1,3 +1,9 @@
+> **Historisch document.** De hier beschreven RDW-oogst is 2026-09-07 uit
+> het project verwijderd: de autokiezer draait nu op de TecDoc-boom van de
+> Wearparts-API (docs/api/WEARPARTS.md), die wél tot een `carId` leidt. Het
+> onderzoek naar de commerciële voertuig-API's hieronder blijft bruikbaar als
+> onderbouwing.
+
 # Merk/model-catalogus — RDW open data
 
 Bron voor klanten die hun auto kiezen zonder kenteken.

@@ -61,6 +61,12 @@ export default async function HomePage({ params }: Props) {
                 pathname: "/[family]",
                 params: { family: familySlug(family, locale) },
               }}
+              // Drie keer "Alles bekijken" naar drie verschillende pagina's
+              // is voor een schermlezer niet uit elkaar te houden; het
+              // aria-label maakt het doel expliciet.
+              aria-label={tFamily("viewAllOf", {
+                family: tFamily(`${family}.title`),
+              })}
               className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface"
             >
               {tFamily("viewAll")}
