@@ -2,7 +2,7 @@
 
 import { isValidCartItem } from "@/lib/cart/cart";
 import type { CartItem } from "@/lib/cart/types";
-import { getCatalogProvider } from "@/lib/catalog/provider";
+import { loadPartById } from "@/lib/catalog/lookup";
 import type { Part } from "@/lib/catalog/types";
 
 // De wagen leeft client-side, dus de server weet niet wat erin zit. Deze
@@ -17,9 +17,8 @@ export async function lookupCartParts(items: unknown): Promise<Part[]> {
   const valid = items.filter((item): item is CartItem => isValidCartItem(item));
   if (valid.length === 0) return [];
 
-  const provider = getCatalogProvider();
   const found = await Promise.all(
-    valid.map((item) => provider.getPartById(item.family, item.partId)),
+    valid.map((item) => loadPartById(item.family, item.partId)),
   );
   return found.filter((part): part is Part => part !== null);
 }

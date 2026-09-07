@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // De Tailwind-bundel was het enige render-blokkerende verzoek (9,7 kB,
+    // ~300 ms volgens PageSpeed). Inline in de HTML kost dat verzoek niets
+    // meer; het is 9 kB die toch op elke pagina nodig is.
+    inlineCss: true,
+  },
   images: {
     // AVIF eerst: scheelt zo'n kwart ten opzichte van WebP op de
     // productfoto's, en browsers die het niet kennen krijgen WebP.
