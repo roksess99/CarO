@@ -113,8 +113,16 @@ export interface AssemblyGroup {
  * eigenschap van de API, geen keuze van ons — `/category` zonder `carId`
  * antwoordt met ERR_MISSING_MANDATORY_PARAMETER.
  */
-/** Formaat waarin we categorie-iconen opvragen */
-const ICON_SIZE = 64;
+/**
+ * Formaat waarin we categorie-iconen opvragen.
+ *
+ * GEMETEN 2026-09-07: de bron is 240x150 en schaalt niet verder op — vraag je
+ * 400, dan komt er alsnog 240x150 terug. Dit is dus de scherpste variant, en
+ * daarmee groot genoeg voor de beeldtegels op de categoriepagina (80px breed
+ * op een 3x-scherm). Het zijn pictogrammen, geen productfoto's: zwarte
+ * silhouetten op transparant, vandaar dat de UI ze op een wit vlak zet.
+ */
+const ICON_SIZE = 240;
 
 /**
  * Icoon-URLs dragen twee %d-plaatshouders voor breedte en hoogte, net als de

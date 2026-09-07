@@ -53,6 +53,9 @@ Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 | Zoeken met suggesties | `components/search/` | Server Action, vanaf 3 tekens met 350 ms debounce; toont thumbnail, merk en prijs. Elke aanroep raakt vier families |
 | Voertuig opgeven | `components/vehicle/` | Kenteken of merk/model/uitvoering; beide leveren een TecDoc-`carId` en dus passende onderdelen |
 | Mobiele navigatie | `components/bottom-nav.tsx` | Zwevende tabbalk; assortiment en autokiezer openen als paneel vanaf de onderkant |
+| Voertuigbalk | `components/vehicle/vehicle-bar.tsx` | Mobiel, in de sticky header boven de zoekbalk: merk, model en motorregel van de gekozen auto. Tikken opent de autokiezer |
+| Categorierijen | `components/catalog/group-list.tsx` | Onderdelen per assemblagegroep, één rij per groep met het pictogram van de leverancier. Alleen hoofdgroepen hébben een pictogram; zonder valt de beeldkolom weg |
+| Bandenmaatkiezer | `components/tyres/tyre-size-picker.tsx` | Breedte/hoogte/diameter + seizoen als GET-formulier; maat in de URL. Zoeklogica in `lib/catalog/tyre-size.ts` |
 | Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |
 
 **Fitment werkt** sinds 2026-09-06: een kenteken gaat via de Wearparts-API naar
