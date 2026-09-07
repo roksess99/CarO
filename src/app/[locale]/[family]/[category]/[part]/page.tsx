@@ -95,8 +95,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     });
 
+  // Niet elk artikel heeft een bruikbaar merk — bij velgen staat daar een
+  // omschrijving die we wegfilteren. Dan geen lege streepjes in de titel.
   return {
-    title: `${part.name} — ${part.brand} — CarO`,
+    title: [part.name, part.brand, "CarO"].filter(Boolean).join(" — "),
     description: t("metaDescription", {
       name: part.name,
       brand: part.brand,
@@ -154,7 +156,7 @@ export default async function ProductPage({ params }: Props) {
     name: part.name,
     sku: part.id,
     mpn: part.oeNumber,
-    brand: { "@type": "Brand", name: part.brand },
+    ...(part.brand ? { brand: { "@type": "Brand", name: part.brand } } : {}),
     ...(part.imageUrl ? { image: part.imageUrl } : {}),
     offers: {
       "@type": "Offer",
@@ -226,7 +228,7 @@ export default async function ProductPage({ params }: Props) {
         </div>
 
         <div className="lg:max-w-md lg:flex-1">
-          <p className="eyebrow text-xs">{part.brand}</p>
+          {part.brand && <p className="eyebrow text-xs">{part.brand}</p>}
           <h1 className="mt-2 text-3xl md:text-4xl">{part.name}</h1>
 
           <p className="mt-6">
@@ -249,16 +251,23 @@ export default async function ProductPage({ params }: Props) {
               "Winterreifen" uit. Wat we niet kennen blijft staan zoals het
               geleverd is. */}
           <dl className="mt-4 divide-y divide-border border-y border-border text-sm">
-            <div className="flex justify-between gap-4 py-3">
-              <dt className="text-muted">{t("brandLabel")}</dt>
-              <dd className="font-medium">{part.brand}</dd>
-            </div>
+            {part.brand && (
+              <div className="flex justify-between gap-4 py-3">
+                <dt className="text-muted">{t("brandLabel")}</dt>
+                <dd className="font-medium">{part.brand}</dd>
+              </div>
+            )}
 
             {(part.specs ?? []).map((spec) => (
               <div key={spec.key} className="flex justify-between gap-4 py-3">
-                <dt className="text-muted">{t(`specs.${spec.key}`)}</dt>
+                <dt className="text-muted">
+                  {spec.label ?? t(`specs.${spec.key}`)}
+                </dt>
                 <dd className="font-medium tabular-nums">
-                  {filterValueLabel(spec.value, tFilters)}
+                  {/* Waarden van de leverancier die al een eigen label
+                      dragen zijn ook al vertaald; die door de woordenlijst
+                      halen zou "155/80-15" tot "155 / 80-15" verbouwen. */}
+                  {spec.label ? spec.value : filterValueLabel(spec.value, tFilters)}
                 </dd>
               </div>
             ))}

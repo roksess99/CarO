@@ -1,11 +1,13 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useVehicle } from "@/components/vehicle/use-vehicle";
 import { useEffect, useRef, useState } from "react";
 import {
   familySlug,
   NAV_GROUPS,
   type ProductFamily,
+  usesVehicleCatalog,
 } from "@/lib/catalog/families";
 import type { Category } from "@/lib/catalog/types";
 import { Link } from "@/i18n/navigation";
@@ -23,6 +25,7 @@ const CATEGORIES_PER_FAMILY = 8;
 // knoppen met hun eigen categorieën eronder.
 export function FamilyNav({ items }: { items: FamilyNavItem[] }) {
   const t = useTranslations("family");
+  const carId = useVehicle()?.carId;
   const locale = useLocale();
   const [openKey, setOpenKey] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -74,6 +77,12 @@ export function FamilyNav({ items }: { items: FamilyNavItem[] }) {
               href={{
                 pathname: "/[family]",
                 params: { family: familySlug(single, locale) },
+                // De onderdelencatalogus hangt aan een TecDoc-voertuig; met
+                // de auto al in de link hoeft de pagina niet eerst te laden
+                // en dan te herladen.
+                ...(usesVehicleCatalog(single) && carId
+                  ? { query: { auto: String(carId) } }
+                  : {}),
               }}
               className="rounded-md px-3 py-2 text-sm font-semibold whitespace-nowrap text-foreground hover:bg-surface"
             >

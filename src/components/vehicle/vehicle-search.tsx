@@ -73,7 +73,10 @@ export function VehicleSearch({
 
   // Gevonden auto: bevestiging tonen i.p.v. het formulier
   if (vehicle) {
+    // De motorvariant uit TecDoc vooraan: die bevestigt beter dan het
+    // bouwjaar dat dit de juiste auto is, en bepaalt welke onderdelen passen.
     const specs = [
+      vehicle.carName,
       vehicle.firstAdmissionYear?.toString(),
       vehicle.fuel,
       vehicle.engineCapacityCc ? `${vehicle.engineCapacityCc} cc` : undefined,

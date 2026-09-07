@@ -32,11 +32,16 @@ export interface Part {
   availability: Availability;
   imageUrl?: string;
   /**
-   * Extra regels voor de productpagina. `key` verwijst naar
-   * `product.specs.<key>` in messages/; `value` is tekst van de
-   * leverancier en kan dus in diens taal staan.
+   * Onderscheidende eigenschap, bv. de bandenmaat bij een sneeuwketting.
+   * Zonder dit heten vijftig artikelen in een categorie allemaal hetzelfde.
    */
-  specs?: ReadonlyArray<{ key: string; value: string }>;
+  variant?: string;
+  /**
+   * Extra regels voor de productpagina. `key` verwijst naar
+   * `product.specs.<key>` in messages/; `label` wint als de leverancier zelf
+   * een (vertaalde) naam meelevert. `value` is leverancierstekst.
+   */
+  specs?: ReadonlyArray<{ key: string; value: string; label?: string }>;
   /** Aantal op voorraad bij de groothandel, als de bron dat meegeeft */
   stock?: number;
 }

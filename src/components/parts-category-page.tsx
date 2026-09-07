@@ -2,6 +2,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ProductGrid } from "@/components/product-grid";
+import { SelectedCarInUrl } from "@/components/vehicle/use-selected-car";
 import { Link } from "@/i18n/navigation";
 import type { ProductFamily } from "@/lib/catalog/families";
 import {
@@ -46,6 +47,7 @@ export async function PartsCategoryPage({
   if (!carId) {
     return (
       <div className="site-container py-8 md:py-12">
+        <SelectedCarInUrl active />
         <h1 className="mt-6 text-3xl md:text-4xl">
           {tFamily("onderdelen.title")}
         </h1>

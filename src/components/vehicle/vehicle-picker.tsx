@@ -5,17 +5,18 @@ import { useId, useState, useTransition } from "react";
 import { SearchableSelect } from "@/components/searchable-select";
 import {
   modelsForMakeAction,
-  yearsForModelAction,
+  typesForModelAction,
+  type VehicleTypeOption,
 } from "@/components/vehicle/catalog-actions";
 import { saveVehicle } from "@/components/vehicle/use-vehicle";
 
 /**
- * Auto kiezen zonder kenteken: merk, dan model, dan bouwjaar.
+ * Auto kiezen zonder kenteken: merk, dan model, dan uitvoering.
  *
- * Drie afhankelijke keuzelijsten in plaats van vrije invoer, omdat de
- * gekozen waarden exact moeten matchen met wat de RDW-registratie gebruikt.
- * Zo levert deze route dezelfde merk- en modelteksten op als een
- * kentekencheck, en zijn beide manieren onderling uitwisselbaar.
+ * De derde stap was eerst het bouwjaar, maar dat is niet genoeg om onderdelen
+ * te kunnen tonen: een Golf uit 2015 heeft zes motorvarianten met
+ * verschillende remmen. De uitvoering levert een TecDoc-`carId`, precies wat
+ * de kentekenzoeker ook oplevert — beide routes komen dus op hetzelfde uit.
  */
 export function VehiclePicker({
   makes,
@@ -30,39 +31,45 @@ export function VehiclePicker({
 
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
-  const [year, setYear] = useState("");
+  const [type, setType] = useState("");
   const [models, setModels] = useState<string[]>([]);
-  const [years, setYears] = useState<number[]>([]);
+  const [types, setTypes] = useState<VehicleTypeOption[]>([]);
   const [pending, startTransition] = useTransition();
 
   function chooseMake(value: string) {
     setMake(value);
     setModel("");
-    setYear("");
+    setType("");
     setModels([]);
-    setYears([]);
+    setTypes([]);
     if (!value) return;
     startTransition(async () => setModels(await modelsForMakeAction(value)));
   }
 
   function chooseModel(value: string) {
     setModel(value);
-    setYear("");
-    setYears([]);
+    setType("");
+    setTypes([]);
     if (!value) return;
-    startTransition(async () => setYears(await yearsForModelAction(make, value)));
+    startTransition(async () => setTypes(await typesForModelAction(make, value)));
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!make || !model) return;
+    const chosen = types.find((option) => option.label === type);
     saveVehicle({
       source: "manual",
-      brand: make.toUpperCase(),
-      model: model.toUpperCase(),
-      // Deze catalogus bevat alleen personenauto's; zie het oogstscript
-      vehicleType: "Personenauto",
-      firstAdmissionYear: year ? Number(year) : undefined,
+      brand: make,
+      model,
+      vehicleType: chosen?.bodyType ?? "Personenauto",
+      fuel: chosen?.fuel,
+      powerKw: chosen?.powerKw,
+      engineCapacityCc: chosen?.engineCapacityCc,
+      // Zonder carId werkt de onderdelencatalogus niet; die komt pas als de
+      // klant ook een uitvoering kiest.
+      carId: chosen?.carId,
+      carName: chosen?.label,
     });
     onSelected?.();
   }
@@ -89,13 +96,13 @@ export function VehiclePicker({
       disabled: models.length === 0,
     },
     {
-      id: `${baseId}-year`,
-      label: t("yearLabel"),
-      value: year,
-      onChange: setYear,
-      options: years.map(String),
-      placeholder: t("chooseYear"),
-      disabled: years.length === 0,
+      id: `${baseId}-type`,
+      label: t("typeLabel"),
+      value: type,
+      onChange: setType,
+      options: types.map((option) => option.label),
+      placeholder: t("chooseType"),
+      disabled: types.length === 0,
     },
   ];
 
@@ -133,7 +140,7 @@ export function VehiclePicker({
 
       <button
         type="submit"
-        disabled={!make || !model || pending}
+        disabled={!make || !model || !type || pending}
         className="!mt-4 w-full rounded-md bg-caro-orange px-6 py-3 font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
       >
         {t("search")}

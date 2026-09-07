@@ -107,7 +107,9 @@
       "notFound": "Dit kenteken staat niet in de RDW-gegevens. Controleer of je het goed hebt ingevuld.",
       "unavailable": "De kentekenzoeker is tijdelijk niet beschikbaar. Probeer het later opnieuw."
     },
-    "fitmentReady": "Deze auto is herkend in de onderdelencatalogus. Je ziet alleen onderdelen die erop passen."
+    "fitmentReady": "Deze auto is herkend in de onderdelencatalogus. Je ziet alleen onderdelen die erop passen.",
+    "typeLabel": "Uitvoering",
+    "chooseType": "Uitvoering selecteren"
   },
   "category": {
     "metaDescription": "{category} voor jouw auto. Alle prijzen inclusief 21% btw.",
@@ -245,7 +247,13 @@
       "content": "Inhoud",
       "packaging": "Verpakking",
       "itemNumber": "Artikelnummer",
-      "ean": "EAN"
+      "ean": "EAN",
+      "packSize": "Aantal per verpakking",
+      "rimSize": "Velgmaat",
+      "boltPattern": "Steekcirkel",
+      "offset": "Inpersdiepte (ET)",
+      "maxLoad": "Max. draagvermogen",
+      "wheelMounting": "Wielmontage"
     }
   },
   "cart": {

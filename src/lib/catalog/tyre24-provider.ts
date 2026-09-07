@@ -136,15 +136,59 @@ const tyreItemSchema = z.object({
  * interne codering ("systeem: 73", "DA: 3").
  */
 const SPEC_KEYS: Record<string, string> = {
+  // Banden
   Inzet: "season",
   Snelheidsindex: "speedIndex",
   laadindex: "loadIndex",
+  // Velgen — dit bepaalt of een velg past
+  Velgmaat: "rimSize",
+  Velgverbinding: "boltPattern",
+  ET: "offset",
+  "Max. draagkracht": "maxLoad",
+  wielmontage: "wheelMounting",
+  // Toebehoren (DE-platform, dus Duitse attribuutnamen)
   Farbe: "colour",
   Material: "material",
   "Größe": "size",
   Inhalt: "content",
   Verpackungseinheit: "packaging",
 };
+
+/**
+ * Naam met het merk ervoor, tenzij het er al staat.
+ *
+ * "CONTI TS860 195/65 R15 91 H" is van CONTINENTAL, maar dat las je nergens.
+ * Alleen bij een écht merk: bij velgen staat in dit veld een omschrijving
+ * ("STAHLRAD OE QUALITÄT: ALCAR,KPZ,SÜDRAD,MWD"), en die hoort niet in een
+ * productnaam — zie isRealBrand() in filter-groups.ts.
+ */
+function displayName(item: z.infer<typeof tyreItemSchema>): string {
+  const brand = item.manufacturerName?.trim();
+  if (!brand || !isRealBrand(brand)) return item.name;
+  return item.name.toLowerCase().startsWith(brand.toLowerCase())
+    ? item.name
+    : `${brand} ${item.name}`;
+}
+
+/**
+ * Onderscheidende eigenschap voor op de productkaart, in volgorde van
+ * bruikbaarheid. Staat de waarde al in de naam — de bandenmaat bijvoorbeeld —
+ * dan voegt herhalen niets toe.
+ */
+const VARIANT_KEYS = ["season", "colour", "material", "size", "rimSize"];
+
+function variantOf(
+  specs: ReadonlyArray<{ key: string; value: string }>,
+  name: string,
+): string | undefined {
+  for (const key of VARIANT_KEYS) {
+    const value = specs.find((spec) => spec.key === key)?.value;
+    if (value && !name.toLowerCase().includes(value.toLowerCase())) {
+      return value;
+    }
+  }
+  return undefined;
+}
 
 /** Bandenmaat uit het `sizes`-blok: 195/65 R15 */
 function sizeLabel(item: z.infer<typeof tyreItemSchema>): string | null {
@@ -438,11 +482,21 @@ function toPart(
     (m) => m.isDefault && !m.isDeleted && m.imageLink,
   );
 
+  const specs = toSpecs(item);
+  const name = displayName(item);
+
   return {
     id: String(item.itemId),
-    slug: `${slugify(item.name)}-${item.itemId}`,
-    name: item.name,
-    brand: item.manufacturerName ?? "",
+    slug: `${slugify(name)}-${item.itemId}`,
+    name,
+    variant: variantOf(specs, name),
+    // Bij velgen staat in dit veld een omschrijving in plaats van een merk
+    // ("STAHLRAD OE QUALITÄT: ALCAR,KPZ,SÜDRAD,MWD"). Die hoort niet in de
+    // paginatitel of onder "Merk"; dan liever niets.
+    brand:
+      item.manufacturerName && isRealBrand(item.manufacturerName)
+        ? item.manufacturerName
+        : "",
     family,
     oeNumber:
       item.identifications?.OEN?.[0] ?? item.manufacturerItemNumber ?? "",
@@ -451,7 +505,7 @@ function toPart(
     priceCents: consumerPriceCents({ purchaseCents, recommendedCents }),
     availability: (item.stock ?? 0) > 0 ? "in-stock" : "out-of-stock",
     imageUrl: image?.imageLink ? imageUrl(image.imageLink) : undefined,
-    specs: toSpecs(item),
+    specs,
     stock: item.stock,
   };
 }

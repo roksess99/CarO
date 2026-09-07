@@ -107,7 +107,9 @@
       "notFound": "This licence plate is not in the RDW data. Please check your input.",
       "unavailable": "The licence plate search is temporarily unavailable. Please try again later."
     },
-    "fitmentReady": "This car was recognised in the parts catalogue. You will only see parts that fit it."
+    "fitmentReady": "This car was recognised in the parts catalogue. You will only see parts that fit it.",
+    "typeLabel": "Version",
+    "chooseType": "Select version"
   },
   "category": {
     "metaDescription": "{category} for your car. All prices include 21% VAT.",
@@ -245,7 +247,13 @@
       "content": "Contents",
       "packaging": "Packaging",
       "itemNumber": "Item number",
-      "ean": "EAN"
+      "ean": "EAN",
+      "packSize": "Quantity per pack",
+      "rimSize": "Rim size",
+      "boltPattern": "Bolt pattern",
+      "offset": "Offset (ET)",
+      "maxLoad": "Max. load",
+      "wheelMounting": "Wheel mounting"
     }
   },
   "cart": {

@@ -12,7 +12,7 @@ import type { FamilyNavItem } from "@/components/family-nav";
 import { PRODUCT_FAMILIES } from "@/lib/catalog/families";
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
-import { listMakes } from "@/lib/vehicle/catalog";
+import { vehicleMakeNames } from "@/lib/vehicle/makes";
 import "../globals.css";
 
 const inter = Inter({
@@ -89,7 +89,7 @@ export default async function LocaleLayout({
           </main>
           <SiteFooter />
           <BackToTop />
-          <BottomNav items={navItems} makes={listMakes()} />
+          <BottomNav items={navItems} makes={await vehicleMakeNames()} />
         </NextIntlClientProvider>
       </body>
     </html>
