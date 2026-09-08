@@ -117,6 +117,12 @@ export async function PartsCategoryPage({
 
       <h1 className="mt-6 text-3xl md:text-4xl">{name}</h1>
 
+      {/* Korte inleiding: een pagina met alleen een raster van artikelen zegt
+          een zoekmachine niets over waar hij over gaat. */}
+      <p className="mt-3 max-w-2xl text-muted">
+        {t("introParts", { category: name })}
+      </p>
+
       {children.length > 0 && (
         <nav aria-label={t("siblingsAria")} className="mt-6">
           <GroupList

@@ -54,30 +54,35 @@
       "title": "Onderdelen",
       "intro": "Nieuwe originele onderdelen. Zoek op naam of nummer, of kies je auto en blader per categorie.",
       "menuAria": "Onderdelen",
-      "empty": "Er is nog geen onderdelenaanbod beschikbaar."
+      "empty": "Er is nog geen onderdelenaanbod beschikbaar.",
+      "about": "Bij CarO bestel je nieuwe onderdelen voor personenauto's en tweewielers: remschijven en remblokken, filters, wielophanging, koeling, verlichting en elektra. Geef je kenteken op of kies merk, model en uitvoering — daarna toont de catalogus alleen artikelen die op jouw auto passen. Zoeken op naam of OE-nummer kan ook zonder auto. Alle prijzen zijn inclusief 21% btw en je hebt veertien dagen bedenktijd."
     },
     "banden": {
       "title": "Banden",
       "intro": "Banden voor auto, SUV, bestelwagen en tweewieler.",
       "menuAria": "Bandencategorieën",
-      "empty": "Er is nog geen bandenaanbod beschikbaar."
+      "empty": "Er is nog geen bandenaanbod beschikbaar.",
+      "about": "Zomerbanden, winterbanden en allseasonbanden voor auto, SUV, bestelwagen en tweewieler. Vul de maat in die op de zijkant van je huidige band staat — breedte, hoogte en velgdiameter, bijvoorbeeld 205/55 R16 — en kies eventueel het seizoen. Je ziet het aanbod van honderden merken, met de prijs inclusief 21% btw."
     },
     "velgen": {
       "title": "Velgen",
       "intro": "Stalen velgen in alle gangbare maten.",
       "menuAria": "Velgencategorieën",
-      "empty": "Er is nog geen velgenaanbod beschikbaar."
+      "empty": "Er is nog geen velgenaanbod beschikbaar.",
+      "about": "Stalen velgen in alle gangbare maten. Filter op steekcirkel, velgmaat, ET en draagvermogen; die waarden staan op de binnenkant van je huidige velg. Prijzen zijn inclusief 21% btw en je hebt veertien dagen bedenktijd."
     },
     "toebehoren": {
       "title": "Toebehoren",
       "intro": "Wiel- en bandenaccessoires, van ventielen tot opbergsystemen.",
       "menuAria": "Toebehorencategorieën",
-      "empty": "Er is nog geen aanbod aan toebehoren beschikbaar."
+      "empty": "Er is nog geen aanbod aan toebehoren beschikbaar.",
+      "about": "Wiel- en bandenaccessoires en auto-uitrusting: ventielen, wielmoeren, sneeuwkettingen, opbergsystemen, accu's, verlichting, oliën en autoverzorging. Filter op merk, maat, kleur of materiaal. Prijzen zijn inclusief 21% btw."
     },
     "oenElsewhere": "Wel gevonden bij banden, velgen en toebehoren voor \"{term}\"",
     "groupsTitle": "Categorieën voor jouw auto",
     "chooseCarToBrowse": "Kies eerst je auto om door de categorieën te bladeren. Zoeken op naam of nummer kan altijd.",
-    "viewAllOf": "Alle {family} bekijken"
+    "viewAllOf": "Alle {family} bekijken",
+    "aboutTitle": "Over {family} bij CarO"
   },
   "tyres": {
     "pickerTitle": "Kies je bandenmaat",
@@ -137,7 +142,9 @@
     "allBrands": "Alle merken",
     "breadcrumbAria": "Kruimelpad",
     "breadcrumbHome": "Home",
-    "siblingsAria": "Andere categorieën"
+    "siblingsAria": "Andere categorieën",
+    "intro": "Ons aanbod {family} in de categorie {category}. Prijzen zijn inclusief 21% btw; filter op merk of eigenschap om snel het juiste artikel te vinden.",
+    "introParts": "Onderdelen in de categorie {category} die op de gekozen auto passen, geleverd door onze groothandel. Prijzen zijn inclusief 21% btw."
   },
   "filters": {
     "title": "Filters",
