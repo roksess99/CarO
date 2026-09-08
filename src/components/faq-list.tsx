@@ -26,7 +26,7 @@ export function FaqList({ items }: { items: readonly FaqItem[] }) {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="faq-chevron mt-0.5 size-5 shrink-0 text-caro-orange transition-[rotate] rtl:-scale-x-100"
+              className="faq-chevron mt-0.5 size-5 shrink-0 text-caro-orange transition-[rotate]"
             >
               <path d="m9 18 6-6-6-6" />
             </svg>

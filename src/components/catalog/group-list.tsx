@@ -20,6 +20,11 @@ import { groupSlug } from "@/lib/catalog/wearparts-provider";
  * subgroepen ("ABS wielsensoren", "Hoofdremcilinder") krijgen er géén van de
  * leverancier, en een rij lege vlakken leest slechter dan geen vlak. Vandaar
  * dat de lijst de beeldkolom als geheel weglaat zodra niemand er een heeft.
+ *
+ * Het aantal achter de naam is er om dezelfde reden als het weglaten van lege
+ * groepen: de klant moet vóór de klik kunnen zien wat hem te wachten staat.
+ * Ontbreekt het (telling mislukt of niet opgevraagd), dan staat er niets —
+ * geen "0", want dat zou een leugen zijn.
  */
 export function GroupList({
   groups,
@@ -65,10 +70,15 @@ export function GroupList({
             <span className="flex-1 text-sm leading-snug font-semibold">
               {group.name}
             </span>
+            {group.articleCount !== undefined && group.articleCount > 0 && (
+              <span className="shrink-0 text-xs text-muted tabular-nums">
+                {group.articleCount}
+              </span>
+            )}
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className="me-1 size-5 shrink-0 text-muted rtl:-scale-x-100"
+              className="me-1 size-5 shrink-0 text-muted"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"

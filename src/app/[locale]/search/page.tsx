@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ProductGrid } from "@/components/product-grid";
 import { SiteSearch } from "@/components/site-search";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import {
   familySlug,
   PRODUCT_FAMILIES,
@@ -12,6 +12,7 @@ import {
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
 import { searchParts } from "@/lib/catalog/wearparts-provider";
+import { socialMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -24,11 +25,23 @@ const RESULTS_PER_FAMILY = 8;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "search" });
+  const title = `${t("title")} — CarO`;
+  const description = t("metaDescription");
+
   return {
-    title: `${t("title")} — CarO`,
-    description: t("metaDescription"),
+    title,
+    description,
     // Zoekresultaten horen niet in de index (dunne, oneindige content)
     robots: { index: false, follow: true },
+    // Wél een fatsoenlijke deelkaart: `noindex` houdt de pagina uit Google,
+    // maar niet uit een WhatsApp-berichtje. Bewust geen canonical of
+    // hreflang — die horen bij een pagina die je juist wél geïndexeerd wilt.
+    ...socialMetadata({
+      locale,
+      title,
+      description,
+      path: getPathname({ locale, href: "/search" }),
+    }),
   };
 }
 

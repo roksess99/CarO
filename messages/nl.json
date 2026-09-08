@@ -3,7 +3,8 @@
     "skipToContent": "Naar inhoud",
     "filterPlaceholder": "Typ om te zoeken…",
     "noMatches": "Niets gevonden. Probeer een ander woord.",
-    "backToTop": "Terug naar boven"
+    "backToTop": "Terug naar boven",
+    "loading": "Bezig met laden…"
   },
   "header": {
     "homeAria": "CarO — naar de homepage"
@@ -140,7 +141,11 @@
     "viewAllOf": "Alle {family} bekijken",
     "aboutTitle": "Over {family} bij CarO",
     "faqTitle": "Veelgestelde vragen over {family}",
-    "faqMore": "Alle veelgestelde vragen"
+    "faqMore": "Alle veelgestelde vragen",
+    "quick": {
+      "filters": "Filters",
+      "oils": "Olie"
+    }
   },
   "tyres": {
     "pickerTitle": "Kies je bandenmaat",
@@ -202,7 +207,10 @@
     "breadcrumbHome": "Home",
     "siblingsAria": "Andere categorieën",
     "intro": "Ons aanbod {family} in de categorie {category}. Prijzen zijn inclusief 21% btw; filter op merk of eigenschap om snel het juiste artikel te vinden.",
-    "introParts": "Onderdelen in de categorie {category} die op de gekozen auto passen, geleverd door onze groothandel. Prijzen zijn inclusief 21% btw."
+    "introParts": "Onderdelen in de categorie {category} die op de gekozen auto passen, geleverd door onze groothandel. Prijzen zijn inclusief 21% btw.",
+    "noParts": "Voor deze auto hebben we in deze categorie niets. Kies een andere categorie of zoek op naam of OE-nummer.",
+    "showAllTypes": "Ook bijbehorende onderdelen tonen",
+    "onlyThisType": "Alleen {type} tonen"
   },
   "filters": {
     "title": "Filters",

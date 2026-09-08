@@ -9,8 +9,10 @@ import { consumerPriceCents } from "@/lib/pricing";
 import {
   type AssemblyGroup,
   articleById,
+  articleCounts,
   assemblyGroupById,
   assemblyGroups,
+  assemblyTree,
   searchArticles,
   type WearpartsArticle,
 } from "./wearparts";
@@ -224,24 +226,170 @@ export async function partGroups(
   return assemblyGroups(carId, parentNodeId);
 }
 
-/** Onderdelen zoeken op vrije tekst; werkt zonder gekozen auto */
+/** Een rij bladgroepen onder de kop van hun tussenliggende groep */
+export interface GroupSection {
+  /** Kop boven de rij; leeg als de bladeren direct onder de hoofdgroep hangen */
+  title: string;
+  groups: AssemblyGroup[];
+}
+
+/**
+ * Wat een klant te zien krijgt als hij een hoofdgroep opent.
+ *
+ * Twee dingen die de oude opzet fout deed, allebei gemeten op één auto
+ * (carId 128214, 2026-09-08):
+ *
+ * 1. **Te veel klikken.** De boom is vier niveaus diep — 36 hoofdgroepen,
+ *    775 knopen. Wie remblokken zocht klikte Remsysteem → Rem­schijf/-trommel
+ *    → Remblokken → artikelen. Hier slaan we de tussenniveaus over en tonen
+ *    we meteen álle bladeren, met hun tussengroep als kop erboven.
+ * 2. **Doodlopende wegen.** `Bediening / Hydraulica` (1089) is een blad met
+ *    nul artikelen. Zulke groepen laten we weg; wie erop klikte kreeg een
+ *    lege pagina en moest terug.
+ *
+ * De telling kost één call per blad, maar die zijn een dag gecacht en lopen
+ * met hoogstens zes tegelijk (`articleCounts`).
+ */
+export async function partLeafGroups(
+  carId: number,
+  rootId: number,
+): Promise<GroupSection[]> {
+  const tree = await assemblyTree(carId);
+  const childrenOf = new Map<number, AssemblyGroup[]>();
+  for (const node of tree) {
+    if (node.parentId === undefined) continue;
+    const siblings = childrenOf.get(node.parentId);
+    if (siblings) siblings.push(node);
+    else childrenOf.set(node.parentId, [node]);
+  }
+
+  // Bladeren verzamelen en onthouden onder welke tussengroep ze hingen. De
+  // hoofdgroep zelf levert een lege kop op: daar staat de <h1> al boven.
+  const sections: GroupSection[] = [];
+  const seen = new Set<number>();
+
+  function collect(id: number, title: string): void {
+    if (seen.has(id)) return; // de boom is plat aangeleverd; lussen uitsluiten
+    seen.add(id);
+    const children = childrenOf.get(id) ?? [];
+    if (children.length === 0) return;
+
+    const leaves = children.filter((child) => !childrenOf.has(child.id));
+    if (leaves.length > 0) {
+      const section = sections.find((entry) => entry.title === title);
+      if (section) section.groups.push(...leaves);
+      else sections.push({ title, groups: [...leaves] });
+    }
+    for (const child of children) {
+      if (childrenOf.has(child.id)) collect(child.id, child.name);
+    }
+  }
+
+  collect(rootId, "");
+
+  const counts = await articleCounts(
+    carId,
+    sections.flatMap((section) => section.groups.map((group) => group.id)),
+  );
+
+  return sections
+    .map((section) => ({
+      title: section.title,
+      groups: section.groups
+        .map((group) => ({ ...group, articleCount: counts.get(group.id) }))
+        // -1 is "telling mislukt": dan tonen we hem, want een onvindbaar
+        // artikel is erger dan een lege pagina.
+        .filter((group) => group.articleCount !== 0),
+    }))
+    .filter((section) => section.groups.length > 0);
+}
+
+/**
+ * Hoofdgroepen voor het raster op de familiepagina, zonder de lege.
+ *
+ * Alleen de hoofdgroepen die zélf een eindgroep zijn worden geteld —
+ * `Koplampreiniging` heeft geen enkele subgroep en is voor de meeste auto's
+ * niets. Die hoort niet in het raster.
+ *
+ * De rest blijft ongeteld staan, en dat is een bewuste keuze: `/articles`
+ * geeft HTTP 500 op een groep met subgroepen (gemeten op alle 36), dus het
+ * aantal van een hoofdgroep is alleen te krijgen door al zijn eindgroepen op
+ * te tellen. Voor 620 bladeren zijn dat 620 calls op een limiet van 100 per
+ * minuut. Dat is de paginaweergave niet waard; de lege takken vallen een
+ * niveau dieper alsnog weg (zie `partLeafGroups`).
+ */
+export async function partGroupsWithCounts(
+  carId: number,
+): Promise<AssemblyGroup[]> {
+  const groups = await assemblyGroups(carId);
+  const leaves = groups.filter((group) => !group.hasChildren);
+  const counts = await articleCounts(
+    carId,
+    leaves.map((group) => group.id),
+  );
+  return groups
+    .map((group) => ({ ...group, articleCount: counts.get(group.id) }))
+    .filter((group) => group.articleCount !== 0);
+}
+
+/**
+ * Onderdelen zoeken op vrije tekst; werkt zonder gekozen auto.
+ *
+ * Geef `carId` mee zodra de klant zijn auto heeft opgegeven. GEMETEN
+ * 2026-09-08: zoeken op "olie" mét auto gaf 797 treffers met "Olie" van FEBI
+ * BILSTEIN bovenaan; zonder auto zoekt de API de hele catalogus af en komen
+ * er olieaftappluggen en -schroeven bovendrijven waar de klant niets aan
+ * heeft.
+ */
 export async function searchParts(
   term: string,
   limit = 20,
   page = 0,
+  carId?: number,
 ): Promise<{ parts: Part[]; total: number }> {
   const { articles, total } = await searchArticles({
     search: term,
+    carId,
     limit,
     page,
   });
   return {
-    parts: articles.flatMap((article) => {
-      const part = toPart(article, SEARCH_CATEGORY_SLUG, "");
-      return part ? [part] : [];
-    }),
+    parts: rankByName(
+      articles.flatMap((article) => {
+        const part = toPart(article, SEARCH_CATEGORY_SLUG, "");
+        return part ? [part] : [];
+      }),
+      term,
+    ),
     total,
   };
+}
+
+/**
+ * Treffers waarvan de naam met de zoekterm begint naar voren halen.
+ *
+ * De leverancier zoekt over meerdere velden tegelijk, dus "olie" matcht ook
+ * op een schroef die "olieaftapplug" heet of op een merk. Een artikel dat
+ * letterlijk "Olie" heet is bijna altijd wat de klant bedoelde; dat hoort
+ * bovenaan. Een stabiele sortering, zodat de volgorde van de API verder
+ * intact blijft.
+ */
+function rankByName(parts: Part[], term: string): Part[] {
+  const needle = term.trim().toLowerCase();
+  if (!needle) return parts;
+
+  const score = (part: Part): number => {
+    const name = part.name.toLowerCase();
+    if (name === needle) return 0;
+    if (name.startsWith(needle)) return 1;
+    if (name.includes(needle)) return 2;
+    return 3;
+  };
+
+  return parts
+    .map((part, index) => ({ part, index, score: score(part) }))
+    .sort((a, b) => a.score - b.score || a.index - b.index)
+    .map((entry) => entry.part);
 }
 
 /** Onderdelen binnen één categorie van één auto */
@@ -250,6 +398,7 @@ export async function partsInGroup({
   categoryId,
   categorySlug,
   categoryName,
+  genericArticleId,
   limit = 20,
   page = 0,
 }: {
@@ -257,12 +406,15 @@ export async function partsInGroup({
   categoryId: number;
   categorySlug: string;
   categoryName: string;
+  /** Beperk tot het soort waar de groep over gaat; zie ArticleQuery */
+  genericArticleId?: string;
   limit?: number;
   page?: number;
 }): Promise<{ parts: Part[]; total: number }> {
   const { articles, total } = await searchArticles({
     carId,
     categoryId,
+    genericArticleId,
     limit,
     page,
   });

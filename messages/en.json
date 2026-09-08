@@ -3,7 +3,8 @@
     "skipToContent": "Skip to content",
     "filterPlaceholder": "Type to search…",
     "noMatches": "Nothing found. Try another word.",
-    "backToTop": "Back to top"
+    "backToTop": "Back to top",
+    "loading": "Loading…"
   },
   "header": {
     "homeAria": "CarO — go to homepage"
@@ -140,7 +141,11 @@
     "viewAllOf": "View all {family}",
     "aboutTitle": "About {family} at CarO",
     "faqTitle": "Frequently asked questions about {family}",
-    "faqMore": "All frequently asked questions"
+    "faqMore": "All frequently asked questions",
+    "quick": {
+      "filters": "Filters",
+      "oils": "Oil"
+    }
   },
   "tyres": {
     "pickerTitle": "Choose your tyre size",
@@ -202,7 +207,10 @@
     "breadcrumbHome": "Home",
     "siblingsAria": "Other categories",
     "intro": "Our {family} range in the {category} category. Prices include 21% Dutch VAT; filter by brand or specification to find the right item quickly.",
-    "introParts": "Parts in the {category} category that fit the selected car, supplied by our wholesaler. Prices include 21% Dutch VAT."
+    "introParts": "Parts in the {category} category that fit the selected car, supplied by our wholesaler. Prices include 21% Dutch VAT.",
+    "noParts": "We have nothing in this category for this car. Pick another category, or search by name or OE number.",
+    "showAllTypes": "Also show related parts",
+    "onlyThisType": "Show only {type}"
   },
   "filters": {
     "title": "Filters",

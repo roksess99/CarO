@@ -1,6 +1,7 @@
 # CarO — Onderdelen webshop (NL)
 
 Webshop voor auto-onderdelen. Markt: Nederland. UI-taal: NL primair, EN secundair.
+Arabisch is 2026-09-08 verwijderd (winkelkeuze).
 
 **Assortiment: alleen personenauto's en tweewielers.** Geen vrachtwagens,
 landbouw, grondverzet of industrie. Afgedwongen als allowlist in
@@ -54,11 +55,14 @@ Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 | Voertuig opgeven | `components/vehicle/` | Kenteken of merk/model/uitvoering; beide leveren een TecDoc-`carId` en dus passende onderdelen |
 | Mobiele navigatie | `components/bottom-nav.tsx` | Zwevende tabbalk; assortiment en autokiezer openen als paneel vanaf de onderkant |
 | Voertuigbalk | `components/vehicle/vehicle-bar.tsx` | Mobiel, in de sticky header boven de zoekbalk: merk, model en motorregel van de gekozen auto. Tikken opent de autokiezer |
-| Categorierijen | `components/catalog/group-list.tsx` | Onderdelen per assemblagegroep, één rij per groep met het pictogram van de leverancier. Alleen hoofdgroepen hébben een pictogram; zonder valt de beeldkolom weg |
+| Categorierijen | `components/catalog/group-list.tsx` | Onderdelen per assemblagegroep, één rij per groep met het pictogram van de leverancier én het aantal artikelen. Alleen hoofdgroepen hébben een pictogram; zonder valt de beeldkolom weg |
+| Platte categorieboom | `lib/catalog/wearparts-provider.ts` | `partLeafGroups()` slaat tussenniveaus over en verbergt lege takken: van vier klikken naar twee. Tellen kan alleen op eindgroepen — een groep met subgroepen geeft HTTP 500 |
+| Olie en Filters | `lib/catalog/quick-links.ts`, `components/catalog/actions.ts` | Twee uitklapmenu's naast de vier families, met dezelfde opbouw. De hoofdgroep staat vast, de subgroepen komen per auto uit een Server Action — ze verschillen per voertuig. Mobiel staan ze als directe link bovenaan het assortimentspaneel |
+| Soort boven toebehoren | `wearparts.ts` → `genericArticleId` | Een eindgroep toont standaard alleen waar hij over gaat. "Oliefilter" bevat 125 artikelen waarvan 65 filters; de rest waren afsluitschroeven en afdichtringen, die bovenaan stonden. `defaultGenericArticleId` van de groep filtert; "alles tonen" haalt het filter eraf |
 | Bandenmaatkiezer | `components/tyres/tyre-size-picker.tsx` | Breedte/hoogte/diameter + seizoen als GET-formulier; maat in de URL. Zoeklogica in `lib/catalog/tyre-size.ts` |
 | Veelgestelde vragen | `app/[locale]/faq/page.tsx`, `components/faq-list.tsx` | Negen vragen in drie blokken, met `FAQPage`-markering. Elke familiepagina heeft er drie eigen onderaan, als gewone tekst |
 | Categorieslugs | `lib/catalog/category-labels.ts` | Nederlandse slug per categorie, bevroren lijst. De leverancier schrijft toebehoren in het Duits; oude URL's krijgen een 308 via `proxy.ts` |
-| Sitemap en robots | `app/sitemap.ts`, `app/robots.ts` | 75 URL's: home, families, categorieën en de statische pagina's, in drie talen met `hreflang`. Producten staan er bewust niet in |
+| Sitemap en robots | `app/sitemap.ts`, `app/robots.ts` | Home, families, categorieën en de statische pagina's, in twee talen met `hreflang`. Producten staan er bewust niet in |
 | Deelkaart | `app/[locale]/opengraph-image.tsx` | Open Graph-beeld voor WhatsApp en social. Productpagina's zetten hun eigen foto; de rest krijgt deze merkkaart |
 | Gestructureerde data | `components/json-ld.tsx`, `lib/site.ts` | `Product` op de productpagina, `BreadcrumbList` op categorie en product. Open Graph via `socialMetadata()` |
 | Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |

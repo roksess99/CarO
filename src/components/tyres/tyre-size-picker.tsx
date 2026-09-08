@@ -43,97 +43,103 @@ export async function TyreSizePicker({
     <section className="mt-8 rounded-xl border border-border p-4 md:p-6">
       <h2 className="text-lg">{t("pickerTitle")}</h2>
 
-      <TyreWall />
+      {/* Op desktop naast elkaar: de kaart loopt over de volle contentbreedte
+          en met alles onder elkaar bleef rechts een half scherm leeg, terwijl
+          de klant naar beneden moest voor de knop. Onder lg blijft het één
+          kolom — daar klopte de volgorde al. */}
+      <div className="mt-4 lg:grid lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-start lg:gap-10">
+        <TyreWall />
 
-      <form action={action} className="mt-4">
-        <div className="grid grid-cols-3 gap-2 sm:max-w-md">
-          <div>
-            <label htmlFor="breedte" className={labelClass}>
-              {t("width")}
-            </label>
-            <select
-              id="breedte"
-              name="breedte"
-              defaultValue={size ? String(size.width) : ""}
-              className={selectClass}
-            >
-              <option value="">–</option>
-              {TYRE_WIDTHS.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="hoogte" className={labelClass}>
-              {t("height")}
-            </label>
-            <select
-              id="hoogte"
-              name="hoogte"
-              defaultValue={size ? String(size.height) : ""}
-              className={selectClass}
-            >
-              <option value="">–</option>
-              {TYRE_HEIGHTS.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="diameter" className={labelClass}>
-              {t("diameter")}
-            </label>
-            <select
-              id="diameter"
-              name="diameter"
-              defaultValue={size ? String(size.diameter) : ""}
-              className={selectClass}
-            >
-              <option value="">–</option>
-              {TYRE_DIAMETERS.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <fieldset className="mt-5">
-          <legend className={labelClass}>{t("season")}</legend>
-          {/* Radioknoppen en geen keuzelijst: het zijn er vier en ze passen op
-              een telefoon op twee regels. Zo is de keuze meteen zichtbaar. */}
-          <div className="flex flex-wrap gap-2">
-            {(["", ...TYRE_SEASONS] as const).map((value) => (
-              <label key={value || "alle"} className="cursor-pointer">
-                <input
-                  type="radio"
-                  name="seizoen"
-                  value={value}
-                  defaultChecked={(season ?? "") === value}
-                  className="peer sr-only"
-                />
-                <span className="flex h-11 items-center rounded-md border border-border px-4 text-sm font-semibold peer-checked:border-caro-orange peer-checked:bg-caro-orange peer-checked:text-caro-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-caro-orange">
-                  {t(`seasons.${value || "all"}`)}
-                </span>
+        <form action={action} className="mt-4 lg:mt-0">
+          <div className="grid grid-cols-3 gap-2 sm:max-w-md">
+            <div>
+              <label htmlFor="breedte" className={labelClass}>
+                {t("width")}
               </label>
-            ))}
-          </div>
-        </fieldset>
+              <select
+                id="breedte"
+                name="breedte"
+                defaultValue={size ? String(size.width) : ""}
+                className={selectClass}
+              >
+                <option value="">–</option>
+                {TYRE_WIDTHS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <button
-          type="submit"
-          className="mt-6 h-12 w-full rounded-md bg-caro-orange px-6 font-semibold text-caro-ink sm:w-auto sm:min-w-64"
-        >
-          {t("submit")}
-        </button>
-      </form>
+            <div>
+              <label htmlFor="hoogte" className={labelClass}>
+                {t("height")}
+              </label>
+              <select
+                id="hoogte"
+                name="hoogte"
+                defaultValue={size ? String(size.height) : ""}
+                className={selectClass}
+              >
+                <option value="">–</option>
+                {TYRE_HEIGHTS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="diameter" className={labelClass}>
+                {t("diameter")}
+              </label>
+              <select
+                id="diameter"
+                name="diameter"
+                defaultValue={size ? String(size.diameter) : ""}
+                className={selectClass}
+              >
+                <option value="">–</option>
+                {TYRE_DIAMETERS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <fieldset className="mt-5">
+            <legend className={labelClass}>{t("season")}</legend>
+            {/* Radioknoppen en geen keuzelijst: het zijn er vier en ze passen op
+                een telefoon op twee regels. Zo is de keuze meteen zichtbaar. */}
+            <div className="flex flex-wrap gap-2">
+              {(["", ...TYRE_SEASONS] as const).map((value) => (
+                <label key={value || "alle"} className="cursor-pointer">
+                  <input
+                    type="radio"
+                    name="seizoen"
+                    value={value}
+                    defaultChecked={(season ?? "") === value}
+                    className="peer sr-only"
+                  />
+                  <span className="flex h-11 items-center rounded-md border border-border px-4 text-sm font-semibold peer-checked:border-caro-orange peer-checked:bg-caro-orange peer-checked:text-caro-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-caro-orange">
+                    {t(`seasons.${value || "all"}`)}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <button
+            type="submit"
+            className="mt-6 h-12 w-full rounded-md bg-caro-orange px-6 font-semibold text-caro-ink sm:w-auto sm:min-w-64"
+          >
+            {t("submit")}
+          </button>
+        </form>
+      </div>
 
       <details className="mt-4">
         <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-muted hover:text-foreground">
@@ -164,7 +170,7 @@ function TyreWall() {
     <svg
       viewBox="0 0 300 80"
       aria-hidden="true"
-      className="mt-4 h-20 w-full max-w-md"
+      className="h-20 w-full max-w-md"
     >
       {/* Flank van de band: donker vlak met de maat erin gestanst. Vaste
           kleuren mogen hier — dit is een afbeelding van een band, geen UI.
