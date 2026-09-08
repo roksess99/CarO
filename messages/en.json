@@ -55,34 +55,92 @@
       "intro": "New original spare parts. Search by name or number, or pick your car and browse by category.",
       "menuAria": "Parts",
       "empty": "No parts are available yet.",
-      "about": "CarO sells new parts for passenger cars and two-wheelers: brake discs and pads, filters, suspension, cooling, lighting and electrics. Enter your registration or pick make, model and version — the catalogue then shows only the articles that fit your car. Searching by name or OE number works without a car too. All prices include 21% Dutch VAT and you have fourteen days to change your mind."
+      "about": "CarO sells new parts for passenger cars and two-wheelers: brake discs and pads, filters, suspension, cooling, lighting and electrics. Enter your registration or pick make, model and version — the catalogue then shows only the articles that fit your car. Searching by name or OE number works without a car too. All prices include 21% Dutch VAT and you have fourteen days to change your mind.",
+      "faq": {
+        "q1": {
+          "question": "Will these parts fit my car?",
+          "answer": "First enter your registration or pick make, model and version. The catalogue then shows only parts that fit that particular version — a 1.0 TSI with 70 kW takes different brakes from the same car with 85 kW, so the version really matters."
+        },
+        "q2": {
+          "question": "Can I search by OE number?",
+          "answer": "Yes. Type the number into the search field; a partial number works too. The prefix OEN searches OE numbers only, EAN searches barcodes only. Searching by name works as well, but keep it to a single word: a description of several words returns nothing at the supplier."
+        },
+        "q3": {
+          "question": "Are the parts new?",
+          "answer": "Yes, all new and from the manufacturers our wholesaler carries. CarO sells no used parts, and nothing for trucks, agriculture or industry."
+        }
+      }
     },
     "banden": {
       "title": "Tyres",
       "intro": "Tyres for cars, SUVs, vans and two-wheelers.",
       "menuAria": "Tyre categories",
       "empty": "No tyres are available yet.",
-      "about": "Summer, winter and all-season tyres for cars, SUVs, vans and two-wheelers. Enter the size printed on the sidewall of your current tyre — width, height and rim diameter, for example 205/55 R16 — and narrow it down by season if you like. You get the range of hundreds of brands, with prices including 21% Dutch VAT."
+      "about": "Summer, winter and all-season tyres for cars, SUVs, vans and two-wheelers. Enter the size printed on the sidewall of your current tyre — width, height and rim diameter, for example 205/55 R16 — and narrow it down by season if you like. You get the range of hundreds of brands, with prices including 21% Dutch VAT.",
+      "faq": {
+        "q1": {
+          "question": "Where do I find my tyre size?",
+          "answer": "On the sidewall of your current tyre, written as 205/55 R16: 205 is the width in millimetres, 55 the height as a percentage of that width, and 16 the rim diameter in inches. Those three numbers go into the picker above."
+        },
+        "q2": {
+          "question": "Summer, winter or all-season — which do I pick?",
+          "answer": "Summer tyres stop shortest on dry and wet roads above roughly seven degrees. Winter tyres stay supple below that and grip in snow. All-season tyres sit in between: one set all year, with a little less grip at both extremes."
+        },
+        "q3": {
+          "question": "Can I search for tyres by registration?",
+          "answer": "No. There is no reliable route from a Dutch registration number to a tyre size — not even in the RDW open data. We would rather not guess about that, so enter the size printed on your tyre."
+        }
+      }
     },
     "velgen": {
       "title": "Wheels",
       "intro": "Steel wheels in all common sizes.",
       "menuAria": "Wheel categories",
       "empty": "No wheels are available yet.",
-      "about": "Steel wheels in every common size. Filter by bolt pattern, rim size, offset and load rating; those figures are stamped on the inside of your current wheel. Prices include 21% Dutch VAT and you have fourteen days to change your mind."
+      "about": "Steel wheels in every common size. Filter by bolt pattern, rim size, offset and load rating; those figures are stamped on the inside of your current wheel. Prices include 21% Dutch VAT and you have fourteen days to change your mind.",
+      "faq": {
+        "q1": {
+          "question": "Which wheel size fits my car?",
+          "answer": "That depends on the bolt pattern (the number of bolts and their circle diameter), the rim size and the offset. Those figures are usually stamped on the inside of your current wheel. Filter on them above, and check the measurements before you order."
+        },
+        "q2": {
+          "question": "What does ET mean?",
+          "answer": "ET is the offset in millimetres: the distance between the wheel's mounting face and the centre line of the rim width. A different ET pushes the wheel further out or in, and can rub against the suspension or the arch."
+        },
+        "q3": {
+          "question": "Are these steel or alloy wheels?",
+          "answer": "Steel wheels for now. They are cheaper and stand up better to kerbs and road salt, which makes them the usual choice for a winter set. Alloy wheels join the range later."
+        }
+      }
     },
     "toebehoren": {
       "title": "Accessories",
       "intro": "Wheel and tyre accessories, from valves to storage systems.",
       "menuAria": "Accessory categories",
       "empty": "No accessories are available yet.",
-      "about": "Wheel and tyre accessories and car equipment: valves, wheel nuts, snow chains, storage systems, batteries, lighting, oils and car care. Filter by brand, size, colour or material. Prices include 21% Dutch VAT."
+      "about": "Wheel and tyre accessories and car equipment: valves, wheel nuts, snow chains, storage systems, batteries, lighting, oils and car care. Filter by brand, size, colour or material. Prices include 21% Dutch VAT.",
+      "faq": {
+        "q1": {
+          "question": "What counts as accessories?",
+          "answer": "Everything around the wheel and the car itself: valves, wheel nuts and snow chains, but also batteries and chargers, lighting, oils and lubricants, car care and fasteners."
+        },
+        "q2": {
+          "question": "Do snow chains fit every tyre?",
+          "answer": "No, chains are tied to a tyre size. That size is listed with the item — compare it with the size on your sidewall. Mind the clearance in the wheel arch too; not every car is suitable for chains."
+        },
+        "q3": {
+          "question": "Can I filter these for my own car?",
+          "answer": "For accessories we search the supplier's description for make and model. That is a strong indication, not a guarantee: always check the size or type listed with the item."
+        }
+      }
     },
     "oenElsewhere": "Found under tyres, wheels and accessories for \"{term}\"",
     "groupsTitle": "Categories for your car",
     "chooseCarToBrowse": "Pick your car first to browse the categories. Searching by name or number always works.",
     "viewAllOf": "View all {family}",
-    "aboutTitle": "About {family} at CarO"
+    "aboutTitle": "About {family} at CarO",
+    "faqTitle": "Frequently asked questions about {family}",
+    "faqMore": "All frequently asked questions"
   },
   "tyres": {
     "pickerTitle": "Choose your tyre size",
@@ -368,7 +426,8 @@
     "withdrawal": "14-day right of withdrawal on every order.",
     "copyright": "© {year} CarO Onderdelen",
     "privacyLink": "Privacy and cookies",
-    "termsLink": "Terms and conditions"
+    "termsLink": "Terms and conditions",
+    "faqLink": "FAQ"
   },
   "terms": {
     "title": "Terms and conditions",
@@ -519,5 +578,54 @@
     "accSmartRepair": "Smart repair",
     "accFasteners": "Fasteners",
     "accPaint": "Sanding & painting"
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "metaTitle": "Frequently asked questions",
+    "metaDescription": "Answers about shipping, payment, returns and choosing parts that fit your car.",
+    "intro": "Question not answered here? Get in touch using the details at the bottom of this page.",
+    "groups": {
+      "ordering": "Ordering and delivery",
+      "returns": "Returns and warranty",
+      "fitment": "Choosing the right parts"
+    },
+    "q": {
+      "shipping": {
+        "question": "What does shipping cost?",
+        "answer": "Shipping within the Netherlands costs {shipping}. From {freeFrom} you pay nothing. We ship with PostNL, DHL or DPD; the final carrier will be announced when the shop opens. We aim to deliver within thirty days and will tell you if that is not going to happen — you can then cancel free of charge."
+      },
+      "vat": {
+        "question": "Do prices include VAT?",
+        "answer": "Yes. Every price on the site includes 21% Dutch VAT, in the cart as well. Shipping costs appear before the final checkout step, so you know the total before you pay."
+      },
+      "payment": {
+        "question": "How can I pay?",
+        "answer": "You pay in advance with one of the methods shown at checkout. Your order ships as soon as the payment arrives. Exactly which methods those will be is announced when the shop opens — we would rather show nothing than a payment method that does not work yet."
+      },
+      "returns": {
+        "question": "Can I return a part?",
+        "answer": "You may cancel your order within fourteen days of receiving it, without giving a reason, and then have another fourteen days to send it back. We refund within fourteen days of your notice. Parts that have been fitted, or whose seal is broken, cannot be taken back. Return postage is yours to pay unless the item arrived wrong or damaged."
+      },
+      "defects": {
+        "question": "What if a part is faulty?",
+        "answer": "Every item has to do what you may reasonably expect of it. If it does not, you are entitled to repair, replacement or a refund. That statutory right is separate from any manufacturer warranty. Report it using the contact details at the bottom of the page; we respond within fourteen days."
+      },
+      "condition": {
+        "question": "Are the parts new?",
+        "answer": "Yes. CarO sells new parts, tyres, wheels and accessories only, and only for passenger cars and two-wheelers. No used parts, and nothing for trucks, agriculture or industry."
+      },
+      "fits": {
+        "question": "How do I know a part fits my car?",
+        "answer": "Enter your registration, or pick make, model and version. We translate that into your car as the parts manufacturers know it, and then show only parts that fit that version. Wheels and accessories work differently: there we search the supplier’s description for make and model. That is a strong indication, not a guarantee — always check the measurements before you order."
+      },
+      "plate": {
+        "question": "What do you do with my registration number?",
+        "answer": "We use it only to look up your car. It never appears in the web address and is not kept in a log file. You can always clear the selected car yourself with the cross in the vehicle bar."
+      },
+      "tyreSize": {
+        "question": "Which tyre size do I need?",
+        "answer": "It is printed on the sidewall of your current tyre, for example 205/55 R16: the width in millimetres, the height as a percentage of that width, and the rim diameter in inches. There is no reliable route from a registration number to a tyre size, so you enter it yourself in the tyre size picker."
+      }
+    }
   }
 }

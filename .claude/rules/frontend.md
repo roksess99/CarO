@@ -117,6 +117,12 @@ kleuren van het select-element niet automatisch over in het popupvenster.
 - Productpagina's krijgen JSON-LD `Product` met `offers`, `price`, `availability`.
 - Categorie- en productpagina's krijgen daarnaast JSON-LD `BreadcrumbList`,
   met dezelfde stappen als het zichtbare kruimelpad.
+- **Geen `aggregateRating` zolang er geen echte beoordelingen zijn.** Cijfers
+  verzinnen misleidt de klant en is voor Google een reden om de markering van
+  de hele site te negeren. Retourtermijn en verzendtarief mogen wél mee: die
+  staan in `offerPolicies()` en komen uit dezelfde bron als de site zelf.
+- Markering beschrijft wat er op de pagina staat. `FAQPage` hoort dus bij
+  /veelgestelde-vragen, niet bij de vragenblokken op een familiepagina.
 - Elke route zet naast `localizedMetadata()` ook `socialMetadata()`: zonder
   Open Graph toont WhatsApp alleen de kale URL.
 - Een pagina met alleen een productraster krijgt lopende tekst: een korte

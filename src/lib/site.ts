@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { routing, type Locale } from "@/i18n/routing";
+import { priceCentsToDecimalString } from "@/lib/format";
+import { STANDARD_SHIPPING_CENTS } from "@/lib/shipping";
 
 /**
  * Basis-URL van de shop. Eén plek, want hij zit in élke canonical- en
@@ -128,5 +130,71 @@ export function breadcrumbJsonLd(
       name: item.name,
       item: `${SITE_URL}${item.path}`,
     })),
+  };
+}
+
+/**
+ * `FAQPage` voor de veelgestelde vragen.
+ *
+ * De vragen staan óók gewoon zichtbaar op de pagina; dit is dezelfde inhoud
+ * in de vorm die een zoekmachine leest. Let op de verwachting: Google toont
+ * FAQ-resultaten sinds 2023 alleen nog bij overheids- en gezondheidssites,
+ * dus dit helpt bij het begrijpen van de pagina — het levert geen sterretjes
+ * in de zoekresultaten op.
+ */
+export function faqJsonLd(
+  items: ReadonlyArray<{ question: string; answer: string }>,
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
+  };
+}
+
+/**
+ * Retour- en verzendvoorwaarden bij een `Offer`.
+ *
+ * Google toont deze twee bij een product in de zoekresultaten, en het zijn
+ * feiten die we al hebben: veertien dagen herroepingsrecht (voorwaarden,
+ * artikel 7) en het verzendtarief uit `lib/shipping.ts`. Eén bron, dus de
+ * markering kan niet uit de pas lopen met wat de klant leest.
+ *
+ * Bewust géén `aggregateRating`: er zijn nog geen beoordelingen. Cijfers
+ * verzinnen is misleidend voor de klant en een reden voor Google om de
+ * markering van de hele site te negeren.
+ *
+ * De drempel voor gratis verzending staat er ook niet in. Die is te
+ * omschrijven in schema.org, maar alleen met een vorm die makkelijk nét
+ * verkeerd staat; het staat wel in de FAQ en in de winkelwagen.
+ */
+export function offerPolicies() {
+  return {
+    hasMerchantReturnPolicy: {
+      "@type": "MerchantReturnPolicy",
+      applicableCountry: "NL",
+      returnPolicyCategory:
+        "https://schema.org/MerchantReturnFiniteReturnWindow",
+      merchantReturnDays: 14,
+      returnMethod: "https://schema.org/ReturnByMail",
+      // De klant betaalt de retourzending zelf, tenzij wij fout leverden
+      returnFees: "https://schema.org/ReturnShippingFees",
+    },
+    shippingDetails: {
+      "@type": "OfferShippingDetails",
+      shippingRate: {
+        "@type": "MonetaryAmount",
+        value: priceCentsToDecimalString(STANDARD_SHIPPING_CENTS),
+        currency: "EUR",
+      },
+      shippingDestination: {
+        "@type": "DefinedRegion",
+        addressCountry: "NL",
+      },
+    },
   };
 }
