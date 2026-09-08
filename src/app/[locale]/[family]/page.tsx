@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { GroupList } from "@/components/catalog/group-list";
+import { FaqList } from "@/components/faq-list";
 import { ProductGrid } from "@/components/product-grid";
 import { TyreSizePicker } from "@/components/tyres/tyre-size-picker";
 import { SelectedCarInUrl } from "@/components/vehicle/use-selected-car";
@@ -39,6 +40,9 @@ type Props = {
 
 /** Artikelen per zoekopdracht of categorie */
 const PAGE_SIZE = 20;
+
+/** Vragen per familie, in vaste volgorde (teksten in messages/) */
+const FAQ_KEYS = ["q1", "q2", "q3"] as const;
 
 /**
  * Banden halen we iets ruimer op dan we tonen. De zoekfunctie van de
@@ -94,6 +98,7 @@ export default async function FamilyPage({ params, searchParams }: Props) {
 
   const t = await getTranslations("family");
   const tTyres = await getTranslations("tyres");
+  const familyName = t(`${family}.title`);
   const provider = getCatalogProvider();
   const categories = await localizeCategories(
     await provider.getCategories(family),
@@ -314,15 +319,41 @@ export default async function FamilyPage({ params, searchParams }: Props) {
         </>
       )}
 
-      {/* Uitleg onderaan, na de producten. Een familiepagina bestaat verder
-          uit namen en prijzen; zonder lopende tekst kan een zoekmachine niet
-          zien waarvoor deze pagina bedoeld is. Onderaan, zodat de klant die
-          weet wat hij zoekt er niet langs hoeft te scrollen. */}
+      {/* Uitleg en vragen onderaan, na de producten. Een familiepagina
+          bestaat verder uit namen en prijzen; zonder lopende tekst kan een
+          zoekmachine niet zien waarvoor deze pagina bedoeld is. Onderaan,
+          zodat de klant die weet wat hij zoekt er niet langs hoeft te
+          scrollen.
+
+          Bewust géén FAQPage-markering hier: die hoort bij een pagina wáár de
+          vragen de hoofdinhoud zijn, en dat is /veelgestelde-vragen. Als
+          gewone tekst leest een zoekmachine dit prima. */}
       <section className="mt-16 max-w-3xl border-t border-border pt-8">
         <h2 className="text-xl">
-          {t("aboutTitle", { family: t(`${family}.title`).toLowerCase() })}
+          {t("aboutTitle", { family: familyName.toLowerCase() })}
         </h2>
         <p className="mt-3 text-muted">{t(`${family}.about`)}</p>
+
+        <h2 className="mt-10 text-xl">
+          {t("faqTitle", { family: familyName.toLowerCase() })}
+        </h2>
+        <div className="mt-4">
+          <FaqList
+            items={FAQ_KEYS.map((key) => ({
+              key,
+              question: t(`${family}.faq.${key}.question`),
+              answer: t(`${family}.faq.${key}.answer`),
+            }))}
+          />
+        </div>
+        <p className="mt-4 text-sm">
+          <Link
+            href="/faq"
+            className="underline underline-offset-4 text-muted hover:text-foreground"
+          >
+            {t("faqMore")}
+          </Link>
+        </p>
       </section>
     </div>
   );

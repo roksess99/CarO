@@ -56,6 +56,7 @@ Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 | Voertuigbalk | `components/vehicle/vehicle-bar.tsx` | Mobiel, in de sticky header boven de zoekbalk: merk, model en motorregel van de gekozen auto. Tikken opent de autokiezer |
 | Categorierijen | `components/catalog/group-list.tsx` | Onderdelen per assemblagegroep, één rij per groep met het pictogram van de leverancier. Alleen hoofdgroepen hébben een pictogram; zonder valt de beeldkolom weg |
 | Bandenmaatkiezer | `components/tyres/tyre-size-picker.tsx` | Breedte/hoogte/diameter + seizoen als GET-formulier; maat in de URL. Zoeklogica in `lib/catalog/tyre-size.ts` |
+| Veelgestelde vragen | `app/[locale]/faq/page.tsx`, `components/faq-list.tsx` | Negen vragen in drie blokken, met `FAQPage`-markering. Elke familiepagina heeft er drie eigen onderaan, als gewone tekst |
 | Categorieslugs | `lib/catalog/category-labels.ts` | Nederlandse slug per categorie, bevroren lijst. De leverancier schrijft toebehoren in het Duits; oude URL's krijgen een 308 via `proxy.ts` |
 | Sitemap en robots | `app/sitemap.ts`, `app/robots.ts` | 75 URL's: home, families, categorieën en de statische pagina's, in drie talen met `hreflang`. Producten staan er bewust niet in |
 | Deelkaart | `app/[locale]/opengraph-image.tsx` | Open Graph-beeld voor WhatsApp en social. Productpagina's zetten hun eigen foto; de rest krijgt deze merkkaart |

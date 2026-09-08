@@ -113,6 +113,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }),
 
+    ...entry((locale) => getPathname({ locale, href: "/faq" }), {
+      changeFrequency: "monthly",
+      priority: 0.6,
+    }),
+
     ...entry((locale) => getPathname({ locale, href: "/terms" }), {
       changeFrequency: "yearly",
       priority: 0.3,

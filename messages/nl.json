@@ -55,34 +55,92 @@
       "intro": "Nieuwe originele onderdelen. Zoek op naam of nummer, of kies je auto en blader per categorie.",
       "menuAria": "Onderdelen",
       "empty": "Er is nog geen onderdelenaanbod beschikbaar.",
-      "about": "Bij CarO bestel je nieuwe onderdelen voor personenauto's en tweewielers: remschijven en remblokken, filters, wielophanging, koeling, verlichting en elektra. Geef je kenteken op of kies merk, model en uitvoering — daarna toont de catalogus alleen artikelen die op jouw auto passen. Zoeken op naam of OE-nummer kan ook zonder auto. Alle prijzen zijn inclusief 21% btw en je hebt veertien dagen bedenktijd."
+      "about": "Bij CarO bestel je nieuwe onderdelen voor personenauto's en tweewielers: remschijven en remblokken, filters, wielophanging, koeling, verlichting en elektra. Geef je kenteken op of kies merk, model en uitvoering — daarna toont de catalogus alleen artikelen die op jouw auto passen. Zoeken op naam of OE-nummer kan ook zonder auto. Alle prijzen zijn inclusief 21% btw en je hebt veertien dagen bedenktijd.",
+      "faq": {
+        "q1": {
+          "question": "Passen deze onderdelen op mijn auto?",
+          "answer": "Geef eerst je kenteken op of kies merk, model en uitvoering. Daarna toont de catalogus alleen onderdelen die op díe uitvoering passen — een 1.0 TSI met 70 kW heeft andere remmen dan dezelfde auto met 85 kW, dus de uitvoering telt echt mee."
+        },
+        "q2": {
+          "question": "Kan ik zoeken op OE-nummer?",
+          "answer": "Ja. Vul het nummer in het zoekveld in; een gedeeltelijk nummer werkt ook. Met het voorvoegsel OEN zoek je alleen in de OE-nummers en met EAN alleen in de streepjescodes. Zoeken op naam kan ook, maar houd het bij één woord: een omschrijving van meerdere woorden levert bij de leverancier niets op."
+        },
+        "q3": {
+          "question": "Zijn de onderdelen nieuw?",
+          "answer": "Ja, allemaal nieuw en afkomstig van de fabrikanten die onze groothandel voert. CarO verkoopt geen gebruikte onderdelen, en niets voor vrachtwagens, landbouw of industrie."
+        }
+      }
     },
     "banden": {
       "title": "Banden",
       "intro": "Banden voor auto, SUV, bestelwagen en tweewieler.",
       "menuAria": "Bandencategorieën",
       "empty": "Er is nog geen bandenaanbod beschikbaar.",
-      "about": "Zomerbanden, winterbanden en allseasonbanden voor auto, SUV, bestelwagen en tweewieler. Vul de maat in die op de zijkant van je huidige band staat — breedte, hoogte en velgdiameter, bijvoorbeeld 205/55 R16 — en kies eventueel het seizoen. Je ziet het aanbod van honderden merken, met de prijs inclusief 21% btw."
+      "about": "Zomerbanden, winterbanden en allseasonbanden voor auto, SUV, bestelwagen en tweewieler. Vul de maat in die op de zijkant van je huidige band staat — breedte, hoogte en velgdiameter, bijvoorbeeld 205/55 R16 — en kies eventueel het seizoen. Je ziet het aanbod van honderden merken, met de prijs inclusief 21% btw.",
+      "faq": {
+        "q1": {
+          "question": "Waar vind ik mijn bandenmaat?",
+          "answer": "Op de zijkant van je huidige band, in de vorm 205/55 R16: 205 is de breedte in millimeters, 55 de hoogte als percentage van die breedte, en 16 de velgdiameter in inches. Die drie getallen vul je hierboven in."
+        },
+        "q2": {
+          "question": "Zomer, winter of allseason — wat kies ik?",
+          "answer": "Zomerbanden hebben de kortste remweg op droog en nat wegdek boven ongeveer zeven graden. Winterbanden blijven onder die temperatuur soepel en grijpen op sneeuw. Allseasonbanden zitten daartussenin: één set het hele jaar door, met wat minder grip in beide uitersten."
+        },
+        "q3": {
+          "question": "Kan ik banden zoeken op kenteken?",
+          "answer": "Nee. Er bestaat geen betrouwbare koppeling van een Nederlands kenteken naar een bandenmaat — ook niet in de open data van de RDW. Wij doen daar liever geen gok over, dus vul de maat in die op je band staat."
+        }
+      }
     },
     "velgen": {
       "title": "Velgen",
       "intro": "Stalen velgen in alle gangbare maten.",
       "menuAria": "Velgencategorieën",
       "empty": "Er is nog geen velgenaanbod beschikbaar.",
-      "about": "Stalen velgen in alle gangbare maten. Filter op steekcirkel, velgmaat, ET en draagvermogen; die waarden staan op de binnenkant van je huidige velg. Prijzen zijn inclusief 21% btw en je hebt veertien dagen bedenktijd."
+      "about": "Stalen velgen in alle gangbare maten. Filter op steekcirkel, velgmaat, ET en draagvermogen; die waarden staan op de binnenkant van je huidige velg. Prijzen zijn inclusief 21% btw en je hebt veertien dagen bedenktijd.",
+      "faq": {
+        "q1": {
+          "question": "Welke velgmaat past op mijn auto?",
+          "answer": "Dat hangt af van de steekcirkel (het aantal bouten en hun cirkeldiameter), de velgmaat en de inpersdiepte. Die waarden staan meestal op de binnenkant van je huidige velg. Filter er hierboven op, en controleer de maten voordat je bestelt."
+        },
+        "q2": {
+          "question": "Wat betekent ET?",
+          "answer": "ET is de inpersdiepte in millimeters: de afstand tussen het montagevlak van de velg en het midden van de velgbreedte. Een afwijkende ET zet het wiel verder naar buiten of naar binnen en kan langs de ophanging of het spatbord schuren."
+        },
+        "q3": {
+          "question": "Zijn dit stalen of lichtmetalen velgen?",
+          "answer": "Op dit moment stalen velgen. Die zijn goedkoper, beter bestand tegen stoeprandjes en strooizout, en daarmee de gebruikelijke keuze voor een winterset. Lichtmetalen velgen komen later in het assortiment."
+        }
+      }
     },
     "toebehoren": {
       "title": "Toebehoren",
       "intro": "Wiel- en bandenaccessoires, van ventielen tot opbergsystemen.",
       "menuAria": "Toebehorencategorieën",
       "empty": "Er is nog geen aanbod aan toebehoren beschikbaar.",
-      "about": "Wiel- en bandenaccessoires en auto-uitrusting: ventielen, wielmoeren, sneeuwkettingen, opbergsystemen, accu's, verlichting, oliën en autoverzorging. Filter op merk, maat, kleur of materiaal. Prijzen zijn inclusief 21% btw."
+      "about": "Wiel- en bandenaccessoires en auto-uitrusting: ventielen, wielmoeren, sneeuwkettingen, opbergsystemen, accu's, verlichting, oliën en autoverzorging. Filter op merk, maat, kleur of materiaal. Prijzen zijn inclusief 21% btw.",
+      "faq": {
+        "q1": {
+          "question": "Wat valt er onder toebehoren?",
+          "answer": "Alles rond het wiel en de auto zelf: ventielen, wielmoeren en sneeuwkettingen, maar ook accu's en acculaders, verlichting, oliën en smeermiddelen, autoverzorging en bevestigingsmateriaal."
+        },
+        "q2": {
+          "question": "Passen sneeuwkettingen op elke band?",
+          "answer": "Nee, kettingen zijn gebonden aan een bandenmaat. Die maat staat bij het artikel vermeld — vergelijk hem met de maat op de zijkant van je band. Let ook op de ruimte in de wielkast; niet elke auto is geschikt voor kettingen."
+        },
+        "q3": {
+          "question": "Kan ik hierop filteren voor mijn eigen auto?",
+          "answer": "Voor toebehoren zoeken we op merk en model in de omschrijving van de leverancier. Dat is een sterke aanwijzing, geen garantie: controleer altijd de maat of het type dat bij het artikel staat."
+        }
+      }
     },
     "oenElsewhere": "Wel gevonden bij banden, velgen en toebehoren voor \"{term}\"",
     "groupsTitle": "Categorieën voor jouw auto",
     "chooseCarToBrowse": "Kies eerst je auto om door de categorieën te bladeren. Zoeken op naam of nummer kan altijd.",
     "viewAllOf": "Alle {family} bekijken",
-    "aboutTitle": "Over {family} bij CarO"
+    "aboutTitle": "Over {family} bij CarO",
+    "faqTitle": "Veelgestelde vragen over {family}",
+    "faqMore": "Alle veelgestelde vragen"
   },
   "tyres": {
     "pickerTitle": "Kies je bandenmaat",
@@ -368,7 +426,8 @@
     "withdrawal": "14 dagen bedenktijd op elke bestelling.",
     "copyright": "© {year} CarO Onderdelen",
     "privacyLink": "Privacy en cookies",
-    "termsLink": "Algemene voorwaarden"
+    "termsLink": "Algemene voorwaarden",
+    "faqLink": "Veelgestelde vragen"
   },
   "terms": {
     "title": "Algemene voorwaarden",
@@ -519,5 +578,54 @@
     "accSmartRepair": "Smart repair",
     "accFasteners": "Bevestigingsmateriaal",
     "accPaint": "Schuren en lakken"
+  },
+  "faq": {
+    "title": "Veelgestelde vragen",
+    "metaTitle": "Veelgestelde vragen",
+    "metaDescription": "Antwoord op vragen over verzending, betalen, retourneren en het kiezen van onderdelen die op jouw auto passen.",
+    "intro": "Staat je vraag er niet bij? Neem contact op via de gegevens onderaan deze pagina.",
+    "groups": {
+      "ordering": "Bestellen en bezorgen",
+      "returns": "Retour en garantie",
+      "fitment": "De juiste onderdelen kiezen"
+    },
+    "q": {
+      "shipping": {
+        "question": "Wat kost verzenden?",
+        "answer": "Verzenden binnen Nederland kost {shipping}. Vanaf {freeFrom} betaal je geen verzendkosten. Wij versturen met PostNL, DHL of DPD; de definitieve vervoerder maken we bekend bij de start van de shop. Wij streven naar levering binnen dertig dagen en laten het je weten als dat niet lukt — je kunt de bestelling dan kosteloos annuleren."
+      },
+      "vat": {
+        "question": "Zijn de prijzen inclusief btw?",
+        "answer": "Ja. Elke prijs op de site is inclusief 21% btw, ook in de winkelwagen. De verzendkosten zie je vóór de laatste stap van het afrekenen, dus je weet het totaalbedrag voordat je betaalt."
+      },
+      "payment": {
+        "question": "Hoe kan ik betalen?",
+        "answer": "Je betaalt vooraf met een van de methoden die in de checkout staan. Zodra de betaling binnen is gaat de bestelling de deur uit. Welke methoden dat precies worden, maken we bekend bij de start van de shop — wij tonen liever niets dan een betaalmethode die nog niet werkt."
+      },
+      "returns": {
+        "question": "Kan ik een onderdeel terugsturen?",
+        "answer": "Je mag je bestelling binnen veertien dagen na ontvangst annuleren zonder reden op te geven, en hebt daarna nog veertien dagen om te retourneren. Wij betalen binnen veertien dagen na je melding terug. Onderdelen die gemonteerd zijn geweest of waarvan de verzegeling verbroken is, kunnen wij niet terugnemen. De retourkosten zijn voor jou, tenzij het artikel verkeerd of beschadigd geleverd is."
+      },
+      "defects": {
+        "question": "Wat als een onderdeel niet deugt?",
+        "answer": "Elk artikel moet doen wat je er redelijkerwijs van mag verwachten. Is dat niet zo, dan heb je recht op herstel, vervanging of terugbetaling. Dat wettelijke recht staat los van een eventuele fabrieksgarantie. Meld het bij ons via de contactgegevens onderaan de pagina; wij reageren binnen veertien dagen."
+      },
+      "condition": {
+        "question": "Zijn de onderdelen nieuw?",
+        "answer": "Ja. CarO verkoopt uitsluitend nieuwe onderdelen, banden, velgen en toebehoren, en alleen voor personenauto’s en tweewielers. Geen gebruikte onderdelen, en geen vrachtwagen-, landbouw- of industriemateriaal."
+      },
+      "fits": {
+        "question": "Hoe weet ik of een onderdeel op mijn auto past?",
+        "answer": "Geef je kenteken op, of kies merk, model en uitvoering. Wij zetten dat om naar je auto zoals de onderdelenfabrikanten hem kennen, en tonen daarna alleen onderdelen die op die uitvoering passen. Bij velgen en toebehoren gaat dat anders: daar zoeken we op merk en model in de omschrijving van de leverancier. Dat is een sterke aanwijzing, geen garantie — controleer altijd de maten voordat je bestelt."
+      },
+      "plate": {
+        "question": "Wat doen jullie met mijn kenteken?",
+        "answer": "We gebruiken het alleen om je auto op te zoeken. Het kenteken komt niet in het webadres te staan en wordt niet in een logbestand bewaard. Je kunt de gekozen auto altijd zelf wissen met het kruisje in de voertuigbalk."
+      },
+      "tyreSize": {
+        "question": "Welke bandenmaat heb ik nodig?",
+        "answer": "Die staat op de zijkant van je huidige band, bijvoorbeeld 205/55 R16: de breedte in millimeters, de hoogte als percentage van die breedte, en de velgdiameter in inches. Er bestaat geen betrouwbare weg van kenteken naar bandenmaat, dus die vul je zelf in bij de bandenmaatkiezer."
+      }
+    }
   }
 }

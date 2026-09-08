@@ -75,6 +75,12 @@ export function SiteFooter() {
         <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-6">
           <p>{t("copyright", { year: new Date().getFullYear() })}</p>
           <Link
+            href="/faq"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            {t("faqLink")}
+          </Link>
+          <Link
             href="/privacy"
             className="underline underline-offset-4 hover:text-foreground"
           >

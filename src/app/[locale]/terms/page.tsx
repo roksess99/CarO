@@ -4,7 +4,7 @@ import { CompanyDetails } from "@/components/company-details";
 import { getPathname } from "@/i18n/navigation";
 import { localizedMetadata } from "@/lib/site";
 import { FREE_SHIPPING_THRESHOLD_CENTS, STANDARD_SHIPPING_CENTS } from "@/lib/shipping";
-import { formatPriceCents } from "@/lib/format";
+import { priceInSentence } from "@/lib/format";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -45,8 +45,8 @@ export default async function TermsPage({ params }: Props) {
   const t = await getTranslations("terms");
 
   const values = {
-    shipping: formatPriceCents(STANDARD_SHIPPING_CENTS),
-    freeFrom: formatPriceCents(FREE_SHIPPING_THRESHOLD_CENTS),
+    shipping: priceInSentence(STANDARD_SHIPPING_CENTS),
+    freeFrom: priceInSentence(FREE_SHIPPING_THRESHOLD_CENTS),
   };
 
   return (

@@ -34,6 +34,11 @@ export const routing = defineRouting({
       en: "/my-car",
       ar: "/my-car",
     },
+    "/faq": {
+      nl: "/veelgestelde-vragen",
+      en: "/faq",
+      ar: "/faq",
+    },
     "/privacy": {
       nl: "/privacy-en-cookies",
       en: "/privacy-and-cookies",

@@ -23,6 +23,7 @@ import { formatPriceCents, priceCentsToDecimalString } from "@/lib/format";
 import {
   breadcrumbJsonLd,
   localizedMetadata,
+  offerPolicies,
   SITE_URL,
   socialMetadata,
 } from "@/lib/site";
@@ -178,6 +179,7 @@ export default async function ProductPage({ params }: Props) {
       availability: SCHEMA_AVAILABILITY[part.availability],
       itemCondition: "https://schema.org/NewCondition",
       seller: { "@type": "Organization", name: "CarO" },
+      ...offerPolicies(),
     },
   };
 

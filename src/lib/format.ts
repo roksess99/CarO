@@ -15,3 +15,20 @@ export function priceCentsToDecimalString(priceCents: number): string {
   const cents = Math.abs(priceCents % 100);
   return `${euros}.${String(cents).padStart(2, "0")}`;
 }
+
+/**
+ * Een bedrag dat middenin een zin komt te staan.
+ *
+ * In het Arabisch loopt de tekst van rechts naar links, en dan is het
+ * euroteken een "neutraal" teken: de browser hangt het aan de kant waar
+ * toevallig tekst staat. Daardoor werd "€ 7,45" de ene keer "7,45 €" en de
+ * andere keer "€ 100,00" — in dezelfde zin (gemeten 2026-09-08). De
+ * LRM-tekens eromheen zetten het bedrag als één links-naar-rechts blokje
+ * vast, dezelfde afspraak als bij de maten in `search.tipSize`.
+ *
+ * Alleen voor bedragen in lopende tekst. Een prijs in een eigen element —
+ * productkaart, winkelwagen — heeft dit niet nodig.
+ */
+export function priceInSentence(priceCents: number): string {
+  return `‎${formatPriceCents(priceCents)}‎`;
+}

@@ -105,3 +105,12 @@
   letter-spacing: 0.12em;
   color: var(--muted);
 }
+
+/* Pijltje bij een opengeklapte vraag.
+   Als losse regel en niet met `group-open:` van Tailwind: die variant leverde
+   hier geen enkele CSS-regel op (gemeten 2026-09-08). `rotate` is bovendien
+   een eigen eigenschap, dus het spiegelen in RTL (`-scale-x-100`, dat via
+   `transform` loopt) blijft gewoon werken. */
+details[open] > summary .faq-chevron {
+  rotate: 90deg;
+}
