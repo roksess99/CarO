@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { filterValueLabel } from "@/lib/catalog/filter-values";
 import { AvailabilityBadge } from "@/components/availability-badge";
 import { AddToCartWithQuantity } from "@/components/cart/add-to-cart-with-quantity";
+import { JsonLd } from "@/components/json-ld";
 import { ProductImagePlaceholder } from "@/components/product-image-placeholder";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -19,7 +20,12 @@ import { loadPartBySlug } from "@/lib/catalog/lookup";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents, priceCentsToDecimalString } from "@/lib/format";
-import { localizedMetadata, SITE_URL } from "@/lib/site";
+import {
+  breadcrumbJsonLd,
+  localizedMetadata,
+  SITE_URL,
+  socialMetadata,
+} from "@/lib/site";
 
 type Props = {
   params: Promise<{
@@ -47,7 +53,9 @@ async function findPart(
   const part = await loadPartBySlug(family, partSlug);
   if (!part || part.family !== family) notFound();
   // Mismatch → 404, anders is hetzelfde artikel op meerdere URL's
-  // bereikbaar (dubbele content)
+  // bereikbaar (dubbele content). Een categorie die alleen hernoemd is vangt
+  // de proxy al af met een 308 (proxy.ts), dus wat hier binnenkomt wijst
+  // echt naar een andere categorie.
   if (!usesVehicleCatalog(family) && part.categorySlug !== categorySlug) {
     notFound();
   }
@@ -83,14 +91,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Niet elk artikel heeft een bruikbaar merk — bij velgen staat daar een
   // omschrijving die we wegfilteren. Dan geen lege streepjes in de titel.
+  const title = [part.name, part.brand, "CarO"].filter(Boolean).join(" — ");
+  const description = t("metaDescription", {
+    name: part.name,
+    brand: part.brand,
+    oeNumber: part.oeNumber,
+  });
+
   return {
-    title: [part.name, part.brand, "CarO"].filter(Boolean).join(" — "),
-    description: t("metaDescription", {
-      name: part.name,
-      brand: part.brand,
-      oeNumber: part.oeNumber,
-    }),
+    title,
+    description,
     ...localizedMetadata(locale, localizedHref),
+    // De productfoto van de leverancier als deelbeeld; ontbreekt hij, dan
+    // valt Next terug op de merkkaart in app/[locale]/opengraph-image.tsx.
+    ...socialMetadata({
+      locale,
+      title,
+      description,
+      path: localizedHref(locale),
+      image: part.imageUrl,
+    }),
   };
 }
 
@@ -140,8 +160,14 @@ export default async function ProductPage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: part.name,
+    description: t("metaDescription", {
+      name: part.name,
+      brand: part.brand,
+      oeNumber: part.oeNumber,
+    }),
     sku: part.id,
     mpn: part.oeNumber,
+    category: categoryName,
     ...(part.brand ? { brand: { "@type": "Brand", name: part.brand } } : {}),
     ...(part.imageUrl ? { image: part.imageUrl } : {}),
     offers: {
@@ -151,15 +177,37 @@ export default async function ProductPage({ params }: Props) {
       price: priceCentsToDecimalString(part.priceCents),
       availability: SCHEMA_AVAILABILITY[part.availability],
       itemCondition: "https://schema.org/NewCondition",
+      seller: { "@type": "Organization", name: "CarO" },
     },
   };
 
+  // Hetzelfde pad als het zichtbare kruimelpad hieronder
+  const breadcrumbs = breadcrumbJsonLd([
+    { name: t("breadcrumbHome"), path: `/${locale}` },
+    {
+      name: tFamily(`${family}.title`),
+      path: getPathname({
+        locale: locale as Locale,
+        href: { pathname: "/[family]", params: { family: familyParam } },
+      }),
+    },
+    {
+      name: categoryName,
+      path: getPathname({
+        locale: locale as Locale,
+        href: {
+          pathname: "/[family]/[category]",
+          params: { family: familyParam, category },
+        },
+      }),
+    },
+    { name: part.name, path: canonicalPath },
+  ]);
+
   return (
     <div className="site-container py-8 md:py-12">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbs} />
 
       {/* Kruimelpad: Home / familie / categorie */}
       <nav aria-label={t("breadcrumbAria")}>

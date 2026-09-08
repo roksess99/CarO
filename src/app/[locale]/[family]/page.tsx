@@ -23,7 +23,7 @@ import {
   tyreSearchTerm,
 } from "@/lib/catalog/tyre-size";
 import { partGroups, searchParts } from "@/lib/catalog/wearparts-provider";
-import { localizedMetadata } from "@/lib/site";
+import { localizedMetadata, socialMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string; family: string }>;
@@ -63,15 +63,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!family) return {};
   const t = await getTranslations({ locale, namespace: "family" });
 
+  const localizedHref = (targetLocale: Locale) =>
+    getPathname({
+      locale: targetLocale,
+      href: {
+        pathname: "/[family]",
+        params: { family: familySlug(family, targetLocale) },
+      },
+    });
+  const title = `${t(`${family}.title`)} — CarO`;
+
   return {
-    title: `${t(`${family}.title`)} — CarO`,
+    title,
     description: t(`${family}.intro`),
-    ...localizedMetadata(locale, (l) =>
-      getPathname({
-        locale: l,
-        href: { pathname: "/[family]", params: { family: familySlug(family, l) } },
-      }),
-    ),
+    ...localizedMetadata(locale, localizedHref),
+    ...socialMetadata({
+      locale,
+      title,
+      description: t(`${family}.intro`),
+      path: localizedHref(locale as Locale),
+    }),
   };
 }
 
@@ -302,6 +313,17 @@ export default async function FamilyPage({ params, searchParams }: Props) {
           )}
         </>
       )}
+
+      {/* Uitleg onderaan, na de producten. Een familiepagina bestaat verder
+          uit namen en prijzen; zonder lopende tekst kan een zoekmachine niet
+          zien waarvoor deze pagina bedoeld is. Onderaan, zodat de klant die
+          weet wat hij zoekt er niet langs hoeft te scrollen. */}
+      <section className="mt-16 max-w-3xl border-t border-border pt-8">
+        <h2 className="text-xl">
+          {t("aboutTitle", { family: t(`${family}.title`).toLowerCase() })}
+        </h2>
+        <p className="mt-3 text-muted">{t(`${family}.about`)}</p>
+      </section>
     </div>
   );
 }

@@ -115,4 +115,17 @@ kleuren van het select-element niet automatisch over in het popupvenster.
 - Eén `<h1>` per pagina.
 - `generateMetadata` op elke route: title, description, canonical, `hreflang` nl/en.
 - Productpagina's krijgen JSON-LD `Product` met `offers`, `price`, `availability`.
+- Categorie- en productpagina's krijgen daarnaast JSON-LD `BreadcrumbList`,
+  met dezelfde stappen als het zichtbare kruimelpad.
+- Elke route zet naast `localizedMetadata()` ook `socialMetadata()`: zonder
+  Open Graph toont WhatsApp alleen de kale URL.
+- Een pagina met alleen een productraster krijgt lopende tekst: een korte
+  inleiding onder de `<h1>`, en op familiepagina's een uitleg onderaan.
+- Nieuwe route die klanten mogen vinden? Zet hem in `app/sitemap.ts`. Nieuwe
+  querystring die varianten van een bestaande pagina maakt? In `app/robots.ts`.
+- URL's zijn Nederlands, ook als de leverancier zijn categorie anders noemt:
+  de slug staat in `lib/catalog/category-labels.ts`. Verandert er een, zet de
+  oude dan in `RENAMED_CATEGORY_SLUGS` — `proxy.ts` maakt er een 308 van.
+  Een omleiding vanuit de pagina zelf werkt niet: door `loading.tsx` is de
+  HTML dan al onderweg en wordt het een sprong met status 200.
 - URL's zijn Nederlandse slugs: `/nl/remmen/remblokken`, niet `/nl/category/123`.

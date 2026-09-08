@@ -6,7 +6,7 @@ import { ProductGrid } from "@/components/product-grid";
 import { Link } from "@/i18n/navigation";
 import { familySlug, PRODUCT_FAMILIES } from "@/lib/catalog/families";
 import { getCatalogProvider } from "@/lib/catalog/provider";
-import { localizedMetadata } from "@/lib/site";
+import { localizedMetadata, socialMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -23,6 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: t("metaTitle"),
     description: t("metaDescription"),
     ...localizedMetadata(locale, (l) => `/${l}`),
+    ...socialMetadata({
+      locale,
+      title: t("metaTitle"),
+      description: t("metaDescription"),
+      path: `/${locale}`,
+    }),
   };
 }
 

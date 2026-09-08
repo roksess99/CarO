@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { BrandTiles } from "@/components/brand-tiles";
+import { JsonLd } from "@/components/json-ld";
 import { ProductFilters } from "@/components/product-filters";
 import { ProductGrid } from "@/components/product-grid";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -20,7 +21,11 @@ import {
 } from "@/lib/catalog/filter-params";
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
-import { localizedMetadata } from "@/lib/site";
+import {
+  breadcrumbJsonLd,
+  localizedMetadata,
+  socialMetadata,
+} from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string; family: string; category: string }>;
@@ -50,10 +55,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     });
 
+  const title = `${category.name} — CarO`;
+  const description = t("metaDescription", { category: category.name });
+
   return {
-    title: `${category.name} — CarO`,
-    description: t("metaDescription", { category: category.name }),
+    title,
+    description,
     ...localizedMetadata(locale, localizedHref),
+    ...socialMetadata({
+      locale,
+      title,
+      description,
+      path: localizedHref(locale),
+    }),
   };
 }
 
@@ -89,6 +103,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const categories = await localizeCategories(
     await provider.getCategories(family),
   );
+  // Hernoemde categorie-URL's vangt de proxy af met een 308 (proxy.ts),
+  // dus hier blijft alleen de echte onzin over.
   const category = categories.find((c) => c.slug === slug);
   if (!category) notFound();
   const selected = parseFilterParam(query[FILTER_PARAM]);
@@ -113,6 +129,29 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     provider.getParts({ family, categorySlug: slug, filters: selected, limit }),
   ]);
 
+  // Kruimelpad voor de zoekresultaten van Google, met dezelfde stappen als
+  // de zichtbare <nav> hieronder.
+  const breadcrumbs = breadcrumbJsonLd([
+    { name: t("breadcrumbHome"), path: `/${locale}` },
+    {
+      name: tFamily(`${family}.title`),
+      path: getPathname({
+        locale: locale as Locale,
+        href: { pathname: "/[family]", params: { family: familyParam } },
+      }),
+    },
+    {
+      name: category.name,
+      path: getPathname({
+        locale: locale as Locale,
+        href: {
+          pathname: "/[family]/[category]",
+          params: { family: familyParam, category: slug },
+        },
+      }),
+    },
+  ]);
+
   const filters = (
     <ProductFilters
       groups={filterGroups}
@@ -124,6 +163,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   return (
     <div className="site-container py-8 md:py-12">
+      <JsonLd data={breadcrumbs} />
+
       <nav aria-label={t("breadcrumbAria")}>
         <ol className="flex flex-wrap items-center gap-2 text-sm text-muted">
           <li>
@@ -144,6 +185,16 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       </nav>
 
       <h1 className="mt-6 text-3xl md:text-4xl">{category.name}</h1>
+
+      {/* Korte inleiding: zonder tekst is dit voor een zoekmachine alleen een
+          raster met prijzen, en dan valt niet af te lezen waar de pagina
+          over gaat. */}
+      <p className="mt-3 max-w-2xl text-muted">
+        {t("intro", {
+          category: category.name,
+          family: tFamily(`${family}.title`).toLowerCase(),
+        })}
+      </p>
 
       {/* Zustercategorieën. Bij banden is dit het verschil tussen Auto/SUV,
           Offroad en Transporter — zonder deze rij kan de klant alleen via

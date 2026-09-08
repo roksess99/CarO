@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { consumerPriceCents } from "../pricing";
-import { categoryLabelKey } from "./category-labels";
+import {
+  categoryIdFromSlug,
+  categoryLabelKey,
+  categorySlugText,
+} from "./category-labels";
 import {
   API_MANUFACTURER_KEY,
   filterGroupOrder,
@@ -360,11 +364,25 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-/** Slugs eindigen op het Tyre24-id zodat we ze terug kunnen vertalen */
-function idFromSlug(slug: string): number | null {
-  const match = /-(\d+)$/.exec(slug);
-  return match ? Number(match[1]) : null;
+/**
+ * URL-slug van een categorie: Nederlandse tekst plus het Tyre24-id.
+ *
+ * De tekst komt uit `category-labels.ts`; alleen als een categorie daar
+ * ontbreekt valt hij terug op de naam van de leverancier — die staat in de
+ * taal van diens platform en kan dus Duits zijn.
+ */
+function categorySlug(
+  productAreaId: string,
+  category: { categoryId: number; name: string },
+): string {
+  const text =
+    categorySlugText(productAreaId, category.categoryId) ??
+    slugify(category.name);
+  return `${text}-${category.categoryId}`;
 }
+
+/** Slugs eindigen op het Tyre24-id zodat we ze terug kunnen vertalen */
+const idFromSlug = categoryIdFromSlug;
 
 async function apiGet(
   source: FamilySource & { token: string },
@@ -499,7 +517,7 @@ function toPart(
     family,
     oeNumber:
       item.identifications?.OEN?.[0] ?? item.manufacturerItemNumber ?? "",
-    categorySlug: category ? `${slugify(category.name)}-${category.categoryId}` : "",
+    categorySlug: category ? categorySlug(source.productAreaId, category) : "",
     categoryName: category?.name ?? "",
     priceCents: consumerPriceCents({ purchaseCents, recommendedCents }),
     availability: (item.stock ?? 0) > 0 ? "in-stock" : "out-of-stock",
@@ -593,7 +611,7 @@ async function fetchCategories(
     }
     return [
       {
-        slug: `${slugify(category.data.name)}-${category.data.categoryId}`,
+        slug: categorySlug(productAreaId, category.data),
         name: category.data.name,
         labelKey: categoryLabelKey(productAreaId, category.data.categoryId),
       },

@@ -54,30 +54,35 @@
       "title": "Parts",
       "intro": "New original spare parts. Search by name or number, or pick your car and browse by category.",
       "menuAria": "Parts",
-      "empty": "No parts are available yet."
+      "empty": "No parts are available yet.",
+      "about": "CarO sells new parts for passenger cars and two-wheelers: brake discs and pads, filters, suspension, cooling, lighting and electrics. Enter your registration or pick make, model and version — the catalogue then shows only the articles that fit your car. Searching by name or OE number works without a car too. All prices include 21% Dutch VAT and you have fourteen days to change your mind."
     },
     "banden": {
       "title": "Tyres",
       "intro": "Tyres for cars, SUVs, vans and two-wheelers.",
       "menuAria": "Tyre categories",
-      "empty": "No tyres are available yet."
+      "empty": "No tyres are available yet.",
+      "about": "Summer, winter and all-season tyres for cars, SUVs, vans and two-wheelers. Enter the size printed on the sidewall of your current tyre — width, height and rim diameter, for example 205/55 R16 — and narrow it down by season if you like. You get the range of hundreds of brands, with prices including 21% Dutch VAT."
     },
     "velgen": {
       "title": "Wheels",
       "intro": "Steel wheels in all common sizes.",
       "menuAria": "Wheel categories",
-      "empty": "No wheels are available yet."
+      "empty": "No wheels are available yet.",
+      "about": "Steel wheels in every common size. Filter by bolt pattern, rim size, offset and load rating; those figures are stamped on the inside of your current wheel. Prices include 21% Dutch VAT and you have fourteen days to change your mind."
     },
     "toebehoren": {
       "title": "Accessories",
       "intro": "Wheel and tyre accessories, from valves to storage systems.",
       "menuAria": "Accessory categories",
-      "empty": "No accessories are available yet."
+      "empty": "No accessories are available yet.",
+      "about": "Wheel and tyre accessories and car equipment: valves, wheel nuts, snow chains, storage systems, batteries, lighting, oils and car care. Filter by brand, size, colour or material. Prices include 21% Dutch VAT."
     },
     "oenElsewhere": "Found under tyres, wheels and accessories for \"{term}\"",
     "groupsTitle": "Categories for your car",
     "chooseCarToBrowse": "Pick your car first to browse the categories. Searching by name or number always works.",
-    "viewAllOf": "View all {family}"
+    "viewAllOf": "View all {family}",
+    "aboutTitle": "About {family} at CarO"
   },
   "tyres": {
     "pickerTitle": "Choose your tyre size",
@@ -137,7 +142,9 @@
     "allBrands": "All brands",
     "breadcrumbAria": "Breadcrumb",
     "breadcrumbHome": "Home",
-    "siblingsAria": "Other categories"
+    "siblingsAria": "Other categories",
+    "intro": "Our {family} range in the {category} category. Prices include 21% Dutch VAT; filter by brand or specification to find the right item quickly.",
+    "introParts": "Parts in the {category} category that fit the selected car, supplied by our wholesaler. Prices include 21% Dutch VAT."
   },
   "filters": {
     "title": "Filters",
