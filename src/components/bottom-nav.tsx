@@ -9,6 +9,7 @@ import { useVehicle } from "@/components/vehicle/use-vehicle";
 import { VehicleFinder } from "@/components/vehicle/vehicle-finder";
 import { countItems } from "@/lib/cart/cart";
 import { familySlug, NAV_GROUPS } from "@/lib/catalog/families";
+import { MAINTENANCE_LINKS } from "@/lib/catalog/quick-links";
 import { Link, usePathname } from "@/i18n/navigation";
 
 /**
@@ -147,7 +148,46 @@ export function BottomNav({
 
           <nav aria-label={t("assortment")} className="flex-1 overflow-y-auto p-2">
               {!activeGroup ? (
-                <ul className="space-y-0.5">
+                <>
+                  {/* Onderhoudsdelen bovenaan en als directe link: op een
+                      telefoon is dit één tik in plaats van drie, en het is
+                      waar de meeste klanten voor komen. */}
+                  <ul className="mb-2 space-y-0.5 border-b border-border pb-2">
+                    {MAINTENANCE_LINKS.map((link) => (
+                      <li key={link.key}>
+                        <Link
+                          href={{
+                            pathname: "/[family]/[category]",
+                            params: {
+                              family: familySlug("onderdelen", locale),
+                              category: link.slug,
+                            },
+                            ...(vehicle?.carId
+                              ? { query: { auto: String(vehicle.carId) } }
+                              : {}),
+                          }}
+                          onClick={closeDrawer}
+                          className="flex items-center justify-between gap-3 rounded-lg px-4 py-3.5 text-base font-semibold text-foreground hover:bg-surface"
+                        >
+                          {tFamily(`quick.${link.key}`)}
+                          <svg
+                            aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            className="size-5 shrink-0 text-caro-orange"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="m9 18 6-6-6-6" />
+                          </svg>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <ul className="space-y-0.5">
                   {groups.map((group) => (
                     <li key={group.key}>
                       <button
@@ -171,7 +211,8 @@ export function BottomNav({
                       </button>
                     </li>
                   ))}
-                </ul>
+                  </ul>
+                </>
               ) : (
                 <div className="space-y-4">
                   {activeGroup.families.map((family) => {

@@ -8,7 +8,7 @@ import type { ProductFamily } from "@/lib/catalog/families";
 import {
   groupIdFromSlug,
   partGroupById,
-  partGroups,
+  partLeafGroups,
   partsInGroup,
 } from "@/lib/catalog/wearparts-provider";
 
@@ -29,12 +29,15 @@ export async function PartsCategoryPage({
   categorySlug,
   carId,
   limit,
+  showAllTypes,
 }: {
   family: ProductFamily;
   familySlugParam: string;
   categorySlug: string;
   carId: number | null;
   limit: number;
+  /** Ook de bijbehorende schroefjes en ringen tonen, niet alleen het product */
+  showAllTypes: boolean;
 }) {
   const t = await getTranslations("category");
   const tFamily = await getTranslations("family");
@@ -63,30 +66,44 @@ export async function PartsCategoryPage({
     );
   }
 
-  // Hoofdgroepen voor de naam en het kruimelpad, subgroepen voor de
-  // navigatie eronder. Twee calls, allebei een dag gecacht.
   // De groep zelf kan op elk niveau zitten ("Remsysteem" of "Remblok"), dus
   // zoeken we hem op in de hele boom in plaats van alleen bij de hoofdgroepen.
-  const [current, children] = await Promise.all([
+  //
+  // `partLeafGroups` slaat de tussenniveaus over en geeft meteen de eindgroepen
+  // die artikelen hébben. Voorheen stond hier `partGroups(carId, groupId)`:
+  // één niveau dieper, inclusief lege takken. Een klant klikte zo vier keer om
+  // bij een artikel te komen, of belandde op een lege pagina.
+  const [current, sections] = await Promise.all([
     partGroupById(carId, groupId),
-    partGroups(carId, groupId),
+    partLeafGroups(carId, groupId),
   ]);
   if (!current) notFound();
   const name = current.name;
 
-  // GEMETEN 2026-09-06: /articles geeft HTTP 500 op een groep die zelf nog
-  // subgroepen heeft ("Remsysteem"). Artikelen hangen aan de eindgroepen
-  // ("Remschijf"), dus vragen we ze alleen daar op.
-  const { parts, total } =
-    children.length === 0
-      ? await partsInGroup({
-          carId,
-          categoryId: groupId,
-          categorySlug,
-          categoryName: name,
-          limit,
-        })
-      : { parts: [], total: 0 };
+  // Artikelen horen bij een eindgroep. Een groep met subgroepen kun je niet
+  // bevragen — GEMETEN: /articles geeft daar HTTP 500 op — dus dan tonen we
+  // de eindgroepen, en als die er geen van allen zijn een eerlijke melding.
+  const showArticles = !current.hasChildren;
+
+  // Standaard alleen het soort waar de groep over gaat. GEMETEN: "Oliefilter"
+  // bevat 125 artikelen waarvan 65 echte filters; de afsluitschroeven en
+  // afdichtringen stonden bovenaan, zodat je veertien rijen moest scrollen
+  // voor het eerste filter. Wie ze tóch zoekt klikt "alles tonen".
+  const typeFilter =
+    showAllTypes || !current.defaultGenericArticleId
+      ? undefined
+      : current.defaultGenericArticleId;
+
+  const { parts, total } = showArticles
+    ? await partsInGroup({
+        carId,
+        categoryId: groupId,
+        categorySlug,
+        categoryName: name,
+        genericArticleId: typeFilter,
+        limit,
+      })
+    : { parts: [], total: 0 };
 
   const query = { auto: String(carId) };
 
@@ -123,26 +140,83 @@ export async function PartsCategoryPage({
         {t("introParts", { category: name })}
       </p>
 
-      {children.length > 0 && (
-        <nav aria-label={t("siblingsAria")} className="mt-6">
-          <GroupList
-            groups={children}
-            familySlugParam={familySlugParam}
-            carId={carId}
-          />
+      {sections.length > 0 && (
+        <nav aria-label={t("siblingsAria")} className="mt-6 space-y-8">
+          {sections.map((section) => (
+            <div key={section.title || "root"}>
+              {/* Kop alleen als de eindgroepen onder een tussengroep hingen;
+                  hangen ze direct onder deze categorie, dan staat de <h1> er
+                  al boven en zou een kop hem verdubbelen. */}
+              {section.title && (
+                <h2 className="mb-3 text-sm font-semibold text-muted">
+                  {section.title}
+                </h2>
+              )}
+              <GroupList
+                groups={section.groups}
+                familySlugParam={familySlugParam}
+                carId={carId}
+              />
+            </div>
+          ))}
         </nav>
       )}
 
-      {children.length === 0 && (
-        <>
-          <p className="mt-8 text-sm text-muted">
-            {tFilters("resultCount", { count: parts.length })}
-          </p>
-          <div className="mt-4">
-            <ProductGrid parts={parts} />
-          </div>
-        </>
+      {!showArticles && sections.length === 0 && (
+        <p className="mt-8 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+          {t("noParts")}
+        </p>
       )}
+
+      {showArticles &&
+        (parts.length === 0 ? (
+          // Deze groep hoort niet meer in een lijst te staan (lege groepen
+          // filteren we weg), maar een oude link of een bladwijzer komt hier
+          // nog uit. Dan liever een wegwijzer dan "0 resultaten".
+          <p className="mt-8 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+            {t("noParts")}
+          </p>
+        ) : (
+          <>
+            <p className="mt-8 flex flex-wrap items-baseline gap-x-3 text-sm text-muted">
+              <span>{tFilters("resultCount", { count: parts.length })}</span>
+              {/* Alleen aanbieden als er écht iets verborgen is */}
+              {typeFilter && (
+                <Link
+                  href={{
+                    pathname: "/[family]/[category]",
+                    params: {
+                      family: familySlugParam,
+                      category: categorySlug,
+                    },
+                    query: { ...query, alles: "1" },
+                  }}
+                  className="underline underline-offset-4 hover:text-foreground"
+                >
+                  {t("showAllTypes")}
+                </Link>
+              )}
+              {showAllTypes && current.defaultGenericArticleId && (
+                <Link
+                  href={{
+                    pathname: "/[family]/[category]",
+                    params: {
+                      family: familySlugParam,
+                      category: categorySlug,
+                    },
+                    query,
+                  }}
+                  className="underline underline-offset-4 hover:text-foreground"
+                >
+                  {t("onlyThisType", { type: name })}
+                </Link>
+              )}
+            </p>
+            <div className="mt-4">
+              <ProductGrid parts={parts} />
+            </div>
+          </>
+        ))}
 
       {parts.length < total && (
         <div className="mt-8 flex justify-center">

@@ -85,23 +85,26 @@ kleuren van het select-element niet automatisch over in het popupvenster.
 
 ## i18n
 
-- next-intl. Routes `/nl/...`, `/en/...` en `/ar/...`, NL is default.
-- Geen hardcoded tekst. Alles via `messages/nl.json`, `en.json` en `ar.json`.
-- Alle drie de bestanden hebben dezelfde sleutels. Ontbrekende sleutel = build faalt.
+- next-intl. Routes `/nl/...` en `/en/...`, NL is default.
+- Geen hardcoded tekst. Alles via `messages/nl.json` en `en.json`.
+- Beide bestanden hebben dezelfde sleutels. Ontbrekende sleutel = build faalt.
+- Gebruik logische eigenschappen: `ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`,
+  `text-start`. Niet omdat er nog een RTL-taal is — Arabisch is 2026-09-08
+  verwijderd — maar omdat het niets kost en de deur openhoudt.
+- Prijzen blijven `nl-NL` (`lib/format.ts`): euro-notatie, ook op de Engelse
+  pagina's. De shop levert alleen in Nederland en de factuur is Nederlands.
 
-### Rechts-naar-links (Arabisch)
+## Onderdelencatalogus (Wearparts)
 
-- **Nooit `ml-`, `mr-`, `pl-`, `pr-`, `left-`, `right-` of `text-left`.** Gebruik
-  de logische varianten `ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`,
-  `text-start`. Die spiegelen mee met `dir`; de fysieke niet.
-- `dir` staat op `<html>` via `textDirection()` uit `i18n/routing.ts`.
-- Wat níet mag spiegelen krijgt een eigen `dir="ltr"`: de kentekenplaat heeft
-  de EU-strook altijd links, ook op een Arabische pagina.
-- Prijzen blijven `nl-NL` (`lib/format.ts`): euro-notatie met Latijnse cijfers,
-  ook in het Arabisch. Arabisch-Indische cijfers naast een €-teken lezen
-  verkeerd en wijken af van de factuur.
-- Arabische URL-slugs zijn Latijns (`/ar/tyres`): Arabisch schrift wordt in een
-  URL percent-encoded en levert onleesbare links op.
+- Een eindgroep toont standaard alleen zijn eigen soort
+  (`defaultGenericArticleId` → `filter[genericArticleId]`). Zonder dat komt de
+  klant op "Oliefilter" eerst veertien afsluitschroeven tegen.
+- Tellen kan alleen op eindgroepen: `/articles` geeft HTTP 500 op een groep
+  met subgroepen. Tel dus nooit een hoofdgroep.
+- Tellingen zijn een dag gecacht en lopen met zes tegelijk. De leverancier
+  staat 100 requests per minuut toe voor de héle winkel.
+- Zoeken op naam: geef de gekozen auto mee. Zonder `carId` doorzoekt de API de
+  hele catalogus en komen onderdelen boven die niet eens passen.
 
 ## Performance
 

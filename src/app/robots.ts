@@ -36,6 +36,7 @@ export default function robots(): MetadataRoute.Robots {
           // "Meer laden" en filters maken varianten van een pagina die al in
           // de index staat.
           "/*?*toon=",
+          "/*?*alles=",
           `/*?*${FILTER_PARAM}=`,
         ],
       },

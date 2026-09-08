@@ -42,13 +42,12 @@ export function localizedMetadata(
 
 /**
  * `og:locale` wil een taal-én-landcode, niet onze kale taalcode. Nederland is
- * onze markt, dus `en` en `ar` krijgen bewust géén NL-land: die pagina's zijn
- * vertalingen voor bezoekers hier, niet aparte landversies.
+ * onze markt, dus `en` krijgt bewust géén NL-land: die pagina's zijn
+ * vertalingen voor bezoekers hier, geen aparte landversie.
  */
 const OG_LOCALE: Record<Locale, string> = {
   nl: "nl_NL",
   en: "en_US",
-  ar: "ar_AR",
 };
 
 /**

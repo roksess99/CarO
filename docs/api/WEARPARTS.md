@@ -123,7 +123,7 @@ Het eerste attribuut is in de praktijk de maat of uitvoering; dat tonen we als v
 | `pl/pl` | werkt (JSON) |
 | `en/en`, `gb/en`, `uk/en`, `nl/en` | geen API — geven een HTML-pagina terug |
 
-De shop spreekt NL, EN en AR; de API dekt daarvan alleen NL. Voor Engelse en Arabische bezoekers blijven artikelnamen en attribuutlabels dus Nederlands. Dat is niet met een woordenlijst op te lossen: het gaat om miljoenen vrije-tekstvelden van honderden fabrikanten.
+De shop spreekt NL en EN; de API dekt daarvan alleen NL. Voor Engelse bezoekers blijven artikelnamen en attribuutlabels dus Nederlands. Dat is niet met een woordenlijst op te lossen: het gaat om miljoenen vrije-tekstvelden van honderden fabrikanten.
 
 ### Autokiezer zonder kenteken — GEMETEN 2026-09-07
 

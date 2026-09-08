@@ -29,7 +29,12 @@ import {
 
 type Props = {
   params: Promise<{ locale: string; family: string; category: string }>;
-  searchParams: Promise<{ f?: string | string[]; toon?: string; auto?: string }>;
+  searchParams: Promise<{
+    f?: string | string[];
+    toon?: string;
+    auto?: string;
+    alles?: string;
+  }>;
 };
 
 /** Producten per stap. Meer laden telt hier telkens bij op. */
@@ -95,6 +100,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             ? Math.min(requestedParts, 200)
             : 20
         }
+        showAllTypes={query.alles === "1"}
       />
     );
   }

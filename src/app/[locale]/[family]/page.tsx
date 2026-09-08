@@ -23,7 +23,10 @@ import {
   parseTyreSize,
   tyreSearchTerm,
 } from "@/lib/catalog/tyre-size";
-import { partGroups, searchParts } from "@/lib/catalog/wearparts-provider";
+import {
+  partGroupsWithCounts,
+  searchParts,
+} from "@/lib/catalog/wearparts-provider";
 import { localizedMetadata, socialMetadata } from "@/lib/site";
 
 type Props = {
@@ -120,11 +123,16 @@ export default async function FamilyPage({ params, searchParams }: Props) {
   const vehicleCatalog = usesVehicleCatalog(family);
   const carId = /^[0-9]+$/.test(auto ?? "") ? Number(auto) : null;
 
+  // De gekozen auto gaat mee in de zoekopdracht: zonder dat doorzoekt de
+  // leverancier de hele catalogus en komen er onderdelen boven die niet eens
+  // op deze auto passen.
   const searchResult =
     vehicleCatalog && searchTerm
-      ? await searchParts(searchTerm, PAGE_SIZE)
+      ? await searchParts(searchTerm, PAGE_SIZE, 0, carId ?? undefined)
       : { parts: [], total: 0 };
-  const groups = vehicleCatalog && carId ? await partGroups(carId) : [];
+  // Met aantallen, zodat hoofdgroepen zonder één artikel voor deze auto niet
+  // in het raster komen (zie partGroupsWithCounts).
+  const groups = vehicleCatalog && carId ? await partGroupsWithCounts(carId) : [];
 
   const parts = vehicleCatalog
     ? searchResult.parts

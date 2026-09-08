@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Anton, Inter } from "next/font/google";
@@ -7,11 +8,12 @@ import { BackToTop } from "@/components/back-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { BottomNav } from "@/components/bottom-nav";
 import { SiteHeader } from "@/components/site-header";
-import { routing, textDirection } from "@/i18n/routing";
+import { routing } from "@/i18n/routing";
 import type { FamilyNavItem } from "@/components/family-nav";
 import { PRODUCT_FAMILIES } from "@/lib/catalog/families";
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import { SITE_URL } from "@/lib/site";
 import { vehicleMakeNames } from "@/lib/vehicle/makes";
 import "../globals.css";
 
@@ -30,6 +32,20 @@ const anton = Anton({
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
+
+/**
+ * Alleen `metadataBase`, voor de hele taalboom.
+ *
+ * Pagina's zetten hun eigen titel, canonical en Open Graph via
+ * `localizedMetadata()` en `socialMetadata()`. Maar routes die dat niet doen —
+ * de 404, de zoekpagina — hadden helemaal geen basis-URL, en dan maakt Next
+ * van een relatieve deelafbeelding `http://localhost:3000/...`. Hier staat hij
+ * één keer goed voor alles wat eronder hangt; een pagina die hem zelf zet
+ * overschrijft dit met dezelfde waarde.
+ */
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+};
 
 // Zet de thema-class vóór de eerste paint zodat dark mode niet flikkert.
 // Bewust een inline script in de server-layout: server-gerenderde scripts
@@ -63,9 +79,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      // Arabisch leest van rechts naar links; hiermee spiegelt de browser de
-      // hele layout, inclusief scrollbalk en formulierelementen.
-      dir={textDirection(locale)}
+      dir="ltr"
       suppressHydrationWarning
       className={`${inter.variable} ${anton.variable}`}
     >

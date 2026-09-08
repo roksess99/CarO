@@ -21,6 +21,13 @@ const CACHE = {
   category: 86_400,
   /** Prijzen en voorraad: kort, net als bij de Products-API */
   articles: 300,
+  /**
+   * Aantallen per categorie. Lang, want dit is een structureel gegeven: of
+   * er voor een auto überhaupt remschijven bestaan verandert niet per uur.
+   * Zonder die lange cache betaalt elke bezoeker opnieuw tientallen calls,
+   * en de leverancier staat er maar 100 per minuut toe voor de hele winkel.
+   */
+  counts: 86_400,
 } as const;
 
 function token(): string | null {
@@ -95,14 +102,34 @@ const categorySchema = z.object({
   hasChilds: z.boolean().optional(),
   icon: z.string().optional(),
   parentNodeId: z.coerce.number().optional(),
+  /** Waar deze groep eigenlijk over gaat; alleen eindgroepen hebben er een */
+  defaultGenericArticleId: z.coerce.string().optional().catch(undefined),
 });
 
 export interface AssemblyGroup {
   id: number;
   name: string;
   hasChildren: boolean;
+  /** Bovenliggende groep; ontbreekt bij de hoofdgroepen */
+  parentId?: number;
+  /**
+   * Het TecDoc-soortnummer waar deze groep om draait.
+   *
+   * GEMETEN 2026-09-08: de groep "Oliefilter" (543) heeft er 7, en van de
+   * eerste veertig artikelen dragen er maar zeven dat nummer. De rest zijn
+   * afsluitschroeven (593) en afdichtringen (135) — ze horen bij een
+   * olieverversing, maar wie op "Oliefilter" klikt wil eerst een filter zien.
+   * Alleen eindgroepen hebben dit veld.
+   */
+  defaultGenericArticleId?: string;
   /** Icoon van de leverancier; niet elke groep heeft er een */
   iconUrl?: string;
+  /**
+   * Aantal artikelen voor de gekozen auto. Alleen gevuld waar we het echt
+   * nodig hebben (zie `articleCounts`); `-1` betekent "telling mislukt, bij
+   * twijfel tonen".
+   */
+  articleCount?: number;
 }
 
 /**
@@ -149,12 +176,32 @@ export async function assemblyGroups(
         ? !group.parentNodeId
         : group.parentNodeId === parentNodeId,
     )
-    .map((group) => ({
-      id: group.assemblyGroupNodeId,
-      name: group.assemblyGroupName,
-      hasChildren: group.hasChilds ?? false,
-      iconUrl: iconUrl(group.icon),
-    }));
+    .map(toGroup);
+}
+
+/**
+ * De hele boom in één keer, plat.
+ *
+ * `/category` levert hem toch al compleet (gemeten: 775 knopen voor één
+ * auto), dus dit is dezelfde gecachte call als `assemblyGroups()`. Wie de
+ * boom wil aflopen — om bladeren te verzamelen of een pad te bepalen — heeft
+ * hier alles, zonder extra verkeer.
+ */
+export async function assemblyTree(carId: number): Promise<AssemblyGroup[]> {
+  const data = await get("/category", { carId }, CACHE.category);
+  const parsed = z.array(categorySchema).safeParse(data);
+  return parsed.success ? parsed.data.map(toGroup) : [];
+}
+
+function toGroup(group: z.infer<typeof categorySchema>): AssemblyGroup {
+  return {
+    id: group.assemblyGroupNodeId,
+    name: group.assemblyGroupName,
+    hasChildren: group.hasChilds ?? false,
+    parentId: group.parentNodeId,
+    defaultGenericArticleId: group.defaultGenericArticleId,
+    iconUrl: iconUrl(group.icon),
+  };
 }
 
 /**
@@ -171,13 +218,7 @@ export async function assemblyGroupById(
   const node = parsed.data.find(
     (group) => group.assemblyGroupNodeId === groupId,
   );
-  if (!node) return null;
-  return {
-    id: node.assemblyGroupNodeId,
-    name: node.assemblyGroupName,
-    hasChildren: node.hasChilds ?? false,
-    iconUrl: iconUrl(node.icon),
-  };
+  return node ? toGroup(node) : null;
 }
 
 const offerSchema = z.object({
@@ -201,6 +242,13 @@ const articleSchema = z.object({
   articleAddName: z.string().optional().catch(undefined),
   brandName: z.string().optional().catch(undefined),
   eanNumber: z.array(z.string()).optional().catch(undefined),
+  /**
+   * TecDoc-soortnummer: 7 = oliefilter, 8 = luchtfilter, 593 = afsluitschroef.
+   * Komt soms als lijst terug ("135,2048"), dus als tekst behandelen.
+   * Hiermee scheiden we het echte product van de bijbehorende schroefjes —
+   * zie `defaultGenericArticleId` op de groep.
+   */
+  genericArticleId: z.coerce.string().optional().catch(undefined),
   // GEMETEN: quality komt als getal terug, niet als tekst. Een strikt
   // stringschema liet hier élk artikel afvallen.
   quality: z.coerce.string().optional().catch(undefined),
@@ -241,6 +289,15 @@ export interface ArticleQuery {
   carId?: number;
   /** `assemblyGroupNodeId`; vereist samen met carId */
   categoryId?: number;
+  /**
+   * Beperk tot één TecDoc-soort, bv. 7 voor oliefilters.
+   *
+   * GEMETEN 2026-09-08: groep 543 "Oliefilter" geeft 125 artikelen, waarvan
+   * 65 echte filters; de rest zijn afsluitschroeven en afdichtringen die
+   * bovenaan in de lijst stonden. Met dit filter komt de klant binnen bij
+   * waar hij voor kwam.
+   */
+  genericArticleId?: string;
   limit?: number;
   page?: number;
 }
@@ -263,6 +320,7 @@ export async function searchArticles(
         search: query.search,
         "filter[carId]": query.carId,
         "filter[category]": query.categoryId,
+        "filter[genericArticleId]": query.genericArticleId,
         limit: query.limit ?? 20,
         page: query.page ?? 0,
       },
@@ -285,6 +343,73 @@ export async function searchArticles(
     return article.success ? [article.data] : [];
   });
   return { articles, total: parsed.data.response.numFound ?? articles.length };
+}
+
+/**
+ * Aantal artikelen in één groep, zonder de artikelen zelf op te halen.
+ *
+ * GEMETEN 2026-09-08: `/articles` geeft `response.numFound`. Daarmee kunnen we
+ * een lege eindgroep herkennen vóór de klant erop klikt — `Bediening /
+ * Hydraulica` (1089) is er zo een: een blad met nul artikelen.
+ *
+ * **Alleen op eindgroepen.** Een groep die zelf nog subgroepen heeft geeft
+ * HTTP 500, ook de hoofdgroepen (890, 1342, 542… allemaal gemeten). Roep dit
+ * dus nooit aan op een knoop met kinderen: je krijgt gegarandeerd -1 terug en
+ * verbruikt een call uit de limiet van 100 per minuut voor niets.
+ *
+ * `limit: 1` omdat we de artikelen niet nodig hebben; alleen het getal.
+ */
+export async function articleCount(
+  carId: number,
+  categoryId: number,
+): Promise<number> {
+  let data: unknown;
+  try {
+    data = await get(
+      "/articles",
+      {
+        "filter[carId]": carId,
+        "filter[category]": categoryId,
+        limit: 1,
+      },
+      CACHE.counts,
+    );
+  } catch {
+    // Een mislukte telling mag geen categorie laten verdwijnen: bij twijfel
+    // tonen we hem gewoon. Liever een lege pagina dan een onvindbaar artikel.
+    return -1;
+  }
+  const parsed = articlesResponseSchema.safeParse(data);
+  return parsed.success ? (parsed.data.response.numFound ?? 0) : -1;
+}
+
+/**
+ * Tel meerdere groepen tegelijk, maar niet allemaal tegelijk.
+ *
+ * De leverancier staat 100 requests per minuut toe voor de hele winkel; een
+ * hoofdgroep met veertig bladeren zou daar in één paginaweergave doorheen
+ * gaan. Zes tegelijk houdt het snel (gemeten: elf tellingen in ~700 ms) en
+ * laat ruimte voor andere bezoekers.
+ */
+const COUNT_CONCURRENCY = 6;
+
+export async function articleCounts(
+  carId: number,
+  categoryIds: readonly number[],
+): Promise<Map<number, number>> {
+  const result = new Map<number, number>();
+  const queue = [...categoryIds];
+
+  async function worker(): Promise<void> {
+    for (let id = queue.shift(); id !== undefined; id = queue.shift()) {
+      result.set(id, await articleCount(carId, id));
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(COUNT_CONCURRENCY, queue.length) }, worker),
+  );
+  return result;
 }
 
 /**
