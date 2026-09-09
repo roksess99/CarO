@@ -448,7 +448,8 @@
     "copyright": "© {year} CarO Onderdelen",
     "privacyLink": "Privacy and cookies",
     "termsLink": "Terms and conditions",
-    "faqLink": "FAQ"
+    "faqLink": "FAQ",
+    "contactLink": "Contact"
   },
   "terms": {
     "title": "Terms and conditions",
@@ -560,7 +561,6 @@
     "name": "Company name",
     "address": "Address",
     "email": "Email",
-    "phone": "Phone",
     "coc": "Chamber of Commerce number",
     "vat": "VAT number",
     "pending": "To follow",
@@ -649,6 +649,38 @@
         "question": "Which tyre size do I need?",
         "answer": "It is printed on the sidewall of your current tyre, for example 205/55 R16: the width in millimetres, the height as a percentage of that width, and the rim diameter in inches. There is no reliable route from a registration number to a tyre size, so you enter it yourself in the tyre size picker."
       }
+    }
+  },
+  "contact": {
+    "metaTitle": "Contact",
+    "metaDescription": "A question about a part, an order or a return? Email info@caroparts.nl or use the contact form.",
+    "title": "Contact",
+    "intro": "A question about a part, an order or a return? Send us a message and we will look into it. If you know the item number or your registration, add it — then we can answer straight away.",
+    "detailsTitle": "Email us directly",
+    "responseTime": "We usually reply within one working day.",
+    "companyTitle": "Company details",
+    "faqHint": "Many questions about shipping, returns and fitment are already answered in the <faq>frequently asked questions</faq>.",
+    "formTitle": "Send a message",
+    "formIntro": "Your message arrives at info@caroparts.nl. We reply to the address you enter here.",
+    "fields": {
+      "name": "Your name",
+      "email": "Your email address",
+      "subject": "Subject",
+      "message": "Your message"
+    },
+    "submit": "Send message",
+    "sending": "Sending…",
+    "sentTitle": "Message sent",
+    "sentBody": "Thank you. We have your message and usually reply within one working day to the address you gave.",
+    "privacyNote": "We only use your details to answer your question.",
+    "errors": {
+      "required": "This field is required.",
+      "email": "Enter a valid email address.",
+      "tooShort": "Please tell us a bit more, at least ten characters.",
+      "tooLong": "This is too long.",
+      "invalid": "This value is not valid.",
+      "rateLimit": "You have sent several messages in a short time. Try again in an hour, or email info@caroparts.nl directly.",
+      "send": "The message could not be sent. Please email us directly at info@caroparts.nl."
     }
   }
 }

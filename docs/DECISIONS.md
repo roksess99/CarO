@@ -370,9 +370,19 @@ de orderbevestiging, de factuur en de footer.
 | Btw-nummer | NL005015784B71 |
 | Adres | Gildebongerd 2, 7038 DE Zeddam |
 
-**Nog open, blokkerend voor de betaalkoppeling (fase 5):** zakelijke rekening
-(IBAN) en het bedrijfs-e-mailadres. Zolang die ontbreken staat er een
-testwaarschuwing onderaan elke gegenereerde orderbevestiging.
+**Bedrijfs-e-mailadres vastgesteld 2026-09-09: `info@caroparts.nl`.** Dat is
+tegelijk de mailbox waar het contactformulier op uitkomt (`src/lib/mail.ts`,
+vier `SMTP_*`-variabelen in `.env`).
+
+**Bewust géén telefoonnummer.** Art. 6:230m BW vraagt om een doeltreffend
+communicatiemiddel, niet om een telefoonlijn; het e-mailadres plus het
+contactformulier voldoen daaraan. Een nummer publiceren dat niet wordt
+opgenomen is slechter dan geen nummer. Komt er later wel een, dan is het één
+veld in `src/lib/company.ts` en één rij in `components/company-details.tsx`.
+
+**Nog open, blokkerend voor de betaalkoppeling (fase 5):** de zakelijke
+rekening (IBAN). Zolang die ontbreekt staat er een testwaarschuwing onderaan
+elke gegenereerde orderbevestiging.
 
 **Let op — de shop heet anders dan het bedrijf.** Bij de KvK staat
 "Car Parts A-Z"; de webshop heet overal CarO. Een factuur moet de

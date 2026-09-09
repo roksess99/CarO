@@ -33,7 +33,6 @@ export function CompanyDetails({
       ? [{ label: t("address"), value: companyAddressLine() }]
       : []),
     { label: t("email"), value: companyValue(COMPANY.email) },
-    { label: t("phone"), value: companyValue(COMPANY.phone) },
     { label: t("coc"), value: companyValue(COMPANY.cocNumber) },
     { label: t("vat"), value: companyValue(COMPANY.vatNumber) },
   ];
