@@ -112,6 +112,20 @@ export function groupIdFromSlug(slug: string): number | null {
 }
 
 /**
+ * Groepsnaam terug uit de slug, zonder de API te bevragen.
+ *
+ * `generateMetadata` heeft een titel nodig, maar de categorieboom hangt aan
+ * een auto: zonder `?auto=` valt de echte naam niet op te halen. De slug is
+ * wél uit die naam gemaakt, dus draaien we hem terug. Leestekens ("&") zijn
+ * daarbij verloren gegaan; voor een titel is dat geen bezwaar, en zodra er
+ * een auto in de URL staat gebruiken we alsnog de echte naam.
+ */
+export function groupNameFromSlug(slug: string): string {
+  const words = slug.replace(/-\d+$/, "").replace(/-/g, " ").trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : "";
+}
+
+/**
  * Artikel → Part. Het goedkoopste aanbod telt: de klant koopt er één, en de
  * `offerList` staat niet gegarandeerd op prijs gesorteerd.
  */

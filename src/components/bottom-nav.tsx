@@ -367,11 +367,16 @@ export function BottomNav({
                 <path d="M2 3h2.5l2.6 12.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6" />
               </svg>
               {cartCount > 0 && (
+                // ring-caro-ink: de badge ligt op het donkere tabvlak en raakt
+                // daar de wagen aan. Een randje in de kleur van de balk snijdt
+                // hem los, zodat een volle wagen ook in een oogopslag opvalt.
+                // Tot 99 stond hier "9+"; bij vier banden zag je dan al niet
+                // meer hoeveel erin zat.
                 <span
                   aria-hidden="true"
-                  className="absolute -top-1.5 -end-2 flex size-4.5 items-center justify-center rounded-full bg-caro-orange px-1 text-[0.625rem] font-bold text-caro-ink tabular-nums"
+                  className="absolute -top-2 -end-2.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-caro-orange px-1 text-[0.6875rem] leading-none font-bold text-caro-ink ring-2 ring-caro-ink tabular-nums"
                 >
-                  {cartCount > 9 ? "9+" : cartCount}
+                  {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}
             </span>

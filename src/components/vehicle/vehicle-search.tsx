@@ -156,7 +156,9 @@ export function VehicleSearch({
         <div
           // Zie plate.tsx: de plaat spiegelt niet mee met de tekstrichting
           dir="ltr"
-          className="flex h-12 min-w-0 flex-1 overflow-hidden rounded-md border-2 focus-within:ring-2 focus-within:ring-caro-orange focus-within:ring-offset-2"
+          // h-14: dit is het belangrijkste invoerveld van de shop en meteen
+          // een royaal aanraakdoel op een telefoon (WCAG 2.2 doelgrootte).
+          className="flex h-14 min-w-0 flex-1 overflow-hidden rounded-md border-2 focus-within:ring-2 focus-within:ring-caro-orange focus-within:ring-offset-2"
           style={{ borderColor: PLATE_INK, backgroundColor: PLATE_YELLOW }}
         >
           <EuStrip className="w-8" />
@@ -173,14 +175,14 @@ export function VehicleSearch({
             maxLength={10}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
-            className="w-full min-w-0 bg-transparent px-3 text-center text-xl font-bold tracking-widest uppercase outline-none placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-[#0e1013]/45"
+            className="w-full min-w-0 bg-transparent px-3 text-center text-2xl font-bold tracking-widest uppercase outline-none placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-[#0e1013]/45"
             style={{ color: PLATE_INK }}
           />
         </div>
         <button
           type="submit"
           disabled={pending || plate.trim().length === 0}
-          className="h-12 shrink-0 rounded-md bg-caro-orange px-6 font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
+          className="h-14 shrink-0 rounded-md bg-caro-orange px-6 font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
         >
           {pending ? t("searching") : compact ? t("search") : t("searchForMyCar")}
         </button>

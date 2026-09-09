@@ -192,8 +192,8 @@
     "fitmentPending": "We zoeken op merk en model in de omschrijvingen van de leverancier. Geen harde garantie — controleer de maten voor je bestelt.",
     "errors": {
       "invalidPlate": "Een Nederlands kenteken heeft 6 tekens, bijvoorbeeld AB-123-C.",
-      "notFound": "Dit kenteken staat niet in de RDW-gegevens. Controleer of je het goed hebt ingevuld.",
-      "unavailable": "De kentekenzoeker is tijdelijk niet beschikbaar. Probeer het later opnieuw."
+      "notFound": "Dit kenteken kennen we niet. Controleer of je het goed hebt overgenomen van je kentekenbewijs, of kies je auto hieronder op merk, model en uitvoering.",
+      "unavailable": "De kentekenzoeker is tijdelijk niet beschikbaar. Kies je auto hieronder op merk, model en uitvoering, of probeer het later opnieuw."
     },
     "fitmentReady": "Deze auto is herkend in de onderdelencatalogus. Je ziet alleen onderdelen die erop passen.",
     "typeLabel": "Uitvoering",
@@ -201,6 +201,7 @@
   },
   "category": {
     "metaDescription": "{category} voor jouw auto. Alle prijzen inclusief 21% btw.",
+    "metaDescriptionParts": "{category} bestellen voor jouw auto. Vul je kenteken in en zie direct welke onderdelen passen. Prijzen inclusief 21% btw.",
     "brandFilterLabel": "Filter op merk",
     "allBrands": "Alle merken",
     "breadcrumbAria": "Kruimelpad",
@@ -312,6 +313,18 @@
     "view": "Bekijken",
     "viewAria": "Bekijk {name}",
     "metaDescription": "{name} van {brand}, OE-nummer {oeNumber}. Prijs inclusief 21% btw.",
+    "descTitle": "Over dit artikel",
+    "descIntro": "De {name} is een {noun} van {brand} uit onze categorie {category}, geleverd door onze groothandel.",
+    "descIntroNoBrand": "De {name} is een {noun} uit onze categorie {category}, geleverd door onze groothandel.",
+    "noun": {
+      "onderdelen": "onderdeel",
+      "banden": "band",
+      "velgen": "velg",
+      "toebehoren": "accessoire"
+    },
+    "descSpecs": "Uitvoering: {specs}.",
+    "descFit": "Het bijbehorende OE-nummer is {oeNumber}. Vul je kenteken in om te zien of dit artikel op jouw auto past.",
+    "descDelivery": "De prijs is inclusief 21% btw. Verzending kost {shipping} en is gratis vanaf {freeFrom}; je hebt 14 dagen bedenktijd.",
     "detailsTitle": "Artikelgegevens",
     "brandLabel": "Merk",
     "quantityLabel": "Aantal",
@@ -539,6 +552,8 @@
   "notFound": {
     "title": "Pagina niet gevonden",
     "description": "Deze pagina bestaat niet of is verplaatst.",
+    "browseTitle": "Of blader door het assortiment",
+    "helpLine": "Zoek je een onderdeel voor een specifieke auto? Vul je kenteken in bij Mijn auto. Staat je vraag er niet bij, kijk dan bij de <faq>veelgestelde vragen</faq>.",
     "backHome": "Terug naar de homepage"
   },
   "company": {

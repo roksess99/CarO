@@ -71,7 +71,15 @@ kleuren van het select-element niet automatisch over in het popupvenster.
 ## Componenten
 
 - Server Component tenzij interactie nodig is.
-- Elk component dat data laadt heeft `loading.tsx` (skeleton) en `error.tsx`.
+- Een `loading.tsx` hoort bij de route die écht op data wacht, nooit hoog in
+  de boom. Op `/[locale]` betekende hij dat de winkelwagen en de FAQ met een
+  productraster-skelet begonnen, én dat Next de HTML met status 200 al had
+  verstuurd voordat `notFound()` viel — elke 404 werd zo een "soft 404".
+  Statische inhoud (kop, formulier, uitleg) hoort in de eerste HTML; wat de
+  leverancier moet leveren zet je in een eigen `<Suspense>`.
+- Moet een route een echte 404 kunnen geven, keur de URL dan in een `layout.tsx`
+  van datzelfde segment: die staat bóven de Suspense-grens. Alleen synchrone
+  keuringen — een API-call daar kost elke geldige pagina zijn snelle start.
 - Lege staat is een uitnodiging tot actie, niet alleen "geen resultaten".
 - Artikelnummers en prijzen: `font-variant-numeric: tabular-nums` zodat kolommen uitlijnen.
 
@@ -108,7 +116,13 @@ kleuren van het select-element niet automatisch over in het popupvenster.
 
 ## Performance
 
-- `next/image` met expliciete `width`/`height` tegen layout shift.
+- `next/image` met expliciete `width`/`height` tegen layout shift, en altijd
+  `sizes` zodra de foto meeschaalt — zonder dat kiest de browser de grootste
+  variant uit de srcset, ook op een telefoon.
+- Foto's van de leverancier worden dertig dagen door de optimizer bewaard
+  (`minimumCacheTTL` in `next.config.ts`). Hun media-servers zetten korte
+  cachetijden; zonder die ondergrens haalt Next dezelfde band telkens opnieuw
+  op en zet hem opnieuw om.
 - WebP, lazy loading behalve de eerste rij van het grid.
 - Geen library groter dan 15kB gzipped zonder te vragen.
 - Budget: LCP < 2,5s op 4G, CLS < 0,1.
@@ -117,7 +131,18 @@ kleuren van het select-element niet automatisch over in het popupvenster.
 
 - Eén `<h1>` per pagina.
 - `generateMetadata` op elke route: title, description, canonical, `hreflang` nl/en.
-- Productpagina's krijgen JSON-LD `Product` met `offers`, `price`, `availability`.
+- Productpagina's krijgen JSON-LD `Product` met `offers`, `price`, `availability`,
+  en lopende tekst uit `lib/catalog/product-description.ts`. Die tekst is
+  opgebouwd uit velden die het artikel écht heeft; dezelfde zinnen gaan naar de
+  markering, want een andere `description` in JSON-LD dan op de pagina is voor
+  Google reden om de markering te negeren.
+- **Elke route zet `generateMetadata`, ook als de gegevens uit een andere bron
+  komen.** De onderdelencategorieën stonden niet in `provider.getCategories()`
+  en vielen daardoor uit op `{}`: geen titel, geen canonical, geen hreflang op
+  het grootste deel van de shop. Valt de naam niet op te halen, leid hem dan af
+  uit de slug (`groupNameFromSlug`) in plaats van niets terug te geven.
+- De canonical draagt geen `?auto=`: dat is de auto van deze bezoeker, niet een
+  eigenschap van de pagina.
 - Categorie- en productpagina's krijgen daarnaast JSON-LD `BreadcrumbList`,
   met dezelfde stappen als het zichtbare kruimelpad.
 - **Geen `aggregateRating` zolang er geen echte beoordelingen zijn.** Cijfers

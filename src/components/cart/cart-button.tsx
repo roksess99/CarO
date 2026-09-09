@@ -32,9 +32,9 @@ export function CartButton() {
       {count > 0 && (
         <span
           aria-hidden="true"
-          className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-caro-orange text-xs font-semibold text-caro-ink tabular-nums"
+          className="absolute -top-1.5 -end-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-caro-orange px-1 text-xs leading-none font-semibold text-caro-ink ring-2 ring-background tabular-nums"
         >
-          {count > 9 ? "9+" : count}
+          {count > 99 ? "99+" : count}
         </span>
       )}
     </Link>

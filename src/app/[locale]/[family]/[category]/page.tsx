@@ -22,6 +22,11 @@ import {
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import {
+  groupIdFromSlug,
+  groupNameFromSlug,
+  partGroupById,
+} from "@/lib/catalog/wearparts-provider";
+import {
   breadcrumbJsonLd,
   localizedMetadata,
   socialMetadata,
@@ -40,15 +45,13 @@ type Props = {
 /** Producten per stap. Meer laden telt hier telkens bij op. */
 const PAGE_SIZE = 20;
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: Props): Promise<Metadata> {
   const { locale, family: familyParam, category: slug } = await params;
   const family = familyFromSlug(familyParam, locale);
   if (!family) return {};
-  const categories = await localizeCategories(
-    await getCatalogProvider().getCategories(family),
-  );
-  const category = categories.find((c) => c.slug === slug);
-  if (!category) return {};
   const t = await getTranslations({ locale, namespace: "category" });
 
   const localizedHref = (targetLocale: string) =>
@@ -60,20 +63,49 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     });
 
-  const title = `${category.name} — CarO`;
-  const description = t("metaDescription", { category: category.name });
-
-  return {
-    title,
+  const meta = (name: string, description: string) => ({
+    title: `${name} — CarO`,
     description,
     ...localizedMetadata(locale, localizedHref),
     ...socialMetadata({
       locale,
-      title,
+      title: `${name} — CarO`,
       description,
+      // Bewust zonder `?auto=`: de canonical is de schone URL, één pagina per
+      // categorie in plaats van één per auto (zie app/robots.ts).
       path: localizedHref(locale),
     }),
-  };
+  });
+
+  // Onderdelen staan niet in `provider.getCategories()` — hun boom hangt aan
+  // een auto (docs/api/WEARPARTS.md). Daardoor viel deze functie hier vroeger
+  // uit op `{}` en kregen álle onderdelenpagina's, veruit de meeste van de
+  // shop, geen titel, canonical, hreflang of Open Graph. GEMETEN 2026-09-09:
+  // nul <title>-tags op /nl/onderdelen/oliefilter-543.
+  if (usesVehicleCatalog(family)) {
+    const groupId = groupIdFromSlug(slug);
+    if (groupId === null) return {};
+    const { auto } = await searchParams;
+    const carId = /^[0-9]+$/.test(auto ?? "") ? Number(auto) : null;
+    // Met een auto in de URL is de echte naam gratis: de pagina zelf haalt
+    // dezelfde gecachte boom op. Zonder auto draaien we de slug terug.
+    const name =
+      (carId ? (await partGroupById(carId, groupId))?.name : null) ??
+      groupNameFromSlug(slug);
+    if (!name) return {};
+    return meta(name, t("metaDescriptionParts", { category: name }));
+  }
+
+  const categories = await localizeCategories(
+    await getCatalogProvider().getCategories(family),
+  );
+  const category = categories.find((c) => c.slug === slug);
+  if (!category) return {};
+
+  return meta(
+    category.name,
+    t("metaDescription", { category: category.name }),
+  );
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
