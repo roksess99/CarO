@@ -198,7 +198,6 @@ function drawParties(ctx: Ctx, order: OrderDocument): void {
     companyValue(company.city) ? `${company.postcode} ${company.city}` : "",
     company.country,
     line(company.email),
-    line(company.phone),
     line(company.cocNumber, "KvK: "),
     line(company.vatNumber, "Btw: "),
     line(company.iban, "IBAN: "),

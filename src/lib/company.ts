@@ -14,7 +14,6 @@ export interface CompanyDetails {
   city: string;
   country: string;
   email: string;
-  phone: string;
   website: string;
   /** Kamer van Koophandel-nummer */
   cocNumber: string;
@@ -30,9 +29,12 @@ export const COMPANY: CompanyDetails = {
   postcode: "7038 DE",
   city: "Zeddam",
   country: "Nederland",
-  email: "PLACEHOLDER — bedrijfs-e-mailadres",
-  phone: "PLACEHOLDER — telefoonnummer",
-  website: "caro.nl",
+  email: "info@caroparts.nl",
+  // Bewust geen telefoonnummer: een webshop is niet verplicht er een te
+  // hebben (art. 6:230m BW vraagt om "een" doeltreffend communicatiemiddel,
+  // en dat is hier het e-mailadres plus het contactformulier). Een nummer
+  // publiceren dat niet wordt opgenomen is slechter dan geen nummer.
+  website: "caroparts.nl",
   cocNumber: "93396252",
   vatNumber: "NL005015784B71",
   iban: "PLACEHOLDER — IBAN",

@@ -448,7 +448,8 @@
     "copyright": "© {year} CarO Onderdelen",
     "privacyLink": "Privacy en cookies",
     "termsLink": "Algemene voorwaarden",
-    "faqLink": "Veelgestelde vragen"
+    "faqLink": "Veelgestelde vragen",
+    "contactLink": "Contact"
   },
   "terms": {
     "title": "Algemene voorwaarden",
@@ -560,7 +561,6 @@
     "name": "Bedrijfsnaam",
     "address": "Adres",
     "email": "E-mail",
-    "phone": "Telefoon",
     "coc": "KvK-nummer",
     "vat": "Btw-nummer",
     "pending": "Volgt nog",
@@ -649,6 +649,38 @@
         "question": "Welke bandenmaat heb ik nodig?",
         "answer": "Die staat op de zijkant van je huidige band, bijvoorbeeld 205/55 R16: de breedte in millimeters, de hoogte als percentage van die breedte, en de velgdiameter in inches. Er bestaat geen betrouwbare weg van kenteken naar bandenmaat, dus die vul je zelf in bij de bandenmaatkiezer."
       }
+    }
+  },
+  "contact": {
+    "metaTitle": "Contact",
+    "metaDescription": "Vraag over een onderdeel, een bestelling of een retour? Mail ons op info@caroparts.nl of vul het contactformulier in.",
+    "title": "Contact",
+    "intro": "Een vraag over een onderdeel, een bestelling of een retour? Stuur een bericht, dan kijken we ernaar. Weet je het artikelnummer of je kenteken, zet het er dan bij — dan kunnen we meteen antwoorden.",
+    "detailsTitle": "Mail ons rechtstreeks",
+    "responseTime": "We reageren doorgaans binnen één werkdag.",
+    "companyTitle": "Bedrijfsgegevens",
+    "faqHint": "Veel vragen over verzending, retour en pasvorm staan al bij de <faq>veelgestelde vragen</faq>.",
+    "formTitle": "Stuur een bericht",
+    "formIntro": "Je bericht komt binnen op info@caroparts.nl. Antwoorden gaat naar het adres dat je hier invult.",
+    "fields": {
+      "name": "Je naam",
+      "email": "Je e-mailadres",
+      "subject": "Onderwerp",
+      "message": "Je bericht"
+    },
+    "submit": "Verstuur bericht",
+    "sending": "Bezig met versturen…",
+    "sentTitle": "Bericht verstuurd",
+    "sentBody": "Bedankt. We hebben je bericht binnen en reageren doorgaans binnen één werkdag op het adres dat je hebt opgegeven.",
+    "privacyNote": "We gebruiken je gegevens alleen om je vraag te beantwoorden.",
+    "errors": {
+      "required": "Dit veld is verplicht.",
+      "email": "Vul een geldig e-mailadres in.",
+      "tooShort": "Vertel iets meer, minimaal tien tekens.",
+      "tooLong": "Dit is te lang.",
+      "invalid": "Deze waarde klopt niet.",
+      "rateLimit": "Je hebt kort achter elkaar meerdere berichten gestuurd. Probeer het over een uur opnieuw, of mail rechtstreeks naar info@caroparts.nl.",
+      "send": "Het bericht kon niet verstuurd worden. Mail ons rechtstreeks op info@caroparts.nl."
     }
   }
 }
