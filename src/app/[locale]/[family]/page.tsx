@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { GroupList } from "@/components/catalog/group-list";
 import { FaqList } from "@/components/faq-list";
@@ -12,6 +13,7 @@ import {
   familyFromSlug,
   familySlug,
   PRODUCT_FAMILIES,
+  type ProductFamily,
   usesVehicleCatalog,
 } from "@/lib/catalog/families";
 import { localizeCategories } from "@/lib/catalog/localized-categories";
@@ -21,6 +23,8 @@ import {
   formatTyreSize,
   parseTyreSeason,
   parseTyreSize,
+  type TyreSeason,
+  type TyreSize,
   tyreSearchTerm,
 } from "@/lib/catalog/tyre-size";
 import {
@@ -93,19 +97,252 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+/**
+ * Plaatshouder voor een blok dat nog bij de leverancier ligt.
+ *
+ * Er hing hier eerder een `loading.tsx` om de hele familietak. Die kostte
+ * twee dingen: de kop, de bandenmaatkiezer en de uitlegtekst hebben niets van
+ * de API nodig en konden meteen zichtbaar zijn, én zolang zo'n Suspense-grens
+ * erboven hangt is de HTML met status 200 al onderweg — dan kan een
+ * `notFound()` verderop geen echte 404 meer worden.
+ */
+function GridFallback({ rows = 8 }: { rows?: number }) {
+  return (
+    <div className="mt-10" aria-busy="true">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 xl:grid-cols-4">
+        {Array.from({ length: rows }, (_, i) => (
+          <div key={i} className="animate-pulse rounded-lg border border-border">
+            <div className="aspect-4/3 rounded-t-lg bg-surface" />
+            <div className="space-y-2 p-4">
+              <div className="h-3 w-1/2 rounded bg-surface" />
+              <div className="h-4 w-3/4 rounded bg-surface" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GroupsFallback() {
+  return (
+    <div
+      className="mt-10 grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
+      aria-busy="true"
+    >
+      {Array.from({ length: 9 }, (_, i) => (
+        <div
+          key={i}
+          className="h-20 animate-pulse rounded-xl border border-border bg-surface"
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Banden in de gekozen maat */
+async function TyreResults({
+  family,
+  size,
+  season,
+}: {
+  family: ProductFamily;
+  size: TyreSize;
+  season: TyreSeason | null;
+}) {
+  const tTyres = await getTranslations("tyres");
+  const tyres = filterTyres(
+    await getCatalogProvider().getParts({
+      family,
+      search: tyreSearchTerm(size, season),
+      limit: TYRE_FETCH_SIZE,
+    }),
+    size,
+    season,
+  ).slice(0, PAGE_SIZE);
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-2xl">
+        {tTyres("results", { size: formatTyreSize(size) })}
+      </h2>
+      {tyres.length === 0 ? (
+        <p className="mt-6 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+          {tTyres("noResults", { size: formatTyreSize(size) })}
+        </p>
+      ) : (
+        <div className="mt-6">
+          <ProductGrid parts={tyres} />
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Categorieën met iconen, voor de gekozen auto.
+ *
+ * Met aantallen, zodat hoofdgroepen zonder één artikel voor deze auto niet in
+ * het raster komen (zie partGroupsWithCounts).
+ */
+async function PartGroups({
+  carId,
+  familySlugParam,
+}: {
+  carId: number;
+  familySlugParam: string;
+}) {
+  const t = await getTranslations("family");
+  const groups = await partGroupsWithCounts(carId);
+  if (groups.length === 0) return null;
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-2xl">{t("groupsTitle")}</h2>
+      <div className="mt-6">
+        <GroupList
+          groups={groups}
+          familySlugParam={familySlugParam}
+          carId={carId}
+        />
+      </div>
+    </section>
+  );
+}
+
+/** Zoeken op naam of OE-nummer binnen de onderdelencatalogus */
+async function PartsSearchResults({
+  family,
+  term,
+  carId,
+}: {
+  family: ProductFamily;
+  term: string;
+  carId: number | null;
+}) {
+  const t = await getTranslations("family");
+
+  // De gekozen auto gaat mee in de zoekopdracht: zonder dat doorzoekt de
+  // leverancier de hele catalogus en komen er onderdelen boven die niet eens
+  // op deze auto passen.
+  const { parts } = await searchParts(term, PAGE_SIZE, 0, carId ?? undefined);
+
+  // GEMETEN 2026-09-06: area 3 doorzoekt uitsluitend OE-nummers. Zoeken op
+  // "OELFILTER" of "VOLKSWAGEN" geeft nul treffers, óók al heet het artikel
+  // letterlijk zo. De andere families zijn wél op naam doorzoekbaar, dus
+  // vangen we een naam-zoekopdracht daar op in plaats van de klant met een
+  // lege pagina achter te laten.
+  const provider = getCatalogProvider();
+  const elsewhere =
+    parts.length === 0
+      ? (
+          await Promise.all(
+            PRODUCT_FAMILIES.filter((other) => other !== family).map((other) =>
+              provider.getParts({ family: other, search: term, limit: 4 }),
+            ),
+          )
+        ).flat()
+      : [];
+
+  if (parts.length === 0) {
+    return (
+      <div className="mt-10">
+        <p className="max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+          {t("oenNoResults", { term })}
+        </p>
+        {elsewhere.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-2xl">{t("oenElsewhere", { term })}</h2>
+            <div className="mt-6">
+              <ProductGrid parts={elsewhere} />
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-10">
+      <h2 className="text-2xl">{t("oenResults", { term })}</h2>
+      <div className="mt-6">
+        <ProductGrid parts={parts} />
+      </div>
+    </div>
+  );
+}
+
+/** Categorieknoppen en een uitgelichte rij, voor de families zonder auto */
+async function CategoryBrowse({
+  family,
+  familySlugParam,
+  showFeatured,
+}: {
+  family: ProductFamily;
+  familySlugParam: string;
+  showFeatured: boolean;
+}) {
+  const t = await getTranslations("family");
+  const provider = getCatalogProvider();
+  const [categories, parts] = await Promise.all([
+    provider.getCategories(family).then(localizeCategories),
+    provider.getParts({ family, limit: 8 }),
+  ]);
+
+  if (categories.length === 0) {
+    // Eerlijke lege staat: geen verzonnen producten als er geen bron is
+    return (
+      <p className="mt-10 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+        {t(`${family}.empty`)}
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <nav aria-label={t("categoriesAria")} className="mt-8">
+        <ul className="flex flex-wrap gap-2">
+          {categories.map((category) => (
+            <li key={category.slug}>
+              <Link
+                href={{
+                  pathname: "/[family]/[category]",
+                  params: { family: familySlugParam, category: category.slug },
+                }}
+                className="inline-block rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface"
+              >
+                {category.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* Alleen tonen als er echt iets is: de eerste categorie van een
+          familie kan leeg zijn of (bij Tyre24) een 500 geven. Bij een
+          gekozen bandenmaat staan de treffers al boven; een blok
+          "veelgekocht" eronder leidt daar alleen van af. */}
+      {showFeatured && parts.length > 0 && (
+        <>
+          <h2 className="mt-12 text-2xl">{t("featuredTitle")}</h2>
+          <div className="mt-6">
+            <ProductGrid parts={parts} />
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 export default async function FamilyPage({ params, searchParams }: Props) {
   const { locale, family: slug } = await params;
   setRequestLocale(locale);
+  // De layout keurde de slug al; dit vangnet sluit het type af.
   const family = familyFromSlug(slug, locale);
   if (!family) notFound();
 
   const t = await getTranslations("family");
-  const tTyres = await getTranslations("tyres");
   const familyName = t(`${family}.title`);
-  const provider = getCatalogProvider();
-  const categories = await localizeCategories(
-    await provider.getCategories(family),
-  );
 
   const { oen, auto, breedte, hoogte, diameter, seizoen } = await searchParams;
   const searchTerm = (Array.isArray(oen) ? oen[0] : oen)?.trim();
@@ -123,49 +360,6 @@ export default async function FamilyPage({ params, searchParams }: Props) {
   const vehicleCatalog = usesVehicleCatalog(family);
   const carId = /^[0-9]+$/.test(auto ?? "") ? Number(auto) : null;
 
-  // De gekozen auto gaat mee in de zoekopdracht: zonder dat doorzoekt de
-  // leverancier de hele catalogus en komen er onderdelen boven die niet eens
-  // op deze auto passen.
-  const searchResult =
-    vehicleCatalog && searchTerm
-      ? await searchParts(searchTerm, PAGE_SIZE, 0, carId ?? undefined)
-      : { parts: [], total: 0 };
-  // Met aantallen, zodat hoofdgroepen zonder één artikel voor deze auto niet
-  // in het raster komen (zie partGroupsWithCounts).
-  const groups = vehicleCatalog && carId ? await partGroupsWithCounts(carId) : [];
-
-  const parts = vehicleCatalog
-    ? searchResult.parts
-    : await provider.getParts({ family, limit: 8 });
-
-  const tyres = tyreSize
-    ? filterTyres(
-        await provider.getParts({
-          family,
-          search: tyreSearchTerm(tyreSize, tyreSeason),
-          limit: TYRE_FETCH_SIZE,
-        }),
-        tyreSize,
-        tyreSeason,
-      ).slice(0, PAGE_SIZE)
-    : [];
-
-  // GEMETEN 2026-09-06: area 3 doorzoekt uitsluitend OE-nummers. Zoeken op
-  // "OELFILTER" of "VOLKSWAGEN" geeft nul treffers, óók al heet het artikel
-  // letterlijk zo. De andere families zijn wél op naam doorzoekbaar, dus
-  // vangen we een naam-zoekopdracht daar op in plaats van de klant met een
-  // lege pagina achter te laten.
-  const elsewhere =
-    vehicleCatalog && searchTerm && parts.length === 0
-      ? (
-          await Promise.all(
-            PRODUCT_FAMILIES.filter((other) => other !== family).map((other) =>
-              provider.getParts({ family: other, search: searchTerm, limit: 4 }),
-            ),
-          )
-        ).flat()
-      : [];
-
   const formAction = getPathname({
     locale: locale as Locale,
     href: { pathname: "/[family]", params: { family: slug } },
@@ -174,7 +368,7 @@ export default async function FamilyPage({ params, searchParams }: Props) {
   return (
     <div className="site-container py-12 md:py-16">
       <p className="eyebrow text-sm">{t("eyebrow")}</p>
-      <h1 className="mt-3 text-3xl md:text-4xl">{t(`${family}.title`)}</h1>
+      <h1 className="mt-3 text-3xl md:text-4xl">{familyName}</h1>
       <p className="mt-4 max-w-xl text-muted">{t(`${family}.intro`)}</p>
 
       {/* Banden: eerst de maat, dan pas categorieën. Wie banden koopt weet
@@ -188,20 +382,9 @@ export default async function FamilyPage({ params, searchParams }: Props) {
       )}
 
       {tyreSize && (
-        <section className="mt-10">
-          <h2 className="text-2xl">
-            {tTyres("results", { size: formatTyreSize(tyreSize) })}
-          </h2>
-          {tyres.length === 0 ? (
-            <p className="mt-6 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
-              {tTyres("noResults", { size: formatTyreSize(tyreSize) })}
-            </p>
-          ) : (
-            <div className="mt-6">
-              <ProductGrid parts={tyres} />
-            </div>
-          )}
-        </section>
+        <Suspense fallback={<GridFallback />}>
+          <TyreResults family={family} size={tyreSize} season={tyreSeason} />
+        </Suspense>
       )}
 
       {vehicleCatalog ? (
@@ -233,22 +416,13 @@ export default async function FamilyPage({ params, searchParams }: Props) {
             <p className="mt-2 text-sm text-muted">{t("oenHint")}</p>
           </form>
 
-          {/* Categorieën met iconen. De boom hangt aan de auto: zonder
-              gekozen voertuig kan de leverancier hem niet leveren, dus dan
-              tonen we een uitnodiging in plaats van een lege rij. */}
+          {/* De boom hangt aan de auto: zonder gekozen voertuig kan de
+              leverancier hem niet leveren, dus dan tonen we een uitnodiging
+              in plaats van een lege rij. */}
           {carId ? (
-            groups.length > 0 && (
-              <section className="mt-10">
-                <h2 className="text-2xl">{t("groupsTitle")}</h2>
-                <div className="mt-6">
-                  <GroupList
-                    groups={groups}
-                    familySlugParam={slug}
-                    carId={carId}
-                  />
-                </div>
-              </section>
-            )
+            <Suspense fallback={<GroupsFallback />}>
+              <PartGroups carId={carId} familySlugParam={slug} />
+            </Suspense>
           ) : (
             <>
               <SelectedCarInUrl active />
@@ -258,73 +432,24 @@ export default async function FamilyPage({ params, searchParams }: Props) {
             </>
           )}
 
-          <div className="mt-10">
-            {!searchTerm ? null : parts.length === 0 ? (
-              <>
-                <p className="max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
-                  {t("oenNoResults", { term: searchTerm })}
-                </p>
-                {elsewhere.length > 0 && (
-                  <section className="mt-10">
-                    <h2 className="text-2xl">
-                      {t("oenElsewhere", { term: searchTerm })}
-                    </h2>
-                    <div className="mt-6">
-                      <ProductGrid parts={elsewhere} />
-                    </div>
-                  </section>
-                )}
-              </>
-            ) : (
-              <>
-                <h2 className="text-2xl">
-                  {t("oenResults", { term: searchTerm })}
-                </h2>
-                <div className="mt-6">
-                  <ProductGrid parts={parts} />
-                </div>
-              </>
-            )}
-          </div>
-        </>
-      ) : categories.length === 0 ? (
-        // Eerlijke lege staat: geen verzonnen producten als er geen bron is
-        <p className="mt-10 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
-          {t(`${family}.empty`)}
-        </p>
-      ) : (
-        <>
-          <nav aria-label={t("categoriesAria")} className="mt-8">
-            <ul className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <li key={category.slug}>
-                  <Link
-                    href={{
-                      pathname: "/[family]/[category]",
-                      params: { family: slug, category: category.slug },
-                    }}
-                    className="inline-block rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface"
-                  >
-                    {category.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* Alleen tonen als er echt iets is: de eerste categorie van een
-              familie kan leeg zijn of (bij Tyre24) een 500 geven. Bij een
-              gekozen bandenmaat staan de treffers al boven; een blok
-              "veelgekocht" eronder leidt daar alleen van af. */}
-          {!tyreSize && parts.length > 0 && (
-            <>
-              <h2 className="mt-12 text-2xl">{t("featuredTitle")}</h2>
-              <div className="mt-6">
-                <ProductGrid parts={parts} />
-              </div>
-            </>
+          {searchTerm && (
+            <Suspense fallback={<GridFallback />}>
+              <PartsSearchResults
+                family={family}
+                term={searchTerm}
+                carId={carId}
+              />
+            </Suspense>
           )}
         </>
+      ) : (
+        <Suspense fallback={<GridFallback />}>
+          <CategoryBrowse
+            family={family}
+            familySlugParam={slug}
+            showFeatured={!tyreSize}
+          />
+        </Suspense>
       )}
 
       {/* Uitleg en vragen onderaan, na de producten. Een familiepagina

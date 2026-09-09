@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { GroupList } from "@/components/catalog/group-list";
+import { JsonLd } from "@/components/json-ld";
 import { ProductGrid } from "@/components/product-grid";
 import { SelectedCarInUrl } from "@/components/vehicle/use-selected-car";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import type { ProductFamily } from "@/lib/catalog/families";
 import {
   groupIdFromSlug,
@@ -11,6 +13,7 @@ import {
   partLeafGroups,
   partsInGroup,
 } from "@/lib/catalog/wearparts-provider";
+import { breadcrumbJsonLd } from "@/lib/site";
 
 /** Artikelen per stap; "meer laden" telt hier telkens bij op */
 const PAGE_SIZE = 20;
@@ -42,6 +45,7 @@ export async function PartsCategoryPage({
   const t = await getTranslations("category");
   const tFamily = await getTranslations("family");
   const tFilters = await getTranslations("filters");
+  const locale = (await getLocale()) as Locale;
 
   const groupId = groupIdFromSlug(categorySlug);
   if (groupId === null) notFound();
@@ -107,8 +111,33 @@ export async function PartsCategoryPage({
 
   const query = { auto: String(carId) };
 
+  // Zelfde stappen als het zichtbare kruimelpad hieronder. De paden dragen
+  // geen `?auto=`: dat is de auto van déze bezoeker, niet van de pagina.
+  const breadcrumbs = breadcrumbJsonLd([
+    { name: t("breadcrumbHome"), path: `/${locale}` },
+    {
+      name: tFamily(`${family}.title`),
+      path: getPathname({
+        locale,
+        href: { pathname: "/[family]", params: { family: familySlugParam } },
+      }),
+    },
+    {
+      name,
+      path: getPathname({
+        locale,
+        href: {
+          pathname: "/[family]/[category]",
+          params: { family: familySlugParam, category: categorySlug },
+        },
+      }),
+    },
+  ]);
+
   return (
     <div className="site-container py-8 md:py-12">
+      <JsonLd data={breadcrumbs} />
+
       <nav aria-label={t("breadcrumbAria")}>
         <ol className="flex flex-wrap items-center gap-2 text-sm text-muted">
           <li>

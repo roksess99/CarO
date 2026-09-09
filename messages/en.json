@@ -192,8 +192,8 @@
     "fitmentPending": "We search the supplier's descriptions for your make and model. Not a hard guarantee — check the dimensions before ordering.",
     "errors": {
       "invalidPlate": "A Dutch licence plate has 6 characters, for example AB-123-C.",
-      "notFound": "This licence plate is not in the RDW data. Please check your input.",
-      "unavailable": "The licence plate search is temporarily unavailable. Please try again later."
+      "notFound": "We don't know this licence plate. Check that you copied it correctly from your registration document, or pick your car below by make, model and version.",
+      "unavailable": "The licence plate search is temporarily unavailable. Pick your car below by make, model and version, or try again later."
     },
     "fitmentReady": "This car was recognised in the parts catalogue. You will only see parts that fit it.",
     "typeLabel": "Version",
@@ -201,6 +201,7 @@
   },
   "category": {
     "metaDescription": "{category} for your car. All prices include 21% VAT.",
+    "metaDescriptionParts": "Order {category} for your car. Enter your registration and see straight away which parts fit. Prices include 21% Dutch VAT.",
     "brandFilterLabel": "Filter by brand",
     "allBrands": "All brands",
     "breadcrumbAria": "Breadcrumb",
@@ -312,6 +313,18 @@
     "view": "View",
     "viewAria": "View {name}",
     "metaDescription": "{name} by {brand}, OE number {oeNumber}. Price includes 21% VAT.",
+    "descTitle": "About this item",
+    "descIntro": "The {name} is a {noun} by {brand} from our {category} category, supplied by our wholesaler.",
+    "descIntroNoBrand": "The {name} is a {noun} from our {category} category, supplied by our wholesaler.",
+    "noun": {
+      "onderdelen": "part",
+      "banden": "tyre",
+      "velgen": "wheel",
+      "toebehoren": "accessory"
+    },
+    "descSpecs": "Specification: {specs}.",
+    "descFit": "The matching OE number is {oeNumber}. Enter your registration to check whether this item fits your car.",
+    "descDelivery": "The price includes 21% Dutch VAT. Shipping is {shipping} and free from {freeFrom}; you have 14 days to change your mind.",
     "detailsTitle": "Item details",
     "brandLabel": "Brand",
     "quantityLabel": "Quantity",
@@ -539,6 +552,8 @@
   "notFound": {
     "title": "Page not found",
     "description": "This page does not exist or has been moved.",
+    "browseTitle": "Or browse the range",
+    "helpLine": "Looking for a part for a specific car? Enter your registration under My car. Still stuck? Check the <faq>frequently asked questions</faq>.",
     "backHome": "Back to the homepage"
   },
   "company": {

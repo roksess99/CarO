@@ -21,6 +21,11 @@ import { groupSlug } from "@/lib/catalog/wearparts-provider";
  * leverancier, en een rij lege vlakken leest slechter dan geen vlak. Vandaar
  * dat de lijst de beeldkolom als geheel weglaat zodra niemand er een heeft.
  *
+ * Staat er in dezelfde lijst wél een pictogram naast een groep zonder, dan
+ * mag daar geen grijs vlak blijven staan: dat leest als een plaatje dat nog
+ * moet laden, terwijl er nooit een komt. Een moer in lijn met het merkteken
+ * vult het gat en houdt de rijen uitgelijnd.
+ *
  * Het aantal achter de naam is er om dezelfde reden als het weglaten van lege
  * groepen: de klant moet vóór de klik kunnen zien wat hem te wachten staat.
  * Ontbreekt het (telling mislukt of niet opgevraagd), dan staat er niets —
@@ -64,8 +69,22 @@ export function GroupList({
               ) : (
                 <span
                   aria-hidden="true"
-                  className="h-14 w-20 shrink-0 rounded-lg bg-surface"
-                />
+                  className="flex h-14 w-20 shrink-0 items-center justify-center rounded-lg bg-surface"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="size-6 text-muted/50"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                  >
+                    {/* Zeskantmoer met open gat — hetzelfde motief als het
+                        merkteken, zie docs/BRAND.md */}
+                    <path d="M12 2.5 20 7v10l-8 4.5L4 17V7z" />
+                    <circle cx="12" cy="12" r="3.5" />
+                  </svg>
+                </span>
               ))}
             <span className="flex-1 text-sm leading-snug font-semibold">
               {group.name}

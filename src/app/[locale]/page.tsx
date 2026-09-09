@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CategoryGrid } from "@/components/home/category-grid";
 import { Hero } from "@/components/home/hero";
@@ -32,9 +33,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function HomePage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
+/** Plaatshouder met dezelfde hoogte als een rij, zodat er niets verspringt */
+function RowsFallback() {
+  return (
+    <div className="site-container pb-16 md:pb-24" aria-busy="true">
+      <div className="h-8 w-48 animate-pulse rounded bg-surface" />
+      <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="animate-pulse rounded-lg border border-border">
+            <div className="aspect-4/3 rounded-t-lg bg-surface" />
+            <div className="space-y-2 p-4">
+              <div className="h-3 w-1/2 rounded bg-surface" />
+              <div className="h-4 w-3/4 rounded bg-surface" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Uitgelichte rijen, apart zodat ze de hero niet ophouden.
+ *
+ * De hero is het grootste element boven de vouw en dus de LCP. Die haalt zijn
+ * tekst uit de vertalingen en heeft geen catalogus nodig; deze rijen doen vier
+ * API-calls. Stonden ze in dezelfde component, dan wachtte de eerste
+ * schilderbeurt op de leverancier.
+ */
+async function FeaturedRows({ locale }: { locale: string }) {
   const tFamily = await getTranslations("family");
 
   // Eén rij per familie. De calls lopen parallel en zijn gecacht (300s in
@@ -52,10 +79,6 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <>
-      <Hero />
-
-      <CategoryGrid />
-
       {/* Geen tekstuele familielijst meer: het categorieraster hierboven
           toont dezelfde vier families mét foto en uitklapbare categorieën. */}
       {featuredRows.map(({ family, parts }) => (
@@ -83,6 +106,25 @@ export default async function HomePage({ params }: Props) {
           </div>
         </section>
       ))}
+    </>
+  );
+}
+
+export default async function HomePage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  return (
+    <>
+      <Hero />
+
+      <Suspense fallback={<RowsFallback />}>
+        <CategoryGrid />
+      </Suspense>
+
+      <Suspense fallback={<RowsFallback />}>
+        <FeaturedRows locale={locale} />
+      </Suspense>
     </>
   );
 }

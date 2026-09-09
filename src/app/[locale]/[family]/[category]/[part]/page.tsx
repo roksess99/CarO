@@ -17,6 +17,8 @@ import {
 } from "@/lib/catalog/families";
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { loadPartBySlug } from "@/lib/catalog/lookup";
+import { productDescription } from "@/lib/catalog/product-description";
+import { groupNameFromSlug } from "@/lib/catalog/wearparts-provider";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents, priceCentsToDecimalString } from "@/lib/format";
@@ -143,9 +145,15 @@ export default async function ProductPage({ params }: Props) {
   const categories = await localizeCategories(
     await getCatalogProvider().getCategories(family),
   );
+  // GEMETEN 2026-09-09: bij onderdelen leverde dit een lege naam op. De
+  // categorielijst kent die familie niet (de boom hangt aan een auto) en
+  // `part.categoryName` is dan een lege string — die overleeft `??`, want
+  // dat vangt alleen null. Kruimelpad, markering en de lopende tekst hadden
+  // daardoor een gat waar de categorie hoort. De slug draagt de naam wél.
   const categoryName =
-    categories.find((item) => item.slug === part.categorySlug)?.name ??
-    part.categoryName ??
+    categories.find((item) => item.slug === part.categorySlug)?.name ||
+    part.categoryName ||
+    groupNameFromSlug(category) ||
     category;
 
   const canonicalPath = getPathname({
@@ -156,16 +164,27 @@ export default async function ProductPage({ params }: Props) {
     },
   });
 
+  // Lopende tekst uit de eigen velden van het artikel. Dezelfde zinnen gaan
+  // naar de markering, zodat wat Google leest en wat de klant leest hetzelfde
+  // is — een andere `description` in JSON-LD dan op de pagina is precies waar
+  // Google markering voor negeert.
+  const description = productDescription(
+    part,
+    t(`noun.${family}`),
+    categoryName,
+    t,
+    (spec) => ({
+      label: spec.label ?? t(`specs.${spec.key}`),
+      value: spec.label ? spec.value : filterValueLabel(spec.value, tFilters),
+    }),
+  );
+
   // JSON-LD voor rich results (SEO-regel in .claude/rules/frontend.md)
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: part.name,
-    description: t("metaDescription", {
-      name: part.name,
-      brand: part.brand,
-      oeNumber: part.oeNumber,
-    }),
+    description: description.join(" "),
     sku: part.id,
     mpn: part.oeNumber,
     category: categoryName,
@@ -252,6 +271,10 @@ export default async function ProductPage({ params }: Props) {
               width={800}
               height={600}
               priority
+              // Zonder `sizes` kiest next/image de grootste variant uit de
+              // srcset, ook op een telefoon. De foto beslaat hier de halve
+              // breedte op desktop en de volle daaronder.
+              sizes="(min-width: 1024px) 45vw, 100vw"
               className="w-full rounded-lg border border-border bg-surface object-contain"
             />
           ) : (
@@ -281,6 +304,13 @@ export default async function ProductPage({ params }: Props) {
             <AddToCartWithQuantity part={part} />
           </div>
 
+          <h2 className="mt-10 text-lg">{t("descTitle")}</h2>
+          <div className="mt-3 space-y-2 text-sm text-muted">
+            {description.map((sentence) => (
+              <p key={sentence}>{sentence}</p>
+            ))}
+          </div>
+
           <h2 className="mt-10 text-lg">{t("detailsTitle")}</h2>
           {/* De waarden komen van de leverancier en staan in diens taal;
               dezelfde woordenlijst als bij de filters haalt er "kegel" en
@@ -303,7 +333,9 @@ export default async function ProductPage({ params }: Props) {
                   {/* Waarden van de leverancier die al een eigen label
                       dragen zijn ook al vertaald; die door de woordenlijst
                       halen zou "155/80-15" tot "155 / 80-15" verbouwen. */}
-                  {spec.label ? spec.value : filterValueLabel(spec.value, tFilters)}
+                  {spec.label
+                    ? spec.value
+                    : filterValueLabel(spec.value, tFilters)}
                 </dd>
               </div>
             ))}
@@ -313,7 +345,8 @@ export default async function ProductPage({ params }: Props) {
                 kop — dat stond er eerder wel. */}
             {part.oeNumber &&
               !(part.specs ?? []).some(
-                (spec) => spec.key === "itemNumber" && spec.value === part.oeNumber,
+                (spec) =>
+                  spec.key === "itemNumber" && spec.value === part.oeNumber,
               ) && (
                 <div className="flex justify-between gap-4 py-3">
                   <dt className="text-muted">{t("oeLabel")}</dt>
@@ -321,7 +354,7 @@ export default async function ProductPage({ params }: Props) {
                 </div>
               )}
 
-            {part.categoryName && (
+            {categoryName && (
               <div className="flex justify-between gap-4 py-3">
                 <dt className="text-muted">{t("categoryLabel")}</dt>
                 <dd className="font-medium">{categoryName}</dd>

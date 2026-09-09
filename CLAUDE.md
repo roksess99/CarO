@@ -48,7 +48,7 @@ Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 
 | Onderdeel | Waar | Bijzonderheid |
 |---|---|---|
-| Hero in twee kolommen | `components/home/hero.tsx` | Links kentekenzoeker **én** merk/model-kiezer zichtbaar (geen tabs), rechts een banner met echte voorwaarden — geen verzonnen acties |
+| Hero in twee kolommen | `components/home/hero.tsx` | Links kentekenzoeker **én** merk/model-kiezer zichtbaar (geen tabs), rechts een banner met echte voorwaarden — geen verzonnen acties. Het linkerpaneel is de primaire actie: oranje bovenrand, plaatveld van 56px. De banner heeft daarom een omlijnde knop, geen tweede oranje vlak |
 | Categorieraster | `components/home/category-grid.tsx` | Tegels uit `lib/catalog/category-tiles.ts`, foto's beeldvullend bijgesneden |
 | Header | `components/site-header.tsx` | Rij 1: logo, voertuigknop, zoekbalk, taal, thema, wagen. Rij 2: de vier families |
 | Zoeken met suggesties | `components/search/` | Server Action, vanaf 3 tekens met 350 ms debounce; toont thumbnail, merk en prijs. Elke aanroep raakt vier families |
@@ -64,7 +64,10 @@ Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 | Categorieslugs | `lib/catalog/category-labels.ts` | Nederlandse slug per categorie, bevroren lijst. De leverancier schrijft toebehoren in het Duits; oude URL's krijgen een 308 via `proxy.ts` |
 | Sitemap en robots | `app/sitemap.ts`, `app/robots.ts` | Home, families, categorieën en de statische pagina's, in twee talen met `hreflang`. Producten staan er bewust niet in |
 | Deelkaart | `app/[locale]/opengraph-image.tsx` | Open Graph-beeld voor WhatsApp en social. Productpagina's zetten hun eigen foto; de rest krijgt deze merkkaart |
-| Gestructureerde data | `components/json-ld.tsx`, `lib/site.ts` | `Product` op de productpagina, `BreadcrumbList` op categorie en product. Open Graph via `socialMetadata()` |
+| Gestructureerde data | `components/json-ld.tsx`, `lib/site.ts` | `Product` op de productpagina, `BreadcrumbList` op categorie en product — ook op de onderdelencategorie. Open Graph via `socialMetadata()` |
+| Productomschrijving | `lib/catalog/product-description.ts` | Drie tot vier zinnen uit de eigen velden van het artikel (merk, soort, eerste twee attributen, OE-nummer, verzending). Dezelfde tekst staat op de pagina én in de JSON-LD. Geen verkooppraat: elke zin die geen veld heeft valt weg |
+| Laadschermen | `loading.tsx` per route, `<Suspense>` in de pagina | **Geen** `loading.tsx` op `/[locale]`: die liet elke pagina — ook de winkelwagen en de FAQ — met een productraster-skelet beginnen, en maakte van elke 404 een status 200. Kop, formulier en uitlegtekst staan nu meteen in de HTML; alleen wat de leverancier moet leveren streamt na |
+| Echte 404 | `[family]/layout.tsx`, `[family]/[category]/layout.tsx` | Een layout staat bóven de Suspense-grens en kan de status dus nog zetten. Gekeurd wordt alleen wat synchroon kan: de familieslug, en bij onderdelen of de categorieslug een id draagt. Een onbekende categorie bij banden vraagt een API-call en blijft daarom 200 |
 | Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |
 
 **Fitment werkt** sinds 2026-09-06: een kenteken gaat via de Wearparts-API naar

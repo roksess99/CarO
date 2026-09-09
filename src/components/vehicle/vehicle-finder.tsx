@@ -37,7 +37,7 @@ export function VehicleFinder({
       {/* h2 en niet h3: hierboven staat alleen de h1 van de pagina, en een
           overgeslagen niveau maakt de structuur onleesbaar voor een
           schermlezer (Lighthouse-bevinding). */}
-      <h2 className="text-sm font-bold">{t("plateHeading")}</h2>
+      <h2 className="text-base font-bold">{t("plateHeading")}</h2>
       <div className="mt-3">
         <VehicleSearch autoFocus={autoFocus} onSelected={onSelected} compact />
       </div>

@@ -34,8 +34,12 @@ export async function Hero() {
       <HeroBackdrop />
       {/* relative: de inhoud moet boven de tekening blijven */}
       <div className="relative site-container py-8 md:py-12">
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,26rem)_1fr]">
-          <div className="rounded-xl border border-border bg-background p-5 shadow-lg">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,28rem)_1fr]">
+          {/* Oranje bovenrand en schaduw: dit paneel is waar de klant moet
+              beginnen, en naast een banner van dubbele breedte viel het
+              eerder weg. Oranje mag hier omdat het een vlak is en geen
+              tekst (docs/BRAND.md). */}
+          <div className="rounded-xl border border-border border-t-4 border-t-caro-orange bg-background p-5 shadow-xl">
             <h1 className="text-xl md:text-2xl">{t("title")}</h1>
             <div className="mt-5">
               <VehicleFinder makes={makes} />
@@ -74,12 +78,16 @@ export async function Hero() {
                 ))}
               </ul>
 
+              {/* Bewust een omlijnde knop en geen oranje vlak: in de hero
+                  hoort maar één primaire actie te staan, en dat is de
+                  kentekencheck links. Twee oranje knoppen naast elkaar laten
+                  de klant kiezen waar niets te kiezen valt. */}
               <Link
                 href={{
                   pathname: "/[family]",
                   params: { family: familySlug("banden", locale) },
                 }}
-                className="mt-7 inline-flex rounded-md bg-caro-orange px-6 py-3 font-semibold text-caro-ink"
+                className="mt-7 inline-flex rounded-md border border-border px-6 py-3 font-semibold hover:bg-surface"
               >
                 {t("bannerCta")}
               </Link>

@@ -12,6 +12,13 @@ const nextConfig: NextConfig = {
     // AVIF eerst: scheelt zo'n kwart ten opzichte van WebP op de
     // productfoto's, en browsers die het niet kennen krijgen WebP.
     formats: ["image/avif", "image/webp"],
+    // De optimizer bewaart elke omgezette foto minstens dertig dagen.
+    // De media-servers van de leverancier bepalen anders zelf hoe lang wij
+    // hun foto mogen cachen, en die zetten korte tijden; dan haalt Next
+    // dezelfde band opnieuw op en zet hem opnieuw om — de mobiele bezoeker
+    // betaalt dat in wachttijd. De URL's zijn stabiel: een andere foto is
+    // een ander artikel en dus een ander adres.
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     // Productfoto's komen van de media-servers van Tyre24 (media1/2/3).
     // Zonder deze regel weigert next/image een externe bron.
     remotePatterns: [
