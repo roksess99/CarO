@@ -200,7 +200,8 @@
     "chooseType": "Select version",
     "or": "or",
     "noOptions": "We cannot find anything for this. Go back a step, or search by licence plate.",
-    "searchByPlate": "Search by licence plate"
+    "searchByPlate": "Search by licence plate",
+    "plateHint": "We look your car up at the RDW and show only parts that fit it."
   },
   "category": {
     "metaDescription": "{category} for your car. All prices include 21% VAT.",
@@ -363,7 +364,8 @@
       "offset": "Offset (ET)",
       "maxLoad": "Max. load",
       "wheelMounting": "Wheel mounting"
-    }
+    },
+    "shippingLine": "Shipping {shipping} — free from {freeFrom}"
   },
   "cart": {
     "metaTitle": "Shopping cart — CarO",
@@ -486,7 +488,9 @@
     "myCarLink": "My car",
     "moreMakes": "More makes",
     "paymentTitle": "Payment methods",
-    "paymentNote": "Payments run through Mollie. Your bank and card details never reach us."
+    "paymentNote": "Payments run through Mollie. Your bank and card details never reach us.",
+    "idealWeroAlt": "iDEAL and Wero",
+    "mollieAlt": "Secure payments powered by Mollie — Mastercard, Visa, American Express and more"
   },
   "terms": {
     "title": "Terms and conditions",
@@ -717,5 +721,22 @@
       "rateLimit": "You have sent several messages in a short time. Try again in an hour, or email info@caroparts.nl directly.",
       "send": "The message could not be sent. Please email us directly at info@caroparts.nl."
     }
+  },
+  "fitment": {
+    "noVehicleTitle": "Does this fit your car?",
+    "noVehicleBody": "Enter your licence plate and we'll tell you right away. That way you never order the wrong part.",
+    "enterPlate": "Check by licence plate",
+    "checking": "Checking fitment…",
+    "fitsTitle": "Fits your car",
+    "doesNotFitTitle": "Does not fit {car}",
+    "doesNotFitBody": "The catalogue does not list this article as fitting your version.",
+    "browseFitting": "See parts that do fit",
+    "unknownTitle": "Check the fit",
+    "unknownBody": "We can't establish this with certainty for {car}. Compare the OE number with the part you are replacing."
+  },
+  "trust": {
+    "payment": "Secure payment, including {method}",
+    "vat": "Price includes 21% VAT",
+    "returns": "14 days to change your mind"
   }
 }

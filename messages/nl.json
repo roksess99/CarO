@@ -200,7 +200,8 @@
     "chooseType": "Uitvoering selecteren",
     "or": "of",
     "noOptions": "Hier kunnen we niets voor vinden. Kies een andere stap terug, of zoek op kenteken.",
-    "searchByPlate": "Zoek op kenteken"
+    "searchByPlate": "Zoek op kenteken",
+    "plateHint": "Wij zoeken je auto op bij de RDW en tonen alleen onderdelen die erop passen."
   },
   "category": {
     "metaDescription": "{category} voor jouw auto. Alle prijzen inclusief 21% btw.",
@@ -363,7 +364,8 @@
       "offset": "Inpersdiepte (ET)",
       "maxLoad": "Max. draagvermogen",
       "wheelMounting": "Wielmontage"
-    }
+    },
+    "shippingLine": "Verzending {shipping} — gratis vanaf {freeFrom}"
   },
   "cart": {
     "metaTitle": "Winkelwagen — CarO",
@@ -486,7 +488,9 @@
     "myCarLink": "Mijn auto",
     "moreMakes": "Meer merken",
     "paymentTitle": "Betaalmethoden",
-    "paymentNote": "Betalen gaat via Mollie. Je bank- en kaartgegevens komen nooit bij ons binnen."
+    "paymentNote": "Betalen gaat via Mollie. Je bank- en kaartgegevens komen nooit bij ons binnen.",
+    "idealWeroAlt": "iDEAL en Wero",
+    "mollieAlt": "Veilige betalingen mogelijk gemaakt door Mollie — Mastercard, Visa, American Express en meer"
   },
   "terms": {
     "title": "Algemene voorwaarden",
@@ -717,5 +721,22 @@
       "rateLimit": "Je hebt kort achter elkaar meerdere berichten gestuurd. Probeer het over een uur opnieuw, of mail rechtstreeks naar info@caroparts.nl.",
       "send": "Het bericht kon niet verstuurd worden. Mail ons rechtstreeks op info@caroparts.nl."
     }
+  },
+  "fitment": {
+    "noVehicleTitle": "Past dit op jouw auto?",
+    "noVehicleBody": "Vul je kenteken in, dan zeggen we het je meteen. Zo bestel je nooit het verkeerde onderdeel.",
+    "enterPlate": "Controleer op kenteken",
+    "checking": "Passendheid controleren…",
+    "fitsTitle": "Past op jouw auto",
+    "doesNotFitTitle": "Past niet op {car}",
+    "doesNotFitBody": "Dit artikel staat in de catalogus niet als passend voor jouw uitvoering.",
+    "browseFitting": "Bekijk onderdelen die wél passen",
+    "unknownTitle": "Controleer de passing",
+    "unknownBody": "Voor {car} kunnen we dit niet met zekerheid vaststellen. Vergelijk het OE-nummer met het onderdeel dat je vervangt."
+  },
+  "trust": {
+    "payment": "Veilig betalen, o.a. met {method}",
+    "vat": "Prijs inclusief 21% btw",
+    "returns": "14 dagen bedenktijd"
   }
 }

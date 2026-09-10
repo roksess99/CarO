@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { clearVehicle, useVehicle } from "@/components/vehicle/use-vehicle";
 import { VehicleFinder } from "@/components/vehicle/vehicle-finder";
+import { vehicleName, vehicleTrim } from "@/lib/vehicle/label";
 
 /**
  * Vaste plek in de header om je auto op te geven of te wisselen.
@@ -21,6 +22,14 @@ export function VehicleButton({ makes }: { makes: string[] }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+
+  // Uitvoering en bouwjaar onder de merknaam: dát onderscheidt een Golf
+  // 1.5 TSI van een Golf 2.0 TDI, en dus welke onderdelen passen.
+  const detail = vehicle
+    ? [vehicleTrim(vehicle), vehicle.firstAdmissionYear?.toString()]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
 
   useEffect(() => {
     if (!open) return;
@@ -48,12 +57,24 @@ export function VehicleButton({ makes }: { makes: string[] }) {
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="flex h-10 max-w-56 items-center gap-2 rounded-md bg-caro-orange px-3 font-semibold text-caro-ink"
+        // Met auto is dit geen actieknop meer maar een statusregel: een
+        // rustig kaartvlak met het oranje autootje als accent, zodat het
+        // oranje in de header van de winkelwagenknop blijft en niet met de
+        // gekozen auto concurreert. Twee regels, want merk plus uitvoering
+        // past niet op één.
+        //
+        // Themakleuren en geen vast donker vlak: `bg-caro-ink` zou in lichte
+        // modus als een fout lezen (.claude/rules/frontend.md).
+        className={
+          vehicle
+            ? "flex h-11 max-w-64 items-center gap-2 rounded-md bg-surface px-3 text-foreground ring-1 ring-border"
+            : "flex h-11 max-w-56 items-center gap-2 rounded-md bg-caro-orange px-3 font-semibold text-caro-ink"
+        }
       >
         <svg
           aria-hidden="true"
           viewBox="0 0 24 24"
-          className="size-5 shrink-0"
+          className={`size-5 shrink-0 ${vehicle ? "text-caro-orange" : ""}`}
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
@@ -65,9 +86,22 @@ export function VehicleButton({ makes }: { makes: string[] }) {
           <circle cx="7.5" cy="17" r="1" />
           <circle cx="16.5" cy="17" r="1" />
         </svg>
-        <span className="truncate text-sm">
-          {vehicle ? `${vehicle.brand} ${vehicle.model}` : t("addVehicle")}
-        </span>
+        {vehicle ? (
+          <span className="min-w-0 text-start">
+            {/* <bdi>: merknaam en motoraanduiding zijn Latijnse
+                leveranciersdata, net als in vehicle-bar.tsx */}
+            <bdi className="block truncate text-sm leading-tight font-bold">
+              {vehicleName(vehicle)}
+            </bdi>
+            {detail && (
+              <bdi className="block truncate text-xs leading-tight text-muted">
+                {detail}
+              </bdi>
+            )}
+          </span>
+        ) : (
+          <span className="truncate text-sm">{t("addVehicle")}</span>
+        )}
         <svg
           aria-hidden="true"
           viewBox="0 0 24 24"

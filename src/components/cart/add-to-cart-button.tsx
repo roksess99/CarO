@@ -14,10 +14,13 @@ export function AddToCartButton({
    */
   variant = "default",
   className = "",
+  /** Voor een knop die in een verborgen balk staat; zie sticky-buy-bar.tsx */
+  tabIndex,
 }: {
   part: Part;
   variant?: "default" | "compact" | "icon";
   className?: string;
+  tabIndex?: number;
 }) {
   const t = useTranslations("cart");
   const [announced, setAnnounced] = useState(false);
@@ -43,6 +46,7 @@ export function AddToCartButton({
       type="button"
       onClick={handleClick}
       disabled={disabled}
+      tabIndex={tabIndex}
       // Zonder tekst moet het doel uit het label komen, anders hoort een
       // screenreader alleen "knop".
       aria-label={icon ? t("addToCartAria", { name: part.name }) : undefined}

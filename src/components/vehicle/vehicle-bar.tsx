@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { clearVehicle, useVehicle } from "@/components/vehicle/use-vehicle";
 import { VehicleFinder } from "@/components/vehicle/vehicle-finder";
+import { vehicleName, vehicleTrim } from "@/lib/vehicle/label";
 import type { Vehicle } from "@/lib/vehicle/types";
 
 /** Kentekenbewijs en advertenties noemen allebei pk; kW staat erbij */
@@ -19,7 +20,13 @@ const PK_PER_KW = 1.35962;
  */
 function engineLine(vehicle: Vehicle, locale: string): string {
   const parts: string[] = [];
-  if (vehicle.engineCapacityCc) {
+  // De uitvoering zoals TecDoc hem schrijft ("1.2 PureTech 110") zegt meer
+  // dan de cilinderinhoud alleen, en het is dezelfde aanduiding waarop de
+  // catalogus zijn onderdelen selecteert. Hebben we hem, dan vervangt hij de
+  // liters — anders staat "1,2 l" er twee keer in.
+  const trim = vehicleTrim(vehicle);
+  if (trim) parts.push(trim);
+  else if (vehicle.engineCapacityCc) {
     const litres = new Intl.NumberFormat(locale, {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
@@ -58,7 +65,7 @@ export function VehicleBar({ makes }: { makes: string[] }) {
   // onderaan en op de homepage.
   if (!vehicle) return null;
 
-  const name = `${vehicle.brand} ${vehicle.model}`;
+  const name = vehicleName(vehicle);
   const engine = engineLine(vehicle, locale);
 
   return (
