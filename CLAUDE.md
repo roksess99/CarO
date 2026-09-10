@@ -44,7 +44,7 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 
 ## Wat de shop nu doet
 
-Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
+Stand 2026-09-10. Handig bij het oppakken van werk; niet uitputtend.
 
 | Onderdeel | Waar | Bijzonderheid |
 |---|---|---|
@@ -73,7 +73,10 @@ Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 | Na de betaling | `lib/orders/settle.ts`, `lib/orders/notify.ts` | Eén afhandeling voor webhook én terugkeerpagina, met `notifiedAt` tegen dubbele mail. Twee mails met dezelfde PDF: bevestiging naar de klant, werkbriefje met artikelnummers naar de beheerder, die met de hand inkoopt |
 | Orderopslag | `lib/orders/store.ts` | JSON per bestelling in `.data/orders/`, gitignored. Kan omdat de winkel bij Hostinger draait en dus een blijvende schijf heeft; `ORDER_DATA_DIR` hoort buiten de projectmap (@docs/DECISIONS.md #10) |
 | Footer | `components/site-footer.tsx`, `lib/footer-links.ts` | Vijf kolommen: klantenservice, assortiment, automerken, fabrikanten en veelgezochte onderdelen, daaronder betaalmethodes en vervoerders. **Elke link is gemeten**: merken en zoektermen die niets opleveren staan er niet in (Citroën gaf drie artikelen en is eruit). De labels blijven in beide talen Nederlands, want de zoekterm ís het label en de catalogus spreekt geen Engels |
-| Betaalmethodes | `lib/payment-methods.ts` | Vaste lijst, gemeten met `pnpm mollie:check`. Geen API-call per paginaweergave en geen logo's van derden — de namen doen hetzelfde zonder licentievraag |
+| Betaalmethodes | `public/betaalmethodes/`, `lib/payment-methods.ts` | De footer toont de officiële merkbeelden van iDEAL/Wero en Mollie, onbewerkt en zonder tegel; de witte Mollie-pil staat in beide thema's, want de zwarte viel in donkere modus net náást de achtergrondkleur. `payment-methods.ts` blijft de gemeten lijst waar dat beeld aan getoetst wordt (`pnpm mollie:check`, geen API-call per paginaweergave). Varianten met PayPal zijn bewust niet overgenomen: die methode staat niet op het account. Zie `public/betaalmethodes/LEESMIJ.md` |
+| Passendheid op de productpagina | `components/vehicle/fitment-badge.tsx`, `components/vehicle/fitment-actions.ts` | Groen "past op jouw auto", rood "past niet", of oranje "controleer de passing" — nooit een gok. De controle is één Wearparts-call en werkt **alleen** met kenteken-auto én assemblagegroep samen; met `carId` alleen filtert de API niet en zou álles passen (@docs/api/WEARPARTS.md). Zonder auto staat het kentekenveld er meteen bij. Alleen bij onderdelen: een band past op een maat, niet op een carId |
+| Zwevende koopbalk | `components/cart/sticky-buy-bar.tsx` | Onder lg, zodra het koopblok uit beeld scrolt. Zweeft bóven de tabbalk in plaats van eroverheen; op 375px vervalt de artikelnaam, want die staat als kop op dezelfde pagina |
+| Koopblok | productpagina, `components/trust-badges.tsx` | Prijs, voorraad en verzendkosten in één omlijnd vlak, daaronder de knop over de volle breedte (h-14) met de aantalkiezer eronder, en daaronder betalen/btw/retour. Verzendkosten en bedenktijd staan niet meer óók onderaan de pagina |
 | Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |
 
 **Fitment werkt** sinds 2026-09-06: een kenteken gaat via de Wearparts-API naar

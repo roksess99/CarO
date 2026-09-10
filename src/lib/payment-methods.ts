@@ -10,9 +10,16 @@
  * paginaweergave zou de limiet van de betaaldienst opeten voor een rijtje dat
  * bijna nooit verandert.
  *
- * Bewust geen logo's: dat zijn merkbeelden van derden met eigen
- * gebruiksvoorwaarden. De namen zeggen hetzelfde en kosten geen licentie.
- * Wil je ze wél, dan levert Mollie officiële SVG's mee bij `GET /methods`.
+ * **De footer toont deze lijst niet meer als tekst**, maar als de officiële
+ * merkbeelden van iDEAL/Wero en Mollie — zie `public/betaalmethodes/LEESMIJ.md`
+ * voor welk beeld welke methode dekt en waarom juist die. Deze lijst blijft
+ * de gemeten waarheid waar dat beeld aan getoetst wordt, en levert de naam
+ * voor het vertrouwensblok bij de bestelknop (`components/trust-badges.tsx`).
+ *
+ * GEMETEN 2026-09-10 gaf `GET /methods` letterlijk:
+ * `iDEAL | Wero, Card, Pay with Klarna, Buy now pay later with Riverty,
+ * Pay By Bank`. iDEAL en Wero zijn bij Mollie dus **één** methode; hieronder
+ * staan ze los omdat de klant ze als twee keuzes kent.
  */
 export const PAYMENT_METHODS = [
   "iDEAL",
