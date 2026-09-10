@@ -29,8 +29,12 @@ export async function Hero() {
     t("uspVat"),
   ];
 
+  // Géén overflow-hidden op de sectie: de keuzelijst van de autokiezer hangt
+  // als absoluut paneel onder zijn knop, en die werd er 147px door afgesneden
+  // (GEMETEN 2026-09-10). De achtergrondtekening knipt zichzelf al af — zie
+  // het overflow-hidden in HeroBackdrop zelf.
   return (
-    <section className="relative overflow-hidden border-b border-border bg-surface">
+    <section className="relative border-b border-border bg-surface">
       <HeroBackdrop />
       {/* relative: de inhoud moet boven de tekening blijven */}
       <div className="relative site-container py-8 md:py-12">

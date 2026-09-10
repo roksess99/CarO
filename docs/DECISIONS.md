@@ -324,9 +324,20 @@ motor, remmen, verlichting, gereedschap, gebruikte onderdelen) zijn
 
 ---
 
-## 2. Hosting — OPEN
+## 2. Hosting — VASTGESTELD 2026-09-10: Hostinger
 
-Vercel (simpelst voor Next.js) vs. een EU-VPS. Let op AVG: klantdata bij voorkeur in de EU.
+De winkel draait bij Hostinger, waar ook de mailbox `info@caroparts.nl` staat.
+Daarmee vervalt de afweging Vercel versus VPS, en dat heeft één concreet
+gevolg: **er is een schijf die blijft bestaan.** De orderopslag (#10) kan
+daardoor blijven zoals hij is; op Vercel had er eerst een database onder
+gemoeten.
+
+Nog uit te zoeken bij de eerste echte deploy: bewaart het platform bestanden
+die de app zelf wegschrijft over een nieuwe deploy heen? Bij een VPS wel, bij
+een beheerd Node-pakket wordt de projectmap vaak vervangen. Zet
+`ORDER_DATA_DIR` daarom op een pad **buiten** de projectmap — bijvoorbeeld
+`/home/<gebruiker>/caro-orders` — dan staat het antwoord op die vraag los van
+de bestellingen.
 
 ### Environment variables bij een deploy
 
@@ -341,6 +352,8 @@ product in staat. Dat kostte een dag zoeken naar een verkeerd vermoeden
 | `TYRE24_WEARPARTS_TOKEN` | Wearparts v1.6: onderdelen, kenteken → auto | Onderdelen leeg, geen fitment |
 | `OVERHEID_IO_API_KEY` | RDW-gegevens bij het kenteken | "Tijdelijk niet beschikbaar" |
 | `NEXT_PUBLIC_SITE_URL` | Canonical en hreflang | Verkeerde URL's in de SEO-tags |
+| `SMTP_*` (vier) | Contactformulier en orderbevestiging | Geen mail, en bestellen wordt geweigerd |
+| `MOLLIE_API_KEY` | Betalingen (#10) | Checkout meldt dat betalen niet kan |
 
 Optioneel: `CARO_MIN_MARGIN_PERCENT` en `CARO_USE_RECOMMENDED_PRICE` (#5),
 `TYRE24_BASE_URL_NL`/`_DE` als noodknop. `TYRE24_ALLOYS_TOKEN` wordt nog
@@ -348,10 +361,11 @@ nergens gelezen (fase 6).
 
 Twee dingen die misgaan als je ze niet weet:
 
-- **Zet ze voor Production én Preview.** Anders werkt de hoofdsite wel en elke
-  pull-request-preview niet.
+- **Zet ze in élke omgeving die je draait**, niet alleen in productie. Een
+  test- of previewomgeving zonder tokens draait op mockdata en ziet er
+  compleet uit.
 - **Een env-wijziging werkt niet door in een bestaande build.** Na het
-  toevoegen opnieuw deployen.
+  toevoegen opnieuw bouwen en herstarten.
 
 De waarden staan in `.env` (gitignored) en in het wachtwoordbeheer van de
 eigenaar — bewust niet hier, want dit bestand staat in Git.
@@ -380,9 +394,17 @@ contactformulier voldoen daaraan. Een nummer publiceren dat niet wordt
 opgenomen is slechter dan geen nummer. Komt er later wel een, dan is het één
 veld in `src/lib/company.ts` en één rij in `components/company-details.tsx`.
 
-**Nog open, blokkerend voor de betaalkoppeling (fase 5):** de zakelijke
-rekening (IBAN). Zolang die ontbreekt staat er een testwaarschuwing onderaan
-elke gegenereerde orderbevestiging.
+**Zakelijke rekening ingevuld 2026-09-10:** `NL37 KNAB 0775 4708 80`, staat in
+`src/lib/company.ts` en daarmee op de orderbevestiging. Mollie bleek hem niet
+nodig te hebben — die rekening zit in hun eigen onboarding. Wat een échte
+factuur nu nog mist is alleen het oplopende factuurnummer (#10).
+
+De melding "een paar gegevens ontbreken nog" en de testwaarschuwing op de
+orderbevestiging zijn 2026-09-09 weggehaald. Ze keken naar élke placeholder in
+`COMPANY`, terwijl alles wat een klant te zien krijgt inmiddels bekend is; het
+enige ontbrekende veld staat nergens in de winkel. Ontbreekt een waarde toch,
+dan valt die regel gewoon weg (`companyValue()`) in plaats van dat er
+"volgt nog" komt te staan.
 
 **Let op — de shop heet anders dan het bedrijf.** Bij de KvK staat
 "Car Parts A-Z"; de webshop heet overal CarO. Een factuur moet de
@@ -398,6 +420,102 @@ Tyre24 maakt dropshipping mogelijk: voorraad live opvragen (`stock` per item,
 `/distributors` per artikel) en inkooporders via `POST /order`. Definitieve keuze
 (alles dropship, of deels eigen voorraad) staat nog open, maar de API dekt beide.
 
+### Bestellen is technisch vrij — GEMETEN 2026-09-10
+
+De overeenkomstenvraag die hierboven bij #7 als open stond, is beantwoord:
+`agreementNeeded` staat alleen op `true` bij area 3, die we niet gebruiken.
+Voor banden, velgen, toebehoren én onderdelen geeft `GET /order` een complete
+offerte terug op het echte account (bewijs in TYRE24.md en WEARPARTS.md).
+`POST /order` is bewust nooit aangeroepen: dat plaatst een echte bestelling.
+
+### Annuleren kan tien minuten — bedrijfsrisico
+
+De ALZURA API-B2B (docs/api/ALZURA-B2B.md) laat een inkooporder alleen binnen
+**tien minuten** annuleren, en alleen als de groothandel dat toestaat. Onze
+klant heeft **veertien dagen** bedenktijd.
+
+Zegt een klant op dag drie af, dan zit de inkoop er al. Dat wordt dan een
+retour bij de groothandel, onder díens voorwaarden — met mogelijk
+retourkosten of een artikel dat helemaal niet retour mag. Dat verschil is voor
+onze rekening.
+
+Twee dingen om vóór livegang te beslissen:
+
+1. Wachten we met inkopen tot de bedenktijd voorbij is? Dat kan niet: dan duurt
+   levering meer dan twee weken.
+2. Nemen we het verschil voor lief, of beperken we het assortiment tot
+   artikelen die de groothandel wél terugneemt? Dat laatste vraagt gegevens die
+   we nu niet hebben.
+
+Voorlopig: de eigenaar bestelt met de hand in, dus hij ziet elk geval
+afzonderlijk. Zodra dat geautomatiseerd wordt is dit een blokkade.
+
+---
+
+## 10. Betaling en orderopslag — VASTGESTELD 2026-09-10
+
+De klant bestelt en betaalt via Mollie. Is de betaling bevestigd, dan gaan er
+twee mails uit met dezelfde PDF: één naar de klant als bevestiging en één naar
+de beheerder. **De beheerder koopt de artikelen met de hand in bij de
+groothandel.** Dat is bewust: bij dit volume ziet hij elke bestelling langs,
+en dat is precies wat besluit #4 vraagt zolang de annuleertermijn van tien
+minuten tegenover veertien dagen bedenktijd staat. Wordt het drukker, dan gaat
+de inkoop alsnog via `POST /order` — de gegevens die daarvoor nodig zijn
+(artikel-id en familie per regel) worden nu al bij de bestelling bewaard.
+
+### Mollie zonder eigen client-library
+
+`@mollie/api-client` is niet toegevoegd. Er worden drie dingen gedaan —
+betaling aanmaken, status opvragen, webhook afhandelen — en dat past in
+`src/lib/mollie/client.ts` met `fetch`. Eén bestand vervangen is genoeg als dat
+ooit anders moet.
+
+### De terugkeer van de klant is geen bewijs van betaling
+
+De `redirectUrl` van Mollie wordt ook geopend door een klant die het
+betaalscherm afbreekt, en de URL is te typen. Alleen de **webhook** telt, en
+zelfs die draagt niets meer dan een betaal-id: de status wordt altijd bij
+Mollie opgehaald met onze eigen sleutel.
+
+De terugkeerpagina roept dezelfde afhandeling aan als de webhook
+(`lib/orders/settle.ts`), om twee redenen: de klant ziet meteen de juiste
+status, en op een ontwikkelmachine kan Mollie geen webhook bezorgen — localhost
+is niet publiek bereikbaar. Dubbele bevestigingsmails worden voorkomen door
+`notifiedAt` op de bestelling plus een slot per proces.
+
+### Orders als JSON-bestand — bewust tijdelijk
+
+Bestellingen staan als JSON in `.data/orders/` (`src/lib/orders/store.ts`), niet
+in PostgreSQL. Wat de opslag moet kunnen is een bestelling terugvinden als
+Mollie zich meldt en onthouden dat de mails eruit zijn; een ORM met migraties
+voegt daar bij dit volume niets aan toe.
+
+**Dit werkt alleen op één server met een schijf die blijft bestaan.** Dat is
+sinds 2026-09-10 het geval: de winkel draait bij Hostinger (#2). Op een
+serverless platform als Vercel was het bestandssysteem per aanroep leeg geweest
+en was de bestelling tussen het aanmaken en de webhook verdwenen.
+
+Twee dingen om bij de deploy op te letten:
+
+- Zet `ORDER_DATA_DIR` op een pad **buiten** de projectmap, zodat een nieuwe
+  deploy de bestellingen niet meeneemt in de opruiming.
+- Die map hoort in de back-up. Er staan NAW-gegevens in en het is de enige
+  plek waar een bestelling volledig staat.
+
+Moet het later toch een database worden, dan raakt dat alleen `store.ts`: de
+rest van de code praat uitsluitend met `saveOrder`, `readOrder` en
+`updateOrder`.
+
+De map bevat NAW-gegevens en staat daarom in `.gitignore`, buiten `public/`.
+
+### Wat nog niet klopt voor de boekhouding
+
+Het kenmerk op de PDF (`CARO-20260910-4K2P`) is géén factuurnummer. Een
+NL-factuur vraagt een aaneengesloten oplopende reeks, en die ontstaat pas in
+een database. Zolang dat er niet is heet het document "orderbevestiging" en
+niet "factuur". Ook de IBAN in `src/lib/company.ts` staat nog op een
+plaatshouder; die regel valt daardoor van het document af.
+
 ---
 
 ## Vastgesteld
@@ -412,3 +530,6 @@ Tyre24 maakt dropshipping mogelijk: voorraad live opvragen (`stock` per item,
 | 2026-08-20 | Eenmanszaak Car Parts A-Z, KvK 93396252 | Inschrijving rond; deblokkeert de factuurgegevens, niet de betaalkoppeling |
 | — | Mollie boven Stripe | iDEAL is ~60% van NL online betalingen; Mollie is hier de standaard |
 | — | Prijzen in eurocenten (integer) | Voorkomt afrondingsfouten |
+| 2026-09-10 | Betalen via Mollie, inkoop met de hand | Beheerder ziet elke bestelling langs zolang annuleren maar tien minuten kan (#4) |
+| 2026-09-10 | Orders als JSON-bestand, geen database | Genoeg voor terugvinden en niet dubbel mailen; kan bij Hostinger omdat de schijf blijft bestaan (#10) |
+| 2026-09-10 | Hosting bij Hostinger | Staat er al, mailbox draait er ook; levert een blijvende schijf voor de orderopslag |

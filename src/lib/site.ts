@@ -8,10 +8,17 @@ import { STANDARD_SHIPPING_CENTS } from "@/lib/shipping";
  * hreflang-tag: staat hier localhost, dan verwijst de hele site zoekmachines
  * naar een adres dat alleen op een ontwikkelmachine bestaat.
  *
- * Zet `NEXT_PUBLIC_SITE_URL` zodra het eigen domein er is (docs/DECISIONS.md #2).
+ * Zet `NEXT_PUBLIC_SITE_URL` per omgeving: lokaal `http://localhost:3000`,
+ * op de server `https://caroparts.nl` (docs/DECISIONS.md #2).
+ *
+ * De waarde wordt geschoond. Een spatie aan het eind of een slash te veel komt
+ * er zo in — GEMETEN 2026-09-10, er stond `http://caroparts.nl ` in `.env` —
+ * en zonder dit belandt die rommel in élke canonical-tag en in de terugkeer-URL
+ * die naar de betaaldienst gaat.
  */
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://caro-two-swart.vercel.app";
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://caroparts.nl"
+).replace(/\/+$/, "");
 
 /**
  * `metadataBase` + canonical + hreflang voor één pagina.

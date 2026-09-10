@@ -26,8 +26,8 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 | 2 | Winkelwagen (client-side, cookie/localStorage) | KLAAR |
 | 3 | Tyre24/ALZURA-API's achter de provider-interface (Products v1.3 + Wearparts v1.6) | KLAAR |
 | 3b | Voertuigidentificatie: kenteken → TecDoc, autokiezer op merk/model/uitvoering | KLAAR |
-| 4 | Database (PostgreSQL + Prisma): orders, klanten; inkoop via Tyre24 POST /order | |
-| 5 | Betaling (Mollie, iDEAL) | |
+| 4 | Database (PostgreSQL + Prisma) en inkoop via Tyre24 POST /order | Orders leven nu als JSON-bestand; inkoop gaat met de hand (@docs/DECISIONS.md #10) |
+| 5 | Betaling (Mollie, iDEAL) | KLAAR |
 | 6 | Velgen: Tyre24 Alloys-API — voertuigselectie (carID), matching, 3D-beelden | |
 
 **Regels tijdens fase 3:**
@@ -38,7 +38,7 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
   praat nooit rechtstreeks met Tyre24 (token is een secret, rate limit 100/min).
 - Zonder `TYRE24_API_TOKEN` valt `getCatalogProvider()` terug op de mock.
   De site moet altijd zonder token blijven werken.
-- Nog geen Prisma-schema en geen betaalcode. Order plaatsen (Tyre24 POST /order) is fase 4.
+- Nog geen Prisma-schema, en inkoop bij de groothandel (Tyre24 POST /order) blijft handwerk. Die call is fase 4 en mag nooit "even ter controle" gedraaid worden: hij plaatst een echte, factureerbare bestelling.
 - Waar later serverwerk komt (ordercreatie, voorraadreservering):
   zet een functie in `src/lib/` met een `// TODO fase X` comment, geen halve implementatie.
 
@@ -48,11 +48,11 @@ Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 
 | Onderdeel | Waar | Bijzonderheid |
 |---|---|---|
-| Hero in twee kolommen | `components/home/hero.tsx` | Links kentekenzoeker **én** merk/model-kiezer zichtbaar (geen tabs), rechts een banner met echte voorwaarden — geen verzonnen acties. Het linkerpaneel is de primaire actie: oranje bovenrand, plaatveld van 56px. De banner heeft daarom een omlijnde knop, geen tweede oranje vlak |
+| Hero in twee kolommen | `components/home/hero.tsx` | Links kentekenzoeker **én** merk/model-kiezer zichtbaar (geen tabs), rechts een banner met echte voorwaarden — geen verzonnen acties. Het linkerpaneel is de primaire actie: oranje bovenrand, plaat over de volle breedte (64px hoog) met de knop eronder, dan een "of"-scheiding en pas daarna de kiezer. De banner heeft daarom een omlijnde knop, geen tweede oranje vlak |
 | Categorieraster | `components/home/category-grid.tsx` | Tegels uit `lib/catalog/category-tiles.ts`, foto's beeldvullend bijgesneden |
 | Header | `components/site-header.tsx` | Rij 1: logo, voertuigknop, zoekbalk, taal, thema, wagen. Rij 2: de vier families |
 | Zoeken met suggesties | `components/search/` | Server Action, vanaf 3 tekens met 350 ms debounce; toont thumbnail, merk en prijs. Elke aanroep raakt vier families |
-| Voertuig opgeven | `components/vehicle/` | Kenteken of merk/model/uitvoering; beide leveren een TecDoc-`carId` en dus passende onderdelen |
+| Voertuig opgeven | `components/vehicle/` | Kenteken of merk/model/uitvoering; beide leveren een TecDoc-`carId` en dus passende onderdelen. De kiezer toont **één veld tegelijk**: de volgende stap verschijnt pas als de vorige beantwoord is (`vehicle-picker.tsx`). Drie grijze keuzelijsten naast elkaar lazen als een formulier en trokken de aandacht weg bij de kentekenzoeker |
 | Mobiele navigatie | `components/bottom-nav.tsx` | Zwevende tabbalk; assortiment en autokiezer openen als paneel vanaf de onderkant |
 | Voertuigbalk | `components/vehicle/vehicle-bar.tsx` | Mobiel, in de sticky header boven de zoekbalk: merk, model en motorregel van de gekozen auto. Tikken opent de autokiezer |
 | Categorierijen | `components/catalog/group-list.tsx` | Onderdelen per assemblagegroep, één rij per groep met het pictogram van de leverancier én het aantal artikelen. Alleen hoofdgroepen hébben een pictogram; zonder valt de beeldkolom weg |
@@ -69,6 +69,11 @@ Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 | Productomschrijving | `lib/catalog/product-description.ts` | Drie tot vier zinnen uit de eigen velden van het artikel (merk, soort, eerste twee attributen, OE-nummer, verzending). Dezelfde tekst staat op de pagina én in de JSON-LD. Geen verkooppraat: elke zin die geen veld heeft valt weg |
 | Laadschermen | `loading.tsx` per route, `<Suspense>` in de pagina | **Geen** `loading.tsx` op `/[locale]`: die liet elke pagina — ook de winkelwagen en de FAQ — met een productraster-skelet beginnen, en maakte van elke 404 een status 200. Kop, formulier en uitlegtekst staan nu meteen in de HTML; alleen wat de leverancier moet leveren streamt na |
 | Echte 404 | `[family]/layout.tsx`, `[family]/[category]/layout.tsx` | Een layout staat bóven de Suspense-grens en kan de status dus nog zetten. Gekeurd wordt alleen wat synchroon kan: de familieslug, en bij onderdelen of de categorieslug een id draagt. Een onbekende categorie bij banden vraagt een API-call en blijft daarom 200 |
+| Bestellen en betalen | `components/checkout/`, `lib/mollie/`, `lib/orders/` | De klant betaalt via Mollie. Bedragen worden bij het starten van de betaling **opnieuw uitgerekend** uit de catalogus — de wagen staat in localStorage en is aanpasbaar. Bevestiging komt van de webhook, nooit van de terugkeer in de browser |
+| Na de betaling | `lib/orders/settle.ts`, `lib/orders/notify.ts` | Eén afhandeling voor webhook én terugkeerpagina, met `notifiedAt` tegen dubbele mail. Twee mails met dezelfde PDF: bevestiging naar de klant, werkbriefje met artikelnummers naar de beheerder, die met de hand inkoopt |
+| Orderopslag | `lib/orders/store.ts` | JSON per bestelling in `.data/orders/`, gitignored. Kan omdat de winkel bij Hostinger draait en dus een blijvende schijf heeft; `ORDER_DATA_DIR` hoort buiten de projectmap (@docs/DECISIONS.md #10) |
+| Footer | `components/site-footer.tsx`, `lib/footer-links.ts` | Vijf kolommen: klantenservice, assortiment, automerken, fabrikanten en veelgezochte onderdelen, daaronder betaalmethodes en vervoerders. **Elke link is gemeten**: merken en zoektermen die niets opleveren staan er niet in (Citroën gaf drie artikelen en is eruit). De labels blijven in beide talen Nederlands, want de zoekterm ís het label en de catalogus spreekt geen Engels |
+| Betaalmethodes | `lib/payment-methods.ts` | Vaste lijst, gemeten met `pnpm mollie:check`. Geen API-call per paginaweergave en geen logo's van derden — de namen doen hetzelfde zonder licentievraag |
 | Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |
 
 **Fitment werkt** sinds 2026-09-06: een kenteken gaat via de Wearparts-API naar
@@ -169,6 +174,11 @@ messages/nl.json, en.json
 - Prijzen tonen **inclusief 21% BTW**. Verplicht voor consumenten.
 - Verzendkosten expliciet vóór de laatste checkoutstap.
 - 14 dagen herroepingsrecht zichtbaar in de checkout-flow.
+- **Een bedrag dat naar een betaaldienst gaat komt nooit uit de browser.**
+  De winkelwagen leeft in localStorage; prijs en aantal worden server-side
+  opnieuw uit de catalogus gehaald voordat er een betaling wordt aangemaakt.
+- Het kenmerk op de orderbevestiging is géén factuurnummer: dat vraagt een
+  oplopende reeks en dus de database van fase 4.
 
 ## Git-workflow
 

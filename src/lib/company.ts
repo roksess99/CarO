@@ -1,11 +1,11 @@
 // Bedrijfsgegevens van CarO. Eén bron voor de orderbevestiging, en straks
 // voor de factuur, de mailhandtekening en de algemene voorwaarden.
 //
-// TODO: alle waarden met PLACEHOLDER hieronder vervangen zodra de
-// bedrijfsvorm rond is (docs/DECISIONS.md #3 — KvK-inschrijving en zakelijke
-// rekening zijn ook de blokkade voor Mollie). Zolang die placeholders er
-// staan is een gegenereerd document GEEN geldige factuur: een NL-factuur
-// moet btw-nummer, KvK-nummer en een oplopend factuurnummer bevatten.
+// Nog één onbekende: de zakelijke rekening. Die is geen blokkade voor de
+// winkel — een orderbevestiging vraagt er niet om — maar wel voor de
+// betaalkoppeling en voor een échte factuur, want een NL-factuur moet naast
+// btw- en KvK-nummer ook een oplopend factuurnummer en een rekening dragen
+// (docs/DECISIONS.md #3).
 export interface CompanyDetails {
   name: string;
   legalName: string;
@@ -37,20 +37,14 @@ export const COMPANY: CompanyDetails = {
   website: "caroparts.nl",
   cocNumber: "93396252",
   vatNumber: "NL005015784B71",
-  iban: "PLACEHOLDER — IBAN",
+  iban: "NL37 KNAB 0775 4708 80",
 };
-
-/** Staan er nog placeholders in? Dan zet het document een waarschuwing. */
-export function hasPlaceholderCompanyData(
-  company: CompanyDetails = COMPANY,
-): boolean {
-  return Object.values(company).some((value) => value.includes("PLACEHOLDER"));
-}
 
 /**
  * Een waarde die nog niet is ingevuld mag nooit in de winkel belanden: de
- * klant hoort geen "PLACEHOLDER — IBAN" te lezen. Null betekent hier
- * "toon de tekst 'volgt nog'".
+ * klant hoort geen "PLACEHOLDER — IBAN" te lezen. Null betekent hier: laat de
+ * regel wég. Niet "volgt nog" tonen — een klant heeft niets aan een
+ * aankondiging van een gegeven dat hij niet nodig heeft.
  */
 export function companyValue(value: string): string | null {
   return value.includes("PLACEHOLDER") ? null : value;

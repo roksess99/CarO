@@ -69,6 +69,14 @@
     line-height: 1.2;
   }
 
+  /* Dunne scrollbar in keuzelijsten. De standaardbalk is op Windows 17px
+     breed en donkergrijs; in een paneel van 400px vraagt dat om aandacht
+     terwijl hij alleen hoeft te zeggen dát er meer is. */
+  .caro-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
   /* Focus altijd zichtbaar; foreground haalt in beide thema's ruim contrast */
   :focus-visible {
     outline: 2px solid var(--foreground);
