@@ -177,7 +177,7 @@
     "searchForMyCar": "Zoek onderdelen voor mijn auto",
     "addVehicle": "Voertuig toevoegen",
     "plateHeading": "Auto-onderdelen zoeken op kenteken",
-    "pickerHeading": "Of selecteer je auto",
+    "pickerHeading": "Selecteer je auto",
     "makeLabel": "Merk",
     "modelLabel": "Model",
     "yearLabel": "Bouwjaar",
@@ -197,7 +197,10 @@
     },
     "fitmentReady": "Deze auto is herkend in de onderdelencatalogus. Je ziet alleen onderdelen die erop passen.",
     "typeLabel": "Uitvoering",
-    "chooseType": "Uitvoering selecteren"
+    "chooseType": "Uitvoering selecteren",
+    "or": "of",
+    "noOptions": "Hier kunnen we niets voor vinden. Kies een andere stap terug, of zoek op kenteken.",
+    "searchByPlate": "Zoek op kenteken"
   },
   "category": {
     "metaDescription": "{category} voor jouw auto. Alle prijzen inclusief 21% btw.",

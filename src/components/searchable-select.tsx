@@ -158,6 +158,9 @@ export function SearchableSelect({
               <label htmlFor={`${baseId}-search`} className="sr-only">
                 {label}
               </label>
+              {/* Geen eigen rand: dit veld krijgt focus zodra het paneel
+                  opengaat, en de focusring uit globals.css is dan al een
+                  kader. Rand plus ring leest als een dubbel vak. */}
               <input
                 ref={inputRef}
                 id={`${baseId}-search`}
@@ -170,7 +173,7 @@ export function SearchableSelect({
                 onKeyDown={onKeyDown}
                 placeholder={t("filterPlaceholder")}
                 autoComplete="off"
-                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm"
+                className="w-full rounded-md bg-surface px-3 py-2.5 text-sm"
               />
             </div>
 
@@ -182,7 +185,7 @@ export function SearchableSelect({
                 id={listId}
                 role="listbox"
                 aria-label={label}
-                className="flex-1 overflow-y-auto overscroll-contain p-1"
+                className="caro-scroll flex-1 overflow-y-auto overscroll-contain p-1"
               >
                 {filtered.map((option, index) => {
                   const selected = option === value;
@@ -195,11 +198,14 @@ export function SearchableSelect({
                         onClick={() => choose(option)}
                         onMouseEnter={() => setActiveIndex(index)}
                         // 48px hoog: betrouwbaar te raken met een duim
-                        className={`flex min-h-12 w-full items-center justify-between gap-2 rounded-md px-3 text-start text-sm ${
+                        className={`flex min-h-12 w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-start text-sm ${
                           index === active ? "bg-surface" : ""
                         } ${selected ? "font-semibold" : ""}`}
                       >
-                        {option}
+                        {/* min-w-0: zonder dat weigert een flex-item te
+                            krimpen en loopt een lange uitvoeringsnaam het
+                            paneel uit in plaats van af te breken. */}
+                        <span className="min-w-0 flex-1">{option}</span>
                         {selected && (
                           <svg
                             aria-hidden="true"

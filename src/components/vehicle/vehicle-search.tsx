@@ -149,44 +149,47 @@ export function VehicleSearch({
       >
         {t("label")}
       </label>
-      <div className="flex flex-wrap items-start gap-2">
-        {/* De hele plaat is één vlak: blauwe EU-strook tegen het gele veld,
-            met de rand eromheen. Zo leest het als een kentekenplaat en niet
-            als een invoerveld met een plaatje ernaast. */}
-        <div
-          // Zie plate.tsx: de plaat spiegelt niet mee met de tekstrichting
-          dir="ltr"
-          // h-14: dit is het belangrijkste invoerveld van de shop en meteen
-          // een royaal aanraakdoel op een telefoon (WCAG 2.2 doelgrootte).
-          className="flex h-14 min-w-0 flex-1 overflow-hidden rounded-md border-2 focus-within:ring-2 focus-within:ring-caro-orange focus-within:ring-offset-2"
-          style={{ borderColor: PLATE_INK, backgroundColor: PLATE_YELLOW }}
-        >
-          <EuStrip className="w-8" />
-          <input
-            ref={inputRef}
-            id={fieldId}
-            name="plate"
-            value={plate}
-            onChange={(event) => setPlate(event.target.value)}
-            placeholder={t("placeholder")}
-            autoComplete="off"
-            autoCapitalize="characters"
-            spellCheck={false}
-            maxLength={10}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? errorId : undefined}
-            className="w-full min-w-0 bg-transparent px-3 text-center text-2xl font-bold tracking-widest uppercase outline-none placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-[#0e1013]/45"
-            style={{ color: PLATE_INK }}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={pending || plate.trim().length === 0}
-          className="h-14 shrink-0 rounded-md bg-caro-orange px-6 font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
-        >
-          {pending ? t("searching") : compact ? t("search") : t("searchForMyCar")}
-        </button>
+      {/* Plaat over de volle breedte met de knop eronder, niet ernaast.
+          Naast elkaar bleef er voor de plaat zelf een strook van een centimeter
+          of vijf over; zo is hij het grootste ding in het paneel — en dat is
+          precies wat hij moet zijn, want dit is de snelste weg naar de juiste
+          onderdelen. */}
+      <div
+        // Zie plate.tsx: de plaat spiegelt niet mee met de tekstrichting
+        dir="ltr"
+        // h-16: het belangrijkste invoerveld van de shop, en meteen een royaal
+        // aanraakdoel op een telefoon (WCAG 2.2 doelgrootte).
+        className="flex h-16 w-full overflow-hidden rounded-md border-2 focus-within:ring-2 focus-within:ring-caro-orange focus-within:ring-offset-2"
+        style={{ borderColor: PLATE_INK, backgroundColor: PLATE_YELLOW }}
+      >
+        <EuStrip className="w-10" />
+        <input
+          ref={inputRef}
+          id={fieldId}
+          name="plate"
+          value={plate}
+          onChange={(event) => setPlate(event.target.value)}
+          placeholder={t("placeholder")}
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={10}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          className="w-full min-w-0 bg-transparent px-3 text-center text-3xl font-bold tracking-widest uppercase outline-none placeholder:text-lg placeholder:font-normal placeholder:tracking-normal placeholder:text-[#0e1013]/45"
+          style={{ color: PLATE_INK }}
+        />
       </div>
+      <button
+        type="submit"
+        disabled={pending || plate.trim().length === 0}
+        className="mt-2 h-12 w-full rounded-md bg-caro-orange px-6 font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
+      >
+        {/* Niet "Zoek auto": die knop staat ook onder de merk/model-kiezer
+            eronder, en twee identieke knoppen in één paneel laten de klant
+            raden welke bij welk veld hoort. */}
+        {pending ? t("searching") : compact ? t("searchByPlate") : t("searchForMyCar")}
+      </button>
 
       <div role="status" aria-live="polite">
         {error && (

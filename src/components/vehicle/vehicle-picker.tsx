@@ -17,6 +17,12 @@ import { saveVehicle } from "@/components/vehicle/use-vehicle";
  * te kunnen tonen: een Golf uit 2015 heeft zes motorvarianten met
  * verschillende remmen. De uitvoering levert een TecDoc-`carId`, precies wat
  * de kentekenzoeker ook oplevert — beide routes komen dus op hetzelfde uit.
+ *
+ * **Eén veld tegelijk.** De volgende stap verschijnt pas als de vorige een
+ * antwoord heeft. Drie keuzelijsten tegelijk tonen waarvan er twee grijs zijn
+ * leest als een formulier dat je moet invullen; één veld leest als een vraag
+ * die je moet beantwoorden. Bovendien haalt het de aandacht weg bij de
+ * kentekenzoeker erboven, en dat is de snellere weg.
  */
 export function VehiclePicker({
   makes,
@@ -27,6 +33,7 @@ export function VehiclePicker({
   onSelected?: () => void;
 }) {
   const t = useTranslations("vehicle");
+  const tCommon = useTranslations("common");
   const baseId = useId();
 
   const [make, setMake] = useState("");
@@ -74,8 +81,6 @@ export function VehiclePicker({
     onSelected?.();
   }
 
-  // Genummerde stappen onder elkaar: de klant ziet in één oogopslag hoeveel
-  // keuzes er nog volgen, en welke aan de beurt is.
   const steps = [
     {
       id: `${baseId}-make`,
@@ -84,7 +89,6 @@ export function VehiclePicker({
       onChange: chooseMake,
       options: makes.map(String),
       placeholder: t("chooseMake"),
-      disabled: false,
     },
     {
       id: `${baseId}-model`,
@@ -93,7 +97,6 @@ export function VehiclePicker({
       onChange: chooseModel,
       options: models,
       placeholder: t("chooseModel"),
-      disabled: models.length === 0,
     },
     {
       id: `${baseId}-type`,
@@ -102,41 +105,66 @@ export function VehiclePicker({
       onChange: setType,
       options: types.map((option) => option.label),
       placeholder: t("chooseType"),
-      disabled: types.length === 0,
     },
   ];
 
+  // Stap 1 staat er altijd; stap 2 zodra er een merk is, stap 3 zodra er een
+  // model is. Meer dan dat heeft de klant nog niet nodig.
+  const visibleCount = make ? (model ? 3 : 2) : 1;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
-      {steps.map((step, index) => {
-        const active = !step.disabled && !step.value;
-        return (
-          <SearchableSelect
-            key={step.id}
-            label={step.label}
-            value={step.value}
-            placeholder={step.placeholder}
-            options={step.options}
-            onChange={step.onChange}
-            disabled={step.disabled}
-            highlighted={active}
-            leading={
-              /* Stapnummer: oranje vlak met inkt-tekst zodra de stap aan de
-                 beurt is, anders neutraal (BRAND.md-contrastregel). */
-              <span
-                aria-hidden="true"
-                className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${
-                  active
-                    ? "bg-caro-orange text-caro-ink"
-                    : "bg-surface text-muted"
-                }`}
+      {/* aria-live: een schermlezer moet horen dát er een stap bij komt, want
+          visueel is dat het enige wat er gebeurt na een keuze. */}
+      <div aria-live="polite" className="space-y-2">
+        {steps.slice(0, visibleCount).map((step, index) => {
+          const last = index === visibleCount - 1;
+          // Alleen de laatste stap kan aan het laden zijn: de vorige heeft
+          // per definitie al een antwoord.
+          const loading = last && pending && step.options.length === 0;
+
+          if (last && !loading && step.options.length === 0) {
+            // Een merk zonder modellen (of een model zonder uitvoeringen)
+            // hoort niet voor te komen, maar een lege keuzelijst die niets
+            // zegt is het slechtste antwoord dat we kunnen geven.
+            return (
+              <p
+                key={step.id}
+                className="rounded-md border border-border bg-surface px-3 py-3 text-sm text-muted"
               >
-                {index + 1}
-              </span>
-            }
-          />
-        );
-      })}
+                {t("noOptions")}
+              </p>
+            );
+          }
+
+          return (
+            <SearchableSelect
+              key={step.id}
+              label={step.label}
+              value={step.value}
+              placeholder={loading ? tCommon("loading") : step.placeholder}
+              options={step.options}
+              onChange={step.onChange}
+              disabled={loading}
+              highlighted={last && !step.value}
+              leading={
+                /* Stapnummer: oranje vlak met inkt-tekst zodra de stap aan de
+                   beurt is, anders neutraal (BRAND.md-contrastregel). */
+                <span
+                  aria-hidden="true"
+                  className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${
+                    last && !step.value
+                      ? "bg-caro-orange text-caro-ink"
+                      : "bg-surface text-muted"
+                  }`}
+                >
+                  {index + 1}
+                </span>
+              }
+            />
+          );
+        })}
+      </div>
 
       <button
         type="submit"

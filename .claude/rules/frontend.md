@@ -39,6 +39,14 @@ Drie plekken mogen wél een vaste kleur hebben, met reden:
 - de scrim achter een paneel (`bg-caro-ink/70`) — dat is een schaduw;
 - de kentekenplaat — geel met blauwe EU-strook is wettelijk vastgelegd.
 
+### Uitklappanelen en `overflow-hidden`
+
+Een sectie met `overflow-hidden` knipt élk absoluut gepositioneerd paneel af
+dat eruit steekt. De hero had het staan voor zijn achtergrondtekening en sneed
+zo 147px van de merkenlijst weg (GEMETEN 2026-09-10) — de lijst leek gewoon
+kapot. Zet `overflow-hidden` op het element dat het écht nodig heeft (bij de
+hero: de tekening zelf), niet op de sectie eromheen.
+
 ### Native formulierelementen
 
 Geef `<select>` nooit `bg-transparent`. De browser rendert het uitklapmenu dan

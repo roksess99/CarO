@@ -42,9 +42,22 @@ export function VehicleFinder({
         <VehicleSearch autoFocus={autoFocus} onSelected={onSelected} compact />
       </div>
 
-      <h2 className="mt-6 border-t border-border pt-6 text-sm font-bold">
-        {t("pickerHeading")}
-      </h2>
+      {/* Scheidingslijn met het woord ertussen. Een kale streep leest als
+          "hier is het blok afgelopen"; met "of" ertussen leest het als twee
+          wegen naar hetzelfde doel — en dat is het ook.
+          aria-hidden: de koppen zeggen het al, een schermlezer hoort anders
+          een losse "of" tussen twee kopregels. */}
+      <div className="my-6 flex items-center gap-3" aria-hidden="true">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-xs font-semibold tracking-wider text-muted uppercase">
+          {t("or")}
+        </span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
+      {/* Kleiner en gedempt: dit is de omweg voor wie zijn kenteken niet bij
+          de hand heeft, niet de hoofdroute. */}
+      <h2 className="text-sm font-bold text-muted">{t("pickerHeading")}</h2>
       <div className="mt-3">
         <VehiclePicker makes={makes} onSelected={onSelected} />
       </div>

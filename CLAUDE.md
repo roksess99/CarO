@@ -48,11 +48,11 @@ Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 
 | Onderdeel | Waar | Bijzonderheid |
 |---|---|---|
-| Hero in twee kolommen | `components/home/hero.tsx` | Links kentekenzoeker **én** merk/model-kiezer zichtbaar (geen tabs), rechts een banner met echte voorwaarden — geen verzonnen acties. Het linkerpaneel is de primaire actie: oranje bovenrand, plaatveld van 56px. De banner heeft daarom een omlijnde knop, geen tweede oranje vlak |
+| Hero in twee kolommen | `components/home/hero.tsx` | Links kentekenzoeker **én** merk/model-kiezer zichtbaar (geen tabs), rechts een banner met echte voorwaarden — geen verzonnen acties. Het linkerpaneel is de primaire actie: oranje bovenrand, plaat over de volle breedte (64px hoog) met de knop eronder, dan een "of"-scheiding en pas daarna de kiezer. De banner heeft daarom een omlijnde knop, geen tweede oranje vlak |
 | Categorieraster | `components/home/category-grid.tsx` | Tegels uit `lib/catalog/category-tiles.ts`, foto's beeldvullend bijgesneden |
 | Header | `components/site-header.tsx` | Rij 1: logo, voertuigknop, zoekbalk, taal, thema, wagen. Rij 2: de vier families |
 | Zoeken met suggesties | `components/search/` | Server Action, vanaf 3 tekens met 350 ms debounce; toont thumbnail, merk en prijs. Elke aanroep raakt vier families |
-| Voertuig opgeven | `components/vehicle/` | Kenteken of merk/model/uitvoering; beide leveren een TecDoc-`carId` en dus passende onderdelen |
+| Voertuig opgeven | `components/vehicle/` | Kenteken of merk/model/uitvoering; beide leveren een TecDoc-`carId` en dus passende onderdelen. De kiezer toont **één veld tegelijk**: de volgende stap verschijnt pas als de vorige beantwoord is (`vehicle-picker.tsx`). Drie grijze keuzelijsten naast elkaar lazen als een formulier en trokken de aandacht weg bij de kentekenzoeker |
 | Mobiele navigatie | `components/bottom-nav.tsx` | Zwevende tabbalk; assortiment en autokiezer openen als paneel vanaf de onderkant |
 | Voertuigbalk | `components/vehicle/vehicle-bar.tsx` | Mobiel, in de sticky header boven de zoekbalk: merk, model en motorregel van de gekozen auto. Tikken opent de autokiezer |
 | Categorierijen | `components/catalog/group-list.tsx` | Onderdelen per assemblagegroep, één rij per groep met het pictogram van de leverancier én het aantal artikelen. Alleen hoofdgroepen hébben een pictogram; zonder valt de beeldkolom weg |

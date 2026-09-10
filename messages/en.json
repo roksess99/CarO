@@ -197,7 +197,10 @@
     },
     "fitmentReady": "This car was recognised in the parts catalogue. You will only see parts that fit it.",
     "typeLabel": "Version",
-    "chooseType": "Select version"
+    "chooseType": "Select version",
+    "or": "or",
+    "noOptions": "We cannot find anything for this. Go back a step, or search by licence plate.",
+    "searchByPlate": "Search by licence plate"
   },
   "category": {
     "metaDescription": "{category} for your car. All prices include 21% VAT.",
