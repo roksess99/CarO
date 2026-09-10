@@ -475,7 +475,18 @@
     "privacyLink": "Privacy and cookies",
     "termsLink": "Terms and conditions",
     "faqLink": "FAQ",
-    "contactLink": "Contact"
+    "contactLink": "Contact",
+    "navLabel": "Footer navigation",
+    "serviceTitle": "Customer service",
+    "assortmentTitle": "Range",
+    "makesTitle": "Car makes",
+    "brandsTitle": "Manufacturers",
+    "popularTitle": "Popular searches",
+    "cartLink": "Cart",
+    "myCarLink": "My car",
+    "moreMakes": "More makes",
+    "paymentTitle": "Payment methods",
+    "paymentNote": "Payments run through Mollie. Your bank and card details never reach us."
   },
   "terms": {
     "title": "Terms and conditions",

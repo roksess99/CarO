@@ -72,6 +72,8 @@ Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 | Bestellen en betalen | `components/checkout/`, `lib/mollie/`, `lib/orders/` | De klant betaalt via Mollie. Bedragen worden bij het starten van de betaling **opnieuw uitgerekend** uit de catalogus — de wagen staat in localStorage en is aanpasbaar. Bevestiging komt van de webhook, nooit van de terugkeer in de browser |
 | Na de betaling | `lib/orders/settle.ts`, `lib/orders/notify.ts` | Eén afhandeling voor webhook én terugkeerpagina, met `notifiedAt` tegen dubbele mail. Twee mails met dezelfde PDF: bevestiging naar de klant, werkbriefje met artikelnummers naar de beheerder, die met de hand inkoopt |
 | Orderopslag | `lib/orders/store.ts` | JSON per bestelling in `.data/orders/`, gitignored. Kan omdat de winkel bij Hostinger draait en dus een blijvende schijf heeft; `ORDER_DATA_DIR` hoort buiten de projectmap (@docs/DECISIONS.md #10) |
+| Footer | `components/site-footer.tsx`, `lib/footer-links.ts` | Vijf kolommen: klantenservice, assortiment, automerken, fabrikanten en veelgezochte onderdelen, daaronder betaalmethodes en vervoerders. **Elke link is gemeten**: merken en zoektermen die niets opleveren staan er niet in (Citroën gaf drie artikelen en is eruit). De labels blijven in beide talen Nederlands, want de zoekterm ís het label en de catalogus spreekt geen Engels |
+| Betaalmethodes | `lib/payment-methods.ts` | Vaste lijst, gemeten met `pnpm mollie:check`. Geen API-call per paginaweergave en geen logo's van derden — de namen doen hetzelfde zonder licentievraag |
 | Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |
 
 **Fitment werkt** sinds 2026-09-06: een kenteken gaat via de Wearparts-API naar

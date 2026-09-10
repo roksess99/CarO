@@ -475,7 +475,18 @@
     "privacyLink": "Privacy en cookies",
     "termsLink": "Algemene voorwaarden",
     "faqLink": "Veelgestelde vragen",
-    "contactLink": "Contact"
+    "contactLink": "Contact",
+    "navLabel": "Footernavigatie",
+    "serviceTitle": "Klantenservice",
+    "assortmentTitle": "Assortiment",
+    "makesTitle": "Automerken",
+    "brandsTitle": "Fabrikanten",
+    "popularTitle": "Veelgezocht",
+    "cartLink": "Winkelwagen",
+    "myCarLink": "Mijn auto",
+    "moreMakes": "Meer merken",
+    "paymentTitle": "Betaalmethoden",
+    "paymentNote": "Betalen gaat via Mollie. Je bank- en kaartgegevens komen nooit bij ons binnen."
   },
   "terms": {
     "title": "Algemene voorwaarden",
