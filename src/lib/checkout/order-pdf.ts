@@ -5,7 +5,7 @@ import {
   rgb,
   StandardFonts,
 } from "pdf-lib";
-import { companyValue, hasPlaceholderCompanyData } from "../company";
+import { companyValue } from "../company";
 import { formatPriceCents } from "../format";
 import type { OrderDocument, OrderDocumentLine } from "./order-document";
 
@@ -380,11 +380,6 @@ function drawFooter(ctx: Ctx): void {
     "14 dagen bedenktijd op elke bestelling (herroepingsrecht).",
     "Dit is een orderbevestiging, geen factuur: de bestelling is nog niet betaald.",
   ];
-  if (hasPlaceholderCompanyData()) {
-    notes.push(
-      "LET OP - testdocument: de bedrijfsgegevens zijn nog niet ingevuld.",
-    );
-  }
 
   let y = MARGIN + 12 * notes.length;
   ctx.page.drawLine({

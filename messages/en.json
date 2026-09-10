@@ -562,9 +562,7 @@
     "address": "Address",
     "email": "Email",
     "coc": "Chamber of Commerce number",
-    "vat": "VAT number",
-    "pending": "To follow",
-    "incomplete": "A few details are still missing. They will be added once known."
+    "vat": "VAT number"
   },
   "myCar": {
     "eyebrow": "Your car",

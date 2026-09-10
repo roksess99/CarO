@@ -380,9 +380,17 @@ contactformulier voldoen daaraan. Een nummer publiceren dat niet wordt
 opgenomen is slechter dan geen nummer. Komt er later wel een, dan is het één
 veld in `src/lib/company.ts` en één rij in `components/company-details.tsx`.
 
-**Nog open, blokkerend voor de betaalkoppeling (fase 5):** de zakelijke
-rekening (IBAN). Zolang die ontbreekt staat er een testwaarschuwing onderaan
-elke gegenereerde orderbevestiging.
+**Zakelijke rekening ingevuld 2026-09-10:** `NL37 KNAB 0775 4708 80`, staat in
+`src/lib/company.ts` en daarmee op de orderbevestiging. Mollie bleek hem niet
+nodig te hebben — die rekening zit in hun eigen onboarding. Wat een échte
+factuur nu nog mist is alleen het oplopende factuurnummer (#10).
+
+De melding "een paar gegevens ontbreken nog" en de testwaarschuwing op de
+orderbevestiging zijn 2026-09-09 weggehaald. Ze keken naar élke placeholder in
+`COMPANY`, terwijl alles wat een klant te zien krijgt inmiddels bekend is; het
+enige ontbrekende veld staat nergens in de winkel. Ontbreekt een waarde toch,
+dan valt die regel gewoon weg (`companyValue()`) in plaats van dat er
+"volgt nog" komt te staan.
 
 **Let op — de shop heet anders dan het bedrijf.** Bij de KvK staat
 "Car Parts A-Z"; de webshop heet overal CarO. Een factuur moet de

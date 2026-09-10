@@ -562,9 +562,7 @@
     "address": "Adres",
     "email": "E-mail",
     "coc": "KvK-nummer",
-    "vat": "Btw-nummer",
-    "pending": "Volgt nog",
-    "incomplete": "Een paar gegevens ontbreken nog. Ze worden aangevuld zodra ze bekend zijn."
+    "vat": "Btw-nummer"
   },
   "myCar": {
     "eyebrow": "Jouw auto",
