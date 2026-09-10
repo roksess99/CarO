@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "mail:check": "node scripts/check-mail.mjs",
+    "mollie:check": "node scripts/check-mollie.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

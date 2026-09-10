@@ -1,9 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useRef, useState, useSyncExternalStore } from "react";
-import { createOrderPdf } from "@/components/checkout/actions";
+import { useLocale, useTranslations } from "next-intl";
+import { useState, useSyncExternalStore } from "react";
 import { useCart } from "@/components/cart/use-cart";
+import { startPayment } from "@/components/checkout/actions";
 import {
   type CheckoutDetails,
   type CheckoutField,
@@ -34,76 +34,54 @@ const labelClass = "mb-1 block text-sm font-medium";
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
-  const [errors, setErrors] = useState<FieldErrors>({});
-  const [saved, setSaved] = useState(false);
-  // TIJDELIJK (test): PDF-knop hieronder. Weg zodra de bevestiging automatisch
-  // gemaild wordt — dan hoeft de klant hem niet zelf te downloaden.
+  const locale = useLocale();
   const cart = useCart();
-  const formRef = useRef<HTMLFormElement>(null);
-  const [pdfBusy, setPdfBusy] = useState(false);
-  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [failure, setFailure] = useState<string | null>(null);
+  // Blijft `true` tot de browser weg navigeert: tussen het antwoord van de
+  // server en de sprong naar Mollie zit een moment waarin de knop anders weer
+  // aanklikbaar zou zijn, en dat levert een tweede betaling op.
+  const [busy, setBusy] = useState(false);
   // Prefill kan pas na hydration (localStorage bestaat niet op de server);
   // key-remount van het formulier houdt de inputs uncontrolled.
   const prefill = useSyncExternalStore(emptySubscribe, getPrefill, () => null) as
     | Record<string, string>
     | null;
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy) return;
+
     const formData = new FormData(event.currentTarget);
     const input = Object.fromEntries(formData.entries());
     const result = validateCheckoutDetails(input);
 
+    // Dezelfde controle draait straks nog eens op de server; deze is er
+    // alleen om de klant meteen te laten zien wat er mist.
     if (!result.success) {
-      setSaved(false);
+      setFailure(null);
       setErrors(result.fieldErrors);
       return;
     }
 
     setErrors({});
+    setFailure(null);
     saveCheckoutDetails(result.data);
     prefillCache = result.data;
-    // TODO fase 5: hier start straks de betaling (src/lib/orders.ts)
-    setSaved(true);
-  }
 
-  // TIJDELIJK (test): document in de browser downloaden om het te kunnen
-  // bekijken. De bytes komen van de server, want daar staan de echte prijzen.
-  async function handleDownloadPdf() {
-    const form = formRef.current;
-    if (!form) return;
-
-    const input = Object.fromEntries(new FormData(form).entries());
-    const result = validateCheckoutDetails(input);
-    if (!result.success) {
-      setPdfError(null);
-      setErrors(result.fieldErrors);
-      return;
-    }
-
-    setErrors({});
-    setPdfError(null);
-    setPdfBusy(true);
-    const response = await createOrderPdf(result.data, cart.items);
-    setPdfBusy(false);
+    setBusy(true);
+    const response = await startPayment(result.data, cart.items, locale);
 
     if (!response.ok) {
-      setPdfError(response.error);
+      setBusy(false);
+      if (response.fieldErrors) setErrors(response.fieldErrors as FieldErrors);
+      setFailure(response.error);
       return;
     }
 
-    const bytes = Uint8Array.from(atob(response.base64), (c) =>
-      c.charCodeAt(0),
-    );
-    const url = URL.createObjectURL(
-      new Blob([bytes], { type: "application/pdf" }),
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = response.fileName;
-    link.click();
-    // Pas vrijgeven als de browser het downloaden gestart heeft
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    // Naar het betaalscherm van Mollie. Bewust geen router.push: dat is een
+    // ander domein, dus een gewone navigatie van de browser.
+    window.location.href = response.checkoutUrl;
   }
 
   function field(
@@ -149,7 +127,6 @@ export function CheckoutForm() {
   return (
     // key: remount na prefill zodat defaultValues de opgeslagen data tonen
     <form
-      ref={formRef}
       onSubmit={handleSubmit}
       noValidate
       key={prefill ? "filled" : "empty"}
@@ -194,43 +171,21 @@ export function CheckoutForm() {
 
       <button
         type="submit"
-        className="mt-8 w-full rounded-md bg-caro-orange px-6 py-3 font-semibold text-caro-ink"
+        disabled={busy}
+        className="mt-8 w-full rounded-md bg-caro-orange px-6 py-3 font-semibold text-caro-ink disabled:opacity-60"
       >
-        {t("submit")}
+        {busy ? t("payBusy") : t("pay")}
       </button>
+      <p className="mt-3 text-center text-xs text-muted">{t("payNote")}</p>
 
       {/* Statusmeldingen ook voor screenreaders */}
       <div role="status" aria-live="polite">
         {hasErrors && (
-          <p className="mt-4 text-sm text-danger">
-            {t("errorSummary")}
-          </p>
+          <p className="mt-4 text-sm text-danger">{t("errorSummary")}</p>
         )}
-        {saved && <p className="mt-4 text-sm text-muted">{t("savedNotice")}</p>}
-      </div>
-
-      {/* TIJDELIJK: testblok om de orderbevestiging te bekijken. Verwijderen
-          zodra het document automatisch gemaild wordt. */}
-      <div className="mt-8 rounded-md border border-dashed border-border bg-surface p-4">
-        <p className="text-xs font-semibold uppercase tracking-widest text-muted">
-          {t("testTools")}
-        </p>
-        <button
-          type="button"
-          onClick={handleDownloadPdf}
-          disabled={pdfBusy}
-          className="mt-3 w-full rounded-md border border-border px-6 py-3 font-semibold disabled:opacity-60"
-        >
-          {pdfBusy ? t("downloadPdfBusy") : t("downloadPdf")}
-        </button>
-        <p className="mt-2 text-xs text-muted">{t("downloadPdfNote")}</p>
-        <div role="status" aria-live="polite">
-          {pdfError && (
-            <p className="mt-2 text-sm text-danger">
-              {t(`pdfErrors.${pdfError}`)}
-            </p>
-          )}
-        </div>
+        {failure && (
+          <p className="mt-4 text-sm text-danger">{t(`payErrors.${failure}`)}</p>
+        )}
       </div>
     </form>
   );

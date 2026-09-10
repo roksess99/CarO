@@ -425,20 +425,43 @@
     "inclVat": "Including 21% VAT",
     "shippingNote": "Shipping costs are shown before the payment step.",
     "withdrawalNote": "14-day right of withdrawal on every order.",
-    "submit": "Place order",
-    "savedNotice": "Your details have been validated and saved. Ordering and payment (iDEAL) become available once the payment integration is in place.",
     "emptyCart": "Your cart is empty — there is nothing to check out yet.",
     "emptyCta": "Browse the range",
     "backToCart": "Back to cart",
-    "testTools": "Test tool",
-    "downloadPdf": "Download order confirmation (PDF)",
-    "downloadPdfBusy": "Generating...",
-    "downloadPdfNote": "Temporary button to check the document. The confirmation will be emailed automatically later.",
-    "pdfErrors": {
-      "invalidDetails": "Please complete your details first.",
-      "emptyCart": "Your cart is empty, there is nothing to confirm.",
-      "failed": "The document could not be created. Please try again."
+    "pay": "Order and pay",
+    "payBusy": "Redirecting…",
+    "payNote": "You complete the payment at Mollie. 14 days to change your mind.",
+    "payErrors": {
+      "invalidDetails": "Please check the fields marked in red.",
+      "emptyCart": "Your cart is empty — there is nothing to pay for.",
+      "notConfigured": "Payment is unavailable right now. Please try again later or contact us.",
+      "failed": "We could not start the payment. Please try again."
     }
+  },
+  "orderStatus": {
+    "metaTitle": "Your order status — CarO",
+    "eyebrow": "Order",
+    "reference": "Order number",
+    "total": "Total paid",
+    "continue": "Continue shopping",
+    "backToCart": "Back to cart",
+    "paid": {
+      "title": "Thank you for your order",
+      "body": "Your payment went through. The confirmation with the order invoice is on its way to {email}.",
+      "delivery": "You will hear from us as soon as your order is on its way. You have 14 days to change your mind."
+    },
+    "pending": {
+      "title": "We are checking your payment",
+      "body": "This usually takes a few seconds. Refresh this page in a moment — as soon as the payment comes in, you will get the confirmation by email."
+    },
+    "failed": {
+      "title": "The payment was not completed",
+      "body": "Nothing has been charged. Your cart is still there, so you can simply try again."
+    }
+  },
+  "orderMail": {
+    "customerSubject": "Confirmation of your order {reference}",
+    "customerBody": "Hello {name},\n\nThank you for your order at {company}. We have received your payment.\n\nOrder number: {reference}\n\n{lines}\n\nTotal paid: {total}\n\nDelivery address:\n{address}\n\nThe order confirmation is attached to this email as a PDF. We will let you know as soon as your parcel is on its way.\n\nQuestions? Reply to this email or write to {email}.\n\n{company}"
   },
   "footer": {
     "termsTitle": "Terms",

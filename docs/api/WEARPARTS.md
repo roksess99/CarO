@@ -133,6 +133,27 @@ De derde stap was eerder het bouwjaar (uit onze RDW-oogst). Dat is niet genoeg: 
 
 **Let op de merknamen.** TecDoc schrijft `VW`, niet `Volkswagen`. De merkenlijst komt daarom uit deze API en niet meer uit de RDW-oogst — anders zoekt de klant een merk dat de modellenstap niet kent. `src/lib/vehicle/makes.ts` valt terug op de oude lijst als de API wegvalt.
 
+## Bestellen — GEMETEN 2026-09-10
+
+`GET /order` werkt op het echte account en vraagt drie parameters:
+`articleNumber`, `brandId` en `quantity`. Antwoord:
+
+```json
+{ "itemId": "F 026 407 143", "manufacturerName": "BOSCH", "brandId": 30,
+  "price": 7.51, "depositPrice": 0, "wholesalerId": 204672, "quantity": 1,
+  "shippingMethodId": 1, "paymentMethodId": 1,
+  "estimatedDelivery": "2026-09-16", "vat": 0.21,
+  "articleId": "30-46203032362034303720313433" }
+```
+
+Ook hier is dat een offerte die als body naar `POST /order` gaat. Geen
+`ERR_RESTRICTED_ACCESS`, geen overeenkomst nodig.
+
+**Let op: een winkelwagen met banden én onderdelen wordt twee bestellingen**,
+bij twee verschillende API's en mogelijk twee verschillende groothandels
+(hier 204672 tegenover 205345 bij de Products-API). Eén "bestelling" in onze
+shop is dus niet automatisch één inkooporder.
+
 ## Aandachtspunten
 
 - **Twee tokens, twee API's.** Verwar ze niet: dit token werkt niet op

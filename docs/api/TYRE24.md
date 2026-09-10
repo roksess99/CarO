@@ -296,6 +296,38 @@ dat beschrijft alleen de gevonden treffers en is geen bladerbare boom.
 | `POST /order` | Bestelling plaatsen bij de groothandel (body = response van GET /order + quantity) | 4 |
 | `/agreementList`, `/agreementPdfs`, `/newPdfAgreement` | B2B-overeenkomsten retailer↔groothandel; vereist vóór bestellen (`ERR_NO_MATCHING_AGREEMENT`) | 4 |
 
+## Bestellen bij de groothandel — GEMETEN 2026-09-10
+
+Op het échte account, met alleen leesverzoeken (`POST /order` is bewust niet
+aangeroepen: dat plaatst een bestelling die geld kost).
+
+**Er is geen B2B-overeenkomst nodig voor wat wij verkopen.** `agreementNeeded`
+staat alleen op `true` bij area 3 — de OE-area die we niet gebruiken. Areas 1
+(toebehoren), 6 (banden) en 7 (velgen) staan op `false`. `/agreementList` geeft
+voor area 6 nul overeenkomsten terug, en dat is dus geen blokkade maar de
+normale toestand.
+
+`GET /order?productAreaId=6&itemId=697011&quantity=1` → **200**:
+
+```json
+{ "itemId": "PTY-697011", "price": 24.93, "wholesalerId": 205345,
+  "quantity": 1, "shippingMethodId": 1, "paymentMethodId": 1,
+  "estimatedDelivery": "2026-09-14", "vat": 0.21 }
+```
+
+Dat is een offerte, geen bestelling: precies dit blok gaat als body naar
+`POST /order`. De hele keten is dus met dit token beschikbaar.
+
+Twee dingen om te weten voordat je dit automatiseert:
+
+- **`price` is de inkoopprijs van dít moment**, niet de prijs waarop wij de
+  klant hebben afgerekend (die kwam uit een 300 seconden gecachte lijst).
+  Vraag de offerte opnieuw op vlak vóór het bestellen en vergelijk; wijkt hij
+  af, dan is dat een beslissing voor een mens, geen stille afwijking.
+- **`estimatedDelivery` lag vier dagen vooruit** (besteld op 10-09, levering
+  14-09). De shop zegt bij `ordered` "levertijd 2–3 werkdagen". Die belofte
+  klopt dus niet met wat de leverancier zegt.
+
 ## Mapping naar ons datacontract (`src/lib/catalog/types.ts`)
 
 `types.ts` blijft leidend; de adapter (`tyre24-provider.ts`) vertaalt.

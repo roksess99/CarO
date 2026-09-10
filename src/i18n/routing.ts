@@ -14,6 +14,12 @@ export const routing = defineRouting({
       nl: "/afrekenen",
       en: "/checkout",
     },
+    // Waar de klant landt als hij terugkomt van Mollie. Draagt het
+    // ordernummer en een toegangsteken in de querystring; staat op noindex.
+    "/checkout/status": {
+      nl: "/afrekenen/status",
+      en: "/checkout/status",
+    },
     "/search": {
       nl: "/zoeken",
       en: "/search",

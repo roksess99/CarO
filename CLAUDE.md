@@ -26,8 +26,8 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 | 2 | Winkelwagen (client-side, cookie/localStorage) | KLAAR |
 | 3 | Tyre24/ALZURA-API's achter de provider-interface (Products v1.3 + Wearparts v1.6) | KLAAR |
 | 3b | Voertuigidentificatie: kenteken → TecDoc, autokiezer op merk/model/uitvoering | KLAAR |
-| 4 | Database (PostgreSQL + Prisma): orders, klanten; inkoop via Tyre24 POST /order | |
-| 5 | Betaling (Mollie, iDEAL) | |
+| 4 | Database (PostgreSQL + Prisma) en inkoop via Tyre24 POST /order | Orders leven nu als JSON-bestand; inkoop gaat met de hand (@docs/DECISIONS.md #10) |
+| 5 | Betaling (Mollie, iDEAL) | KLAAR |
 | 6 | Velgen: Tyre24 Alloys-API — voertuigselectie (carID), matching, 3D-beelden | |
 
 **Regels tijdens fase 3:**
@@ -38,7 +38,7 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
   praat nooit rechtstreeks met Tyre24 (token is een secret, rate limit 100/min).
 - Zonder `TYRE24_API_TOKEN` valt `getCatalogProvider()` terug op de mock.
   De site moet altijd zonder token blijven werken.
-- Nog geen Prisma-schema en geen betaalcode. Order plaatsen (Tyre24 POST /order) is fase 4.
+- Nog geen Prisma-schema, en inkoop bij de groothandel (Tyre24 POST /order) blijft handwerk. Die call is fase 4 en mag nooit "even ter controle" gedraaid worden: hij plaatst een echte, factureerbare bestelling.
 - Waar later serverwerk komt (ordercreatie, voorraadreservering):
   zet een functie in `src/lib/` met een `// TODO fase X` comment, geen halve implementatie.
 
@@ -69,6 +69,9 @@ Stand 2026-09-07. Handig bij het oppakken van werk; niet uitputtend.
 | Productomschrijving | `lib/catalog/product-description.ts` | Drie tot vier zinnen uit de eigen velden van het artikel (merk, soort, eerste twee attributen, OE-nummer, verzending). Dezelfde tekst staat op de pagina én in de JSON-LD. Geen verkooppraat: elke zin die geen veld heeft valt weg |
 | Laadschermen | `loading.tsx` per route, `<Suspense>` in de pagina | **Geen** `loading.tsx` op `/[locale]`: die liet elke pagina — ook de winkelwagen en de FAQ — met een productraster-skelet beginnen, en maakte van elke 404 een status 200. Kop, formulier en uitlegtekst staan nu meteen in de HTML; alleen wat de leverancier moet leveren streamt na |
 | Echte 404 | `[family]/layout.tsx`, `[family]/[category]/layout.tsx` | Een layout staat bóven de Suspense-grens en kan de status dus nog zetten. Gekeurd wordt alleen wat synchroon kan: de familieslug, en bij onderdelen of de categorieslug een id draagt. Een onbekende categorie bij banden vraagt een API-call en blijft daarom 200 |
+| Bestellen en betalen | `components/checkout/`, `lib/mollie/`, `lib/orders/` | De klant betaalt via Mollie. Bedragen worden bij het starten van de betaling **opnieuw uitgerekend** uit de catalogus — de wagen staat in localStorage en is aanpasbaar. Bevestiging komt van de webhook, nooit van de terugkeer in de browser |
+| Na de betaling | `lib/orders/settle.ts`, `lib/orders/notify.ts` | Eén afhandeling voor webhook én terugkeerpagina, met `notifiedAt` tegen dubbele mail. Twee mails met dezelfde PDF: bevestiging naar de klant, werkbriefje met artikelnummers naar de beheerder, die met de hand inkoopt |
+| Orderopslag | `lib/orders/store.ts` | JSON per bestelling in `.data/orders/`, gitignored. Kan omdat de winkel bij Hostinger draait en dus een blijvende schijf heeft; `ORDER_DATA_DIR` hoort buiten de projectmap (@docs/DECISIONS.md #10) |
 | Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |
 
 **Fitment werkt** sinds 2026-09-06: een kenteken gaat via de Wearparts-API naar
@@ -169,6 +172,11 @@ messages/nl.json, en.json
 - Prijzen tonen **inclusief 21% BTW**. Verplicht voor consumenten.
 - Verzendkosten expliciet vóór de laatste checkoutstap.
 - 14 dagen herroepingsrecht zichtbaar in de checkout-flow.
+- **Een bedrag dat naar een betaaldienst gaat komt nooit uit de browser.**
+  De winkelwagen leeft in localStorage; prijs en aantal worden server-side
+  opnieuw uit de catalogus gehaald voordat er een betaling wordt aangemaakt.
+- Het kenmerk op de orderbevestiging is géén factuurnummer: dat vraagt een
+  oplopende reeks en dus de database van fase 4.
 
 ## Git-workflow
 

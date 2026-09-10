@@ -425,20 +425,43 @@
     "inclVat": "Inclusief 21% btw",
     "shippingNote": "Verzendkosten worden getoond vóór de betaalstap.",
     "withdrawalNote": "14 dagen bedenktijd op elke bestelling.",
-    "submit": "Bestelling plaatsen",
-    "savedNotice": "Je gegevens zijn gecontroleerd en opgeslagen. Bestellen en betalen (iDEAL) komen beschikbaar zodra de betaalkoppeling er is.",
     "emptyCart": "Je winkelwagen is leeg — er valt nog niets af te rekenen.",
     "emptyCta": "Bekijk het aanbod",
     "backToCart": "Terug naar winkelwagen",
-    "testTools": "Testfunctie",
-    "downloadPdf": "Orderbevestiging downloaden (PDF)",
-    "downloadPdfBusy": "Bezig met genereren...",
-    "downloadPdfNote": "Tijdelijke knop om het document te controleren. Straks krijg je de bevestiging automatisch per e-mail.",
-    "pdfErrors": {
-      "invalidDetails": "Vul eerst je gegevens volledig in.",
-      "emptyCart": "Je winkelwagen is leeg, er valt niets te bevestigen.",
-      "failed": "Het document kon niet gemaakt worden. Probeer het opnieuw."
+    "pay": "Bestellen en betalen",
+    "payBusy": "Je wordt doorgestuurd…",
+    "payNote": "Je rondt de betaling af bij Mollie. 14 dagen bedenktijd.",
+    "payErrors": {
+      "invalidDetails": "Controleer de rood gemarkeerde velden.",
+      "emptyCart": "Je winkelwagen is leeg — er valt niets af te rekenen.",
+      "notConfigured": "Betalen is op dit moment niet mogelijk. Probeer het later opnieuw of neem contact met ons op.",
+      "failed": "Het starten van de betaling is mislukt. Probeer het opnieuw."
     }
+  },
+  "orderStatus": {
+    "metaTitle": "Status van je bestelling — CarO",
+    "eyebrow": "Bestelling",
+    "reference": "Ordernummer",
+    "total": "Totaal betaald",
+    "continue": "Verder winkelen",
+    "backToCart": "Terug naar winkelwagen",
+    "paid": {
+      "title": "Bedankt voor je bestelling",
+      "body": "Je betaling is gelukt. De bevestiging met de orderfactuur is onderweg naar {email}.",
+      "delivery": "Je krijgt bericht zodra je bestelling onderweg is. Je hebt 14 dagen bedenktijd."
+    },
+    "pending": {
+      "title": "We controleren je betaling",
+      "body": "Dat duurt meestal een paar seconden. Ververs deze pagina zo nog een keer — zodra de betaling binnen is, krijg je de bevestiging per e-mail."
+    },
+    "failed": {
+      "title": "De betaling is niet afgerond",
+      "body": "Er is niets afgeschreven. Je winkelwagen staat er nog, dus je kunt het gewoon opnieuw proberen."
+    }
+  },
+  "orderMail": {
+    "customerSubject": "Bevestiging van je bestelling {reference}",
+    "customerBody": "Hallo {name},\n\nBedankt voor je bestelling bij {company}. We hebben je betaling ontvangen.\n\nOrdernummer: {reference}\n\n{lines}\n\nTotaal betaald: {total}\n\nBezorgadres:\n{address}\n\nDe orderbevestiging zit als PDF bij deze mail. Je krijgt bericht zodra je pakket onderweg is.\n\nVragen? Antwoord op deze mail of stuur een bericht naar {email}.\n\n{company}"
   },
   "footer": {
     "termsTitle": "Voorwaarden",

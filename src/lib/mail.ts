@@ -52,15 +52,24 @@ function getTransporter(): Transporter {
   return transporter;
 }
 
+export interface MailAttachment {
+  filename: string;
+  content: Uint8Array;
+  contentType: string;
+}
+
 export interface MailMessage {
   subject: string;
   text: string;
   /** Adres waar een antwoord heen moet; niet de afzender */
   replyTo?: string;
+  /** Ontvanger; standaard onze eigen mailbox */
+  to?: string;
+  attachments?: MailAttachment[];
 }
 
 /**
- * Stuurt een bericht naar de eigen mailbox.
+ * Stuurt een bericht. Zonder `to` gaat het naar de eigen mailbox.
  *
  * **De afzender is altijd onze eigen mailbox, nooit de bezoeker.** Zou daar
  * het adres van de invuller staan, dan verstuurt onze server mail namens een
@@ -77,9 +86,16 @@ export async function sendMail(message: MailMessage): Promise<void> {
 
   await getTransporter().sendMail({
     from: { name: COMPANY.name, address: process.env.SMTP_USER as string },
-    to: COMPANY.email,
+    to: message.to ?? COMPANY.email,
     replyTo: message.replyTo,
     subject: message.subject,
     text: message.text,
+    // Nodemailer wil een Buffer of een stream; de PDF komt als Uint8Array
+    // uit pdf-lib, dus hier één keer omzetten in plaats van bij elke aanroep.
+    attachments: message.attachments?.map((file) => ({
+      filename: file.filename,
+      content: Buffer.from(file.content),
+      contentType: file.contentType,
+    })),
   });
 }

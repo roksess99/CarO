@@ -62,3 +62,7 @@ prisma/*.db-journal
 
 # --- Uploads / gegenereerd ---
 /public/uploads/
+
+# --- Bestellingen (src/lib/orders/store.ts) ---
+# Bevat NAW-gegevens van klanten. Nooit in Git.
+/.data/
