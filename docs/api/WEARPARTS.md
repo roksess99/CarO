@@ -79,6 +79,35 @@ Elk artikel geeft `articleName`, `brandName`, `eanNumber`, `genericArticleId`,
 op. Sorteren kan via `/sorters` (prijs, relevantie, topseller, merk, naam) en
 filteren via `/filterList`.
 
+### Past dit artikel op deze auto? — GEMETEN 2026-09-10
+
+Voor de passendheidsbadge op de productpagina (`components/vehicle/fitment-badge.tsx`)
+is een hard ja of nee per artikel nodig. Dat kan, maar **alleen met alle drie
+de parameters tegelijk**:
+
+`GET /articles?search=ID<artikel>&filter[carId]=<auto>&filter[category]=<nodeId>`
+
+| Zoekopdracht | `numFound` |
+|---|---|
+| `ID…` alleen | 1 |
+| `ID…` + `carId` | **1, ook bij een auto van een ander merk** |
+| `ID…` + `carId` + `category`, juiste auto | 1 |
+| `ID…` + `carId` + `category`, andere auto | 0 |
+| `ID…` + `carId` + verkeerde `category` | 0 |
+
+Gemeten met een Citroën (carId 128136) en een Chevrolet (26605) op groep 891,
+beide kanten op: het Citroën-artikel geeft 0 op de Chevrolet en andersom.
+
+**Zonder de categorie filtert de API dus niet op voertuig** — dan zou elk
+artikel op elke auto "passen". De assemblagegroep komt bij ons uit de URL
+(`groupIdFromSlug`); draagt die er geen (een artikel dat via het zoekveld
+gevonden is staat onder `zoekresultaat`), dan geeft `articleFitsVehicle()`
+`null` en zegt de badge "controleer de passing" in plaats van te gokken.
+
+Wat **niet** werkt: `filter[articleId]` bestaat niet (HTTP 400), en
+`vehicleAttributes` op een artikel komt leeg terug zodra je het zonder auto
+opvraagt.
+
 ### Verder beschikbaar
 
 - `/manufacturers` (469 op nl), `/modelSeries`, `/vehicles` — de auto kiezen

@@ -16,6 +16,7 @@ import {
   useVehicle,
 } from "@/components/vehicle/use-vehicle";
 import { Link } from "@/i18n/navigation";
+import { vehicleName } from "@/lib/vehicle/label";
 import type { VehicleLookupError } from "@/lib/vehicle/types";
 
 export function VehicleSearch({
@@ -84,16 +85,17 @@ export function VehicleSearch({
     ].filter((value): value is string => Boolean(value));
 
     return (
-      <div className="rounded-lg border border-border bg-surface p-4">
+      // Oranje bovenrand: dit is het resultaat van de belangrijkste actie op
+      // de pagina, en moet er ook uitzien als een antwoord in plaats van als
+      // het zoveelste grijze kaartje.
+      <div className="rounded-lg border border-border border-t-4 border-t-caro-orange bg-surface p-4">
         <p className="eyebrow text-xs">{t("yourCar")}</p>
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
           {/* Alleen een plaat als er een kenteken achter zit */}
           {vehicle.plateFormatted && (
             <PlateBadge plate={vehicle.plateFormatted} />
           )}
-          <p className="font-bold">
-            {vehicle.brand} {vehicle.model}
-          </p>
+          <p className="text-lg font-bold">{vehicleName(vehicle)}</p>
         </div>
         {specs.length > 0 && (
           <p className="mt-2 text-sm text-muted">{specs.join(" · ")}</p>
@@ -173,6 +175,10 @@ export function VehicleSearch({
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
+          // Op een telefoon opent hiermee het toetsenbord met de
+          // enter-toets als "zoeken" in plaats van een regelafbreking, en
+          // blijft de suggestiebalk van de browser weg.
+          enterKeyHint="search"
           maxLength={10}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
@@ -180,16 +186,37 @@ export function VehicleSearch({
           style={{ color: PLATE_INK }}
         />
       </div>
+      {/* h-14 en een vergrootglas ervoor: samen met de plaat erboven is dit
+          het zwaartepunt van de homepage. Onder de 48px van WCAG 2.2 zakt hij
+          nooit, ook niet in het smalle headerpaneel. */}
       <button
         type="submit"
         disabled={pending || plate.trim().length === 0}
-        className="mt-2 h-12 w-full rounded-md bg-caro-orange px-6 font-semibold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
+        className="mt-2 flex h-14 w-full items-center justify-center gap-2 rounded-md bg-caro-orange px-6 text-base font-bold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
       >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className="size-5 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </svg>
         {/* Niet "Zoek auto": die knop staat ook onder de merk/model-kiezer
             eronder, en twee identieke knoppen in één paneel laten de klant
             raden welke bij welk veld hoort. */}
         {pending ? t("searching") : compact ? t("searchByPlate") : t("searchForMyCar")}
       </button>
+
+      {/* Waarom je hier je kenteken invult, in één regel onder de knop. Dat
+          is de belofte van de winkel, en die hoort bij het veld te staan waar
+          hij waargemaakt wordt. */}
+      <p className="mt-2 text-center text-xs text-muted">{t("plateHint")}</p>
 
       <div role="status" aria-live="polite">
         {error && (

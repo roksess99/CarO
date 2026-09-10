@@ -5,8 +5,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { filterValueLabel } from "@/lib/catalog/filter-values";
 import { AvailabilityBadge } from "@/components/availability-badge";
 import { AddToCartWithQuantity } from "@/components/cart/add-to-cart-with-quantity";
+import { StickyBuyBar } from "@/components/cart/sticky-buy-bar";
 import { JsonLd } from "@/components/json-ld";
 import { ProductImagePlaceholder } from "@/components/product-image-placeholder";
+import { TrustBadges } from "@/components/trust-badges";
+import { FitmentBadge } from "@/components/vehicle/fitment-badge";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -22,6 +25,10 @@ import { groupNameFromSlug } from "@/lib/catalog/wearparts-provider";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents, priceCentsToDecimalString } from "@/lib/format";
+import {
+  FREE_SHIPPING_THRESHOLD_CENTS,
+  STANDARD_SHIPPING_CENTS,
+} from "@/lib/shipping";
 import {
   breadcrumbJsonLd,
   localizedMetadata,
@@ -116,6 +123,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }),
   };
 }
+
+/** Anker voor de zwevende koopbalk; zie components/cart/sticky-buy-bar.tsx */
+const BUY_BOX_ID = "buy-box";
 
 const SCHEMA_AVAILABILITY = {
   "in-stock": "https://schema.org/InStock",
@@ -226,7 +236,9 @@ export default async function ProductPage({ params }: Props) {
   ]);
 
   return (
-    <div className="site-container py-8 md:py-12">
+    // pb-32 onder lg: ruimte voor de tabbalk én de zwevende koopbalk, zodat
+    // de laatste regel tekst niet onder twee balken verdwijnt.
+    <div className="site-container pt-8 pb-32 md:py-12 lg:pb-12">
       <JsonLd data={jsonLd} />
       <JsonLd data={breadcrumbs} />
 
@@ -290,19 +302,64 @@ export default async function ProductPage({ params }: Props) {
           {part.brand && <p className="eyebrow text-xs">{part.brand}</p>}
           <h1 className="mt-2 text-3xl md:text-4xl">{part.name}</h1>
 
-          <p className="mt-6">
-            <span className="text-3xl font-bold tabular-nums">
-              {formatPriceCents(part.priceCents)}
-            </span>{" "}
-            <span className="text-sm text-muted">{t("inclVat")}</span>
-          </p>
-          <div className="mt-3">
-            <AvailabilityBadge availability={part.availability} />
+          {/* Past het? staat vóór de prijs. Dat is de vraag waarmee iemand
+              op een onderdelenpagina binnenkomt; pas als die beantwoord is
+              doet het bedrag ertoe.
+
+              Alleen bij onderdelen: die hangen aan een TecDoc-voertuig en
+              daar is een hard ja of nee op te halen. Een band past op een
+              máát en een velg op een steekcirkel — daar zou "vul je kenteken
+              in" een belofte zijn die de catalogus niet kan waarmaken (de
+              RDW kent de bandenmaat niet, zie docs/DECISIONS.md #6). */}
+          {usesVehicleCatalog(family) && (
+            <div className="mt-6">
+              <FitmentBadge
+                family={family}
+                articleId={part.id}
+                categorySlug={category}
+              />
+            </div>
+          )}
+
+          {/* Prijs, voorraad en verzending als één blok: de drie gegevens
+              waarop een koopbesluit valt stonden los over de pagina verspreid,
+              zodat de klant ze zelf bij elkaar moest zoeken. */}
+          <div className="mt-6 rounded-lg border border-border bg-surface p-4">
+            <p className="flex flex-wrap items-baseline gap-x-2">
+              <span className="text-4xl font-bold tabular-nums">
+                {formatPriceCents(part.priceCents)}
+              </span>
+              <span className="text-sm text-muted">{t("inclVat")}</span>
+            </p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <AvailabilityBadge availability={part.availability} />
+              {part.stock !== undefined && part.stock > 0 && (
+                <span className="text-sm text-muted tabular-nums">
+                  {t("stockValue", { count: part.stock })}
+                </span>
+              )}
+            </div>
+
+            <p className="mt-3 text-sm text-muted">
+              {t("shippingLine", {
+                shipping: formatPriceCents(STANDARD_SHIPPING_CENTS),
+                freeFrom: formatPriceCents(FREE_SHIPPING_THRESHOLD_CENTS),
+              })}
+            </p>
           </div>
 
-          <div className="mt-8">
+          {/* Het id is het anker voor de zwevende koopbalk op mobiel: zodra
+              dit blok uit beeld scrolt verschijnt zij (sticky-buy-bar.tsx). */}
+          <div id={BUY_BOX_ID} className="mt-6">
             <AddToCartWithQuantity part={part} />
           </div>
+
+          <div className="mt-4 border-t border-border pt-4">
+            <TrustBadges />
+          </div>
+
+          <StickyBuyBar part={part} watch={BUY_BOX_ID} />
 
           <h2 className="mt-10 text-lg">{t("descTitle")}</h2>
           <div className="mt-3 space-y-2 text-sm text-muted">
@@ -361,18 +418,12 @@ export default async function ProductPage({ params }: Props) {
               </div>
             )}
 
-            {part.stock !== undefined && part.stock > 0 && (
-              <div className="flex justify-between gap-4 py-3">
-                <dt className="text-muted">{t("stockLabel")}</dt>
-                <dd className="font-medium tabular-nums">
-                  {t("stockValue", { count: part.stock })}
-                </dd>
-              </div>
-            )}
           </dl>
 
-          <p className="mt-6 text-sm text-muted">{t("shippingNote")}</p>
-          <p className="mt-2 text-sm text-muted">{t("withdrawalNote")}</p>
+          {/* Voorraad, verzendkosten en bedenktijd stonden hier eerder ook;
+              die staan nu bij de prijs en onder de bestelknop, wáár het
+              koopbesluit valt. Twee keer hetzelfde maakt de pagina alleen
+              langer. */}
         </div>
       </div>
     </div>

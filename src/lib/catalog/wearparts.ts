@@ -423,6 +423,49 @@ export async function articleById(
   return articles[0] ?? null;
 }
 
+/**
+ * Past dit artikel op deze auto? Eén call, exact antwoord.
+ *
+ * GEMETEN 2026-09-10 — dit werkt alléén met alle drie de parameters:
+ *
+ * | zoekopdracht | uitkomst |
+ * |---|---|
+ * | `ID…` + `carId` | 1 — de auto wordt genegeerd, ook bij een auto van een ander merk |
+ * | `ID…` + `carId` + `category` (juiste auto) | 1 |
+ * | `ID…` + `carId` + `category` (andere auto) | **0** |
+ * | `ID…` + `carId` + verkeerde `category` | 0 |
+ *
+ * Zonder de categorie filtert de API dus niet op voertuig en zou elk artikel
+ * op elke auto "passen". Vandaar dat de aanroeper de assemblagegroep uit de
+ * URL moet meegeven, en dat we bij een ontbrekende groep `null` teruggeven in
+ * plaats van te gokken: een valse groene vink kost de klant een retour.
+ */
+export async function articleFitsVehicle(
+  articleId: string,
+  carId: number,
+  categoryId: number,
+): Promise<boolean | null> {
+  let data: unknown;
+  try {
+    data = await get(
+      "/articles",
+      {
+        search: `ID${articleId}`,
+        "filter[carId]": carId,
+        "filter[category]": categoryId,
+        limit: 1,
+      },
+      CACHE.articles,
+    );
+  } catch {
+    // Niet weten is hier geen fout: de UI zegt dan "controleer de passing".
+    return null;
+  }
+  const parsed = articlesResponseSchema.safeParse(data);
+  if (!parsed.success) return null;
+  return (parsed.data.response.numFound ?? 0) > 0;
+}
+
 const vehicleDetailsSchema = z.object({
   vehicleDetails: z
     .object({
