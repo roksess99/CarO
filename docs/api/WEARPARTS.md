@@ -108,7 +108,7 @@ Wat **niet** werkt: `filter[articleId]` bestaat niet (HTTP 400), en
 `vehicleAttributes` op een artikel komt leeg terug zodra je het zonder auto
 opvraagt.
 
-### Filteren op eigenschap — GEMETEN 2026-09-11
+### Filteren op eigenschap — KAN WEL, DOEN WE NIET — GEMETEN 2026-09-11
 
 Naast de artikelen geeft `/articles` **facetten** terug: per eigenschap de
 waarden met hun aantal. `attr_*`-facetten verschijnen alleen als
@@ -147,9 +147,34 @@ categorieën voor dezelfde auto:
 De grens ligt rond 40%; `src/lib/catalog/part-filters.ts` past hem toe, samen
 met "alleen tekstwaarden" (getallen zijn maatvoering) en 2 tot 8 waarden.
 
-**Let op bij het tonen:** een eigenschap die 40% dekt verbergt bij filteren de
-60% artikelen zonder waarde. Dat is geen fout van de API maar ontbrekende
-data van de fabrikant.
+#### Winkelkeuze 2026-09-11: geen filters op eigenschap
+
+Dit heeft een dag in de shop gestaan en is er bewust weer uit gehaald. Twee
+redenen, en de tweede is de zwaarste:
+
+1. **De koppen zijn leveranciersjargon.** "Schokdemper bevestigingstype:
+   Oog bovenaan / Pen bovenaan / Onder plaat" is een keuze die een monteur
+   maakt, niet iemand die een schokdemper zoekt voor zijn eigen auto. De
+   onderdelen in de lijst passen sowieso al op de gekozen auto; er valt dan
+   weinig meer te verfijnen dat de klant zelf kan beoordelen.
+2. **Filteren verbergt artikelen die wél passen.** De aantallen in de
+   facetten tellen alleen artikelen mét een waarde. Van de 261 remblokken
+   voor één auto hebben er 116 een `Inbouwplaats`; wie op "Vooras" filtert
+   ziet er 82 en mist de 145 waarvoor de fabrikant het veld niet invulde.
+   Dat is ontbrekende data, geen eigenschap van het artikel — maar de klant
+   leest het als "meer is er niet".
+
+**De eigenschappen zelf blijven wél staan**, bij de artikelgegevens op de
+productpagina. `toPart()` zet elk attribuut uit `attr` in `specs`, met het
+label van de leverancier. Gecontroleerd op een remschijf: Inbouwplaats,
+Remschijftype, Oppervlakte, Remschijfdikte, Steek wielbouten — allemaal
+zichtbaar. De klant kan dus nog steeds vergelijken, alleen niet meer
+voorselecteren.
+
+De meting hierboven blijft staan omdat de API-kant klopt en niet triviaal was
+om te vinden. Wil je dit ooit terug, dan is de eerste vraag niet "hoe" maar
+"welke eigenschap is voor een consument een echte keuze" — en de tweede: wat
+doe je met de artikelen zonder waarde.
 
 ### Kosten per paginaweergave — GEMETEN 2026-09-11
 

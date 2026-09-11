@@ -16,18 +16,8 @@ import {
   searchArticles,
   type WearpartsArticle,
 } from "./wearparts";
-import {
-  attributeLabels,
-  partFilterGroups,
-  toAttributeFilters,
-} from "./part-filters";
 import { POPULAR_PART_GROUP_IDS } from "./quick-links";
-import type {
-  Category,
-  FilterGroup,
-  Part,
-  SelectedFilters,
-} from "./types";
+import type { Category, Part } from "./types";
 
 /**
  * Attributen die niets zeggen over het product zelf en dus niet op de
@@ -478,7 +468,6 @@ export async function partsInGroup({
   categorySlug,
   categoryName,
   genericArticleId,
-  filters,
   limit = 20,
   page = 0,
 }: {
@@ -488,46 +477,22 @@ export async function partsInGroup({
   categoryName: string;
   /** Beperk tot het soort waar de groep over gaat; zie ArticleQuery */
   genericArticleId?: string;
-  /** Gekozen eigenschappen uit de URL, bv. `{ e100: ["Vooras"] }` */
-  filters?: SelectedFilters;
   limit?: number;
   page?: number;
-}): Promise<{ parts: Part[]; total: number; filterGroups: FilterGroup[] }> {
-  const { articles, total, facets } = await searchArticles({
+}): Promise<{ parts: Part[]; total: number }> {
+  const { articles, total } = await searchArticles({
     carId,
     categoryId,
     genericArticleId,
-    attributes: toAttributeFilters(filters ?? {}),
     limit,
     page,
   });
-
-  // De facetten tellen over de hele groep, de namen staan op de artikelen.
-  // Beide komen uit dezelfde call, dus dit kost niets extra.
-  //
-  // `total` is het aantal ná filteren; voor de dekkingsdrempel willen we het
-  // aantal waar de facetten over gaan. Zolang er niet gefilterd is zijn die
-  // gelijk — en zodra er wél gefilterd is houdt de UI de groepen toch staan.
-  const filterGroups = partFilterGroups(
-    facets,
-    attributeLabels(articles),
-    Math.max(
-      total,
-      facets.reduce(
-        (max, facet) =>
-          Math.max(max, facet.values.reduce((sum, v) => sum + v.count, 0)),
-        0,
-      ),
-    ),
-  );
-
   return {
     parts: articles.flatMap((article) => {
       const part = toPart(article, categorySlug, categoryName);
       return part ? [part] : [];
     }),
     total,
-    filterGroups,
   };
 }
 

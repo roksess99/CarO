@@ -274,44 +274,12 @@ const articleSchema = z.object({
   quantityPerPackingUnit: z.coerce.number().optional().catch(undefined),
 });
 
-/**
- * Facetten per eigenschap, zoals `/articles` ze teruggeeft naast de
- * artikelen zelf. GEMETEN 2026-09-11: `attr_*`-facetten verschijnen pas
- * zodra `filter[genericArticleId]` meegaat — zonder artikeltype levert de
- * API alleen merk, kwaliteit en het artikeltype zelf.
- *
- * De vorm verschilt per facet: `genericArticleId` komt als array,
- * `attr_*` als object met de waarde als sleutel. We lezen alleen die
- * tweede vorm; de rest valt met `.catch` weg in plaats van de hele
- * respons ongeldig te maken.
- */
-const facetValueSchema = z.object({
-  value: z.union([z.string(), z.number()]).optional(),
-  count: z.coerce.number().optional(),
-});
-
 const articlesResponseSchema = z.object({
   response: z.object({
     numFound: z.coerce.number().optional(),
     docs: z.array(z.unknown()).optional(),
   }),
-  facets: z
-    .object({
-      facet_fields: z
-        .record(z.string(), z.record(z.string(), facetValueSchema).catch({}))
-        .optional()
-        .catch(undefined),
-    })
-    .optional()
-    .catch(undefined),
 });
-
-/** Eén eigenschap met haar waarden en aantallen, zoals de API ze telt */
-export interface ArticleFacet {
-  /** Attribuut-id zonder prefix, bv. "100" voor Inbouwplaats */
-  id: string;
-  values: Array<{ value: string; count: number }>;
-}
 
 export type WearpartsArticle = z.infer<typeof articleSchema>;
 
@@ -330,16 +298,6 @@ export interface ArticleQuery {
    * waar hij voor kwam.
    */
   genericArticleId?: string;
-  /**
-   * Gekozen eigenschappen: attribuut-id → waarde, bv. `{ "100": "Vooras" }`.
-   * GEMETEN 2026-09-11 op remblokken (carId 128136, groep 568):
-   * `filter[attr_100]=Vooras` bracht 261 artikelen terug naar 82.
-   *
-   * Eén waarde per eigenschap. De API kan er meer aan (`multiple: true` in
-   * `/filterList`), maar dat is niet gemeten en "vooras óf achteras" is
-   * geen keuze die een klant maakt.
-   */
-  attributes?: Record<string, string>;
   limit?: number;
   page?: number;
 }
@@ -353,11 +311,7 @@ export interface ArticleQuery {
  */
 export async function searchArticles(
   query: ArticleQuery,
-): Promise<{
-  articles: WearpartsArticle[];
-  total: number;
-  facets: ArticleFacet[];
-}> {
+): Promise<{ articles: WearpartsArticle[]; total: number }> {
   let data: unknown;
   try {
     data = await get(
@@ -367,12 +321,6 @@ export async function searchArticles(
         "filter[carId]": query.carId,
         "filter[category]": query.categoryId,
         "filter[genericArticleId]": query.genericArticleId,
-        ...Object.fromEntries(
-          Object.entries(query.attributes ?? {}).map(([id, value]) => [
-            `filter[attr_${id}]`,
-            value,
-          ]),
-        ),
         limit: query.limit ?? 20,
         page: query.page ?? 0,
       },
@@ -385,32 +333,16 @@ export async function searchArticles(
       "Wearparts /articles faalde:",
       error instanceof Error ? error.message : error,
     );
-    return { articles: [], total: 0, facets: [] };
+    return { articles: [], total: 0 };
   }
   const parsed = articlesResponseSchema.safeParse(data);
-  if (!parsed.success) return { articles: [], total: 0, facets: [] };
+  if (!parsed.success) return { articles: [], total: 0 };
 
   const articles = (parsed.data.response.docs ?? []).flatMap((raw) => {
     const article = articleSchema.safeParse(raw);
     return article.success ? [article.data] : [];
   });
-  const facets: ArticleFacet[] = Object.entries(
-    parsed.data.facets?.facet_fields ?? {},
-  ).flatMap(([key, entries]) => {
-    if (!key.startsWith("attr_")) return [];
-    const values = Object.entries(entries).flatMap(([value, entry]) => {
-      const label = String(entry.value ?? value).trim();
-      const count = entry.count ?? 0;
-      return label && count > 0 ? [{ value: label, count }] : [];
-    });
-    return values.length > 0 ? [{ id: key.slice(5), values }] : [];
-  });
-
-  return {
-    articles,
-    total: parsed.data.response.numFound ?? articles.length,
-    facets,
-  };
+  return { articles, total: parsed.data.response.numFound ?? articles.length };
 }
 
 /**

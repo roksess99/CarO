@@ -77,6 +77,23 @@ staat in `src/lib/catalog/category-labels.ts`, en `localizeCategories()` past
 hem toe vlak achter de provider — zo zijn navigatie, kruimelpad, tegels en
 koppen overal gelijk.
 
+### Vastgesteld 2026-09-11: geen filters op eigenschap bij onderdelen
+
+De Wearparts-API kan het wél — `/articles` geeft facetten per eigenschap en
+`filter[attr_100]=Vooras` werkt (meetreeks in @docs/api/WEARPARTS.md). Het
+heeft een dag in de shop gestaan en is er bewust uit gehaald:
+
+- de koppen zijn leveranciersjargon ("Schokdemper bevestigingstype: Oog
+  bovenaan"), een keuze voor een monteur en niet voor wie een onderdeel voor
+  zijn eigen auto zoekt — en de lijst past sowieso al op die auto;
+- filteren verbergt artikelen die wél passen. Van 261 remblokken hebben er
+  116 een `Inbouwplaats`; filteren op "Vooras" toont er 82 en laat de 145
+  zonder waarde weg. Dat is ontbrekende fabrikantsdata, maar het leest als
+  "meer is er niet".
+
+**De eigenschappen blijven bij de artikelgegevens op de productpagina staan.**
+Vergelijken kan dus nog steeds, voorselecteren niet.
+
 ### Vastgesteld 2026-09-05: welke filters de shop toont
 
 De filterrespons van Tyre24 bevat tientallen groepen per categorie, waarvan het

@@ -2,13 +2,11 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { GroupList } from "@/components/catalog/group-list";
 import { JsonLd } from "@/components/json-ld";
-import { ProductFilters } from "@/components/product-filters";
 import { ProductGrid } from "@/components/product-grid";
 import { SelectedCarInUrl } from "@/components/vehicle/use-selected-car";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { ProductFamily } from "@/lib/catalog/families";
-import type { SelectedFilters } from "@/lib/catalog/types";
 import {
   groupIdFromSlug,
   partGroupById,
@@ -35,7 +33,6 @@ export async function PartsCategoryPage({
   carId,
   limit,
   showAllTypes,
-  selected,
 }: {
   family: ProductFamily;
   familySlugParam: string;
@@ -44,8 +41,6 @@ export async function PartsCategoryPage({
   limit: number;
   /** Ook de bijbehorende schroefjes en ringen tonen, niet alleen het product */
   showAllTypes: boolean;
-  /** Gekozen eigenschappen uit de URL (`f=e100:Vooras`) */
-  selected: SelectedFilters;
 }) {
   const t = await getTranslations("category");
   const tFamily = await getTranslations("family");
@@ -103,17 +98,16 @@ export async function PartsCategoryPage({
       ? undefined
       : current.defaultGenericArticleId;
 
-  const { parts, total, filterGroups } = showArticles
+  const { parts, total } = showArticles
     ? await partsInGroup({
         carId,
         categoryId: groupId,
         categorySlug,
         categoryName: name,
         genericArticleId: typeFilter,
-        filters: selected,
         limit,
       })
-    : { parts: [], total: 0, filterGroups: [] };
+    : { parts: [], total: 0 };
 
   const query = { auto: String(carId) };
 
@@ -247,25 +241,6 @@ export async function PartsCategoryPage({
                 </Link>
               )}
             </p>
-            {/* Eigenschappen van dít soort onderdeel: vooras of achteras,
-                massief of geventileerd. Ze komen uit de facetten van dezelfde
-                call die de artikelen ophaalt, dus ze kosten niets extra
-                (lib/catalog/part-filters.ts). Boven het raster en niet in een
-                zijbalk: het zijn er hooguit drie, en op een telefoon is dit
-                de eerste keuze die de klant maakt. */}
-            {filterGroups.length > 0 && (
-              <div className="mt-4 rounded-lg border border-border p-4">
-                <ProductFilters
-                  groups={filterGroups}
-                  selected={selected}
-                  family={familySlugParam}
-                  category={categorySlug}
-                  extraQuery={query}
-                  layout="inline"
-                />
-              </div>
-            )}
-
             <div className="mt-4">
               <ProductGrid parts={parts} />
             </div>
