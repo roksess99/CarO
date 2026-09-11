@@ -145,7 +145,8 @@
     "quick": {
       "filters": "Filters",
       "oils": "Olie"
-    }
+    },
+    "popularTitle": "Meest gezocht voor jouw auto"
   },
   "tyres": {
     "pickerTitle": "Kies je bandenmaat",
@@ -163,7 +164,8 @@
     "results": "Banden in maat {size}",
     "noResults": "Geen banden gevonden in maat {size}. Controleer de maat op de flank van je band of kies een ander seizoen.",
     "helpTitle": "Waar vind ik mijn bandenmaat?",
-    "helpBody": "De maat staat op de flank van je band, bijvoorbeeld 205/55 R16 91 V. 205 is de breedte in millimeter, 55 de hoogte als percentage van die breedte en 16 de velgdiameter in inch. Het getal en de letter erachter zijn de laad- en snelheidsindex."
+    "helpBody": "De maat staat op de flank van je band, bijvoorbeeld 205/55 R16 91 V. 205 is de breedte in millimeter, 55 de hoogte als percentage van die breedte en 16 de velgdiameter in inch. Het getal en de letter erachter zijn de laad- en snelheidsindex.",
+    "resultsInCategory": "{count, plural, =0 {Geen banden in maat {size} in deze categorie} =1 {1 band in maat {size}} other {# banden in maat {size}}}"
   },
   "categoryTiles": {
     "title": "Auto-onderdelen vinden in de catalogus",
@@ -738,5 +740,17 @@
     "payment": "Veilig betalen, o.a. met {method}",
     "vat": "Prijs inclusief 21% btw",
     "returns": "14 dagen bedenktijd"
+  },
+  "wheels": {
+    "pickerTitle": "Kies je velgmaat",
+    "pickerIntro": "De maat staat op de binnenkant van je huidige velg, of in deel 1B van je kentekenbewijs.",
+    "diameter": "Diameter",
+    "width": "Breedte",
+    "bolts": "Steekcirkel",
+    "submit": "Velgen bekijken",
+    "current": "Gekozen: {size}",
+    "clear": "Wissen",
+    "pickerHint": "Twijfel je over de steekcirkel? Die schrijf je als aantal gaten × afstand in millimeter, bijvoorbeeld 5 × 112.",
+    "resultsForSize": "{count, plural, =0 {Geen velgen in {size}} =1 {1 velg in {size}} other {# velgen in {size}}}"
   }
 }

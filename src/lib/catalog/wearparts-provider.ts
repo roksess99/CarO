@@ -16,6 +16,7 @@ import {
   searchArticles,
   type WearpartsArticle,
 } from "./wearparts";
+import { POPULAR_PART_GROUP_IDS } from "./quick-links";
 import type { Category, Part } from "./types";
 
 /**
@@ -335,15 +336,69 @@ export async function partLeafGroups(
 export async function partGroupsWithCounts(
   carId: number,
 ): Promise<AssemblyGroup[]> {
-  const groups = await assemblyGroups(carId);
-  const leaves = groups.filter((group) => !group.hasChildren);
-  const counts = await articleCounts(
-    carId,
-    leaves.map((group) => group.id),
+  const { groups } = await partGroupsAndPopular(carId);
+  return groups;
+}
+
+/**
+ * De veelgevraagde eindgroepen voor deze auto, in de volgorde van
+ * `POPULAR_PART_GROUP_IDS`.
+ *
+ * Kost geen extra boom-call: `/category` levert de hele platte boom en die
+ * is een dag gecacht, dus dit is dezelfde call als het categorierooster
+ * eronder. Wat er wél bij komt is de telling per groep — en die is nodig,
+ * want een snelkoppeling die op een lege pagina uitkomt is erger dan geen
+ * snelkoppeling. Ook die tellingen staan een dag in de cache.
+ *
+ * Een groep die deze auto niet heeft valt weg: niet elke auto heeft een
+ * distributieriem (ketting) of een interieurfilter.
+ */
+export async function popularPartGroups(
+  carId: number,
+): Promise<AssemblyGroup[]> {
+  const { popular } = await partGroupsAndPopular(carId);
+  return popular;
+}
+
+/**
+ * Het rooster én de rij "meest gezocht" uit één telling.
+ *
+ * Beide lijsten hebben aantallen nodig en beide lezen dezelfde gecachte boom.
+ * Los van elkaar zetten ze allebei een eigen wachtrij op van zes tegelijk —
+ * samen twaalf gelijktijdige calls op een limiet van honderd per minuut voor
+ * de héle winkel. In één batch blijft dat er zes, en tellen we een groep die
+ * in allebei de lijsten staat maar één keer.
+ */
+async function partGroupsAndPopular(
+  carId: number,
+): Promise<{ groups: AssemblyGroup[]; popular: AssemblyGroup[] }> {
+  const tree = await assemblyTree(carId);
+  const byId = new Map(tree.map((group) => [group.id, group]));
+  // Zelfde toets als `assemblyGroups()` zonder parentNodeId: een hoofdgroep
+  // heeft geen ouder. Niet `=== undefined` — de API levert daar ook 0 voor.
+  const mainGroups = tree.filter((group) => !group.parentId);
+
+  const present = POPULAR_PART_GROUP_IDS.map((id) => byId.get(id)).filter(
+    (group): group is AssemblyGroup => group !== undefined,
   );
-  return groups
-    .map((group) => ({ ...group, articleCount: counts.get(group.id) }))
-    .filter((group) => group.articleCount !== 0);
+
+  // Alleen eindgroepen zijn te tellen: /articles geeft HTTP 500 op een groep
+  // met subgroepen (zie articleCount).
+  const ids = new Set<number>();
+  for (const group of mainGroups) if (!group.hasChildren) ids.add(group.id);
+  for (const group of present) if (!group.hasChildren) ids.add(group.id);
+
+  const counts = await articleCounts(carId, [...ids]);
+  const withCount = (group: AssemblyGroup) => ({
+    ...group,
+    articleCount: counts.get(group.id),
+  });
+
+  return {
+    // -1 is "telling mislukt": dan tonen we hem, net als in partLeafGroups.
+    groups: mainGroups.map(withCount).filter((g) => g.articleCount !== 0),
+    popular: present.map(withCount).filter((g) => g.articleCount !== 0),
+  };
 }
 
 /**

@@ -108,6 +108,90 @@ Wat **niet** werkt: `filter[articleId]` bestaat niet (HTTP 400), en
 `vehicleAttributes` op een artikel komt leeg terug zodra je het zonder auto
 opvraagt.
 
+### Filteren op eigenschap — KAN WEL, DOEN WE NIET — GEMETEN 2026-09-11
+
+Naast de artikelen geeft `/articles` **facetten** terug: per eigenschap de
+waarden met hun aantal. `attr_*`-facetten verschijnen alleen als
+`filter[genericArticleId]` meegaat — zonder artikeltype krijg je enkel merk,
+kwaliteit en het artikeltype zelf.
+
+Filteren gaat met `filter[attr_<id>]=<waarde>`. Op remblokken voor carId
+128136 (groep 568, type 402): 261 artikelen totaal, `filter[attr_100]=Vooras`
+→ 82, `=Achteras` → 32.
+
+**De namen van de eigenschappen staan niet in de facetten**, alleen de
+waarden. De naam (`100` → "Inbouwplaats") staat in `attr` op elk artikel dat
+hem draagt — dus uit dezelfde call. Loop wél álle opgehaalde artikelen langs:
+bij wisserbladen draagt het eerste artikel geen `Inbouwplaats` terwijl de
+helft van de lijst hem heeft.
+
+#### Welke eigenschappen bruikbaar zijn
+
+Er komen er te veel terug — 36 voor remblokken — en het merendeel is
+leveranciersadministratie. Een allowlist van ids werkt niet: elk artikeltype
+heeft eigen eigenschappen. **Dekking** scheidt ze wél, gemeten over vijf
+categorieën voor dezelfde auto:
+
+| Categorie | Eigenschap | Dekking | Bruikbaar |
+|---|---|---|---|
+| Luchtfilter | Filter type | 59/59 | ja |
+| Schokdemper | Inbouwtype, Bevestigingstype | 55/55 | ja |
+| Schokdemper | Inbouwplaats | 47/55 | ja |
+| Remschijf | Remschijftype | 283/283 | ja |
+| Remschijf | Oppervlakte | 181/283 | ja |
+| Remschijf | Inbouwplaats | 114/283 | ja |
+| Oliefilter | `OCS 1 / J9131003 / LS 7` | 5/73 | nee |
+| Schokdemper | `ST30/20X147A` | 3/55 | nee |
+| Remschijf | `J / JC` | 3/283 | nee |
+
+De grens ligt rond 40%; `src/lib/catalog/part-filters.ts` past hem toe, samen
+met "alleen tekstwaarden" (getallen zijn maatvoering) en 2 tot 8 waarden.
+
+#### Winkelkeuze 2026-09-11: geen filters op eigenschap
+
+Dit heeft een dag in de shop gestaan en is er bewust weer uit gehaald. Twee
+redenen, en de tweede is de zwaarste:
+
+1. **De koppen zijn leveranciersjargon.** "Schokdemper bevestigingstype:
+   Oog bovenaan / Pen bovenaan / Onder plaat" is een keuze die een monteur
+   maakt, niet iemand die een schokdemper zoekt voor zijn eigen auto. De
+   onderdelen in de lijst passen sowieso al op de gekozen auto; er valt dan
+   weinig meer te verfijnen dat de klant zelf kan beoordelen.
+2. **Filteren verbergt artikelen die wél passen.** De aantallen in de
+   facetten tellen alleen artikelen mét een waarde. Van de 261 remblokken
+   voor één auto hebben er 116 een `Inbouwplaats`; wie op "Vooras" filtert
+   ziet er 82 en mist de 145 waarvoor de fabrikant het veld niet invulde.
+   Dat is ontbrekende data, geen eigenschap van het artikel — maar de klant
+   leest het als "meer is er niet".
+
+**De eigenschappen zelf blijven wél staan**, bij de artikelgegevens op de
+productpagina. `toPart()` zet elk attribuut uit `attr` in `specs`, met het
+label van de leverancier. Gecontroleerd op een remschijf: Inbouwplaats,
+Remschijftype, Oppervlakte, Remschijfdikte, Steek wielbouten — allemaal
+zichtbaar. De klant kan dus nog steeds vergelijken, alleen niet meer
+voorselecteren.
+
+De meting hierboven blijft staan omdat de API-kant klopt en niet triviaal was
+om te vinden. Wil je dit ooit terug, dan is de eerste vraag niet "hoe" maar
+"welke eigenschap is voor een consument een echte keuze" — en de tweede: wat
+doe je met de artikelen zonder waarde.
+
+### Kosten per paginaweergave — GEMETEN 2026-09-11
+
+Met `logging: { fetches: { fullUrl: true } }` in `next.config.ts` logt Next
+elke call. Twee dingen kwamen daaruit:
+
+- **De navigatie werd drie keer opgehaald.** Header, tabbalk en layout
+  vroegen de categorielijst per familie en `/manufacturers` los van elkaar
+  op. Gecacht, dus geen netwerkverkeer, maar wel drie keer hetzelfde werk.
+  De layout doet het nu één keer en geeft het door.
+- **Het filterblok was de duurste call van een categoriepagina**:
+  `/items?limit=100` duurde koud 2,8 s, tegen 1,3 s voor de artikelen zelf.
+  Opgelost door `FILTER_SAMPLE_SIZE` naar 20 te zetten — dat kost niets,
+  want de filteropties gaan over de hele categorie en niet over de
+  opgehaalde artikelen. De meetreeks staat bij die constante in
+  `tyre24-provider.ts`.
+
 ### Verder beschikbaar
 
 - `/manufacturers` (469 op nl), `/modelSeries`, `/vehicles` — de auto kiezen

@@ -57,8 +57,33 @@ const FIRST_PAGE = 0;
 
 /** Groepssleutel van het merkfilter; die gaat naar een eigen parameter */
 const MANUFACTURER_KEY = "manufacturer";
-/** Aantal artikelen waarover de attribuutfilters worden berekend */
-const FILTER_SAMPLE_SIZE = 100;
+/**
+ * Hoeveel artikelen we meevragen als we het filterblok ophalen.
+ *
+ * Dit stond op 100 in de veronderstelling dat de leverancier de filters over
+ * de teruggegeven artikelen berekent. **Dat doet hij niet.** GEMETEN
+ * 2026-09-11 over alle categorieën van de drie families: het filterblok is bij
+ * limit 100, 50, 20 en 10 exact hetzelfde. De opties gaan over de héle
+ * categorie — 191 bandenmerken bij 1.597 artikelen, ook als je er één ophaalt.
+ *
+ * Wat het wél scheelt is tijd, want de leverancier stuurt die artikelen mee:
+ *
+ * | Categorie | limit 100 | limit 20 |
+ * |---|---|---|
+ * | Banden Auto/SUV (1.597) | 11,2 s | 6,5 s |
+ * | Staalvelgen (826) | 2,19 s | 0,69 s |
+ * | Toebehoren (7.475) | 5,5 s | 3,8 s |
+ *
+ * Eén categorie gaf verschil tussen 100 en 20 — Auto/SUV, in `Runflat`,
+ * `Oldtimer`, `Ijs greep` en vier andere. Geen daarvan staat in de allowlist
+ * (filter-groups.ts), dus de klant ziet ze toch niet. `manufacturer` en
+ * `laadindex` waren overal gelijk.
+ *
+ * Niet lager dan dit: bij limit 1 zakte `laadindex` van twee opties naar één,
+ * en een groep met één optie valt helemaal weg (`toFilterGroups`). Twintig
+ * houdt marge en is toch de kleinste pagina die we elders ook opvragen.
+ */
+const FILTER_SAMPLE_SIZE = 20;
 
 const PURCHASE_PRICE_TYPE = "ek";
 const RETAIL_PRICE_PREFIX = "evp";
@@ -626,8 +651,8 @@ async function fetchFilterBlock(
 ): Promise<Record<string, z.infer<typeof filterGroupSchema>>> {
   let data: unknown;
   try {
-    // Volle pagina: de attribuutfilters worden over de opgehaalde
-    // artikelen berekend, niet over de hele categorie.
+    // De artikelen die hier meekomen gebruiken we niet; het gaat om het
+    // `filter`-blok. Zie FILTER_SAMPLE_SIZE waarom dat er maar twintig zijn.
     data = await apiGet(
       source,
       "/items",

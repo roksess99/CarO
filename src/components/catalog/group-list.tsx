@@ -35,12 +35,61 @@ export function GroupList({
   groups,
   familySlugParam,
   carId,
+  /**
+   * De rij "meest gezocht" boven het rooster. Zelfde rijen, maar zonder
+   * pictogram en in vier kolommen: het zijn er tien, ze staan bovenaan, en
+   * met beeld zouden ze meer ruimte vragen dan het rooster waar ze naar
+   * verwijzen. Oranje rand, zodat de rij als snelkoppeling leest en niet als
+   * een tweede categorielijst.
+   */
+  compact = false,
 }: {
   groups: readonly AssemblyGroup[];
   familySlugParam: string;
   carId: number;
+  compact?: boolean;
 }) {
-  const withIcons = groups.some((group) => group.iconUrl);
+  const withIcons = !compact && groups.some((group) => group.iconUrl);
+
+  if (compact) {
+    return (
+      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {groups.map((group) => (
+          <li key={group.id}>
+            <Link
+              href={{
+                pathname: "/[family]/[category]",
+                params: { family: familySlugParam, category: groupSlug(group) },
+                query: { auto: String(carId) },
+              }}
+              className="flex h-full min-h-12 items-center gap-2 rounded-lg border border-caro-orange/40 bg-background px-3 py-2.5 transition-colors hover:border-caro-orange hover:bg-surface"
+            >
+              <span className="flex-1 text-sm leading-snug font-semibold">
+                {group.name}
+              </span>
+              {group.articleCount !== undefined && group.articleCount > 0 && (
+                <span className="shrink-0 text-xs text-muted tabular-nums">
+                  {group.articleCount}
+                </span>
+              )}
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="size-4 shrink-0 text-caro-orange"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    );
+  }
 
   return (
     <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">

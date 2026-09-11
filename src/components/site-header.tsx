@@ -9,22 +9,25 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { VehicleBar } from "@/components/vehicle/vehicle-bar";
 import { VehicleButton } from "@/components/vehicle/vehicle-button";
 import { Link } from "@/i18n/navigation";
-import { PRODUCT_FAMILIES } from "@/lib/catalog/families";
-import { localizeCategories } from "@/lib/catalog/localized-categories";
-import { getCatalogProvider } from "@/lib/catalog/provider";
-import { vehicleMakeNames } from "@/lib/vehicle/makes";
 
-export async function SiteHeader() {
+/**
+ * De header haalt zijn assortimentsmenu en merkenlijst niet meer zelf op.
+ *
+ * GEMETEN 2026-09-11 met `logging.fetches`: de categorielijst per familie en
+ * `/manufacturers` kwamen **drie keer** langs in één paginaweergave — header,
+ * tabbalk en de layout vroegen ze los van elkaar op. Ze waren gecacht, dus
+ * het kostte geen netwerkverkeer, maar wel drie keer parsen en drie keer
+ * hetzelfde werk. De layout haalt ze nu één keer op en geeft ze door.
+ */
+export async function SiteHeader({
+  items,
+  makes,
+}: {
+  items: FamilyNavItem[];
+  makes: string[];
+}) {
   const t = await getTranslations("header");
   const locale = await getLocale();
-  const makes = await vehicleMakeNames();
-  const provider = getCatalogProvider();
-  const items: FamilyNavItem[] = await Promise.all(
-    PRODUCT_FAMILIES.map(async (family) => ({
-      family,
-      categories: await localizeCategories(await provider.getCategories(family)),
-    })),
-  );
 
   return (
     // Sticky: zoeken, navigatie en winkelwagen blijven bereikbaar bij scrollen

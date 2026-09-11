@@ -66,15 +66,21 @@ export default async function LocaleLayout({
   }
   setRequestLocale(locale);
   const t = await getTranslations("common");
-  // De tabbalk toont het assortiment; die categorieen komen gecacht uit de
-  // provider, dezelfde bron als de header gebruikt.
+  // Assortimentsmenu en merkenlijst: één keer per paginaweergave, hier.
+  // Header, tabbalk en autokiezer delen ze — apart opgehaald stonden dezelfde
+  // calls drie keer in het log (zie site-header.tsx).
   const provider = getCatalogProvider();
-  const navItems: FamilyNavItem[] = await Promise.all(
-    PRODUCT_FAMILIES.map(async (family) => ({
-      family,
-      categories: await localizeCategories(await provider.getCategories(family)),
-    })),
-  );
+  const [navItems, makes] = await Promise.all([
+    Promise.all(
+      PRODUCT_FAMILIES.map(async (family) => ({
+        family,
+        categories: await localizeCategories(
+          await provider.getCategories(family),
+        ),
+      })),
+    ) as Promise<FamilyNavItem[]>,
+    vehicleMakeNames(),
+  ]);
 
   return (
     <html
@@ -97,13 +103,13 @@ export default async function LocaleLayout({
           >
             {t("skipToContent")}
           </a>
-          <SiteHeader />
+          <SiteHeader items={navItems} makes={makes} />
           <main id="main" className="flex-1">
             {children}
           </main>
           <SiteFooter />
           <BackToTop />
-          <BottomNav items={navItems} makes={await vehicleMakeNames()} />
+          <BottomNav items={navItems} makes={makes} />
         </NextIntlClientProvider>
       </body>
     </html>
