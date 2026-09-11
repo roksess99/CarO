@@ -86,10 +86,14 @@ export async function Hero() {
                   hoort maar één primaire actie te staan, en dat is de
                   kentekencheck links. Twee oranje knoppen naast elkaar laten
                   de klant kiezen waar niets te kiezen valt. */}
+              {/* Naar onderdelen en niet naar banden: de banner ernaast gaat
+                  over zoeken op onderdeel of OE-nummer, en "Bekijk het
+                  assortiment" bracht je op de bandenpagina — een ander
+                  product dan de tekst belooft. */}
               <Link
                 href={{
                   pathname: "/[family]",
-                  params: { family: familySlug("banden", locale) },
+                  params: { family: familySlug("onderdelen", locale) },
                 }}
                 className="mt-7 inline-flex rounded-md border border-border px-6 py-3 font-semibold hover:bg-surface"
               >
