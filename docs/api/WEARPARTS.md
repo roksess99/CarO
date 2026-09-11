@@ -108,6 +108,62 @@ Wat **niet** werkt: `filter[articleId]` bestaat niet (HTTP 400), en
 `vehicleAttributes` op een artikel komt leeg terug zodra je het zonder auto
 opvraagt.
 
+### Filteren op eigenschap — GEMETEN 2026-09-11
+
+Naast de artikelen geeft `/articles` **facetten** terug: per eigenschap de
+waarden met hun aantal. `attr_*`-facetten verschijnen alleen als
+`filter[genericArticleId]` meegaat — zonder artikeltype krijg je enkel merk,
+kwaliteit en het artikeltype zelf.
+
+Filteren gaat met `filter[attr_<id>]=<waarde>`. Op remblokken voor carId
+128136 (groep 568, type 402): 261 artikelen totaal, `filter[attr_100]=Vooras`
+→ 82, `=Achteras` → 32.
+
+**De namen van de eigenschappen staan niet in de facetten**, alleen de
+waarden. De naam (`100` → "Inbouwplaats") staat in `attr` op elk artikel dat
+hem draagt — dus uit dezelfde call. Loop wél álle opgehaalde artikelen langs:
+bij wisserbladen draagt het eerste artikel geen `Inbouwplaats` terwijl de
+helft van de lijst hem heeft.
+
+#### Welke eigenschappen bruikbaar zijn
+
+Er komen er te veel terug — 36 voor remblokken — en het merendeel is
+leveranciersadministratie. Een allowlist van ids werkt niet: elk artikeltype
+heeft eigen eigenschappen. **Dekking** scheidt ze wél, gemeten over vijf
+categorieën voor dezelfde auto:
+
+| Categorie | Eigenschap | Dekking | Bruikbaar |
+|---|---|---|---|
+| Luchtfilter | Filter type | 59/59 | ja |
+| Schokdemper | Inbouwtype, Bevestigingstype | 55/55 | ja |
+| Schokdemper | Inbouwplaats | 47/55 | ja |
+| Remschijf | Remschijftype | 283/283 | ja |
+| Remschijf | Oppervlakte | 181/283 | ja |
+| Remschijf | Inbouwplaats | 114/283 | ja |
+| Oliefilter | `OCS 1 / J9131003 / LS 7` | 5/73 | nee |
+| Schokdemper | `ST30/20X147A` | 3/55 | nee |
+| Remschijf | `J / JC` | 3/283 | nee |
+
+De grens ligt rond 40%; `src/lib/catalog/part-filters.ts` past hem toe, samen
+met "alleen tekstwaarden" (getallen zijn maatvoering) en 2 tot 8 waarden.
+
+**Let op bij het tonen:** een eigenschap die 40% dekt verbergt bij filteren de
+60% artikelen zonder waarde. Dat is geen fout van de API maar ontbrekende
+data van de fabrikant.
+
+### Kosten per paginaweergave — GEMETEN 2026-09-11
+
+Met `logging: { fetches: { fullUrl: true } }` in `next.config.ts` logt Next
+elke call. Twee dingen kwamen daaruit:
+
+- **De navigatie werd drie keer opgehaald.** Header, tabbalk en layout
+  vroegen de categorielijst per familie en `/manufacturers` los van elkaar
+  op. Gecacht, dus geen netwerkverkeer, maar wel drie keer hetzelfde werk.
+  De layout doet het nu één keer en geeft het door.
+- **Het filterblok is de duurste call van een categoriepagina**:
+  `/items?limit=100` duurde koud 2,8 s, tegen 1,3 s voor de artikelen zelf.
+  Hij is een uur gecacht (`FILTER_SAMPLE_SIZE` in `tyre24-provider.ts`);
+  verlagen levert snelheid op maar kost filteropties.
 ### Verder beschikbaar
 
 - `/manufacturers` (469 op nl), `/modelSeries`, `/vehicles` — de auto kiezen
