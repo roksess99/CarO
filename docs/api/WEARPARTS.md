@@ -185,10 +185,13 @@ elke call. Twee dingen kwamen daaruit:
   vroegen de categorielijst per familie en `/manufacturers` los van elkaar
   op. Gecacht, dus geen netwerkverkeer, maar wel drie keer hetzelfde werk.
   De layout doet het nu één keer en geeft het door.
-- **Het filterblok is de duurste call van een categoriepagina**:
+- **Het filterblok was de duurste call van een categoriepagina**:
   `/items?limit=100` duurde koud 2,8 s, tegen 1,3 s voor de artikelen zelf.
-  Hij is een uur gecacht (`FILTER_SAMPLE_SIZE` in `tyre24-provider.ts`);
-  verlagen levert snelheid op maar kost filteropties.
+  Opgelost door `FILTER_SAMPLE_SIZE` naar 20 te zetten — dat kost niets,
+  want de filteropties gaan over de hele categorie en niet over de
+  opgehaalde artikelen. De meetreeks staat bij die constante in
+  `tyre24-provider.ts`.
+
 ### Verder beschikbaar
 
 - `/manufacturers` (469 op nl), `/modelSeries`, `/vehicles` — de auto kiezen
