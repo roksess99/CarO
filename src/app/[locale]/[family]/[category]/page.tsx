@@ -8,6 +8,15 @@ import { ProductGrid } from "@/components/product-grid";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { PartsCategoryPage } from "@/components/parts-category-page";
+import { TyreSizePicker } from "@/components/tyres/tyre-size-picker";
+import { WheelSizePicker } from "@/components/wheels/wheel-size-picker";
+import {
+  filterTyres,
+  formatTyreSize,
+  parseTyreSeason,
+  parseTyreSize,
+  tyreSearchTerm,
+} from "@/lib/catalog/tyre-size";
 import {
   familyFromSlug,
   familySlug,
@@ -19,6 +28,12 @@ import {
   parseFilterParam,
   toFilterParam,
 } from "@/lib/catalog/filter-params";
+import {
+  formatWheelSelection,
+  hasWheelSelection,
+  parseWheelSelection,
+  wheelSelectionToFilters,
+} from "@/lib/catalog/wheel-size";
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import {
@@ -39,11 +54,23 @@ type Props = {
     toon?: string;
     auto?: string;
     alles?: string;
+    breedte?: string;
+    hoogte?: string;
+    diameter?: string;
+    seizoen?: string;
+    steekcirkel?: string;
   }>;
 };
 
 /** Producten per stap. Meer laden telt hier telkens bij op. */
 const PAGE_SIZE = 20;
+
+/**
+ * Hoeveel banden we ophalen als er op maat gezocht wordt binnen één
+ * categorie. Ruimer dan de familiepagina (30): daar tellen alle treffers
+ * mee, hier valt eerst alles af dat in een andere bandencategorie hoort.
+ */
+const TYRE_CATEGORY_FETCH_SIZE = 120;
 
 export async function generateMetadata({
   params,
@@ -133,18 +160,24 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             : 20
         }
         showAllTypes={query.alles === "1"}
+        selected={parseFilterParam(query[FILTER_PARAM])}
       />
     );
   }
 
   const provider = getCatalogProvider();
-  const categories = await localizeCategories(
-    await provider.getCategories(family),
-  );
-  // Hernoemde categorie-URL's vangt de proxy af met een 308 (proxy.ts),
-  // dus hier blijft alleen de echte onzin over.
-  const category = categories.find((c) => c.slug === slug);
-  if (!category) notFound();
+
+  // De categorielijst is nodig om de slug te keuren, maar de filters en de
+  // producten hangen alleen van de slug zélf af. Ze wachtten hier eerder op
+  // elkaar: eerst de lijst ophalen, dán pas beginnen met de rest. Nu start
+  // alles tegelijk en scheelt dat één heenweg naar de leverancier op élke
+  // categoriepagina.
+  //
+  // Bij een onbekende slug is dat werk voor niets, maar dat is precies de
+  // pagina die niemand opvraagt — en het antwoord blijft een echte 404.
+  const categoriesPromise = provider
+    .getCategories(family)
+    .then(localizeCategories);
   const selected = parseFilterParam(query[FILTER_PARAM]);
   const activeCount = countActiveFilters(selected);
 
@@ -160,12 +193,79 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const t = await getTranslations("category");
   const tFilters = await getTranslations("filters");
   const tFamily = await getTranslations("family");
+  const tTyres = await getTranslations("tyres");
+  const tWheels = await getTranslations("wheels");
 
-  // Filters en producten parallel: beide raken dezelfde gecachte API-call
+  // Banden hebben binnen een categorie nóg een ingang: de maat op de flank.
+  // Die stond alleen op de familiepagina, terwijl de klant die via
+  // "Offroad" of "Transporter" binnenkomt precies dezelfde vraag heeft.
+  const tyreFamily = family === "banden";
+  const tyreSize = tyreFamily
+    ? parseTyreSize({
+        width: query.breedte,
+        height: query.hoogte,
+        diameter: query.diameter,
+      })
+    : null;
+  const tyreSeason = parseTyreSeason(query.seizoen);
+
+  // Velgen krijgen dezelfde behandeling als banden: de maat die op de auto
+  // staat als ingang, in plaats van 59 leveranciersteksten in de zijbalk.
+  const wheelFamily = family === "velgen";
+  const wheelSelection = wheelFamily
+    ? parseWheelSelection(query)
+    : {};
+
+  // Filters en producten parallel: beide raken dezelfde gecachte API-call.
+  // Bij een gekozen velgmaat moeten we wel eerst het filterblok hebben — de
+  // keuze "15 inch" bestaat daar als zeven losse teksten en die moeten mee
+  // in de productquery. Dat wachten geldt alléén voor die ene situatie.
+  const filterGroupsPromise = provider.getFilters(family, slug);
+
   const [filterGroups, parts] = await Promise.all([
-    provider.getFilters(family, slug),
-    provider.getParts({ family, categorySlug: slug, filters: selected, limit }),
+    filterGroupsPromise,
+    tyreSize
+      ? // Met een maat is de zoekopdracht leidend. /items accepteert search
+        // óf parentNodeId, nooit allebei (tyre24-provider.ts), dus zoeken we
+        // op de maat over de hele bandenarea en houden we daarna over wat in
+        // déze categorie valt. Ruimer ophalen dan we tonen, want de treffers
+        // verdelen zich over Auto/SUV, Offroad, Transporter en de rest.
+        provider
+          .getParts({
+            family,
+            search: tyreSearchTerm(tyreSize, tyreSeason),
+            limit: TYRE_CATEGORY_FETCH_SIZE,
+          })
+          .then((found) =>
+            filterTyres(found, tyreSize, tyreSeason)
+              .filter((part) => part.categorySlug === slug)
+              .slice(0, limit),
+          )
+      : hasWheelSelection(wheelSelection)
+        ? filterGroupsPromise.then((groups) =>
+            provider.getParts({
+              family,
+              categorySlug: slug,
+              filters: {
+                ...selected,
+                ...wheelSelectionToFilters(groups, wheelSelection),
+              },
+              limit,
+            }),
+          )
+        : provider.getParts({
+            family,
+            categorySlug: slug,
+            filters: selected,
+            limit,
+          }),
   ]);
+
+  const categories = await categoriesPromise;
+  // Hernoemde categorie-URL's vangt de proxy af met een 308 (proxy.ts),
+  // dus hier blijft alleen de echte onzin over.
+  const category = categories.find((c) => c.slug === slug);
+  if (!category) notFound();
 
   // Kruimelpad voor de zoekresultaten van Google, met dezelfde stappen als
   // de zichtbare <nav> hieronder.
@@ -265,8 +365,46 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         </nav>
       )}
 
+      {/* De maatkiezer boven de filters: wie banden koopt begint bij de maat
+          op zijn flank, niet bij een merk. Het formulier post terug naar
+          deze categorie, zodat "Offroad" ook Offroad blijft. */}
+      {tyreFamily && (
+        <TyreSizePicker
+          action={getPathname({
+            locale: locale as Locale,
+            href: {
+              pathname: "/[family]/[category]",
+              params: { family: familyParam, category: slug },
+            },
+          })}
+          size={tyreSize}
+          season={tyreSeason}
+        />
+      )}
+
+      {/* Velgen: dezelfde plek als de bandenmaatkiezer. De opties komen uit
+          het filterblok van déze categorie, dus alleen maten die er echt
+          zijn staan in de lijst. */}
+      {wheelFamily && (
+        <WheelSizePicker
+          action={getPathname({
+            locale: locale as Locale,
+            href: {
+              pathname: "/[family]/[category]",
+              params: { family: familyParam, category: slug },
+            },
+          })}
+          groups={filterGroups}
+          selection={wheelSelection}
+        />
+      )}
+
       <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
-        {filterGroups.length > 0 && (
+        {/* Met een maat in de URL zijn de merk- en laadindexfilters niet meer
+            van toepassing: die horen bij de categorielijst, en de lijst komt
+            nu uit een zoekopdracht op maat. Ze tonen zou knoppen opleveren
+            die niets doen. */}
+        {!tyreSize && filterGroups.length > 0 && (
           <>
             {/* Mobiel: uitklapbaar, zodat de producten bovenaan blijven staan */}
             <details className="rounded-lg border border-border lg:hidden">
@@ -290,15 +428,27 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           {/* Merk boven de producten en over de volle breedte: in de 256px
               brede zijbalk werden namen als "Alfa Romeo" afgekapt tot
               "Alfa R…", en merk is waar de meeste klanten op filteren. */}
-          <BrandTiles
-            groups={filterGroups}
-            selected={selected}
-            family={familyParam}
-            category={slug}
-          />
+          {!tyreSize && (
+            <BrandTiles
+              groups={filterGroups}
+              selected={selected}
+              family={familyParam}
+              category={slug}
+            />
+          )}
 
           <p className="text-sm text-muted">
-            {tFilters("resultCount", { count: parts.length })}
+            {tyreSize
+              ? tTyres("resultsInCategory", {
+                  size: formatTyreSize(tyreSize),
+                  count: parts.length,
+                })
+              : hasWheelSelection(wheelSelection)
+                ? tWheels("resultsForSize", {
+                    size: formatWheelSelection(wheelSelection),
+                    count: parts.length,
+                  })
+                : tFilters("resultCount", { count: parts.length })}
           </p>
           <div className="mt-4">
             <ProductGrid parts={parts} />
@@ -313,12 +463,21 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                 href={{
                   pathname: "/[family]/[category]",
                   params: { family: familyParam, category: slug },
-                  query: {
-                    ...(activeCount > 0
-                      ? { [FILTER_PARAM]: toFilterParam(selected) }
-                      : {}),
-                    toon: String(limit + PAGE_SIZE),
-                  },
+                  query: tyreSize
+                    ? {
+                        // Met een maat draagt de URL de maat, niet de filters
+                        breedte: String(tyreSize.width),
+                        hoogte: String(tyreSize.height),
+                        diameter: String(tyreSize.diameter),
+                        ...(tyreSeason ? { seizoen: tyreSeason } : {}),
+                        toon: String(limit + PAGE_SIZE),
+                      }
+                    : {
+                        ...(activeCount > 0
+                          ? { [FILTER_PARAM]: toFilterParam(selected) }
+                          : {}),
+                        toon: String(limit + PAGE_SIZE),
+                      },
                 }}
                 className="rounded-md border border-border px-6 py-3 font-semibold hover:border-caro-orange hover:bg-surface"
               >

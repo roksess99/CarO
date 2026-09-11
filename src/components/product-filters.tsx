@@ -20,6 +20,19 @@ type Props = {
   /** Route-params van de categoriepagina waar de links naartoe wijzen */
   family: string;
   category: string;
+  /**
+   * Queryparameters die mee moeten in elke filterlink. Bij onderdelen is dat
+   * `auto`: zonder de gekozen auto bestaat de categorie niet eens, en een
+   * filterlink zonder dat param leidt naar "kies eerst je auto".
+   */
+  extraQuery?: Record<string, string>;
+  /**
+   * `sidebar` (standaard) is de zijbalk bij banden, velgen en toebehoren.
+   * `inline` is de rij boven het raster bij onderdelen: daar zijn het er
+   * hooguit drie en staan ze altijd open — een dichtgeklapt blokje dat je
+   * eerst moet vinden is bij twee keuzes meer werk dan het oplevert.
+   */
+  layout?: "sidebar" | "inline";
 };
 
 /**
@@ -32,16 +45,19 @@ export async function ProductFilters({
   selected,
   family,
   category,
+  extraQuery,
+  layout = "sidebar",
 }: Props) {
   const t = await getTranslations("filters");
   if (groups.length === 0) return null;
 
   const activeCount = countActiveFilters(selected);
+  const inline = layout === "inline";
 
   const hrefFor = (next: SelectedFilters) => ({
     pathname: "/[family]/[category]" as const,
     params: { family, category },
-    query: { [FILTER_PARAM]: toFilterParam(next) },
+    query: { ...extraQuery, [FILTER_PARAM]: toFilterParam(next) },
   });
 
   return (
@@ -87,14 +103,20 @@ export async function ProductFilters({
         </ul>
       )}
 
-      <div className="mt-4 space-y-3">
+      <div
+        className={
+          inline
+            ? "mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            : "mt-4 space-y-3"
+        }
+      >
         {groups.map((group) => {
           const activeInGroup = selected[group.key]?.length ?? 0;
           return (
             // <details> geeft in- en uitklappen zonder JavaScript
             <details
               key={group.key}
-              open={activeInGroup > 0}
+              open={inline || activeInGroup > 0}
               className="rounded-lg border border-border"
             >
               <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">

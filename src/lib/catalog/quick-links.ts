@@ -21,3 +21,33 @@ export const MAINTENANCE_LINKS = [
 ] as const;
 
 export type MaintenanceLink = (typeof MAINTENANCE_LINKS)[number];
+
+/**
+ * De onderdelen waar de meeste klanten voor komen, in volgorde van vraag.
+ *
+ * Het categorierooster staat alfabetisch: "Aandrijfassen / toebehoren",
+ * "Accessoires", "Airconditioning" bovenaan, en wie remblokken of een
+ * oliefilter zoekt moet eerst 36 groepen langs en dan nog een niveau dieper.
+ * Deze rij zet de gangbare onderhoudsdelen erbovenop; het rooster blijft
+ * eronder staan, zodat de volledige boom bereikbaar blijft.
+ *
+ * Dit zijn **eindgroepen**, geen hoofdgroepen: de klant komt zo in één klik
+ * bij de artikelen in plaats van bij een tussenscherm.
+ *
+ * GEMETEN 2026-09-11 op drie auto's (Citroën C3 Aircross 128136, Chevrolet
+ * Aveo 26605, VW Golf 7 115566): deze `assemblyGroupNodeId`s zijn in alle
+ * drie de bomen identiek. Het id is dus niet auto-afhankelijk — de vraag óf
+ * de groep in de boom zit wél, en dat kijkt `popularPartGroups()` na.
+ */
+export const POPULAR_PART_GROUP_IDS = [
+  543, // Oliefilter
+  544, // Luchtfilter
+  546, // Interieurfilter
+  568, // Remblok
+  569, // Remschijf
+  1371, // motorolie
+  947, // Wisserblad / Rubber
+  634, // Bougie
+  774, // Schokdempers
+  269, // Distributieriem
+] as const;

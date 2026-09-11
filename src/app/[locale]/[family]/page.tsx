@@ -29,6 +29,7 @@ import {
 } from "@/lib/catalog/tyre-size";
 import {
   partGroupsWithCounts,
+  popularPartGroups,
   searchParts,
 } from "@/lib/catalog/wearparts-provider";
 import { localizedMetadata, socialMetadata } from "@/lib/site";
@@ -193,20 +194,47 @@ async function PartGroups({
   familySlugParam: string;
 }) {
   const t = await getTranslations("family");
-  const groups = await partGroupsWithCounts(carId);
-  if (groups.length === 0) return null;
+  // Parallel: beide lezen dezelfde gecachte boom, alleen de tellingen
+  // verschillen.
+  const [popular, groups] = await Promise.all([
+    popularPartGroups(carId),
+    partGroupsWithCounts(carId),
+  ]);
+  if (groups.length === 0 && popular.length === 0) return null;
 
   return (
-    <section className="mt-10">
-      <h2 className="text-2xl">{t("groupsTitle")}</h2>
-      <div className="mt-6">
-        <GroupList
-          groups={groups}
-          familySlugParam={familySlugParam}
-          carId={carId}
-        />
-      </div>
-    </section>
+    <>
+      {/* Bovenaan de gangbare onderhoudsdelen, daaronder pas de volledige
+          boom. Alfabetisch begint het rooster bij "Aandrijfassen" en
+          "Airconditioning", terwijl negen van de tien klanten voor een
+          filter, remblokken of olie komen (lib/catalog/quick-links.ts). */}
+      {popular.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-2xl">{t("popularTitle")}</h2>
+          <div className="mt-6">
+            <GroupList
+              groups={popular}
+              familySlugParam={familySlugParam}
+              carId={carId}
+              compact
+            />
+          </div>
+        </section>
+      )}
+
+      {groups.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-2xl">{t("groupsTitle")}</h2>
+          <div className="mt-6">
+            <GroupList
+              groups={groups}
+              familySlugParam={familySlugParam}
+              carId={carId}
+            />
+          </div>
+        </section>
+      )}
+    </>
   );
 }
 
