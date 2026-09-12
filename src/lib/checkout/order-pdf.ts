@@ -375,10 +375,18 @@ function drawTotals(ctx: Ctx, order: OrderDocument): void {
 }
 
 function drawFooter(ctx: Ctx): void {
+  // "nog niet betaald" stond hier tot 2026-09-11, en dat klopte niet: deze PDF
+  // wordt alleen aangemaakt door lib/orders/notify.ts, en die draait pas nadat
+  // Mollie de betaling heeft bevestigd. De klant las dus "we hebben je betaling
+  // ontvangen" in de mail en "nog niet betaald" in de bijlage.
+  //
+  // Orderbevestiging blíjft het, geen factuur: een NL-factuur vraagt een
+  // aaneengesloten oplopende nummerreeks en het kenmerk hierboven is dat niet
+  // (docs/DECISIONS.md #10).
   const notes = [
     "Alle bedragen in euro. Prijzen inclusief 21% btw, tenzij anders vermeld.",
     "14 dagen bedenktijd op elke bestelling (herroepingsrecht).",
-    "Dit is een orderbevestiging, geen factuur: de bestelling is nog niet betaald.",
+    "Betaling ontvangen. Dit is een orderbevestiging, geen factuur: het kenmerk is geen factuurnummer.",
   ];
 
   let y = MARGIN + 12 * notes.length;

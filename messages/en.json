@@ -465,7 +465,32 @@
   },
   "orderMail": {
     "customerSubject": "Confirmation of your order {reference}",
-    "customerBody": "Hello {name},\n\nThank you for your order at {company}. We have received your payment.\n\nOrder number: {reference}\n\n{lines}\n\nTotal paid: {total}\n\nDelivery address:\n{address}\n\nThe order confirmation is attached to this email as a PDF. We will let you know as soon as your parcel is on its way.\n\nQuestions? Reply to this email or write to {email}.\n\n{company}"
+    "customerBody": "Hello {name},\n\nThank you for your order at {company}. We have received your payment.\n\nOrder number: {reference}\n\n{lines}\n\nTotal paid: {total}\n\nDelivery address:\n{address}\n\nThe order confirmation is attached to this email as a PDF. We will let you know as soon as your parcel is on its way.\n\nQuestions? Reply to this email or write to {email}.\n\n{company}",
+    "html": {
+      "preheader": "We received your payment. Order {reference}.",
+      "eyebrow": "Order confirmation",
+      "greeting": "Thank you for your order, {name}",
+      "intro": "We have received your payment and are getting your order ready. We will let you know as soon as your parcel is on its way.",
+      "viewOrder": "View your order",
+      "orderNumber": "Order number",
+      "itemsHeading": "Your order",
+      "quantity": "Quantity",
+      "subtotal": "Items subtotal",
+      "shipping": "Shipping",
+      "free": "Free",
+      "vat": "Of which VAT {percent}%",
+      "total": "Total paid",
+      "addressHeading": "Delivery address",
+      "pdfNote": "The order confirmation is attached to this email as a PDF.",
+      "returnsNote": "You have 14 days to change your mind on every order.",
+      "helpHeading": "Questions about your order?",
+      "helpBody": "Reply to this email or write to",
+      "linkShop": "To the shop",
+      "linkFaq": "Frequently asked questions",
+      "linkContact": "Contact",
+      "coc": "Chamber of Commerce {value}",
+      "vatNumber": "VAT {value}"
+    }
   },
   "footer": {
     "termsTitle": "Terms",

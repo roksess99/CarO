@@ -1,8 +1,12 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { getTranslations } from "next-intl/server";
 import { renderOrderPdf } from "@/lib/checkout/order-pdf";
 import { COMPANY } from "@/lib/company";
 import { formatPriceCents } from "@/lib/format";
 import { sendMail, type MailAttachment } from "@/lib/mail";
+import { LOGO_CID, renderCustomerMail } from "./customer-mail";
+import { productLabel } from "./product-label";
 import type { StoredOrder } from "./types";
 
 // De twee mails die na een bevestigde betaling de deur uit gaan: één naar de
@@ -37,28 +41,73 @@ function addressBlock(order: StoredOrder): string {
   ].join("\n");
 }
 
-/** Artikelregels zoals ze in beide mails staan, één regel per artikel */
+/** Artikelregels voor de klantmail, één regel per artikel */
 function lineBlock(order: StoredOrder): string {
   return order.document.lines
     .map(
       (line) =>
-        `${line.quantity}x ${line.brand} ${line.name} — ${formatPriceCents(line.lineGrossCents)}`,
+        `${line.quantity}x ${productLabel(line)} — ${formatPriceCents(line.lineGrossCents)}`,
     )
     .join("\n");
 }
 
 /**
- * Regels voor de beheerder, met het artikelnummer van de leverancier erbij.
- * Zonder dat nummer moet hij elk artikel op naam terugzoeken bij Tyre24.
+ * Tabel met uitgevulde kolommen voor een tekstmail.
+ *
+ * Geen HTML-tabel: deze mails zijn `text/plain` en dat zetten mailprogramma's
+ * in een vaste-breedte lettertype, waardoor uitvullen met spaties precies
+ * goed uitkomt. De laatste kolom wordt niet opgevuld, anders eindigt elke
+ * regel in een sliert spaties.
+ */
+function textTable(rows: readonly (readonly string[])[]): string {
+  const widths = rows[0].map((_, column) =>
+    Math.max(...rows.map((row) => row[column].length)),
+  );
+  return rows
+    .map((row) =>
+      row
+        .map((cell, column) =>
+          column === row.length - 1 ? cell : cell.padEnd(widths[column]),
+        )
+        .join("  ")
+        .trimEnd(),
+    )
+    .join("\n");
+}
+
+/**
+ * De inkooptabel voor de beheerder: alles wat hij nodig heeft om de artikelen
+ * bij de groothandel te bestellen, zonder ze op naam te moeten terugzoeken.
+ *
+ * ARTIKELNR is het id van de leverancier — daarmee is het artikel direct te
+ * vinden. OEM-NUMMER staat ernaast om te controleren of het om hetzelfde
+ * onderdeel gaat, of om elders te bestellen. CATALOGUS zegt wáár hij moet
+ * zijn: banden, velgen en toebehoren komen uit Products v1.3 en onderdelen
+ * uit Wearparts v1.6 — aparte API's, aparte schermen, en een wagen met
+ * allebei wordt dus twee inkooporders (docs/api/WEARPARTS.md).
+ *
+ * De productnaam staat achteraan. Vooraan zou de breedste naam alle nummers
+ * voorbij de ~78 tekens duwen waar veel mailprogramma's afbreken, en dan valt
+ * de tabel uit elkaar.
+ *
+ * `order.items` en `order.document.lines` lopen gelijk op; zo wordt het in
+ * components/checkout/actions.ts opgebouwd.
  */
 function purchaseBlock(order: StoredOrder): string {
-  return order.items
-    .map((item, index) => {
-      const line = order.document.lines[index];
-      const label = line ? `${line.brand} ${line.name}` : "?";
-      return `${item.quantity}x ${label}\n    ${item.family} / ${item.partId}`;
-    })
-    .join("\n");
+  const rows: string[][] = [
+    ["AANTAL", "ARTIKELNR", "OEM-NUMMER", "CATALOGUS", "PRODUCT"],
+  ];
+  for (const [index, item] of order.items.entries()) {
+    const line = order.document.lines[index];
+    rows.push([
+      `${item.quantity}x`,
+      item.partId,
+      line?.oeNumber || "-",
+      item.family,
+      line ? productLabel(line) : "?",
+    ]);
+  }
+  return textTable(rows);
 }
 
 async function renderAttachment(order: StoredOrder): Promise<MailAttachment> {
@@ -67,6 +116,32 @@ async function renderAttachment(order: StoredOrder): Promise<MailAttachment> {
     content: await renderOrderPdf(order.document),
     contentType: "application/pdf",
   };
+}
+
+/**
+ * Het logo dat in de HTML-mail staat, als meegestuurde bijlage.
+ *
+ * Eén keer inlezen per proces: het bestand verandert niet tussen twee
+ * bestellingen door, en een bevestigingsmail hoort niet op schijf-IO te
+ * wachten. Lukt het lezen niet — bestand weg na een half gelukte deploy —
+ * dan gaat de mail zonder logo de deur uit in plaats van helemaal niet.
+ */
+let logoCache: MailAttachment | null | undefined;
+
+async function logoAttachment(): Promise<MailAttachment | null> {
+  if (logoCache !== undefined) return logoCache;
+  try {
+    const file = path.join(process.cwd(), "public", "brand", "caro-lockup-email.png");
+    logoCache = {
+      filename: "caro.png",
+      content: await readFile(file),
+      contentType: "image/png",
+      cid: LOGO_CID,
+    };
+  } catch {
+    logoCache = null;
+  }
+  return logoCache;
 }
 
 /**
@@ -86,9 +161,22 @@ export async function sendOrderNotifications(order: StoredOrder): Promise<void> 
     namespace: "orderMail",
   });
 
+  const logo = await logoAttachment();
+  const html = await renderCustomerMail(
+    order,
+    order.document.lines.map((line) => ({
+      label: productLabel(line),
+      quantity: line.quantity,
+      lineGrossCents: line.lineGrossCents,
+    })),
+  );
+
   await sendMail({
     to: order.document.customer.email,
     subject: t("customerSubject", { reference: order.reference }),
+    // De platte tekst blijft de volwaardige versie van het bericht, niet een
+    // "bekijk deze mail in je browser"-regel: hij gaat als alternatief mee en
+    // is wat een tekstclient en een spamfilter te zien krijgen.
     text: t("customerBody", {
       name: order.document.customer.firstName,
       reference: order.reference,
@@ -98,7 +186,8 @@ export async function sendOrderNotifications(order: StoredOrder): Promise<void> 
       email: COMPANY.email,
       company: COMPANY.name,
     }),
-    attachments: [attachment],
+    html,
+    attachments: logo ? [attachment, logo] : [attachment],
   });
 
   // De beheerdersmail staat vast in het Nederlands: die gaat naar ons eigen
