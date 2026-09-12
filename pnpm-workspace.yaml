@@ -1,3 +1,31 @@
+# Platte node_modules zonder symlinks.
+#
+# GEMETEN 2026-09-12 bij de eerste deploy op Hostinger: de applicatie startte
+# niet en gaf
+#
+#   Cannot find module '@swc/helpers/_/_interop_require_default'
+#   required from node_modules/next/dist/client/lib/console.js
+#
+# Standaard zet pnpm in `node_modules` alleen symlinks naar `node_modules/.pnpm`,
+# waar elk pakket zijn eigen afhankelijkheden naast zich heeft staan.
+# `@swc/helpers` hoort bij Next en staat dus in `.pnpm/next@…/node_modules/`,
+# niet bovenin. Node vindt hem alleen omdat de zoektocht begint op het échte
+# pad waar de symlink naar wijst.
+#
+# Hostinger kopieert elke deploy naar een eigen map (`hbuilds/versions/<uuid>/`)
+# en pakt die symlinks daarbij uit: `node_modules/next` werd een echte map, los
+# van de afhankelijkheden die ernaast hoorden te staan. In de stacktrace stonden
+# daardoor twee kopieën van Next.
+#
+# Hiermee schrijft pnpm alles plat in `node_modules`, zoals npm dat doet. Er zijn
+# dan geen symlinks meer om te verliezen. Het kost wat schijfruimte; dat weegt
+# niet op tegen een winkel die na een deploy niet start.
+#
+# LET OP: dit hoort hier en niet in `.npmrc`. pnpm 11 leest zijn eigen
+# instellingen uit dit bestand — in `.npmrc` blijft `node-linker=hoisted`
+# stilletjes zonder effect (`pnpm config get node-linker` gaf `undefined`).
+nodeLinker: hoisted
+
 allowBuilds:
   '@parcel/watcher': true
   '@swc/core': true
