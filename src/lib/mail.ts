@@ -56,11 +56,25 @@ export interface MailAttachment {
   filename: string;
   content: Uint8Array;
   contentType: string;
+  /**
+   * Zet dit om de bijlage in de HTML te kunnen tonen met `<img src="cid:…">`
+   * in plaats van hem onderaan als download te laten hangen. Het logo van de
+   * orderbevestiging gaat zo mee: een afbeelding die van een webserver moet
+   * komen blijft in de meeste clients een grijs vlak tot de lezer op
+   * "afbeeldingen tonen" klikt.
+   */
+  cid?: string;
 }
 
 export interface MailMessage {
   subject: string;
   text: string;
+  /**
+   * Opgemaakte versie. Gaat als `multipart/alternative` mee náást `text`,
+   * nooit in plaats daarvan: een bericht zonder tekstversie scoort slechter
+   * bij spamfilters en is onleesbaar in tekstclients.
+   */
+  html?: string;
   /** Adres waar een antwoord heen moet; niet de afzender */
   replyTo?: string;
   /** Ontvanger; standaard onze eigen mailbox */
@@ -90,12 +104,14 @@ export async function sendMail(message: MailMessage): Promise<void> {
     replyTo: message.replyTo,
     subject: message.subject,
     text: message.text,
+    html: message.html,
     // Nodemailer wil een Buffer of een stream; de PDF komt als Uint8Array
     // uit pdf-lib, dus hier één keer omzetten in plaats van bij elke aanroep.
     attachments: message.attachments?.map((file) => ({
       filename: file.filename,
       content: Buffer.from(file.content),
       contentType: file.contentType,
+      ...(file.cid ? { cid: file.cid } : {}),
     })),
   });
 }

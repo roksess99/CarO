@@ -465,7 +465,32 @@
   },
   "orderMail": {
     "customerSubject": "Bevestiging van je bestelling {reference}",
-    "customerBody": "Hallo {name},\n\nBedankt voor je bestelling bij {company}. We hebben je betaling ontvangen.\n\nOrdernummer: {reference}\n\n{lines}\n\nTotaal betaald: {total}\n\nBezorgadres:\n{address}\n\nDe orderbevestiging zit als PDF bij deze mail. Je krijgt bericht zodra je pakket onderweg is.\n\nVragen? Antwoord op deze mail of stuur een bericht naar {email}.\n\n{company}"
+    "customerBody": "Hallo {name},\n\nBedankt voor je bestelling bij {company}. We hebben je betaling ontvangen.\n\nOrdernummer: {reference}\n\n{lines}\n\nTotaal betaald: {total}\n\nBezorgadres:\n{address}\n\nDe orderbevestiging zit als PDF bij deze mail. Je krijgt bericht zodra je pakket onderweg is.\n\nVragen? Antwoord op deze mail of stuur een bericht naar {email}.\n\n{company}",
+    "html": {
+      "preheader": "Je betaling is ontvangen. Bestelling {reference}.",
+      "eyebrow": "Orderbevestiging",
+      "greeting": "Bedankt voor je bestelling, {name}",
+      "intro": "We hebben je betaling ontvangen en maken je bestelling klaar. Je krijgt bericht zodra het pakket onderweg is.",
+      "viewOrder": "Bekijk je bestelling",
+      "orderNumber": "Ordernummer",
+      "itemsHeading": "Je bestelling",
+      "quantity": "Aantal",
+      "subtotal": "Subtotaal artikelen",
+      "shipping": "Verzendkosten",
+      "free": "Gratis",
+      "vat": "Waarvan btw {percent}%",
+      "total": "Totaal betaald",
+      "addressHeading": "Bezorgadres",
+      "pdfNote": "De orderbevestiging zit als PDF bij deze mail.",
+      "returnsNote": "Je hebt 14 dagen bedenktijd op elke bestelling.",
+      "helpHeading": "Vragen over je bestelling?",
+      "helpBody": "Antwoord op deze mail of schrijf naar",
+      "linkShop": "Naar de webshop",
+      "linkFaq": "Veelgestelde vragen",
+      "linkContact": "Contact",
+      "coc": "KvK {value}",
+      "vatNumber": "Btw {value}"
+    }
   },
   "footer": {
     "termsTitle": "Voorwaarden",
