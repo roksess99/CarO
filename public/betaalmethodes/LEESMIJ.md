@@ -35,14 +35,19 @@ iDEAL en Wero leveren sowieso maar één versie: geel, en dat is verplicht.
 
 ## Waarom precies deze beelden
 
-`pnpm mollie:check` gaf op het echte account (2026-09-10):
+`pnpm mollie:check` gaf op de **live** sleutel (2026-09-12):
 
-> iDEAL | Wero, Card, Pay with Klarna, Buy now pay later with Riverty, Pay By Bank
+> iDEAL | Wero, Card, Pay with Klarna, Pay By Bank
 
 De lockup dekt de eerste methode één op één — Mollie levert iDEAL en Wero als
 één methode, en dat is precies wat de lockup toont. Het Mollie-blok dekt `Card`
-en vangt Klarna, Riverty en Pay By Bank op met "+ meer". Zo staat er geen
-methode in beeld die de klant niet kan kiezen.
+en vangt Klarna en Pay By Bank op met "+ meer". Zo staat er geen methode in
+beeld die de klant niet kan kiezen.
+
+De meting van 2026-09-10 noemde ook Riverty, maar die liep op de testsleutel.
+Test en live hebben bij Mollie elk hun eigen methodes; op het echte account
+staat Riverty niet aan. **Meet dit dus altijd met de sleutel die de winkel
+werkelijk gebruikt.**
 
 De varianten met PayPal uit dezelfde kit zijn daarom **niet** overgenomen:
 PayPal staat niet op het account en zou een keuze beloven die er niet is.
