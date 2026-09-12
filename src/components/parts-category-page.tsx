@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { GroupList } from "@/components/catalog/group-list";
 import { JsonLd } from "@/components/json-ld";
+import { LoadMore } from "@/components/load-more";
 import { ProductGrid } from "@/components/product-grid";
 import { SelectedCarInUrl } from "@/components/vehicle/use-selected-car";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -248,18 +249,15 @@ export async function PartsCategoryPage({
         ))}
 
       {parts.length < total && (
-        <div className="mt-8 flex justify-center">
-          <Link
-            href={{
-              pathname: "/[family]/[category]",
-              params: { family: familySlugParam, category: categorySlug },
-              query: { ...query, toon: String(limit + PAGE_SIZE) },
-            }}
-            className="rounded-md border border-border px-6 py-3 font-semibold hover:border-caro-orange hover:bg-surface"
-          >
-            {tFilters("loadMore", { count: PAGE_SIZE })}
-          </Link>
-        </div>
+        <LoadMore
+          href={{
+            pathname: "/[family]/[category]",
+            params: { family: familySlugParam, category: categorySlug },
+            query: { ...query, toon: String(limit + PAGE_SIZE) },
+          }}
+          label={tFilters("loadMore", { count: PAGE_SIZE })}
+          busyLabel={tFilters("loadMoreBusy")}
+        />
       )}
     </div>
   );

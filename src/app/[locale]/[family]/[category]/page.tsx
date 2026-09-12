@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { BrandTiles } from "@/components/brand-tiles";
 import { JsonLd } from "@/components/json-ld";
+import { LoadMore } from "@/components/load-more";
 import { ProductFilters } from "@/components/product-filters";
 import { ProductGrid } from "@/components/product-grid";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -457,32 +458,29 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               De leverancier geeft geen totaal mee, dus dit is het eerlijkste
               signaal dat we hebben. */}
           {parts.length >= limit && (
-            <div className="mt-8 flex justify-center">
-              <Link
-                href={{
-                  pathname: "/[family]/[category]",
-                  params: { family: familyParam, category: slug },
-                  query: tyreSize
-                    ? {
-                        // Met een maat draagt de URL de maat, niet de filters
-                        breedte: String(tyreSize.width),
-                        hoogte: String(tyreSize.height),
-                        diameter: String(tyreSize.diameter),
-                        ...(tyreSeason ? { seizoen: tyreSeason } : {}),
-                        toon: String(limit + PAGE_SIZE),
-                      }
-                    : {
-                        ...(activeCount > 0
-                          ? { [FILTER_PARAM]: toFilterParam(selected) }
-                          : {}),
-                        toon: String(limit + PAGE_SIZE),
-                      },
-                }}
-                className="rounded-md border border-border px-6 py-3 font-semibold hover:border-caro-orange hover:bg-surface"
-              >
-                {tFilters("loadMore", { count: PAGE_SIZE })}
-              </Link>
-            </div>
+            <LoadMore
+              href={{
+                pathname: "/[family]/[category]",
+                params: { family: familyParam, category: slug },
+                query: tyreSize
+                  ? {
+                      // Met een maat draagt de URL de maat, niet de filters
+                      breedte: String(tyreSize.width),
+                      hoogte: String(tyreSize.height),
+                      diameter: String(tyreSize.diameter),
+                      ...(tyreSeason ? { seizoen: tyreSeason } : {}),
+                      toon: String(limit + PAGE_SIZE),
+                    }
+                  : {
+                      ...(activeCount > 0
+                        ? { [FILTER_PARAM]: toFilterParam(selected) }
+                        : {}),
+                      toon: String(limit + PAGE_SIZE),
+                    },
+              }}
+              label={tFilters("loadMore", { count: PAGE_SIZE })}
+              busyLabel={tFilters("loadMoreBusy")}
+            />
           )}
         </div>
       </div>
