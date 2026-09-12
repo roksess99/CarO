@@ -290,7 +290,8 @@
       "ganzjahresreifen": "vierseizoenenband",
       "winterreifen_": "winterband"
     },
-    "loadMore": "Nog {count} producten laden"
+    "loadMore": "Nog {count} producten laden",
+    "loadMoreBusy": "Bezig met laden…"
   },
   "localeSwitcher": {
     "label": "Taal",
@@ -440,6 +441,11 @@
       "emptyCart": "Je winkelwagen is leeg — er valt niets af te rekenen.",
       "notConfigured": "Betalen is op dit moment niet mogelijk. Probeer het later opnieuw of neem contact met ons op.",
       "failed": "Het starten van de betaling is mislukt. Probeer het opnieuw."
+    },
+    "addressLookup": {
+      "busy": "Adres opzoeken…",
+      "found": "Straat en plaats zijn ingevuld. Klopt het niet? Pas ze gerust aan.",
+      "notFound": "We konden dit adres niet vinden. Vul straat en plaats zelf in."
     }
   },
   "orderStatus": {
@@ -563,7 +569,7 @@
   "privacy": {
     "title": "Privacy en cookies",
     "intro": "Deze webshop slaat zo min mogelijk op. Hieronder staat precies wat er op je apparaat wordt bewaard, waarom, en hoe lang.",
-    "lastUpdated": "Laatst bijgewerkt: 7 augustus 2026",
+    "lastUpdated": "Laatst bijgewerkt: 12 september 2026",
     "storageTitle": "Wat we op je apparaat opslaan",
     "storageIntro": "De wet maakt geen onderscheid tussen cookies en andere opslag in je browser: voor localStorage gelden dezelfde regels. Daarom staat alles hier in één overzicht.",
     "tableName": "Naam",
@@ -600,13 +606,16 @@
     "noBannerBody": "Toestemming vragen is verplicht voor opslag die niet nodig is om de site te laten werken — denk aan het meten van bezoekersgedrag of advertenties. Alles in de tabel hierboven is óf noodzakelijk om de webshop te laten functioneren, óf een keuze die je zelf hebt gemaakt. Daarvoor geldt een wettelijke uitzondering en hoeven we geen toestemming te vragen. We vinden het bovendien misleidend om toestemming te vragen voor iets dat je niet kunt weigeren zonder dat de winkelwagen stopt met werken.",
     "noTracking": "We gebruiken geen analytics, geen advertentiecookies, geen social-mediaknoppen en geen trackers van derden. De site laadt ook geen lettertypen of scripts van externe servers.",
     "personalDataTitle": "Persoonsgegevens die we verwerken",
-    "personalDataBody": "Zolang je alleen rondkijkt, verwerken we geen persoonsgegevens. Dat verandert op twee momenten:",
+    "personalDataBody": "Zolang je alleen rondkijkt, verwerken we geen persoonsgegevens. Dat verandert op drie momenten:",
     "personalCheckout": "Bij het afrekenen vul je je naam, adres, e-mailadres en eventueel telefoonnummer in. Die gegevens hebben we nodig om je bestelling te bezorgen en een factuur te maken.",
+    "personalAddress": "Vul je bij het afrekenen je postcode en huisnummer in, dan zoeken we daarmee je straat en woonplaats op zodat je ze niet hoeft te typen. Je kunt beide velden altijd zelf aanpassen.",
     "personalPlate": "Als je een kenteken invult, sturen we dat naar de RDW-voertuigendatabase om je auto op te zoeken. Een kenteken is een persoonsgegeven, daarom staat het nooit in een webadres en bewaren we het niet in onze logboeken.",
     "thirdPartiesTitle": "Partijen die gegevens van ons ontvangen",
     "thirdPartiesBody": "We verkopen je gegevens niet en delen ze alleen waar dat nodig is om je bestelling uit te voeren:",
     "thirdTyre24": "Tyre24 / ALZURA — onze leverancier. Ontvangt bij een bestelling de gegevens die nodig zijn om het pakket bij jou te bezorgen.",
+    "thirdMollie": "Mollie — handelt je betaling af. Wij geven alleen het bedrag en ons ordernummer door, niet je naam, adres of wat je besteld hebt. Wat je op het betaalscherm invult, zoals je rekening- of kaartnummer, geef je rechtstreeks aan Mollie en je bank; dat komt nooit in onze winkel.",
     "thirdRdw": "overheid.io — levert de RDW-voertuiggegevens. Ontvangt het kenteken dat je invult, en verder niets over jou.",
+    "thirdPostcode": "gratis-postcodedata.nl — zoekt straat en woonplaats op bij je postcode. Ontvangt alleen je postcode en huisnummer en verder niets over jou: de vraag gaat via onze server, dus ook je IP-adres komt er niet.",
     "thirdHosting": "Onze hostingpartij — verwerkt technische gegevens zoals je IP-adres om de site te kunnen serveren.",
     "rightsTitle": "Je rechten",
     "rightsBody": "Je mag opvragen welke gegevens we van je hebben, ze laten corrigeren of laten verwijderen, en bezwaar maken tegen de verwerking. Neem daarvoor contact met ons op. Kom je er met ons niet uit, dan kun je een klacht indienen bij de Autoriteit Persoonsgegevens.",
