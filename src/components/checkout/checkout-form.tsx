@@ -1,9 +1,10 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { useCart } from "@/components/cart/use-cart";
 import { startPayment } from "@/components/checkout/actions";
+import { lookupAddressAction } from "@/components/checkout/address-actions";
 import {
   type CheckoutDetails,
   type CheckoutField,
@@ -48,6 +49,61 @@ export function CheckoutForm() {
     | Record<string, string>
     | null;
 
+  /**
+   * Straat en plaats worden ingevuld zodra postcode én huisnummer bekend zijn.
+   *
+   * Het formulier blijft uncontrolled — de waarden worden rechtstreeks op de
+   * twee invoervelden gezet. Ze controlled maken zou betekenen dat élk veld
+   * mee moet, inclusief de prefill-remount die daarop gebouwd is, en dat is een
+   * verbouwing voor een gemaksfunctie.
+   *
+   * `unavailable` toont niets: de dienst is gratis en zonder uptimegarantie,
+   * dus dat gebeurt. De klant ziet dan twee lege velden die hij gewoon invult,
+   * precies zoals hij zonder deze functie ook zou doen.
+   */
+  const streetRef = useRef<HTMLInputElement>(null);
+  const cityRef = useRef<HTMLInputElement>(null);
+  const [addressStatus, setAddressStatus] = useState<
+    "idle" | "busy" | "found" | "notFound"
+  >("idle");
+  // Voorkomt dat tabben door het formulier dezelfde vraag nog eens stelt
+  const lastLookup = useRef("");
+  // Twee opzoekacties kunnen elkaar inhalen; alleen de laatste mag het veld
+  // vullen, anders krijgt de klant het adres van zijn vórige huisnummer
+  const lookupCount = useRef(0);
+
+  async function lookUpAddress(form: HTMLFormElement) {
+    const data = new FormData(form);
+    const postcode = String(data.get("postcode") ?? "").trim();
+    const houseNumber = String(data.get("houseNumber") ?? "").trim();
+    if (!postcode || !houseNumber) return;
+
+    const key = `${postcode}|${houseNumber}`;
+    if (key === lastLookup.current) return;
+    lastLookup.current = key;
+
+    const id = ++lookupCount.current;
+    setAddressStatus("busy");
+    const result = await lookupAddressAction(postcode, houseNumber);
+    if (id !== lookupCount.current) return;
+
+    if (!result.ok) {
+      setAddressStatus(result.error === "notFound" ? "notFound" : "idle");
+      return;
+    }
+
+    if (streetRef.current) streetRef.current.value = result.street;
+    if (cityRef.current) cityRef.current.value = result.city;
+    // De rode "verplicht"-melding onder die velden slaat nergens meer op
+    setErrors((current) => {
+      const { street, city, ...rest } = current;
+      void street;
+      void city;
+      return rest;
+    });
+    setAddressStatus("found");
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
@@ -91,6 +147,9 @@ export function CheckoutForm() {
       autoComplete?: string;
       optional?: boolean;
       className?: string;
+      inputRef?: React.RefObject<HTMLInputElement | null>;
+      /** Verlaat de klant dit veld, dan mag het adres opgezocht worden */
+      looksUpAddress?: boolean;
     } = {},
   ) {
     const error = errors[name];
@@ -106,9 +165,18 @@ export function CheckoutForm() {
         <input
           id={name}
           name={name}
+          ref={options.inputRef}
           type={options.type ?? "text"}
           autoComplete={options.autoComplete}
           defaultValue={prefill?.[name] ?? ""}
+          onBlur={
+            options.looksUpAddress
+              ? (event) => {
+                  const form = event.currentTarget.form;
+                  if (form) void lookUpAddress(form);
+                }
+              : undefined
+          }
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
           className={error ? inputErrorClass : inputClass}
@@ -143,14 +211,37 @@ export function CheckoutForm() {
 
       <h2 className="mt-8 text-lg">{t("addressTitle")}</h2>
       <div className="mt-4 flex flex-col gap-4">
-        {field("street", { autoComplete: "address-line1" })}
+        {/* Postcode en huisnummer staan bovenaan: vult de klant die eerst in,
+            dan zijn straat en plaats al ingevuld als hij daar komt. */}
         <div className="grid grid-cols-2 gap-4">
-          {field("houseNumber")}
-          {field("houseNumberAddition", { optional: true })}
+          {field("postcode", {
+            autoComplete: "postal-code",
+            looksUpAddress: true,
+          })}
+          {field("houseNumber", { looksUpAddress: true })}
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          {field("postcode", { autoComplete: "postal-code" })}
-          {field("city", { autoComplete: "address-level2" })}
+        {field("houseNumberAddition", { optional: true })}
+        {field("street", {
+          autoComplete: "address-line1",
+          inputRef: streetRef,
+        })}
+        {field("city", {
+          autoComplete: "address-level2",
+          inputRef: cityRef,
+        })}
+
+        {/* Ook voor schermlezers: het invullen gebeurt zonder dat de klant
+            iets aanklikt, dus het moet gemeld worden. */}
+        <div role="status" aria-live="polite" className="-mt-2">
+          {addressStatus === "busy" && (
+            <p className="text-sm text-muted">{t("addressLookup.busy")}</p>
+          )}
+          {addressStatus === "found" && (
+            <p className="text-sm text-muted">{t("addressLookup.found")}</p>
+          )}
+          {addressStatus === "notFound" && (
+            <p className="text-sm text-muted">{t("addressLookup.notFound")}</p>
+          )}
         </div>
         <div>
           <label htmlFor="country" className={labelClass}>

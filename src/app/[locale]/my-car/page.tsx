@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { LoadMore } from "@/components/load-more";
 import { ProductGrid } from "@/components/product-grid";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -56,6 +57,7 @@ export default async function MyCarPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
   const t = await getTranslations("myCar");
   const tFamily = await getTranslations("family");
+  const tFilters = await getTranslations("filters");
 
   const { merk, model, jaar, toon } = await searchParams;
   // Meer laden telt op bij het aantal per familie; de gekozen auto blijft
@@ -161,22 +163,19 @@ export default async function MyCarPage({ params, searchParams }: Props) {
       ))}
 
       {withParts.some(({ parts }) => parts.length >= perFamily) && (
-        <div className="mt-10 flex justify-center">
-          <Link
-            href={{
-              pathname: "/my-car",
-              query: {
-                merk: brand,
-                ...(modelName ? { model: modelName } : {}),
-                ...(year ? { jaar: String(year) } : {}),
-                toon: String(perFamily + PER_FAMILY),
-              },
-            }}
-            className="rounded-md border border-border px-6 py-3 font-semibold hover:border-caro-orange hover:bg-surface"
-          >
-            {t("loadMore")}
-          </Link>
-        </div>
+        <LoadMore
+          href={{
+            pathname: "/my-car",
+            query: {
+              merk: brand,
+              ...(modelName ? { model: modelName } : {}),
+              ...(year ? { jaar: String(year) } : {}),
+              toon: String(perFamily + PER_FAMILY),
+            },
+          }}
+          label={t("loadMore")}
+          busyLabel={tFilters("loadMoreBusy")}
+        />
       )}
 
       {/* Eerlijk zijn over wat niet kan is hier belangrijker dan elders: de

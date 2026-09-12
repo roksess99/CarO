@@ -321,16 +321,36 @@ opnames van individuele advertentievoertuigen, niet van het model.
 
 ---
 
-## 9. Beeldrechten categoriefoto's — OPEN — blokkerend voor livegang
+## 9. Beeldrechten categoriefoto's — OPEN — de winkel is inmiddels live
 
 Het categorieraster op de homepage draait op foto's in `public/categorieen/`.
-De zes die er nu staan zijn aangeleverd als `istockphoto-{id}-612x612.jpg` —
-dat is het **gratis previewformaat** van iStock, bedoeld om te bladeren, niet
-voor publicatie. Getty/iStock treedt hier actief tegen op.
+Ze zijn aangeleverd als `istockphoto-{id}-612x612.jpg` — het **gratis
+previewformaat** van iStock, bedoeld om te bladeren, niet voor publicatie.
+Getty/iStock treedt hier actief tegen op.
 
-**Vóór livegang**: vervangen door gelicentieerde versies, of door beeld van
-Pexels, Unsplash of Pixabay (die staan commercieel gebruik toe). De code
-verandert niet mee; het zijn alleen bestanden. Noteer de herkomst per foto in
+De bestanden zijn inmiddels hernoemd naar `banden.jpg` en dergelijke, dus aan
+de naam is de herkomst niet meer te zien. Aan de afmetingen wél — GEMETEN
+2026-09-12:
+
+| Bestand | Formaat |
+|---|---|
+| `banden.jpg` | 612 × 408 |
+| `onderdelen.jpg` | 612 × 398 |
+| `toebehoren.jpg` | 612 × 408 |
+| `velgen.jpg` | 452 × 445 (bijgesneden) |
+
+Drie van de vier zijn nog exact 612 px breed. Dat is het previewformaat, dus
+het probleem staat er nog.
+
+**Dit stond hier als "vóór livegang" en dat moment is gepasseerd**: de winkel
+draait sinds 2026-09-10 op caroparts.nl, met deze previews op de homepage. Het
+is daarmee geen openstaande voorbereiding meer maar een lopend risico, en het
+is het enige punt in dit bestand dat geld kan kosten zonder dat er iets stuk
+gaat.
+
+Vervangen door gelicentieerde versies, of door beeld van Pexels, Unsplash of
+Pixabay (die staan commercieel gebruik toe). De code verandert niet mee; het
+zijn alleen vier bestanden. Noteer de herkomst per foto in
 `public/categorieen/BRONNEN.md`.
 
 Het raster heeft nu vier tegels — één per familie — en alle vier hebben een
@@ -371,10 +391,16 @@ product in staat. Dat kostte een dag zoeken naar een verkeerd vermoeden
 | `NEXT_PUBLIC_SITE_URL` | Canonical en hreflang | Verkeerde URL's in de SEO-tags |
 | `SMTP_*` (vier) | Contactformulier en orderbevestiging | Geen mail, en bestellen wordt geweigerd |
 | `MOLLIE_API_KEY` | Betalingen (#10) | Checkout meldt dat betalen niet kan |
+| `ORDER_ADMIN_EMAIL` | Waar de inkoopmail heen gaat | Valt terug op het adres in `src/lib/company.ts` |
+| `ORDER_DATA_DIR` | Waar bestellingen bewaard worden | Komt in `<project>/.data/orders` — een nieuwe deploy neemt ze mee in de opruiming (#10) |
 
 Optioneel: `CARO_MIN_MARGIN_PERCENT` en `CARO_USE_RECOMMENDED_PRICE` (#5),
 `TYRE24_BASE_URL_NL`/`_DE` als noodknop. `TYRE24_ALLOYS_TOKEN` wordt nog
 nergens gelezen (fase 6).
+
+Het automatisch invullen van het adres (#11) heeft **geen** variabele: die
+dienst vraagt geen sleutel. Valt hij weg, dan vult de klant straat en plaats
+zelf in en gaat de bestelling gewoon door.
 
 Twee dingen die misgaan als je ze niet weet:
 
@@ -535,6 +561,31 @@ plaatshouder; die regel valt daardoor van het document af.
 
 ---
 
+## 11. Adres automatisch invullen — VASTGESTELD 2026-09-12
+
+De klant typt postcode en huisnummer; straat en plaats worden opgezocht bij
+**gratis-postcodedata.nl** (BAG-data van het Kadaster, CC0). Geen registratie,
+geen sleutel, geen contract — meetreeks en valkuilen in docs/api/POSTCODE.md.
+
+Drie dingen die bij die keuze horen:
+
+- **Het is een gemak, geen voorwaarde.** Gratis dienst zonder uptimegarantie,
+  dus elke fout eindigt in "niet gevonden" en dan vult de klant de twee velden
+  gewoon zelf. Een checkout die vastloopt omdat een adressendienst offline is,
+  is erger dan een checkout zonder automatisch invullen.
+- **De vraag loopt via onze server**, niet vanuit de browser. Anders geeft de
+  klant zijn IP-adres én zijn adres af aan een partij waar hij niets mee te
+  maken heeft. Zelfde regel als bij het kenteken.
+- **Er komt een partij bij die gegevens ontvangt**, dus de privacyverklaring
+  moest mee. Daarbij bleek Mollie er nooit in te hebben gestaan — die pagina
+  dateerde van vóór de betaalkoppeling. Beide staan er nu in.
+
+Alleen Nederland. Het land ligt in de checkout vast op NL, dus dat valt nu
+samen; komt er een tweede land bij, dan moet de opzoekactie overgeslagen worden
+in plaats van een foutmelding te tonen.
+
+---
+
 ## Vastgesteld
 
 | Datum | Beslissing | Reden |
@@ -550,3 +601,4 @@ plaatshouder; die regel valt daardoor van het document af.
 | 2026-09-10 | Betalen via Mollie, inkoop met de hand | Beheerder ziet elke bestelling langs zolang annuleren maar tien minuten kan (#4) |
 | 2026-09-10 | Orders als JSON-bestand, geen database | Genoeg voor terugvinden en niet dubbel mailen; kan bij Hostinger omdat de schijf blijft bestaan (#10) |
 | 2026-09-10 | Hosting bij Hostinger | Staat er al, mailbox draait er ook; levert een blijvende schijf voor de orderopslag |
+| 2026-09-12 | Adres invullen via gratis-postcodedata.nl | Geen sleutel en geen contract nodig, CC0-data van het Kadaster; scheelt de klant twee velden (#11) |

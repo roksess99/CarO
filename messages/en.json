@@ -290,7 +290,8 @@
       "ganzjahresreifen": "all-season tyre",
       "winterreifen_": "winter tyre"
     },
-    "loadMore": "Load {count} more products"
+    "loadMore": "Load {count} more products",
+    "loadMoreBusy": "Loading…"
   },
   "localeSwitcher": {
     "label": "Language",
@@ -440,6 +441,11 @@
       "emptyCart": "Your cart is empty — there is nothing to pay for.",
       "notConfigured": "Payment is unavailable right now. Please try again later or contact us.",
       "failed": "We could not start the payment. Please try again."
+    },
+    "addressLookup": {
+      "busy": "Looking up address…",
+      "found": "Street and town have been filled in. Not right? Feel free to change them.",
+      "notFound": "We could not find this address. Please enter the street and town yourself."
     }
   },
   "orderStatus": {
@@ -563,7 +569,7 @@
   "privacy": {
     "title": "Privacy and cookies",
     "intro": "This shop stores as little as possible. Below is exactly what is kept on your device, why, and for how long.",
-    "lastUpdated": "Last updated: 7 August 2026",
+    "lastUpdated": "Last updated: 12 September 2026",
     "storageTitle": "What we store on your device",
     "storageIntro": "The law makes no distinction between cookies and other browser storage: the same rules apply to localStorage. That is why everything is listed together here.",
     "tableName": "Name",
@@ -600,13 +606,16 @@
     "noBannerBody": "Consent is required for storage that is not needed to make the site work — such as measuring visitor behaviour or advertising. Everything in the table above is either necessary for the shop to function, or a choice you made yourself. A legal exemption applies to that, so we do not have to ask for consent. We also consider it misleading to ask permission for something you cannot refuse without breaking the shopping cart.",
     "noTracking": "We use no analytics, no advertising cookies, no social media buttons and no third-party trackers. The site also loads no fonts or scripts from external servers.",
     "personalDataTitle": "Personal data we process",
-    "personalDataBody": "As long as you are only browsing, we process no personal data. That changes at two moments:",
+    "personalDataBody": "As long as you are only browsing, we process no personal data. That changes at three moments:",
     "personalCheckout": "At checkout you enter your name, address, email address and optionally a phone number. We need these to deliver your order and issue an invoice.",
+    "personalAddress": "When you enter your postcode and house number at checkout, we use them to look up your street and town so you do not have to type them. You can always change both fields yourself.",
     "personalPlate": "If you enter a licence plate, we send it to the Dutch RDW vehicle database to look up your car. A licence plate is personal data, which is why it never appears in a web address and is not kept in our logs.",
     "thirdPartiesTitle": "Parties that receive data from us",
     "thirdPartiesBody": "We do not sell your data and share it only where needed to fulfil your order:",
     "thirdTyre24": "Tyre24 / ALZURA — our supplier. Receives the details needed to deliver your parcel when you place an order.",
+    "thirdMollie": "Mollie — handles your payment. We pass on only the amount and our order number, not your name, address or what you ordered. What you enter on the payment screen, such as your account or card number, goes straight to Mollie and your bank; it never reaches our shop.",
     "thirdRdw": "overheid.io — provides the RDW vehicle data. Receives the licence plate you enter, and nothing else about you.",
+    "thirdPostcode": "gratis-postcodedata.nl — looks up the street and town for your postcode. Receives only your postcode and house number and nothing else about you: the request goes through our server, so your IP address is not shared either.",
     "thirdHosting": "Our hosting provider — processes technical data such as your IP address in order to serve the site.",
     "rightsTitle": "Your rights",
     "rightsBody": "You may request which data we hold about you, have it corrected or deleted, and object to the processing. Contact us to do so. If we cannot resolve it together, you can file a complaint with the Dutch Data Protection Authority.",

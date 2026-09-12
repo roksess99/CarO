@@ -16,16 +16,22 @@
  * de gemeten waarheid waar dat beeld aan getoetst wordt, en levert de naam
  * voor het vertrouwensblok bij de bestelknop (`components/trust-badges.tsx`).
  *
- * GEMETEN 2026-09-10 gaf `GET /methods` letterlijk:
- * `iDEAL | Wero, Card, Pay with Klarna, Buy now pay later with Riverty,
- * Pay By Bank`. iDEAL en Wero zijn bij Mollie dus **één** methode; hieronder
- * staan ze los omdat de klant ze als twee keuzes kent.
+ * GEMETEN 2026-09-12 op de **live** sleutel gaf `GET /methods` letterlijk:
+ * `iDEAL | Wero, Card, Pay with Klarna, Pay By Bank`. iDEAL en Wero zijn bij
+ * Mollie dus **één** methode; hieronder staan ze los omdat de klant ze als
+ * twee keuzes kent.
+ *
+ * **Riverty stond hier tot 2026-09-12 wél in.** Die kwam uit de meting van
+ * 2026-09-10, en die liep nog op de testsleutel. Test en live zijn bij Mollie
+ * gescheiden werelden met elk hun eigen methodes: op het echte account staat
+ * Riverty niet aan. Een methode noemen die de klant op het betaalscherm niet
+ * kan kiezen is een loze belofte, dus hij is eruit. Meet dit opnieuw met de
+ * live sleutel zodra je in het dashboard iets aan- of uitzet.
  */
 export const PAYMENT_METHODS = [
   "iDEAL",
   "Wero",
   "Creditcard",
   "Klarna",
-  "Riverty",
   "Betaal via je bank",
 ] as const;

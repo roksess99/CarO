@@ -1,3 +1,7 @@
+> **Let op — oorspronkelijk briefingdocument, van vóór de bouw.** Bewaard als
+> herkomst van de opdracht, niet bijgewerkt. De geldende UI-regels staan in
+> `docs/BRAND.md` (huisstijl, contrast) en `.claude/rules/frontend.md`.
+
 Frontend Design Skills for CarO Webshop
 =======================================
 
