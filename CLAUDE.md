@@ -44,7 +44,7 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 
 ## Wat de shop nu doet
 
-Stand 2026-09-10. Handig bij het oppakken van werk; niet uitputtend.
+Stand 2026-09-12. Handig bij het oppakken van werk; niet uitputtend.
 
 | Onderdeel | Waar | Bijzonderheid |
 |---|---|---|
@@ -70,7 +70,7 @@ Stand 2026-09-10. Handig bij het oppakken van werk; niet uitputtend.
 | Laadschermen | `loading.tsx` per route, `<Suspense>` in de pagina | **Geen** `loading.tsx` op `/[locale]`: die liet elke pagina — ook de winkelwagen en de FAQ — met een productraster-skelet beginnen, en maakte van elke 404 een status 200. Kop, formulier en uitlegtekst staan nu meteen in de HTML; alleen wat de leverancier moet leveren streamt na |
 | Echte 404 | `[family]/layout.tsx`, `[family]/[category]/layout.tsx` | Een layout staat bóven de Suspense-grens en kan de status dus nog zetten. Gekeurd wordt alleen wat synchroon kan: de familieslug, en bij onderdelen of de categorieslug een id draagt. Een onbekende categorie bij banden vraagt een API-call en blijft daarom 200 |
 | Bestellen en betalen | `components/checkout/`, `lib/mollie/`, `lib/orders/` | De klant betaalt via Mollie. Bedragen worden bij het starten van de betaling **opnieuw uitgerekend** uit de catalogus — de wagen staat in localStorage en is aanpasbaar. Bevestiging komt van de webhook, nooit van de terugkeer in de browser |
-| Na de betaling | `lib/orders/settle.ts`, `lib/orders/notify.ts` | Eén afhandeling voor webhook én terugkeerpagina, met `notifiedAt` tegen dubbele mail. Twee mails met dezelfde PDF: bevestiging naar de klant, werkbriefje met artikelnummers naar de beheerder, die met de hand inkoopt |
+| Na de betaling | `lib/orders/settle.ts`, `lib/orders/notify.ts` | Eén afhandeling voor webhook én terugkeerpagina, met `notifiedAt` tegen dubbele mail. Twee mails met dezelfde PDF. De klant krijgt een **opgemaakte HTML-mail** in de huisstijl (`lib/orders/customer-mail.ts`) met het logo als bijlage via `cid:` — geen SVG en geen webfont, want Gmail gooit beide weg — en een kale tekstversie ernaast. De beheerder krijgt een werkbriefje: een tabel met aantal, artikelnummer, OE-nummer en product, zodat hij direct bij de leverancier kan bestellen |
 | Orderopslag | `lib/orders/store.ts` | JSON per bestelling in `.data/orders/`, gitignored. Kan omdat de winkel bij Hostinger draait en dus een blijvende schijf heeft; `ORDER_DATA_DIR` hoort buiten de projectmap (@docs/DECISIONS.md #10) |
 | Footer | `components/site-footer.tsx`, `lib/footer-links.ts` | Vijf kolommen: klantenservice, assortiment, automerken, fabrikanten en veelgezochte onderdelen, daaronder betaalmethodes en vervoerders. **Elke link is gemeten**: merken en zoektermen die niets opleveren staan er niet in (Citroën gaf drie artikelen en is eruit). De labels blijven in beide talen Nederlands, want de zoekterm ís het label en de catalogus spreekt geen Engels |
 | Betaalmethodes | `public/betaalmethodes/`, `lib/payment-methods.ts` | De footer toont de officiële merkbeelden van iDEAL/Wero en Mollie, onbewerkt en zonder tegel; de witte Mollie-pil staat in beide thema's, want de zwarte viel in donkere modus net náást de achtergrondkleur. `payment-methods.ts` blijft de gemeten lijst waar dat beeld aan getoetst wordt (`pnpm mollie:check`, geen API-call per paginaweergave). Varianten met PayPal zijn bewust niet overgenomen: die methode staat niet op het account. Zie `public/betaalmethodes/LEESMIJ.md` |
@@ -81,6 +81,8 @@ Stand 2026-09-10. Handig bij het oppakken van werk; niet uitputtend.
 | Bandenmaat per categorie | `app/[locale]/[family]/[category]/page.tsx` | De maatkiezer staat ook op Offroad, Transporter en de rest. `/items` accepteert `search` óf `parentNodeId`, nooit allebei, dus met een maat zoeken we over de hele bandenarea en houden we over wat in déze categorie valt. Merk- en laadindexfilters vervallen zolang er een maat staat |
 | Velgmaatkiezer | `lib/catalog/wheel-size.ts`, `components/wheels/` | Diameter, breedte en steekcirkel uit de samengestelde leveranciersteksten ("5,5j*14", "4*100*54"). De keuze gaat terug naar precies die teksten, zodat het gewone filterpad hem gebruikt. Verminkte en omgedraaide waarden vallen af op plausibiliteitsgrenzen |
 | Géén filters op eigenschap bij onderdelen | @docs/DECISIONS.md | Kan technisch wel, doen we niet: leveranciersjargon als kop, en filteren verbergt artikelen waarvoor de fabrikant het veld niet invulde. De eigenschappen staan wél bij de artikelgegevens |
+| Adres automatisch invullen | `lib/address/postcode-data.ts`, `components/checkout/address-actions.ts` | Postcode + huisnummer → straat en plaats, via gratis-postcodedata.nl (geen sleutel nodig). De vraag loopt via een Server Action, dus de klant geeft zijn IP en adres niet aan een derde. Valt de dienst weg, dan vult de klant de velden gewoon zelf — het is een gemak, geen voorwaarde. Zie `docs/api/POSTCODE.md` |
+| Meer laden | `components/load-more.tsx` | Eén knop voor alle productlijsten. Het aantal blijft in de URL (`?toon=40`), maar mét `scroll={false}`: zonder dat sprong de pagina terug naar boven en moest de klant langs de twintig artikelen die hij al gezien had. `useLinkStatus` toont "Bezig met laden…" tijdens het ophalen |
 | Productkaart | `components/product-card.tsx` | Kaal gehouden: beeld, naam, artikelnummer, voorraadbadge, prijs, twee icoonknoppen |
 
 **Fitment werkt** sinds 2026-09-06: een kenteken gaat via de Wearparts-API naar
@@ -123,8 +125,12 @@ pnpm dev          # http://localhost:3000
 pnpm build        # moet slagen voor elke commit
 pnpm lint
 pnpm typecheck    # tsc --noEmit
-pnpm test
+pnpm mail:check   # SMTP los van de site testen (--send stuurt een bericht)
+pnpm mollie:check # test- of live-sleutel, en welke betaalmethodes aanstaan
 ```
+
+Er is nog geen testrunner. Staat er `pnpm test` in een instructie: die bestaat
+niet, gebruik de twee controlescripts hierboven plus de browser.
 
 Draai `pnpm typecheck && pnpm lint` voordat je zegt dat werk af is.
 
@@ -151,8 +157,12 @@ src/
   components/search/     # zoekveld met live suggesties (Server Action)
   components/vehicle/    # kentekenzoeker, autokiezer, kentekenplaat
   lib/                   # domeinlogica, geen React
+  lib/address/           # postcode + huisnummer -> straat en plaats
   lib/catalog/           # types.ts (contract) + mock-provider.ts + tyre24-provider.ts
   lib/cart/              # winkelwagenlogica, framework-onafhankelijk
+  lib/checkout/          # validatie, opslag van klantgegevens, order-PDF
+  lib/mollie/            # betaling aanmaken en status ophalen
+  lib/orders/            # opslaan, afhandelen, mailen
   lib/vehicle/           # RDW-adapter + geoogste merk/model-catalogus
 public/brand/            # logo SVG's
 public/categorieen/      # foto's voor het categorieraster (zie LEESMIJ.md)

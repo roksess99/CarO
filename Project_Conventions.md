@@ -1,3 +1,10 @@
+> **Let op — dit is het oorspronkelijke briefingdocument, van vóór de bouw.**
+> Het staat hier als herkomst van de opdracht en is bewust niet bijgewerkt.
+> Waar het afwijkt van de praktijk is de praktijk leidend: de stack is
+> Next.js 16 met TypeScript (geen ASP.NET of PHP, en geen MVC-indeling), de
+> betaling via Mollie is gebouwd, en de werkafspraken staan in `CLAUDE.md`,
+> `docs/DECISIONS.md` en `.claude/rules/frontend.md`.
+
 CarO Webshop Project Conventions
 ================================
 
