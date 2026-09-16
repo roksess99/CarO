@@ -29,6 +29,17 @@ export interface Part {
   categoryName: string;
   /** Integer in eurocenten, inclusief 21% btw. Nooit floats voor geld. */
   priceCents: number;
+  /**
+   * De prijs zonder korting, alleen aanwezig als er een actie op dit artikel
+   * loopt. `priceCents` is dan lager.
+   *
+   * Dit veld tónen als doorgestreepte "van"-prijs mag pas als er dertig dagen
+   * prijsgeschiedenis is: de wet vraagt de laagste prijs van die periode, niet
+   * die van gisteren (docs/DECISIONS.md #14).
+   */
+  listPriceCents?: number;
+  /** Het werkelijk toegepaste kortingspercentage, 0 als er geen actie loopt */
+  discountPercent?: number;
   availability: Availability;
   imageUrl?: string;
   /**

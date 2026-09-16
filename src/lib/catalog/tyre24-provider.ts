@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { consumerPriceCents } from "../pricing";
+import { discountedPriceCents } from "../pricing";
+import {
+  type DiscountSet,
+  NO_DISCOUNTS,
+  activeDiscounts,
+} from "@/lib/discounts/rules";
 import {
   categoryIdFromSlug,
   categoryLabelKey,
@@ -491,6 +496,7 @@ function toPart(
   source: FamilySource & { token: string },
   family: ProductFamily,
   allowedCategoryIds: ReadonlySet<number> | null,
+  discounts: DiscountSet = NO_DISCOUNTS,
 ): Part | null {
   const parsed = tyreItemSchema.safeParse(raw);
   if (!parsed.success) return null;
@@ -526,6 +532,20 @@ function toPart(
 
   const specs = toSpecs(item);
   const name = displayName(item);
+  const catSlug = category ? categorySlug(source.productAreaId, category) : "";
+
+  // Prijs inclusief een eventuele actie. Dit gebeurt hier en niet ergens
+  // achteraf, omdat de inkoopprijs alleen hier nog bekend is: zonder die
+  // waarde is de marge-ondergrens niet te bewaken (docs/DECISIONS.md #14).
+  const priced = discountedPriceCents({
+    purchaseCents,
+    recommendedCents,
+    percent: discounts.percentFor({
+      id: String(item.itemId),
+      family,
+      categorySlug: catSlug,
+    }),
+  });
 
   return {
     id: String(item.itemId),
@@ -542,9 +562,9 @@ function toPart(
     family,
     oeNumber:
       item.identifications?.OEN?.[0] ?? item.manufacturerItemNumber ?? "",
-    categorySlug: category ? categorySlug(source.productAreaId, category) : "",
+    categorySlug: catSlug,
     categoryName: category?.name ?? "",
-    priceCents: consumerPriceCents({ purchaseCents, recommendedCents }),
+    ...priced,
     availability: (item.stock ?? 0) > 0 ? "in-stock" : "out-of-stock",
     imageUrl: image?.imageLink ? imageUrl(image.imageLink) : undefined,
     specs,
@@ -603,9 +623,12 @@ async function fetchParts(
   }
   const parsed = itemsResponseSchema.safeParse(data);
   if (!parsed.success) return [];
-  const allowed = await allowedCategoryIds(source);
+  const [allowed, discounts] = await Promise.all([
+    allowedCategoryIds(source),
+    activeDiscounts(),
+  ]);
   return (parsed.data.result ?? [])
-    .map((raw) => toPart(raw, source, family, allowed))
+    .map((raw) => toPart(raw, source, family, allowed, discounts))
     .filter((part): part is Part => part !== null);
 }
 

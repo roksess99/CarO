@@ -39,6 +39,12 @@ export default async function BeheerPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link
+            href="/beheer/kortingen"
+            className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface"
+          >
+            Kortingen
+          </Link>
+          <Link
             href="/beheer/facturen"
             className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface"
           >
@@ -134,7 +140,8 @@ export default async function BeheerPage() {
         <h2 className="text-base font-semibold">Nog te bouwen</h2>
         <ul className="mt-3 space-y-1 text-sm text-muted">
           <li>Creditfacturen bij een terugbetaling</li>
-          <li>Artikelen in de korting zetten</li>
+          <li>De doorgestreepte &ldquo;van&rdquo;-prijs (vraagt 30 dagen prijsgeschiedenis)</li>
+          <li>Een aanbiedingenpagina en de carrousel in de hero</li>
           <li>Kortingscodes</li>
         </ul>
       </section>

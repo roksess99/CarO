@@ -63,3 +63,58 @@ export function consumerPriceCents({
       : floorCents;
   return addVat(netCents);
 }
+
+/**
+ * Consumentenprijs mét een lopende actie erop.
+ *
+ * **De ondergrens gaat vóór het percentage.** Zet de beheerder 40% op een
+ * artikel waar de adviesprijs toevallig dicht op de inkoop ligt, dan verkoopt
+ * hij met verlies. Dat mag nooit gebeuren, ook niet als de leverancier zijn
+ * inkoopprijs verhoogt nadat de actie is aangemaakt. Daarom wordt de korting
+ * hier berekend, waar de inkoopprijs nog in beeld is — buiten de adapter is
+ * die weg (`Part` draagt hem niet).
+ *
+ * Wat er terugkomt is wat er werkelijk toegepast is. Ligt dat lager dan
+ * gevraagd, dan is de ondergrens geraakt en hoort het beheerpaneel dat te
+ * laten zien in plaats van te doen alsof het gelukt is.
+ */
+export function discountedPriceCents({
+  purchaseCents,
+  recommendedCents,
+  percent,
+}: {
+  purchaseCents: number;
+  recommendedCents?: number | null;
+  /** 0 tot 100; buiten bereik telt als geen korting */
+  percent: number;
+}): { priceCents: number; listPriceCents?: number; discountPercent: number } {
+  const listCents = consumerPriceCents({ purchaseCents, recommendedCents });
+  if (!Number.isFinite(percent) || percent <= 0 || percent >= 100) {
+    return { priceCents: listCents, discountPercent: 0 };
+  }
+
+  // Alles netto uitrekenen en pas aan het eind btw erbij: rekenen met bedragen
+  // waar al btw in zit geeft een cent verschil, en een cent verschil op een
+  // factuur is een vraag van de boekhouder.
+  const floorNet = Math.round((purchaseCents * (100 + minMarginPercent())) / 100);
+  const listNet = followsRecommendedPrice() && recommendedCents
+    ? Math.max(recommendedCents, floorNet)
+    : floorNet;
+
+  const wantedNet = Math.round((listNet * (100 - percent)) / 100);
+  const netCents = Math.max(wantedNet, floorNet);
+  const priceCents = addVat(netCents);
+
+  if (priceCents >= listCents) {
+    // De ondergrens at de hele korting op; dan is er niets te tonen
+    return { priceCents: listCents, discountPercent: 0 };
+  }
+
+  return {
+    priceCents,
+    listPriceCents: listCents,
+    // Afgerond naar beneden: liever "19%" tonen bij een korting van 19,6% dan
+    // een percentage beloven dat de klant niet terugziet in het bedrag.
+    discountPercent: Math.floor(((listCents - priceCents) * 100) / listCents),
+  };
+}

@@ -5,7 +5,12 @@
 // omdat de categorieboom aan een TecDoc-voertuig hangt. Zoeken op naam kan
 // altijd. De pagina's regelen dat verschil; de mapping hieronder niet.
 
-import { consumerPriceCents } from "@/lib/pricing";
+import { discountedPriceCents } from "@/lib/pricing";
+import {
+  type DiscountSet,
+  NO_DISCOUNTS,
+  activeDiscounts,
+} from "@/lib/discounts/rules";
 import {
   type AssemblyGroup,
   articleById,
@@ -134,6 +139,7 @@ export function toPart(
   article: WearpartsArticle,
   categorySlug: string,
   categoryName: string,
+  discounts: DiscountSet = NO_DISCOUNTS,
 ): Part | null {
   const offers = article.offerList ?? [];
   const priced = offers
@@ -210,9 +216,17 @@ export function toPart(
     oeNumber: article.articleId ?? "",
     categorySlug,
     categoryName,
-    priceCents: consumerPriceCents({
+    // De korting wordt hier verrekend en niet ergens achteraf: alleen hier is
+    // de inkoopprijs nog bekend, en zonder die waarde valt de marge-ondergrens
+    // niet te bewaken (docs/DECISIONS.md #14).
+    ...discountedPriceCents({
       purchaseCents: best.purchase,
       recommendedCents: best.recommended,
+      percent: discounts.percentFor({
+        id: article.id,
+        family: "onderdelen",
+        categorySlug,
+      }),
     }),
     availability: best.stock > 0 ? "in-stock" : "out-of-stock",
     imageUrl: article.image,
@@ -416,16 +430,14 @@ export async function searchParts(
   page = 0,
   carId?: number,
 ): Promise<{ parts: Part[]; total: number }> {
-  const { articles, total } = await searchArticles({
-    search: term,
-    carId,
-    limit,
-    page,
-  });
+  const [{ articles, total }, discounts] = await Promise.all([
+    searchArticles({ search: term, carId, limit, page }),
+    activeDiscounts(),
+  ]);
   return {
     parts: rankByName(
       articles.flatMap((article) => {
-        const part = toPart(article, SEARCH_CATEGORY_SLUG, "");
+        const part = toPart(article, SEARCH_CATEGORY_SLUG, "", discounts);
         return part ? [part] : [];
       }),
       term,
@@ -480,16 +492,13 @@ export async function partsInGroup({
   limit?: number;
   page?: number;
 }): Promise<{ parts: Part[]; total: number }> {
-  const { articles, total } = await searchArticles({
-    carId,
-    categoryId,
-    genericArticleId,
-    limit,
-    page,
-  });
+  const [{ articles, total }, discounts] = await Promise.all([
+    searchArticles({ carId, categoryId, genericArticleId, limit, page }),
+    activeDiscounts(),
+  ]);
   return {
     parts: articles.flatMap((article) => {
-      const part = toPart(article, categorySlug, categoryName);
+      const part = toPart(article, categorySlug, categoryName, discounts);
       return part ? [part] : [];
     }),
     total,
@@ -497,6 +506,9 @@ export async function partsInGroup({
 }
 
 export async function partById(id: string): Promise<Part | null> {
-  const article = await articleById(id);
-  return article ? toPart(article, SEARCH_CATEGORY_SLUG, "") : null;
+  const [article, discounts] = await Promise.all([
+    articleById(id),
+    activeDiscounts(),
+  ]);
+  return article ? toPart(article, SEARCH_CATEGORY_SLUG, "", discounts) : null;
 }
