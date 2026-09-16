@@ -21,8 +21,12 @@ function adminAddress(): string {
   return process.env.ORDER_ADMIN_EMAIL || COMPANY.email;
 }
 
-function pdfName(order: StoredOrder): string {
-  return `orderbevestiging-${order.reference}.pdf`;
+function pdfName(order: StoredOrder, invoiceNumber?: string): string {
+  // Met een factuurnummer heet het bestand ook zo. Een klant die zijn
+  // administratie doet zoekt op factuurnummer, niet op ons ordernummer.
+  return invoiceNumber
+    ? `factuur-${invoiceNumber}.pdf`
+    : `orderbevestiging-${order.reference}.pdf`;
 }
 
 function customerName(order: StoredOrder): string {
@@ -110,10 +114,17 @@ function purchaseBlock(order: StoredOrder): string {
   return textTable(rows);
 }
 
-async function renderAttachment(order: StoredOrder): Promise<MailAttachment> {
+async function renderAttachment(
+  order: StoredOrder,
+  invoiceNumber?: string,
+): Promise<MailAttachment> {
   return {
-    filename: pdfName(order),
-    content: await renderOrderPdf(order.document),
+    filename: pdfName(order, invoiceNumber),
+    content: await renderOrderPdf(order.document, {
+      invoiceNumber,
+      // De factuurdatum is de dag van betaling, niet die van bestellen
+      issuedAt: order.paidAt ?? undefined,
+    }),
     contentType: "application/pdf",
   };
 }
@@ -152,8 +163,11 @@ async function logoAttachment(): Promise<MailAttachment | null> {
  * De klantmail gaat als eerste: die is het belangrijkst voor het vertrouwen
  * van de klant, en de beheerder ziet de betaling anders ook in Mollie.
  */
-export async function sendOrderNotifications(order: StoredOrder): Promise<void> {
-  const attachment = await renderAttachment(order);
+export async function sendOrderNotifications(
+  order: StoredOrder,
+  invoiceNumber?: string,
+): Promise<void> {
+  const attachment = await renderAttachment(order, invoiceNumber);
   const total = formatPriceCents(order.document.totalGrossCents);
 
   const t = await getTranslations({

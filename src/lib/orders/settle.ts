@@ -1,3 +1,4 @@
+import { issueInvoice } from "@/lib/invoices/store";
 import { getPayment, type MolliePayment } from "@/lib/mollie/client";
 import { sendOrderNotifications } from "./notify";
 import { readOrder, saveOrder } from "./store";
@@ -89,12 +90,17 @@ async function settle(
   // is de betaling niet zoekgeraakt en probeert de volgende webhook het opnieuw.
   await saveOrder(paid);
 
+  // Pas hier krijgt de bestelling een factuurnummer: bij het aanmaken zou een
+  // afgebroken betaling een gat in de reeks slaan, en die moet aaneengesloten
+  // zijn. Idempotent, want Mollie meldt zich vaker dan één keer.
+  const invoice = await issueInvoice(paid);
+
   if (paid.notifiedAt) return paid;
 
   // Bewust niet afgevangen: mislukt de mail, dan mag `notifiedAt` niet gezet
   // worden. De aanroeper geeft Mollie een foutstatus terug en die probeert het
   // opnieuw — tot ruim een dag lang.
-  await sendOrderNotifications(paid);
+  await sendOrderNotifications(paid, invoice.number);
 
   const notified: StoredOrder = { ...paid, notifiedAt: new Date().toISOString() };
   await saveOrder(notified);

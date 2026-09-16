@@ -39,6 +39,12 @@ export default async function BeheerPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link
+            href="/beheer/facturen"
+            className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface"
+          >
+            Facturen
+          </Link>
+          <Link
             href="/beheer/beheerders"
             className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface"
           >
@@ -127,7 +133,7 @@ export default async function BeheerPage() {
       <section className="mt-10 rounded-lg border border-border bg-background p-6">
         <h2 className="text-base font-semibold">Nog te bouwen</h2>
         <ul className="mt-3 space-y-1 text-sm text-muted">
-          <li>Facturen met een doorlopend nummer</li>
+          <li>Creditfacturen bij een terugbetaling</li>
           <li>Artikelen in de korting zetten</li>
           <li>Kortingscodes</li>
         </ul>
