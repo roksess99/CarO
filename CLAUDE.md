@@ -44,7 +44,7 @@ We bouwen frontend-first. Database, externe productcatalogus en betaling komen *
 
 ## Wat de shop nu doet
 
-Stand 2026-09-12. Handig bij het oppakken van werk; niet uitputtend.
+Stand 2026-09-16. Handig bij het oppakken van werk; niet uitputtend.
 
 | Onderdeel | Waar | Bijzonderheid |
 |---|---|---|
@@ -71,7 +71,8 @@ Stand 2026-09-12. Handig bij het oppakken van werk; niet uitputtend.
 | Echte 404 | `[family]/layout.tsx`, `[family]/[category]/layout.tsx` | Een layout staat bóven de Suspense-grens en kan de status dus nog zetten. Gekeurd wordt alleen wat synchroon kan: de familieslug, en bij onderdelen of de categorieslug een id draagt. Een onbekende categorie bij banden vraagt een API-call en blijft daarom 200 |
 | Bestellen en betalen | `components/checkout/`, `lib/mollie/`, `lib/orders/` | De klant betaalt via Mollie. Bedragen worden bij het starten van de betaling **opnieuw uitgerekend** uit de catalogus — de wagen staat in localStorage en is aanpasbaar. Bevestiging komt van de webhook, nooit van de terugkeer in de browser |
 | Na de betaling | `lib/orders/settle.ts`, `lib/orders/notify.ts` | Eén afhandeling voor webhook én terugkeerpagina, met `notifiedAt` tegen dubbele mail. Twee mails met dezelfde PDF. De klant krijgt een **opgemaakte HTML-mail** in de huisstijl (`lib/orders/customer-mail.ts`) met het logo als bijlage via `cid:` — geen SVG en geen webfont, want Gmail gooit beide weg — en een kale tekstversie ernaast. De beheerder krijgt een werkbriefje: een tabel met aantal, artikelnummer, OE-nummer en product, zodat hij direct bij de leverancier kan bestellen |
-| Orderopslag | `lib/orders/store.ts` | JSON per bestelling in `.data/orders/`, gitignored. Kan omdat de winkel bij Hostinger draait en dus een blijvende schijf heeft; `ORDER_DATA_DIR` hoort buiten de projectmap (@docs/DECISIONS.md #10) |
+| Orderopslag | `lib/orders/store.ts`, `lib/db/client.ts` | MySQL bij Hostinger (@docs/DECISIONS.md #13). Dezelfde drie functies als toen het JSON-bestanden waren, dus de rest van de winkel merkt er niets van. Schema in `db/migrations/`, nakijken met `pnpm db:check` |
+| Beheerpaneel | `app/beheer/`, `lib/admin/` | Buiten `[locale]`, dus niet tweetalig en met een eigen wortel-layout; op noindex en uit `robots.ts`. Inloggen vraagt mailadres, wachtwoord én de code uit een authenticator-app in één formulier — een tweetrapsscherm zou een half-ingelogde toestand vragen. Wachtwoorden met scrypt uit `node:crypto` (geen native module: die viel bij de deploy al eens om), het 2FA-geheim versleuteld met `ADMIN_TOTP_KEY`. De eerste beheerder komt uit `/beheer/setup`, die zichzelf sluit zodra er één is |
 | Footer | `components/site-footer.tsx`, `lib/footer-links.ts` | Vijf kolommen: klantenservice, assortiment, automerken, fabrikanten en veelgezochte onderdelen, daaronder betaalmethodes en vervoerders. **Elke link is gemeten**: merken en zoektermen die niets opleveren staan er niet in (Citroën gaf drie artikelen en is eruit). De labels blijven in beide talen Nederlands, want de zoekterm ís het label en de catalogus spreekt geen Engels |
 | Betaalmethodes | `public/betaalmethodes/`, `lib/payment-methods.ts` | De footer toont de officiële merkbeelden van iDEAL/Wero en Mollie, onbewerkt en zonder tegel; de witte Mollie-pil staat in beide thema's, want de zwarte viel in donkere modus net náást de achtergrondkleur. `payment-methods.ts` blijft de gemeten lijst waar dat beeld aan getoetst wordt (`pnpm mollie:check`, geen API-call per paginaweergave). Varianten met PayPal zijn bewust niet overgenomen: die methode staat niet op het account. Zie `public/betaalmethodes/LEESMIJ.md` |
 | Passendheid op de productpagina | `components/vehicle/fitment-badge.tsx`, `components/vehicle/fitment-actions.ts` | Groen "past op jouw auto", rood "past niet", of oranje "controleer de passing" — nooit een gok. De controle is één Wearparts-call en werkt **alleen** met kenteken-auto én assemblagegroep samen; met `carId` alleen filtert de API niet en zou álles passen (@docs/api/WEARPARTS.md). Zonder auto staat het kentekenveld er meteen bij. Alleen bij onderdelen: een band past op een maat, niet op een carId |
@@ -127,6 +128,8 @@ pnpm lint
 pnpm typecheck    # tsc --noEmit
 pnpm mail:check   # SMTP los van de site testen (--send stuurt een bericht)
 pnpm mollie:check # test- of live-sleutel, en welke betaalmethodes aanstaan
+pnpm db:check     # verbinding en schema nakijken
+pnpm orders:migrate # JSON-bestellingen naar de database (--write om te doen)
 ```
 
 Er is nog geen testrunner. Staat er `pnpm test` in een instructie: die bestaat
@@ -158,6 +161,8 @@ src/
   components/vehicle/    # kentekenzoeker, autokiezer, kentekenplaat
   lib/                   # domeinlogica, geen React
   lib/address/           # postcode + huisnummer -> straat en plaats
+  lib/admin/             # inloggen, 2FA, sessies, beheerders
+  lib/db/                # MySQL-verbinding en transacties
   lib/catalog/           # types.ts (contract) + mock-provider.ts + tyre24-provider.ts
   lib/cart/              # winkelwagenlogica, framework-onafhankelijk
   lib/checkout/          # validatie, opslag van klantgegevens, order-PDF
