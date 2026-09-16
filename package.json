@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "db:check": "node scripts/check-db.mjs",
     "mail:check": "node scripts/check-mail.mjs",
     "mollie:check": "node scripts/check-mollie.mjs",
+    "orders:migrate": "node scripts/migrate-orders.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -12,6 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "mysql2": "^3.24.4",
     "next": "16.3.0",
     "next-intl": "^4.13.5",
     "nodemailer": "^10.0.1",
