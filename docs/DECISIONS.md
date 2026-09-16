@@ -549,6 +549,10 @@ Moet het later toch een database worden, dan raakt dat alleen `store.ts`: de
 rest van de code praat uitsluitend met `saveOrder`, `readOrder` en
 `updateOrder`.
 
+**Dat moment is in zicht.** Het beheerpaneel (#12) vraagt een factuurnummer, een
+teller op kortingscodes en een mailinglijst, en die drie hebben alle drie iets
+nodig wat een bestand niet kan: een transactie. Zie #13.
+
 De map bevat NAW-gegevens en staat daarom in `.gitignore`, buiten `public/`.
 
 ### Wat nog niet klopt voor de boekhouding
@@ -586,6 +590,479 @@ in plaats van een foutmelding te tonen.
 
 ---
 
+## 12. Beheerpaneel — GEDEELTELIJK VASTGESTELD 2026-09-14
+
+De eigenaar wil een afgeschermd paneel waarin hij vijf dingen kan: het aantal
+bestellingen zien, de facturatie bekijken, artikelen in de korting zetten met
+een eigen percentage, kortingscodes maken met een minimum bestedingsbedrag, en
+met één klik een aanbiedingsmail sturen aan zijn klanten.
+
+**Beslist 2026-09-14 door de eigenaar:**
+
+| Vraag | Antwoord |
+|---|---|
+| Inloggen | Een **eigen inlogpagina**, geen browserpopup |
+| Facturatie | **Allebei**: een factuurdocument per bestelling én een omzetoverzicht |
+| Opslag | Er komt een database (#13) |
+| Kortingen | Zie #14 — vier keuzes gemaakt |
+| Reclamemail | **Geparkeerd** (#15) |
+| Tweestapsverificatie | Nog open — de eigenaar vroeg wat het kost; antwoord staat hieronder |
+
+Eén ding vooraf, want het scheelt een verkeerde verwachting: **vier van de vijf
+kunnen vandaag niet gebouwd worden zonder eerst iets anders op te lossen.**
+
+| Wens | Wat het nodig heeft | Kan dat nu? |
+|---|---|---|
+| Aantal orders zien | een lijstfunctie over `.data/orders` + een inlog | **ja**, zodra er een inlog is |
+| Facturatie bekijken | doorlopend factuurnummer, zeven jaar bewaren | nee — een nummerreeks vraagt een transactie (#13) |
+| Artikel in de korting | kortingsregel per artikel, marge-ondergrens, 30-dagenprijs | nee — vraagt opslag én prijsgeschiedenis (#14) |
+| Kortingscode | code met teller, server-side gekeurd | nee — de teller vraagt een transactie (#13) |
+| Mailadressen + aanbiedingsmail | toestemming, uitschrijflink, aparte verzenddienst | nee — en dit raakt de bezorging van de orderbevestiging (#15) |
+
+### Toegang: dit is de eerste inlog van de hele winkel
+
+Er zit nu **nergens** authenticatie in de code. Het paneel is dus niet "een
+pagina erbij" maar een nieuw stuk beveiliging, en het kan straks prijzen
+veranderen en alle klanten mailen. Fout hierin is duurder dan waar ook.
+
+| Optie | Voordeel | Nadeel |
+|---|---|---|
+| **GEKOZEN — eigen inlogpagina + ondertekende cookie** | Klein en te overzien: één wachtwoordhash in `.env`, `timingSafeEqual`, HttpOnly-cookie. Geen library. Een echte pagina in de huisstijl, met uitloggen | Zelf bouwen aan beveiliging; sessies intrekken en wachtwoord herstellen moeten we zelf bedenken |
+| Auth-library (Auth.js, better-auth) | Doordacht, meer gebruikers en 2FA later makkelijk | Een library erbij, en dat vraagt toestemming (CLAUDE.md). Zwaar voor één gebruiker |
+| HTTP Basic bij de hostingpartij | Kost geen regel code | Lelijke browserpopup, geen uitloggen, wachtwoord bij elke aanvraag mee |
+
+Wat er hoe dan ook bij hoort: `noindex` en uit `app/sitemap.ts`, **buiten**
+`[locale]` (een beheerpaneel hoeft niet tweetalig), een limiet op
+inlogpogingen, en het wachtwoord alleen als hash in `.env` — nooit in de repo.
+
+### Tweestapsverificatie: kost geen geld, wel werk
+
+De eigenaar vroeg of 2FA geld kost. Dat hangt van de vorm af:
+
+| Vorm | Kosten | Oordeel |
+|---|---|---|
+| **Code uit een app** (Google Authenticator, Authy, 1Password) | **€ 0** — het is een open standaard (TOTP, RFC 6238), en de rekensom staat in Node zelf (`node:crypto`, HMAC-SHA1). Geen dienst, geen abonnement, geen account | Dit is wat we zouden bouwen |
+| Code per sms | Per bericht, via een sms-dienst | Onnodig, en sms is de zwakste van de drie |
+| Passkey / vingerafdruk | € 0, maar een zwaardere bouw (WebAuthn) | Later, als er meer gebruikers komen |
+
+Wat het wél kost is werk: een geheim aanmaken, dat één keer tonen zodat je het
+in je telefoon zet, en bij het inloggen zes cijfers extra controleren. Plus
+**herstelcodes**, want een verloren telefoon zonder herstelcode sluit je
+permanent buiten je eigen winkel.
+
+**Advies: doen.** Dit scherm kan prijzen veranderen en straks de klantenlijst
+raken; een uitgelekt wachtwoord is dan genoeg om schade aan te richten.
+
+### Waar het paneel niet over gaat
+
+Inkopen bij de groothandel blijft handwerk (#4). `POST /order` plaatst een
+echte, factureerbare bestelling en hoort niet achter een knop in een paneel dat
+verder over kortingen gaat.
+
+### Facturatie: allebei — VASTGESTELD 2026-09-14
+
+Het worden twee schermen, want het zijn twee verschillende dingen:
+
+1. **Per bestelling een factuurdocument** dat je kunt openen en opsturen. Het
+   ontbrekende stuk is het doorlopende factuurnummer (#10 noemt dat al); daarmee
+   gaat het document van "orderbevestiging" naar "factuur".
+2. **Een omzetoverzicht** voor de boekhouding: wat is er deze maand
+   binnengekomen, hoeveel btw zit erin, wat is er per bestelling verkocht.
+
+Twee dingen die bij keuze 1 horen en die je niet terug kunt draaien:
+
+- **Een factuurnummer is voor altijd.** Zodra er een factuur met nummer 1 de
+  deur uit is, moet de reeks aaneengesloten blijven — ook als een bestelling
+  later geannuleerd wordt. Een geannuleerde factuur verdwijnt niet, die krijgt
+  een creditfactuur met een eigen nummer.
+- **Zeven jaar bewaren** (fiscale bewaarplicht). Dat is meteen het antwoord op
+  een vraag die nog nergens beantwoord was: hoe lang bewaren we bestellingen?
+  Voor de factuurgegevens is dat dus zeven jaar, en niet korter.
+
+De bestellingen die er nu al liggen krijgen géén factuurnummer met terugwerkende
+kracht. De reeks begint bij de eerste bestelling ná de invoering; alles daarvóór
+houdt zijn kenmerk `CARO-…` en blijft een orderbevestiging.
+
+---
+
+## 13. Opslag: MySQL — VASTGESTELD 2026-09-16
+
+Tot nu toe stonden bestellingen als JSON-bestand en was dat verdedigbaar (#10):
+wat de opslag moest kunnen was een bestelling terugvinden en onthouden dat de
+mail eruit was. Dat argument houdt geen stand meer zodra het paneel erbij komt.
+Drie dingen uit #12 vragen iets wat een bestand niet kan:
+
+- **Een factuurnummerreeks moet aaneengesloten en uniek zijn.** Twee
+  bestellingen tegelijk mogen nooit hetzelfde nummer krijgen, en er mag geen gat
+  vallen. `store.ts` zegt zelf al: "dit is geen slot".
+- **De teller van een kortingscode** ("nog vijftig keer geldig") heeft precies
+  hetzelfde probleem, met geld eraan vast.
+- **De mailinglijst** moet doorzoekbaar zijn en per adres onthouden of iemand
+  zich heeft uitgeschreven. Dat mag geen map met bestandjes worden waar één
+  mislukte schrijfactie een uitschrijving laat verdwijnen — dat is een
+  AVG-overtreding, geen bugje.
+
+Fase 4 stond al in CLAUDE.md als "PostgreSQL + Prisma". Dat is nooit tegen een
+alternatief afgewogen; het volume-argument uit #10 geldt nog steeds.
+
+**BESLOTEN 2026-09-14: er komt een database.** Welke, dat hangt aan één ding dat
+we nog niet weten — zie de blokkade hieronder.
+
+Het pakket is **Unlimited Web Hosting** van Hostinger, dus gedeelde hosting en
+geen eigen server. In het paneel staan **Supabase** en **MongoDB Atlas** als
+koppeling. Dat verandert de keuzelijst:
+
+| Optie | Voordeel | Nadeel |
+|---|---|---|
+| **GEKOZEN — MySQL** (zit bij het pakket) | Zit er al bij, geen extra dienst, geen derde partij. InnoDB geeft transacties, en dat is het enige wat we misten | Ouder gereedschap dan Postgres |
+| Supabase (gehoste PostgreSQL) | Echte Postgres, precies wat fase 4 bedoelde | Aanmaken lukte niet (`Unrecognized client_id`). En het zet klantgegevens bij een derde: EU-regio, verwerkersovereenkomst, privacyverklaring bijwerken |
+| SQLite (bestand naast de bestellingen) | Geen tweede dienst, geen wachtwoorden, geen netwerk. Snelst | Staat of valt met een schijf die een deploy overleeft — en dat weten we niet |
+| MongoDB Atlas | — | **Afgeraden.** Een documentdatabase voor bedragen, factuurreeksen en tellers vraagt om precies de problemen die we juist willen oplossen. Orders, regels en codes zijn tabellen met verbanden; dat is een SQL-vorm |
+
+### De blokkade: blijft de schijf bestaan over een deploy heen?
+
+Dit stond al als vraag in #2 en is nooit beantwoord. Het is nu dringend, en om
+twee redenen tegelijk:
+
+1. Het bepaalt of SQLite kan.
+2. **Het raakt de bestellingen die er nu al liggen.** Die staan als JSON-bestand
+   in `.data/orders`. Wordt de projectmap bij een deploy vervangen, dan zijn ze
+   weg — met NAW-gegevens en al, en dat is de enige plek waar een bestelling
+   volledig staat. `ORDER_DATA_DIR` op een pad búiten de projectmap zetten is
+   daar de afspraak voor (#10), en het is het controleren waard of dat er ook
+   echt staat.
+
+**Uit te zoeken**: staat `ORDER_DATA_DIR` op de server ingevuld, en overleeft
+een bestand op dat pad een nieuwe deploy?
+
+### VASTGESTELD 2026-09-16: MySQL bij Hostinger
+
+Supabase is geprobeerd en strandde op `{"message":"Unrecognized client_id"}` bij
+het aanmaken van een project. Niet verder uitgezocht, want de hostingpartij
+biedt zelf een MySQL-database aan en die is er meteen.
+
+**Dat is geen concessie.** Alles wat deze wensen vragen kan MySQL met InnoDB:
+transacties, een unieke sleutel voor "deze code is al door dit adres gebruikt",
+en een aaneengesloten factuurreeks. Bovendien vervalt er een partij: geen
+gegevens bij een derde, dus ook geen verwerkersovereenkomst en geen extra regel
+in de privacyverklaring.
+
+Twee dingen om bij het bouwen niet te vergeten:
+
+- **Gebruik geen `AUTO_INCREMENT` voor het factuurnummer.** Die laat gaten
+  vallen zodra een transactie terugdraait, en een factuurreeks moet
+  aaneengesloten zijn. Het nummer komt uit een tellerrij die met
+  `SELECT … FOR UPDATE` binnen de transactie wordt opgehoogd.
+- **De winkel verbindt via `localhost`, niet via Remote MySQL.** De app draait
+  op hetzelfde Hostinger-account als de database; dan hoeft er niets over het
+  internet. Remote MySQL is er voor verbindingen van búiten (een laptop, een
+  andere server) en vraagt om een IP-adres op de witte lijst.
+
+  **Zet daar nooit `%` neer.** Dat betekent "vanaf elk IP-adres ter wereld" en
+  zet je database met alleen een wachtwoord ervoor op het open internet. Voor
+  ontwikkelen zet je tijdelijk je eigen IP op de lijst, of je draait een MySQL
+  op je eigen machine.
+
+De vraag over de schijf hierboven blijft staan, maar hij blokkeert niets meer:
+de bestellingen verhuizen naar de database en die staat niet in de projectmap.
+
+### Hoe dan ook
+
+De bestaande bestellingen moeten mee: `.data/orders/*.json` inlezen en
+wegschrijven. Dat is een eenmalig script, geen handwerk.
+
+En de opzet van `store.ts` blijft: alle databasecode achter functies, zodat de
+rest van de winkel niet weet waar de gegevens staan. Dan is wisselen van
+Supabase naar SQLite (of andersom) een migratie en geen herbouw.
+
+---
+
+## 14. Kortingen en kortingscodes — GROTENDEELS VASTGESTELD 2026-09-14
+
+### Waar een korting toegepast moet worden
+
+Niet in de componenten. Prijzen komen bij elke paginaweergave vers uit de
+catalogus en worden in `src/lib/pricing.ts` berekend; een korting die alleen op
+de productpagina staat maar niet in het bedrag dat naar Mollie gaat, is een
+prijsfout die geld kost.
+
+**De korting hoort in de adapter, vlak achter `consumerPriceCents()`.** Daar is
+de inkoopprijs nog in beeld — `Part` draagt alleen `priceCents` en verder niets
+over inkoop, dus buiten de adapter is de ondergrens niet meer te berekenen. Eén
+plek aanpassen dekt dan meteen de productkaart, de productpagina, de
+zoekfunctie, de winkelwagen én het orderdocument.
+
+`Part` heeft er een veld bij nodig voor de oude prijs (de doorgestreepte
+"van"-prijs). Dat is een wijziging in `src/lib/catalog/types.ts` — de route die
+CLAUDE.md daarvoor voorschrijft, niet een los veld erbij verzinnen.
+
+### Twee dingen die geld of een boete kosten als ze fout gaan
+
+**De ondergrens mag niet doorbroken worden. BESLIST: weigeren.**
+`consumerPriceCents()` garandeert nu minimaal 25% marge op de inkoopprijs. Zet
+de eigenaar er 40% korting op een artikel waar de adviesprijs toevallig dicht op
+de inkoop ligt, dan verkoopt hij met verlies zonder dat iets hem tegenhoudt.
+
+Het paneel **weigert** zo'n percentage en zegt erbij wat er wél kan ("maximaal
+18% op dit artikel"). Bewust niet stilletjes afkappen: dan staat er 40% in het
+paneel terwijl de klant 18% ziet, en dat verschil merk je pas als je je omzet
+narekent.
+
+Let op het gevolg voor een korting op een hele categorie: bij honderd artikelen
+tegelijk zullen er altijd een paar onder de grens vallen. Het paneel moet die
+dus kunnen aanwijzen ("94 artikelen aangepast, 6 overgeslagen omdat de marge te
+krap is") en niet de hele actie weigeren.
+
+**"Van € 100 voor € 80" mag niet zomaar. BESLIST: we houden prijsgeschiedenis
+bij.** Sinds de Omnibus-richtlijn (in NL het Besluit prijsaanduiding producten,
+de ACM handhaaft erop) moet bij een aangekondigde prijsverlaging de **laagste
+prijs van de afgelopen dertig dagen** vermeld worden — niet de prijs van
+gisteren. Onze prijzen volgen een leveranciersfeed die beweegt, dus die laagste
+prijs weten we alleen als we hem bijhouden.
+
+Wat dat concreet betekent:
+
+- Eén keer per dag de prijs per artikel wegschrijven, met datum. Alleen van
+  artikelen die we tonen, niet van de hele catalogus — dat zijn er miljoenen.
+- De doorgestreepte prijs op de kaart is dan **de laagste prijs van de
+  afgelopen dertig dagen**, niet de adviesprijs van vandaag. Dat is precies
+  waar de wet om vraagt en het is ook het eerlijkste getal.
+- **De eerste dertig dagen na invoering is er nog geen geschiedenis.** Tot die
+  gevuld is tonen we geen doorgestreepte prijs, alleen de nieuwe. Anders staat
+  er een "van"-prijs die we niet kunnen onderbouwen.
+
+### Wat die prijsgeschiedenis kost — GEMETEN 2026-09-16
+
+De eigenaar vroeg of dit niet te veel opslag en te veel API-verzoeken kost.
+Twee metingen op het echte account, en de uitkomst is geruststellend zolang we
+één regel aanhouden.
+
+**Een API-verzoek draagt honderden prijzen tegelijk.** Gemeten op remblokken
+voor carId 128136 (groep 568):
+
+| `limit` | Teruggekregen | Tijd |
+|---|---|---|
+| 100 | 100 van 261 | 1,1 s |
+| 300 | **261 van 261** | 2,4 s |
+| 500 | 261 (alles) | 1,0 s |
+| 1000 | 261 (alles) | 1,3 s |
+
+Er zit geen plafond op dat we raken: een hele categorie komt in één verzoek
+binnen. Een actie van vijfhonderd artikelen kost dus een handvol verzoeken per
+dag, niet vijfhonderd — op een limiet van 100 per minuut voor de hele winkel.
+
+**Eén artikel per verzoek opvragen kan níet gebundeld worden.** Ook gemeten:
+
+| Zoekopdracht | `numFound` |
+|---|---|
+| `search=ID<a>` | 1 |
+| `search=ID<a>,ID<b>,ID<c>` (komma) | **0** |
+| `search=ID<a> ID<b> ID<c>` (spatie) | **0** |
+
+De dagelijkse opfrisbeurt moet dus **per categorie** lopen, met een hoge
+`limit`, en niet artikel voor artikel. Dat scheelt een factor honderd.
+
+**De opslag is verwaarloosbaar.** Een regel is een artikel-id, een datum en een
+bedrag: ruim honderd bytes met index en al.
+
+| Wat | Rekensom | Opslag |
+|---|---|---|
+| 500 artikelen in de aanbieding, 40 dagen bewaard | 20.000 regels | ~2 MB |
+| 5.000 artikelen, 40 dagen | 200.000 regels | ~20 MB |
+| De zes bestellingen die er nu liggen | gemeten: 2.086 bytes per stuk | 1.000 bestellingen ≈ 2 MB |
+
+Dat blijft ook zo: regels ouder dan veertig dagen gaan weg, want we hebben er
+dertig nodig. Het groeit dus niet door. Ter vergelijking: de gratis laag van
+Supabase is een halve gigabyte (controleer dat zelf even, tarieven veranderen).
+
+**De regel die dit alles draagt: nooit de hele catalogus opslaan.** De
+leverancier heeft er miljoenen; `remschijf` alleen al geeft 7.127 treffers.
+Bijhouden doen we uitsluitend voor artikelen die in een actie zitten of er kort
+geleden in zaten. De wet vraagt de dertigdagenprijs alleen bij een *aangekondigde
+verlaging* — geen actie, geen verplichting, dus ook geen reden om iets te bewaren.
+
+Nog zuiniger kan: **alleen wegschrijven als de prijs verandert.** De
+leveranciersprijzen bewegen niet elke dag, dus dat scheelt het merendeel van de
+regels zonder dat het antwoord verandert.
+
+### En de gewone bezoeker? Die kost geen extra verzoek
+
+Belangrijk om apart te noemen, want het is de helft van de zorg: **een korting
+tonen kost geen enkele API-call extra.** De kortingsregels staan in ónze
+database, niet bij de leverancier. De productpagina haalt het artikel toch al
+op; er gaat alleen een percentage overheen.
+
+Die regels zijn bovendien klein en veranderen zelden, dus ze passen in het
+geheugen van de server met een verversing van een minuut. Dat maakt ook het
+lezen uit de database bijna gratis.
+
+Eén vormkeuze die daarbij hoort: een kortingsregel moet een **categorie** kunnen
+aanwijzen, niet alleen losse artikelen. "15% op alle remschijven" is dan één
+regel in plaats van tweehonderd.
+
+### Waar de klant de aanbiedingen ziet — VASTGESTELD 2026-09-16
+
+De afgeprijsde artikelen komen in de **bannerkolom van de hero**, rechts naast
+het zoekpaneel, als een blok dat vanzelf doorschuift. Met de productfoto's van
+de leverancier; die komen al mee met het artikel.
+
+Die plek stond er eigenlijk al voor klaar. In `components/home/hero.tsx` staat
+sinds de bouw:
+
+> "Geen fotobanner met aanbiedingen zoals de concurrent: wij hebben nog geen
+> acties, en een verzonnen korting tonen zou misleidend zijn. Dit blok verkoopt
+> wat wél waar is."
+
+Die reden vervalt zodra er echte kortingen zijn. Wat er stond blijft dus geen
+principe, het was een plaatshouder.
+
+**Zonder lopende actie blijft de banner zoals hij nu is.** Geen lege carrousel
+en geen "binnenkort aanbiedingen": dan is het blok met de drie voordelen nog
+steeds het eerlijkste wat we kunnen tonen.
+
+Vier dingen die eraan vastzitten:
+
+- **De drie voordelen mogen niet verdwijnen.** "Gratis verzending vanaf € 100"
+  en "14 dagen bedenktijd" zijn precies de zinnen die twijfelaars overhalen, en
+  de verzendgrens is ook een verkoopargument op zichzelf. Ze verhuizen naar een
+  smalle strook onder de hero, niet naar de prullenbak.
+- **Vanzelf doorschuiven vraagt een pauzeknop.** WCAG 2.2 (succescriterium
+  2.2.2) eist dat bewegende inhoud die langer dan vijf seconden doorloopt te
+  stoppen is. Daar hoort ook bij: stilstaan zodra de muis erop staat of iemand
+  er met het toetsenbord in komt, en helemaal niet bewegen bij
+  `prefers-reduced-motion` — die regel staat al in `.claude/rules/frontend.md`.
+- **Dit is het grootste beeld van de pagina en dus de LCP.** Het eerste artikel
+  moet in de HTML staan die de server stuurt, niet pas door JavaScript worden
+  opgehaald, met `priority`, vaste afmetingen en een `sizes`. Anders ruilen we
+  omzet uit aanbiedingen in tegen een tragere homepage.
+- **De homepage is de drukste pagina**, dus de lijst met aanbiedingen wordt
+  gecacht. Niet per bezoeker de catalogus bevragen voor een rijtje dat een dag
+  hetzelfde blijft.
+
+Vijf tot acht artikelen is genoeg. Niemand ziet dia negen.
+
+**Let op de eerste maand.** De doorgestreepte "van"-prijs mag pas getoond worden
+als er dertig dagen prijsgeschiedenis is (zie hierboven). Tot die tijd toont het
+blok de nieuwe prijs met een kortingsvlag, zonder oude prijs ernaast. Dat is
+geen tekortkoming maar de wet.
+
+### Kortingscodes
+
+Gekeurd op de server, in `startPayment()` vlak voordat de betaling wordt
+aangemaakt — daar wordt het bedrag al opnieuw uitgerekend en dat blijft de enige
+plek waar het bedrag ontstaat (CLAUDE.md: een bedrag dat naar een betaaldienst
+gaat komt nooit uit de browser).
+
+**Vastgesteld 2026-09-14:**
+
+| Keuze | Besluit |
+|---|---|
+| Soort korting | **Alleen een percentage.** Geen vaste bedragen — dat scheelt een halve rekenmachine aan randgevallen |
+| Minimum bestedingsbedrag | **Zonder verzendkosten.** De grens kijkt naar de artikelen, niet naar het verzendtarief |
+| Looptijd | **Startdatum én einddatum**, allebei door de beheerder in te vullen. Een actie kan dus vooruit gepland worden |
+| Maximaal aantal keer | **Optioneel.** Leeg = onbeperkt |
+
+Twee dingen die hieruit volgen en die nog niemand heeft beslist — mijn voorstel
+erbij, zeg het als je er anders over denkt:
+
+- **Telt de korting mee voor gratis verzending (€ 100)?** Een code van 20% op
+  een bestelling van € 110 maakt daar € 88 van. *Voorstel: de grens kijkt naar
+  het bedrag ná de korting.* De klant betaalt dan immers € 88, en gratis
+  verzending weggeven op geld dat niet binnenkomt kost twee keer.
+- **Mag een code op een artikel dat al in de aanbieding is?** *Voorstel: nee.*
+  Anders stapelen twee kortingen tot onder de ondergrens en moet de winkel de
+  code bij het afrekenen alsnog weigeren — precies op het moment dat de klant
+  wil betalen. Een regel vooraf ("geldt niet op afgeprijsde artikelen") is
+  eerlijker dan een weigering achteraf.
+
+Een code die de bestelling op nul zet kan niet: Mollie weigert een betaling van
+nul. Dat is een randgeval om bewust af te vangen, geen theoretisch probleem.
+
+---
+
+## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
+
+**De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
+De analyse hieronder blijft staan voor als het weer opgepakt wordt.
+
+Wat parkeren concreet betekent, en dat is geen formaliteit:
+
+- **We gaan nu géén mailadressen apart bewaren voor marketing.** Ze staan al bij
+  de bestelling, want daar zijn ze voor nodig. Een aparte lijst aanleggen voor
+  een doel dat je nog niet hebt, mag niet onder de AVG — je verzamelt voor een
+  doel, niet voor de zekerheid.
+- **De bezwaarmelding in de checkout komt er nu ook niet.** Die hoort bij het
+  moment dat je adressen voor marketing gaat verzamelen (zie hieronder), en
+  eerder iets aankondigen wat je niet doet is verwarrend.
+- **Beslist voor later: bewaartermijn twee jaar** na de laatste bestelling.
+
+Wanneer dit terugkomt, is de eerste stap dus niet de knop maar de melding in de
+checkout — zonder die melding is de rest niet toegestaan.
+
+De wens was: de mailadressen van klanten bewaren en er met één klik een
+aanbiedingenmail naartoe sturen. Dat kan, maar niet zoals het nu zou gaan.
+
+### Toestemming is niet vrijblijvend
+
+De Telecommunicatiewet (art. 11.7) staat toe dat je **eigen klanten** mailt over
+**eigen, soortgelijke producten** zonder dat ze daar vooraf ja op zeggen — de
+klantrelatie-uitzondering. Twee voorwaarden zitten eraan vast:
+
+1. Je moet de mogelijkheid om bezwaar te maken aanbieden **op het moment dat je
+   het adres krijgt**, dus in de checkout. Dat staat er nu niet. Zonder die
+   melding geldt de uitzondering niet.
+2. In **elke** mail moet een werkende afmeldlink staan, gratis en zonder
+   inloggen.
+
+Wie niets besteld heeft — bijvoorbeeld iemand die zich op de site inschrijft —
+valt niet onder die uitzondering en moet actief toestemming geven.
+
+Omdat er een nieuw doel bij komt voor gegevens die we al hebben, moet de
+privacyverklaring mee: waarvoor, op welke grondslag, hoe lang bewaard, en hoe je
+je uitschrijft. Bewaar per adres **hoe en wanneer** het binnenkwam en of iemand
+zich heeft uitgeschreven — zonder die vastlegging kun je bij een klacht niet
+laten zien dat je het goed deed.
+
+### De aanbiedingsmail mag niet over dezelfde mailbox
+
+Dit is de zwaarste van de twee, en het is een technisch risico, geen juridisch:
+
+**De orderbevestiging en de reclamemail delen nu dezelfde afzender**
+(`info@caroparts.nl` via de Hostinger-mailbox, `src/lib/mail.ts`). Reputatie bij
+Gmail en Outlook hangt aan het domein. Eén campagne met te veel spamklachten — en
+reclame krijgt altijd klachten — sleurt daarmee ook de **orderbevestigingen** de
+spamfolder in. Dan betaalt een klant en hoort hij niets meer.
+
+Gmail en Yahoo stellen sinds 2024 eisen aan afzenders van grote hoeveelheden
+mail: SPF, DKIM én DMARC, uitschrijven in één klik (`List-Unsubscribe-Post`) en
+een klachtpercentage onder 0,3%. Onder hun volumegrens zijn dat geen harde
+eisen, maar de filters kijken naar dezelfde signalen.
+
+**Voorstel**: marketing via een aparte verzenddienst op een **apart subdomein**
+(bijvoorbeeld `nieuws.caroparts.nl`), zodat een misgelopen campagne de
+transactionele mail niet meeneemt. Welke dienst dat wordt is een aparte keuze;
+wat telt is de scheiding.
+
+### "Eén klik" is precies het gevaar
+
+Een knop die direct naar alle klanten verstuurt, is onomkeerbaar. Een typefout,
+een verkeerd artikel of een verkeerde prijs staat dan bij iedereen in de inbox,
+en een rectificatie is een tweede mail — met opnieuw klachten. Wat het wel kan
+zijn: een concept opstellen, naar jezelf testen, en dan pas versturen met het
+aantal ontvangers in beeld en een bevestiging erop. Dat zijn drie klikken in
+plaats van één, en dat is de bedoeling.
+
+### Open vragen voor als dit terugkomt
+
+- Wat gaat er in die mail? Artikelen die in de aanbieding staan (#14) volgen
+  automatisch uit de kortingsregels — of stelt de eigenaar de lijst zelf samen?
+- Komt er ook een inschrijfmogelijkheid voor bezoekers die nog niet besteld
+  hebben? Dan is expliciete toestemming en een bevestigingsmail nodig.
+
+De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
+
+---
+
 ## Vastgesteld
 
 | Datum | Beslissing | Reden |
@@ -602,3 +1079,11 @@ in plaats van een foutmelding te tonen.
 | 2026-09-10 | Orders als JSON-bestand, geen database | Genoeg voor terugvinden en niet dubbel mailen; kan bij Hostinger omdat de schijf blijft bestaan (#10) |
 | 2026-09-10 | Hosting bij Hostinger | Staat er al, mailbox draait er ook; levert een blijvende schijf voor de orderopslag |
 | 2026-09-12 | Adres invullen via gratis-postcodedata.nl | Geen sleutel en geen contract nodig, CC0-data van het Kadaster; scheelt de klant twee velden (#11) |
+| 2026-09-14 | Beheerpaneel met eigen inlogpagina | De winkel had nog geen enkele inlog; een browserpopup kent geen uitloggen en geen huisstijl (#12) |
+| 2026-09-14 | Er komt een database | Factuurnummers, een codeteller en een uitschrijving kunnen niet veilig in losse bestanden (#13) |
+| 2026-09-14 | Facturatie wordt factuur én omzetoverzicht | Twee verschillende vragen: één voor de klant, één voor de boekhouding (#12) |
+| 2026-09-14 | Korting alleen als percentage, met prijsgeschiedenis | "Van/voor" mag alleen met de laagste prijs van 30 dagen erbij (#14) |
+| 2026-09-14 | Te diepe korting wordt geweigerd, niet afgekapt | Anders staat er 40% in het paneel terwijl de klant 18% ziet (#14) |
+| 2026-09-14 | Marketingmail geparkeerd | Eigenaar pakt het later op, mogelijk met een apart mailadres (#15) |
+| 2026-09-16 | MySQL bij Hostinger, geen Supabase | Supabase aanmaken lukte niet; MySQL zit bij het pakket, kan transacties en zet geen klantgegevens bij een derde (#13) |
+| 2026-09-16 | Aanbiedingen in de hero-banner, vanzelf doorschuivend | Die plek stond al als plaatshouder in de code; met echte kortingen vervalt de reden om hem leeg te laten (#14) |
