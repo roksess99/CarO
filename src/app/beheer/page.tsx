@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CaroMark } from "@/components/brand/caro-mark";
 import { formatPriceCents } from "@/lib/format";
 import { requireAdmin } from "@/lib/admin/session";
@@ -36,14 +37,22 @@ export default async function BeheerPage() {
             <p className="text-sm text-muted">{admin.email}</p>
           </div>
         </div>
-        <form action={signOut}>
-          <button
-            type="submit"
+        <div className="flex items-center gap-2">
+          <Link
+            href="/beheer/beheerders"
             className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface"
           >
-            Uitloggen
-          </button>
-        </form>
+            Beheerders
+          </Link>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface"
+            >
+              Uitloggen
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -118,7 +127,6 @@ export default async function BeheerPage() {
       <section className="mt-10 rounded-lg border border-border bg-background p-6">
         <h2 className="text-base font-semibold">Nog te bouwen</h2>
         <ul className="mt-3 space-y-1 text-sm text-muted">
-          <li>Een tweede beheerder uitnodigen</li>
           <li>Facturen met een doorlopend nummer</li>
           <li>Artikelen in de korting zetten</li>
           <li>Kortingscodes</li>

@@ -190,3 +190,27 @@ export async function listAdmins(): Promise<AdminListItem[]> {
     disabledAt: row.disabled_at,
   }));
 }
+
+/**
+ * Toegang intrekken. De rij blijft staan, want het logboek verwijst ernaar.
+ *
+ * Weigert de laatste actieve beheerder: een paneel zonder beheerder is alleen
+ * nog met serveratoegang te openen, en dat is geen knop die je per ongeluk
+ * moet kunnen indrukken.
+ */
+export async function disableAdmin(
+  adminId: number,
+): Promise<"ok" | "laatste" | "onbekend"> {
+  if ((await countAdmins()) <= 1) return "laatste";
+  const result = await execute(
+    `UPDATE admins SET disabled_at = ? WHERE id = ? AND disabled_at IS NULL`,
+    [new Date(), adminId],
+  );
+  if (result.affectedRows !== 1) return "onbekend";
+
+  // Lopende sessies van deze beheerder meteen ongeldig maken. `currentAdmin()`
+  // kijkt ook naar disabled_at, maar een rij laten staan die nergens meer voor
+  // dient is slordig.
+  await execute(`DELETE FROM admin_sessions WHERE admin_id = ?`, [adminId]);
+  return "ok";
+}
