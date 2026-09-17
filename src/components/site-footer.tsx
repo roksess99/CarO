@@ -89,6 +89,14 @@ export function SiteFooter() {
           </Column>
 
           <Column title={t("assortmentTitle")}>
+            {/* Bovenaan het assortiment: wie langs de hero scrolde moet de
+                aanbiedingen alsnog kunnen vinden. De pagina zegt het eerlijk
+                als er niets loopt. */}
+            <li>
+              <Link href="/offers" className={linkClass}>
+                {t("offersLink")}
+              </Link>
+            </li>
             {PRODUCT_FAMILIES.map((family) => (
               <li key={family}>
                 <Link

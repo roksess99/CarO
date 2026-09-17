@@ -29,6 +29,20 @@ export interface Part {
   categoryName: string;
   /** Integer in eurocenten, inclusief 21% btw. Nooit floats voor geld. */
   priceCents: number;
+  /**
+   * De doorgestreepte "van"-prijs: **de laagste prijs van de afgelopen dertig
+   * dagen**, niet de adviesprijs van vandaag. Dat is de referentie die het
+   * Besluit prijsaanduiding producten voorschrijft bij een aangekondigde
+   * verlaging (docs/DECISIONS.md #14).
+   *
+   * Alleen gevuld als er ook echt dertig dagen gemeten zijn én die prijs hoger
+   * lag dan wat het artikel nu kost. Ontbreekt hij, dan toont de winkel alleen
+   * de nieuwe prijs — nooit een bedrag dat we niet kunnen onderbouwen.
+   * Bron: `lib/prices/history.ts`.
+   */
+  listPriceCents?: number;
+  /** Het werkelijk toegepaste kortingspercentage, 0 als er geen actie loopt */
+  discountPercent?: number;
   availability: Availability;
   imageUrl?: string;
   /**
@@ -84,6 +98,12 @@ export interface PartQuery {
    */
   search?: string;
   limit?: number;
+  /**
+   * Nulgebaseerd paginanummer. Alleen de nachtelijke prijsmeting gebruikt dit:
+   * die moet een hele categorie langs (Auto / SUV telt er 1.603) en haalt hem
+   * in blokken op. De winkel zelf toont één pagina en laadt bij met `limit`.
+   */
+  page?: number;
 }
 
 export interface CatalogProvider {

@@ -5,7 +5,12 @@
 // omdat de categorieboom aan een TecDoc-voertuig hangt. Zoeken op naam kan
 // altijd. De pagina's regelen dat verschil; de mapping hieronder niet.
 
-import { consumerPriceCents } from "@/lib/pricing";
+import { discountedPriceCents } from "@/lib/pricing";
+import {
+  PLAIN_PRICING,
+  type PricingContext,
+  pricingContext,
+} from "@/lib/pricing-context";
 import {
   type AssemblyGroup,
   articleById,
@@ -130,10 +135,46 @@ export function groupNameFromSlug(slug: string): string {
  * Artikel → Part. Het goedkoopste aanbod telt: de klant koopt er één, en de
  * `offerList` staat niet gegarandeerd op prijs gesorteerd.
  */
+/**
+ * Prijs, korting en — als er dertig dagen geschiedenis is — de doorgestreepte
+ * "van"-prijs. De korting wordt hier verrekend en niet ergens achteraf: alleen
+ * hier is de inkoopprijs nog bekend, en zonder die waarde valt de
+ * marge-ondergrens niet te bewaken (docs/DECISIONS.md #14).
+ */
+function priceFor(
+  id: string,
+  categorySlug: string,
+  best: { purchase: number; recommended: number | null },
+  pricing: PricingContext,
+): { priceCents: number; discountPercent: number; listPriceCents?: number } {
+  const priced = discountedPriceCents({
+    purchaseCents: best.purchase,
+    recommendedCents: best.recommended,
+    percent: pricing.discounts.percentFor({
+      id,
+      family: "onderdelen",
+      categorySlug,
+    }),
+  });
+
+  // De laagste prijs van de afgelopen dertig dagen, niet de adviesprijs van
+  // vandaag: dat is de referentie die de wet vraagt bij een aangekondigde
+  // verlaging. Geen geschiedenis betekent geen "van"-prijs.
+  const reference = pricing.references.referenceFor(id);
+  return {
+    priceCents: priced.priceCents,
+    discountPercent: priced.discountPercent,
+    ...(reference !== undefined && reference > priced.priceCents
+      ? { listPriceCents: reference }
+      : {}),
+  };
+}
+
 export function toPart(
   article: WearpartsArticle,
   categorySlug: string,
   categoryName: string,
+  pricing: PricingContext = PLAIN_PRICING,
 ): Part | null {
   const offers = article.offerList ?? [];
   const priced = offers
@@ -210,10 +251,10 @@ export function toPart(
     oeNumber: article.articleId ?? "",
     categorySlug,
     categoryName,
-    priceCents: consumerPriceCents({
-      purchaseCents: best.purchase,
-      recommendedCents: best.recommended,
-    }),
+    // De korting wordt hier verrekend en niet ergens achteraf: alleen hier is
+    // de inkoopprijs nog bekend, en zonder die waarde valt de marge-ondergrens
+    // niet te bewaken (docs/DECISIONS.md #14).
+    ...priceFor(article.id, categorySlug, best, pricing),
     availability: best.stock > 0 ? "in-stock" : "out-of-stock",
     imageUrl: article.image,
     specs,
@@ -416,16 +457,14 @@ export async function searchParts(
   page = 0,
   carId?: number,
 ): Promise<{ parts: Part[]; total: number }> {
-  const { articles, total } = await searchArticles({
-    search: term,
-    carId,
-    limit,
-    page,
-  });
+  const [{ articles, total }, pricing] = await Promise.all([
+    searchArticles({ search: term, carId, limit, page }),
+    pricingContext(),
+  ]);
   return {
     parts: rankByName(
       articles.flatMap((article) => {
-        const part = toPart(article, SEARCH_CATEGORY_SLUG, "");
+        const part = toPart(article, SEARCH_CATEGORY_SLUG, "", pricing);
         return part ? [part] : [];
       }),
       term,
@@ -480,16 +519,13 @@ export async function partsInGroup({
   limit?: number;
   page?: number;
 }): Promise<{ parts: Part[]; total: number }> {
-  const { articles, total } = await searchArticles({
-    carId,
-    categoryId,
-    genericArticleId,
-    limit,
-    page,
-  });
+  const [{ articles, total }, pricing] = await Promise.all([
+    searchArticles({ carId, categoryId, genericArticleId, limit, page }),
+    pricingContext(),
+  ]);
   return {
     parts: articles.flatMap((article) => {
-      const part = toPart(article, categorySlug, categoryName);
+      const part = toPart(article, categorySlug, categoryName, pricing);
       return part ? [part] : [];
     }),
     total,
@@ -497,6 +533,9 @@ export async function partsInGroup({
 }
 
 export async function partById(id: string): Promise<Part | null> {
-  const article = await articleById(id);
-  return article ? toPart(article, SEARCH_CATEGORY_SLUG, "") : null;
+  const [article, pricing] = await Promise.all([
+    articleById(id),
+    pricingContext(),
+  ]);
+  return article ? toPart(article, SEARCH_CATEGORY_SLUG, "", pricing) : null;
 }

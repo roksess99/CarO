@@ -41,5 +41,7 @@ export const config = {
   // LET OP: de punt in `\\.` moet ontsnapt blijven. Zonder die backslash
   // matcht `.*..*` bijna elk pad en slaat Next de proxy over — dan werkt
   // alleen de homepage nog (gemeten 2026-09-08).
-  matcher: "/((?!api|_next|_vercel|.*\\..*).*)",
+  // `beheer` staat er bewust bij: het beheerpaneel is niet tweetalig en zou
+  // anders door next-intl naar /nl/beheer verplaatst worden.
+  matcher: "/((?!api|beheer|_next|_vercel|.*\\..*).*)",
 };

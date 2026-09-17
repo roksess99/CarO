@@ -1,10 +1,12 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { HeroBackdrop } from "@/components/home/hero-backdrop";
+import { OfferCarousel } from "@/components/offers/offer-carousel";
 import { VehicleFinder } from "@/components/vehicle/vehicle-finder";
 import { Link } from "@/i18n/navigation";
 import { familySlug } from "@/lib/catalog/families";
 import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/shipping";
 import { formatPriceCents } from "@/lib/format";
+import { offerParts } from "@/lib/discounts/offers";
 import { vehicleMakeNames } from "@/lib/vehicle/makes";
 
 /**
@@ -21,7 +23,11 @@ export async function Hero() {
   const t = await getTranslations("home");
   const locale = await getLocale();
   // Alleen de merknamen naar de browser; modellen volgen per stap
-  const makes = await vehicleMakeNames();
+  const [makes, offers] = await Promise.all([
+    vehicleMakeNames(),
+    // Vijf tot acht is genoeg; niemand ziet dia negen
+    offerParts(6),
+  ]);
 
   const usps = [
     t("uspShipping", { amount: formatPriceCents(FREE_SHIPPING_THRESHOLD_CENTS) }),
@@ -50,9 +56,12 @@ export async function Hero() {
             </div>
           </div>
 
-          {/* Banner. Geen fotobanner met aanbiedingen zoals de concurrent:
-              wij hebben nog geen acties, en een verzonnen korting tonen zou
-              misleidend zijn. Dit blok verkoopt wat wél waar is. */}
+          {/* Lopen er acties, dan staan die hier; anders blijft de banner
+              staan die verkoopt wat wél waar is. Bewust geen lege carrousel en
+              geen "binnenkort aanbiedingen" (docs/DECISIONS.md #14). */}
+          {offers.length > 0 ? (
+            <OfferCarousel parts={offers} />
+          ) : (
           <div className="relative overflow-hidden rounded-xl border border-border bg-background p-6 md:p-10">
             <HeroBackdrop id="banner" />
             <div className="relative">
@@ -101,7 +110,34 @@ export async function Hero() {
               </Link>
             </div>
           </div>
+          )}
         </div>
+
+        {/* De drie voordelen staan normaal ín de banner. Wordt die vervangen
+            door de aanbiedingen, dan verhuizen ze naar deze strook: "gratis
+            verzending vanaf € 100" en "14 dagen bedenktijd" zijn precies de
+            zinnen die twijfelaars overhalen en mogen niet wegvallen. */}
+        {offers.length > 0 && (
+          <ul className="mt-6 grid gap-3 border-t border-border pt-5 sm:grid-cols-3">
+            {usps.map((usp) => (
+              <li key={usp} className="flex items-start gap-2 text-sm">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="mt-0.5 size-4 shrink-0 text-caro-orange"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m4 12.5 5 5L20 6.5" />
+                </svg>
+                {usp}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   );

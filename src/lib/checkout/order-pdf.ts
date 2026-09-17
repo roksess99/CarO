@@ -123,7 +123,12 @@ function newPage(ctx: Ctx): void {
   ctx.y = A4[1] - MARGIN;
 }
 
-function drawHeader(ctx: Ctx, order: OrderDocument): void {
+function drawHeader(
+  ctx: Ctx,
+  order: OrderDocument,
+  invoiceNumber?: string,
+  issuedAt?: string,
+): void {
   // Woordmerk links. Oranje mag als vlak, niet als tekst (docs/BRAND.md).
   text(ctx, "CarO", { size: 26, bold: true, y: ctx.y - 20 });
   ctx.page.drawRectangle({
@@ -135,20 +140,22 @@ function drawHeader(ctx: Ctx, order: OrderDocument): void {
   });
 
   const right = MARGIN + CONTENT_WIDTH;
-  text(ctx, "ORDERBEVESTIGING", {
+  text(ctx, invoiceNumber ? "FACTUUR" : "ORDERBEVESTIGING", {
     size: 9,
     bold: true,
     color: GREY,
     alignRight: right,
     y: ctx.y - 6,
   });
-  text(ctx, order.reference, {
+  text(ctx, invoiceNumber ?? order.reference, {
     size: 12,
     bold: true,
     alignRight: right,
     y: ctx.y - 21,
   });
-  text(ctx, dateFormatter.format(new Date(order.issuedAt)), {
+  // Een factuur draagt de datum waarop hij is uitgegeven — dat is de dag dat
+  // de betaling binnenkwam, en die kan later zijn dan de dag van bestellen.
+  text(ctx, dateFormatter.format(new Date(issuedAt ?? order.issuedAt)), {
     size: 9,
     color: GREY,
     alignRight: right,
@@ -343,6 +350,16 @@ function drawTotals(ctx: Ctx, order: OrderDocument): void {
     formatPriceCents(order.itemsNetCents),
     formatPriceCents(order.itemsGrossCents),
   );
+  if (order.discount) {
+    // Met een minteken ervoor: een bedrag zonder teken tussen twee optellingen
+    // leest als iets wat erbij komt.
+    drawTotalRow(
+      ctx,
+      `Kortingscode ${order.discount.code} (${order.discount.percent}%)`,
+      `-${formatPriceCents(order.discount.netCents)}`,
+      `-${formatPriceCents(order.discount.grossCents)}`,
+    );
+  }
   drawTotalRow(
     ctx,
     "Verzendkosten",
@@ -374,19 +391,27 @@ function drawTotals(ctx: Ctx, order: OrderDocument): void {
   );
 }
 
-function drawFooter(ctx: Ctx): void {
+function drawFooter(
+  ctx: Ctx,
+  reference: string,
+  invoiceNumber?: string,
+): void {
   // "nog niet betaald" stond hier tot 2026-09-11, en dat klopte niet: deze PDF
   // wordt alleen aangemaakt door lib/orders/notify.ts, en die draait pas nadat
   // Mollie de betaling heeft bevestigd. De klant las dus "we hebben je betaling
   // ontvangen" in de mail en "nog niet betaald" in de bijlage.
   //
-  // Orderbevestiging blíjft het, geen factuur: een NL-factuur vraagt een
-  // aaneengesloten oplopende nummerreeks en het kenmerk hierboven is dat niet
-  // (docs/DECISIONS.md #10).
+  // Met een factuurnummer ís dit een factuur: dat nummer komt uit een
+  // aaneengesloten reeks in de database (docs/DECISIONS.md #12). Zonder — bij
+  // een document dat om een andere reden getekend wordt — blijft het een
+  // orderbevestiging, en dan moet erbij staan dat het kenmerk geen
+  // factuurnummer is.
   const notes = [
     "Alle bedragen in euro. Prijzen inclusief 21% btw, tenzij anders vermeld.",
     "14 dagen bedenktijd op elke bestelling (herroepingsrecht).",
-    "Betaling ontvangen. Dit is een orderbevestiging, geen factuur: het kenmerk is geen factuurnummer.",
+    invoiceNumber
+      ? `Betaling ontvangen. Ordernummer ${reference}.`
+      : "Betaling ontvangen. Dit is een orderbevestiging, geen factuur: het kenmerk is geen factuurnummer.",
   ];
 
   let y = MARGIN + 12 * notes.length;
@@ -402,8 +427,12 @@ function drawFooter(ctx: Ctx): void {
   }
 }
 
-/** Orderbevestiging → PDF-bytes */
-export async function renderOrderPdf(order: OrderDocument): Promise<Uint8Array> {
+/** Orderbevestiging → PDF-bytes. Mét factuurnummer wordt het een factuur. */
+export async function renderOrderPdf(
+  order: OrderDocument,
+  options: { invoiceNumber?: string; issuedAt?: string } = {},
+): Promise<Uint8Array> {
+  const { invoiceNumber, issuedAt } = options;
   const doc = await PDFDocument.create();
   const ctx: Ctx = {
     doc,
@@ -413,14 +442,16 @@ export async function renderOrderPdf(order: OrderDocument): Promise<Uint8Array> 
     bold: await doc.embedFont(StandardFonts.HelveticaBold),
   };
 
-  doc.setTitle(`Orderbevestiging ${order.reference}`);
+  doc.setTitle(
+    invoiceNumber ? `Factuur ${invoiceNumber}` : `Orderbevestiging ${order.reference}`,
+  );
   doc.setAuthor(order.company.name);
-  doc.setSubject("Orderbevestiging");
+  doc.setSubject(invoiceNumber ? "Factuur" : "Orderbevestiging");
   doc.setCreator(order.company.name);
   doc.setProducer(order.company.name);
-  doc.setCreationDate(new Date(order.issuedAt));
+  doc.setCreationDate(new Date(issuedAt ?? order.issuedAt));
 
-  drawHeader(ctx, order);
+  drawHeader(ctx, order, invoiceNumber, issuedAt);
   drawParties(ctx, order);
   drawTableHead(ctx);
 
@@ -439,7 +470,7 @@ export async function renderOrderPdf(order: OrderDocument): Promise<Uint8Array> 
     newPage(ctx);
   }
   drawTotals(ctx, order);
-  drawFooter(ctx);
+  drawFooter(ctx, order.reference, invoiceNumber);
 
   return doc.save();
 }

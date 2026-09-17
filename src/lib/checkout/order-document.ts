@@ -34,6 +34,17 @@ export interface OrderDocument {
   vatPercent: number;
   itemsNetCents: number;
   itemsGrossCents: number;
+  /**
+   * De kortingscode zoals hij gold, met het bedrag dat hij scheelde. Ontbreekt
+   * hij, dan is er geen code gebruikt — een bedrag van 0 zou op de factuur een
+   * regel "korting € 0,00" opleveren.
+   */
+  discount?: {
+    code: string;
+    percent: number;
+    grossCents: number;
+    netCents: number;
+  };
   shippingNetCents: number;
   shippingGrossCents: number;
   shippingIsFree: boolean;
@@ -51,6 +62,12 @@ export interface OrderDocumentInput {
     priceCents: number;
     quantity: number;
   }>;
+  /**
+   * De gekeurde kortingscode. `baseGrossCents` is het bedrag waar hij over
+   * mag rekenen — de artikelen zónder eigen actie — en komt van
+   * `checkCode()`, nooit uit de browser.
+   */
+  discount?: { code: string; percent: number; grossCents: number };
   /** Meegeven in tests; anders "nu" */
   now?: Date;
   reference?: string;
@@ -80,6 +97,7 @@ export function provisionalReference(now: Date = new Date()): string {
 export function buildOrderDocument({
   details,
   entries,
+  discount,
   now = new Date(),
   reference,
 }: OrderDocumentInput): OrderDocument {
@@ -100,15 +118,34 @@ export function buildOrderDocument({
   const itemsGrossCents = lines.reduce((sum, l) => sum + l.lineGrossCents, 0);
   const itemsNetCents = lines.reduce((sum, l) => sum + l.lineNetCents, 0);
 
-  const shipping = calculateShipping(itemsGrossCents);
+  // De korting gaat er eerst af, en pas daarna kijkt de verzendgrens mee: bij
+  // 20% korting op € 110 betaalt de klant € 88, en gratis verzending weggeven
+  // op geld dat niet binnenkomt kost twee keer (docs/DECISIONS.md #14).
+  const discountGrossCents = Math.min(discount?.grossCents ?? 0, itemsGrossCents);
+  const discountNetCents =
+    discountGrossCents - vatPortionCents(discountGrossCents);
+  const payableItemsGrossCents = itemsGrossCents - discountGrossCents;
+
+  // ...maar een code mag de bestelling nooit duurder maken. Bij een kleine
+  // korting op een bedrag net boven de gratis-verzendgrens haalt de korting de
+  // gratis verzending weg terwijl hij minder scheelt dan het verzendtarief:
+  // € 100 met 5% korting werd € 95 + € 7,45 = € 102,45, méér dan zonder code.
+  // Dan houdt de klant de verzending die hij zonder code ook had gekregen.
+  const shippingAfter = calculateShipping(payableItemsGrossCents);
+  const shippingBefore = calculateShipping(itemsGrossCents);
+  const worseOff =
+    payableItemsGrossCents + shippingAfter.costCents >
+    itemsGrossCents + shippingBefore.costCents;
+  const shipping = worseOff ? shippingBefore : shippingAfter;
+
   const shippingNetCents =
     shipping.costCents - vatPortionCents(shipping.costCents);
 
-  const totalGrossCents = itemsGrossCents + shipping.costCents;
+  const totalGrossCents = payableItemsGrossCents + shipping.costCents;
   // Het nettototaal is de som van de regels, niet een herberekening over het
   // eindbedrag: anders wijkt de kolom "excl. btw" een cent af van wat eronder
   // staat opgeteld. De btw is dan het sluitstuk, zodat het document klopt.
-  const totalNetCents = itemsNetCents + shippingNetCents;
+  const totalNetCents = itemsNetCents - discountNetCents + shippingNetCents;
 
   return {
     reference: reference ?? provisionalReference(now),
@@ -119,6 +156,16 @@ export function buildOrderDocument({
     vatPercent: VAT_PERCENT,
     itemsNetCents,
     itemsGrossCents,
+    ...(discount && discountGrossCents > 0
+      ? {
+          discount: {
+            code: discount.code,
+            percent: discount.percent,
+            grossCents: discountGrossCents,
+            netCents: discountNetCents,
+          },
+        }
+      : {}),
     shippingNetCents,
     shippingGrossCents: shipping.costCents,
     shippingIsFree: shipping.isFree,

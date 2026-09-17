@@ -31,6 +31,12 @@ export const routing = defineRouting({
       nl: "/mijn-auto",
       en: "/my-car",
     },
+    // Artikelen die nu in de korting zijn. Eén pagina, geen filters: het zijn
+    // er hooguit een paar tientallen zolang de eigenaar de acties zelf aanzet.
+    "/offers": {
+      nl: "/aanbiedingen",
+      en: "/offers",
+    },
     "/faq": {
       nl: "/veelgestelde-vragen",
       en: "/faq",

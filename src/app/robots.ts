@@ -26,6 +26,10 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: [
           ...privatePaths,
+          // Het beheerpaneel. Staat ook op noindex in zijn eigen layout; dit
+          // scheelt een crawler de moeite er langs te gaan.
+          "/beheer",
+          "/beheer/",
           // Zoekresultaten: eindeloos veel varianten van dezelfde artikelen.
           "/*?*oen=",
           "/*?*q=",

@@ -113,6 +113,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }),
 
+    // Wat er in de aanbieding staat wisselt; daarom dagelijks, en met een
+    // hogere prioriteit dan de statische pagina's.
+    ...entry((locale) => getPathname({ locale, href: "/offers" }), {
+      changeFrequency: "daily",
+      priority: 0.7,
+    }),
+
     ...entry((locale) => getPathname({ locale, href: "/faq" }), {
       changeFrequency: "monthly",
       priority: 0.6,

@@ -3,6 +3,10 @@
 import { useTranslations } from "next-intl";
 import { OrderTotals } from "@/components/cart/order-totals";
 import { useCartParts } from "@/components/cart/use-cart-parts";
+import { DiscountCodeField } from "@/components/checkout/discount-code-field";
+import { useAppliedCode } from "@/components/checkout/use-discount-code";
+import { DiscountBadge } from "@/components/discount-badge";
+import { codeBaseCents, codeDiscountCents } from "@/lib/discounts/code-base";
 import { subtotalCents } from "@/lib/cart/cart";
 import { formatPriceCents } from "@/lib/format";
 import { Link } from "@/i18n/navigation";
@@ -12,6 +16,7 @@ import { Link } from "@/i18n/navigation";
 export function OrderSummary() {
   const t = useTranslations("checkout");
   const { entries, loading } = useCartParts();
+  const applied = useAppliedCode();
 
   if (loading) {
     return (
@@ -46,6 +51,19 @@ export function OrderSummary() {
     })),
   );
 
+  // Het kortingsbedrag wordt hier opnieuw uitgerekend uit de wagen zoals hij nu
+  // is, met dezelfde regels als de server: alleen over artikelen zonder eigen
+  // actie, en naar beneden afgerond. Een onthouden bedrag zou verouderen zodra
+  // de klant nog iets toevoegt.
+  const codeBase = codeBaseCents(
+    entries.map(({ part, quantity }) => ({
+      priceCents: part.priceCents,
+      quantity,
+      discountPercent: part.discountPercent,
+    })),
+  );
+  const discountCents = applied ? codeDiscountCents(codeBase, applied.percent) : 0;
+
   return (
     <div className="rounded-lg border border-border p-6">
       <h2 className="text-lg">{t("summaryTitle")}</h2>
@@ -57,7 +75,11 @@ export function OrderSummary() {
           >
             <span>
               {part.name}{" "}
-              <span className="text-muted tabular-nums">× {quantity}</span>
+              <span className="text-muted tabular-nums">× {quantity}</span>{" "}
+              <DiscountBadge
+                percent={part.discountPercent}
+                className="align-middle text-xs"
+              />
             </span>
             <span className="font-medium tabular-nums">
               {formatPriceCents(part.priceCents * quantity)}
@@ -65,8 +87,21 @@ export function OrderSummary() {
           </li>
         ))}
       </ul>
+      <DiscountCodeField />
+
       <div className="mt-4">
-        <OrderTotals subtotalCents={subtotal} />
+        <OrderTotals
+          subtotalCents={subtotal}
+          discount={
+            applied && discountCents > 0
+              ? {
+                  code: applied.code,
+                  percent: applied.percent,
+                  cents: discountCents,
+                }
+              : undefined
+          }
+        />
       </div>
       {/* Verplicht vóór de laatste checkoutstap (CLAUDE.md, NL-recht) */}
       <p className="mt-4 text-sm text-muted">{t("withdrawalNote")}</p>

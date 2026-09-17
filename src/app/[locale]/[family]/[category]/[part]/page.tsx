@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { filterValueLabel } from "@/lib/catalog/filter-values";
 import { AvailabilityBadge } from "@/components/availability-badge";
+import { DiscountBadge } from "@/components/discount-badge";
+import { OldPrice } from "@/components/old-price";
 import { AddToCartWithQuantity } from "@/components/cart/add-to-cart-with-quantity";
 import { StickyBuyBar } from "@/components/cart/sticky-buy-bar";
 import { JsonLd } from "@/components/json-ld";
@@ -325,12 +327,21 @@ export default async function ProductPage({ params }: Props) {
               waarop een koopbesluit valt stonden los over de pagina verspreid,
               zodat de klant ze zelf bij elkaar moest zoeken. */}
           <div className="mt-6 rounded-lg border border-border bg-surface p-4">
-            <p className="flex flex-wrap items-baseline gap-x-2">
+            <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span className="text-4xl font-bold tabular-nums">
                 {formatPriceCents(part.priceCents)}
               </span>
               <span className="text-sm text-muted">{t("inclVat")}</span>
+              <DiscountBadge percent={part.discountPercent} />
             </p>
+            {part.listPriceCents && (
+              /* De referentieprijs mét uitleg erbij: "van € 45,98" zonder te
+                 zeggen wat dat bedrag ís, is precies wat de ACM aanrekent. */
+              <p className="mt-1 text-sm">
+                <OldPrice cents={part.listPriceCents} />{" "}
+                <span className="text-muted">{t("lowest30")}</span>
+              </p>
+            )}
 
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
               <AvailabilityBadge availability={part.availability} />

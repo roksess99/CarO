@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { consumerPriceCents } from "../pricing";
+import { discountedPriceCents } from "../pricing";
+import {
+  PLAIN_PRICING,
+  type PricingContext,
+  pricingContext,
+} from "@/lib/pricing-context";
 import {
   categoryIdFromSlug,
   categoryLabelKey,
@@ -491,6 +496,7 @@ function toPart(
   source: FamilySource & { token: string },
   family: ProductFamily,
   allowedCategoryIds: ReadonlySet<number> | null,
+  pricing: PricingContext = PLAIN_PRICING,
 ): Part | null {
   const parsed = tyreItemSchema.safeParse(raw);
   if (!parsed.success) return null;
@@ -526,6 +532,30 @@ function toPart(
 
   const specs = toSpecs(item);
   const name = displayName(item);
+  const catSlug = category ? categorySlug(source.productAreaId, category) : "";
+
+  // Prijs inclusief een eventuele actie. Dit gebeurt hier en niet ergens
+  // achteraf, omdat de inkoopprijs alleen hier nog bekend is: zonder die
+  // waarde is de marge-ondergrens niet te bewaken (docs/DECISIONS.md #14).
+  const priced = discountedPriceCents({
+    purchaseCents,
+    recommendedCents,
+    percent: pricing.discounts.percentFor({
+      id: String(item.itemId),
+      family,
+      categorySlug: catSlug,
+    }),
+  });
+
+  // De doorgestreepte prijs is de laagste prijs van de afgelopen dertig dagen,
+  // niet de adviesprijs van vandaag — dat is wat de wet als referentie vraagt.
+  // Is er geen geschiedenis, dan staat er geen "van"-prijs. Zie
+  // lib/prices/history.ts.
+  const reference = pricing.references.referenceFor(String(item.itemId));
+  const listPriceCents =
+    reference !== undefined && reference > priced.priceCents
+      ? reference
+      : undefined;
 
   return {
     id: String(item.itemId),
@@ -542,9 +572,11 @@ function toPart(
     family,
     oeNumber:
       item.identifications?.OEN?.[0] ?? item.manufacturerItemNumber ?? "",
-    categorySlug: category ? categorySlug(source.productAreaId, category) : "",
+    categorySlug: catSlug,
     categoryName: category?.name ?? "",
-    priceCents: consumerPriceCents({ purchaseCents, recommendedCents }),
+    priceCents: priced.priceCents,
+    discountPercent: priced.discountPercent,
+    ...(listPriceCents === undefined ? {} : { listPriceCents }),
     availability: (item.stock ?? 0) > 0 ? "in-stock" : "out-of-stock",
     imageUrl: image?.imageLink ? imageUrl(image.imageLink) : undefined,
     specs,
@@ -603,9 +635,12 @@ async function fetchParts(
   }
   const parsed = itemsResponseSchema.safeParse(data);
   if (!parsed.success) return [];
-  const allowed = await allowedCategoryIds(source);
+  const [allowed, pricing] = await Promise.all([
+    allowedCategoryIds(source),
+    pricingContext(),
+  ]);
   return (parsed.data.result ?? [])
-    .map((raw) => toPart(raw, source, family, allowed))
+    .map((raw) => toPart(raw, source, family, allowed, pricing))
     .filter((part): part is Part => part !== null);
 }
 
@@ -800,7 +835,7 @@ export const tyre24Provider: CatalogProvider = {
       parentNodeId,
       ...filterParams,
       limit: query.limit,
-      page: FIRST_PAGE,
+      page: query.page ?? FIRST_PAGE,
     });
   },
 

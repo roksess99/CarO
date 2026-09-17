@@ -1,3 +1,6 @@
+import { transaction } from "@/lib/db/client";
+import { recordCodeUse } from "@/lib/discounts/codes";
+import { issueInvoice } from "@/lib/invoices/store";
 import { getPayment, type MolliePayment } from "@/lib/mollie/client";
 import { sendOrderNotifications } from "./notify";
 import { readOrder, saveOrder } from "./store";
@@ -89,14 +92,59 @@ async function settle(
   // is de betaling niet zoekgeraakt en probeert de volgende webhook het opnieuw.
   await saveOrder(paid);
 
+  await noteCodeUse(paid);
+
+  // Pas hier krijgt de bestelling een factuurnummer: bij het aanmaken zou een
+  // afgebroken betaling een gat in de reeks slaan, en die moet aaneengesloten
+  // zijn. Idempotent, want Mollie meldt zich vaker dan één keer.
+  const invoice = await issueInvoice(paid);
+
   if (paid.notifiedAt) return paid;
 
   // Bewust niet afgevangen: mislukt de mail, dan mag `notifiedAt` niet gezet
   // worden. De aanroeper geeft Mollie een foutstatus terug en die probeert het
   // opnieuw — tot ruim een dag lang.
-  await sendOrderNotifications(paid);
+  await sendOrderNotifications(paid, invoice.number);
 
   const notified: StoredOrder = { ...paid, notifiedAt: new Date().toISOString() };
   await saveOrder(notified);
   return notified;
+}
+
+/**
+ * De kortingscode aftekenen: pas nu, want een afgebroken checkout mag de enige
+ * kans van een klant niet opsouperen.
+ *
+ * Twee dingen gaan hier bewust niet stuk:
+ *
+ * - **De unieke sleutel kan afketsen.** Twee bestellingen van hetzelfde adres
+ *   die tegelijk afgerekend worden, lezen allebei "nog niet gebruikt"; de
+ *   database weigert dan de tweede. Het geld is op dat moment al binnen, dus
+ *   dat mag de afhandeling niet tegenhouden — het komt in de log zodat de
+ *   beheerder het ziet.
+ * - **De database kan wegvallen.** Ook dan gaat de bestelling door: de klant
+ *   heeft betaald, en zijn bevestiging tegenhouden om een teller is de
+ *   verkeerde afweging.
+ */
+async function noteCodeUse(order: StoredOrder): Promise<void> {
+  if (!order.discountCodeId) return;
+  try {
+    const recorded = await transaction((tx) =>
+      recordCodeUse(tx, {
+        codeId: order.discountCodeId as number,
+        email: order.document.customer.email,
+        orderReference: order.reference,
+      }),
+    );
+    if (!recorded) {
+      console.warn(
+        `Kortingscode al gebruikt door dit adres, bestelling ${order.reference} is wel betaald`,
+      );
+    }
+  } catch (error) {
+    console.error(
+      `Kortingscode niet kunnen aftekenen voor ${order.reference}:`,
+      error instanceof Error ? error.message : "onbekende fout",
+    );
+  }
 }
