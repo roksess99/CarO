@@ -313,11 +313,29 @@
     "uspReturns": "14 dagen bedenktijd op elke bestelling",
     "uspVat": "Alle prijzen inclusief 21% btw",
     "title": "Het juiste onderdeel, zonder gedoe",
-    "intro": "Zoek op onderdeel of OE-nummer. Alle prijzen zijn inclusief 21% btw en verzendkosten zie je vóór het afrekenen."
+    "intro": "Zoek op onderdeel of OE-nummer. Alle prijzen zijn inclusief 21% btw en verzendkosten zie je vóór het afrekenen.",
+    "offersEyebrow": "Nu in de aanbieding",
+    "offersCta": "Bekijk dit artikel",
+    "offersAll": "Alle aanbiedingen",
+    "offersPause": "Pauzeer het doorschuiven",
+    "offersPlay": "Schuif weer door",
+    "offersGoTo": "Toon aanbieding {number}",
+    "offersCount": "Aanbieding {number} van {total}"
+  },
+  "offers": {
+    "title": "Aanbiedingen",
+    "intro": "Artikelen die nu in de korting zijn. Prijzen inclusief 21% btw.",
+    "empty": "Er loopt op dit moment geen actie. Bekijk het assortiment voor het volledige aanbod.",
+    "toAssortment": "Naar de onderdelen",
+    "metaDescription": "Auto-onderdelen, banden, velgen en toebehoren die nu in de korting zijn bij CarO."
   },
   "product": {
     "empty": "Geen onderdelen gevonden. Probeer een andere categorie.",
     "view": "Bekijken",
+    "discountBadge": "-{percent}%",
+    "discountAria": "Nu {percent}% korting",
+    "wasPrice": "Vorige prijs",
+    "lowest30": "Laagste prijs in de afgelopen 30 dagen",
     "viewAria": "Bekijk {name}",
     "metaDescription": "{name} van {brand}, OE-nummer {oeNumber}. Prijs inclusief 21% btw.",
     "descTitle": "Over dit artikel",
@@ -398,7 +416,23 @@
     "freeShipping": "Gratis",
     "total": "Totaal",
     "vatIncluded": "Inclusief {amount} btw",
-    "remainingForFree": "Nog {amount} en je bestelling wordt gratis verzonden."
+    "remainingForFree": "Nog {amount} en je bestelling wordt gratis verzonden.",
+    "codeLabel": "Kortingscode",
+    "codeApply": "Toepassen",
+    "codeBusy": "Bezig…",
+    "codeApplied": "Code {code} toegepast: {percent}% korting.",
+    "codeRemove": "Verwijderen",
+    "codeRow": "Kortingscode {code} ({percent}%)",
+    "codeMinSpend": "Deze code geldt vanaf {amount} aan artikelen.",
+    "codeErrors": {
+      "unknown": "Deze code kennen we niet. Controleer of je hem goed hebt overgenomen.",
+      "notStarted": "Deze code is nog niet geldig.",
+      "expired": "Deze code is verlopen.",
+      "exhausted": "Deze code is niet meer beschikbaar.",
+      "alreadyUsed": "Je hebt deze code al een keer gebruikt.",
+      "minSpend": "Je bestelling haalt het minimumbedrag van deze code niet.",
+      "onlyDiscounted": "Deze code geldt niet op artikelen die al in de aanbieding zijn."
+    }
   },
   "checkout": {
     "metaTitle": "Afrekenen — CarO",
@@ -440,7 +474,8 @@
       "invalidDetails": "Controleer de rood gemarkeerde velden.",
       "emptyCart": "Je winkelwagen is leeg — er valt niets af te rekenen.",
       "notConfigured": "Betalen is op dit moment niet mogelijk. Probeer het later opnieuw of neem contact met ons op.",
-      "failed": "Het starten van de betaling is mislukt. Probeer het opnieuw."
+      "failed": "Het starten van de betaling is mislukt. Probeer het opnieuw.",
+      "code": "De kortingscode geldt niet meer. Controleer je bestelling en probeer het opnieuw."
     },
     "addressLookup": {
       "busy": "Adres opzoeken…",
@@ -514,6 +549,7 @@
     "navLabel": "Footernavigatie",
     "serviceTitle": "Klantenservice",
     "assortmentTitle": "Assortiment",
+    "offersLink": "Aanbiedingen",
     "makesTitle": "Automerken",
     "brandsTitle": "Fabrikanten",
     "popularTitle": "Veelgezocht",

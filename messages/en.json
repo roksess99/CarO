@@ -313,11 +313,29 @@
     "uspReturns": "14-day right of withdrawal on every order",
     "uspVat": "All prices include 21% VAT",
     "title": "The right part, no hassle",
-    "intro": "Search by part or OE number. All prices include 21% VAT and shipping costs are shown before checkout."
+    "intro": "Search by part or OE number. All prices include 21% VAT and shipping costs are shown before checkout.",
+    "offersEyebrow": "Now on offer",
+    "offersCta": "View this item",
+    "offersAll": "All offers",
+    "offersPause": "Pause the slideshow",
+    "offersPlay": "Resume the slideshow",
+    "offersGoTo": "Show offer {number}",
+    "offersCount": "Offer {number} of {total}"
+  },
+  "offers": {
+    "title": "Offers",
+    "intro": "Items that are on sale right now. Prices include 21% VAT.",
+    "empty": "There is no sale running at the moment. Browse the range to see everything we sell.",
+    "toAssortment": "Go to parts",
+    "metaDescription": "Car parts, tyres, wheels and accessories that are on sale at CarO right now."
   },
   "product": {
     "empty": "No parts found. Try a different category.",
     "view": "View",
+    "discountBadge": "-{percent}%",
+    "discountAria": "Now {percent}% off",
+    "wasPrice": "Previous price",
+    "lowest30": "Lowest price in the past 30 days",
     "viewAria": "View {name}",
     "metaDescription": "{name} by {brand}, OE number {oeNumber}. Price includes 21% VAT.",
     "descTitle": "About this item",
@@ -398,7 +416,23 @@
     "freeShipping": "Free",
     "total": "Total",
     "vatIncluded": "Including {amount} VAT",
-    "remainingForFree": "Add {amount} more and your order ships free."
+    "remainingForFree": "Add {amount} more and your order ships free.",
+    "codeLabel": "Discount code",
+    "codeApply": "Apply",
+    "codeBusy": "Working…",
+    "codeApplied": "Code {code} applied: {percent}% off.",
+    "codeRemove": "Remove",
+    "codeRow": "Discount code {code} ({percent}%)",
+    "codeMinSpend": "This code applies from {amount} in items.",
+    "codeErrors": {
+      "unknown": "We do not know this code. Check that you copied it correctly.",
+      "notStarted": "This code is not valid yet.",
+      "expired": "This code has expired.",
+      "exhausted": "This code is no longer available.",
+      "alreadyUsed": "You have already used this code once.",
+      "minSpend": "Your order does not reach the minimum for this code.",
+      "onlyDiscounted": "This code does not apply to items that are already on sale."
+    }
   },
   "checkout": {
     "metaTitle": "Checkout — CarO",
@@ -440,7 +474,8 @@
       "invalidDetails": "Please check the fields marked in red.",
       "emptyCart": "Your cart is empty — there is nothing to pay for.",
       "notConfigured": "Payment is unavailable right now. Please try again later or contact us.",
-      "failed": "We could not start the payment. Please try again."
+      "failed": "We could not start the payment. Please try again.",
+      "code": "The discount code is no longer valid. Check your order and try again."
     },
     "addressLookup": {
       "busy": "Looking up address…",
@@ -514,6 +549,7 @@
     "navLabel": "Footer navigation",
     "serviceTitle": "Customer service",
     "assortmentTitle": "Range",
+    "offersLink": "Offers",
     "makesTitle": "Car makes",
     "brandsTitle": "Manufacturers",
     "popularTitle": "Popular searches",

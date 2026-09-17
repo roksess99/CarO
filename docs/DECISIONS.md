@@ -946,6 +946,86 @@ als er dertig dagen prijsgeschiedenis is (zie hierboven). Tot die tijd toont het
 blok de nieuwe prijs met een kortingsvlag, zonder oude prijs ernaast. Dat is
 geen tekortkoming maar de wet.
 
+### GEBOUWD 2026-09-17 — wat er staat en wat er níet in kan
+
+De carrousel staat er, met pauzeknop, stilstand bij muis en toetsenbord en géén
+beweging bij `prefers-reduced-motion` (alle drie gemeten in de browser). De drie
+voordelen zijn verhuisd naar een strook onder de hero, zoals hierboven
+afgesproken. Daarnaast is er `/nl/aanbiedingen` voor wie ze allemaal wil zien.
+
+Twee dingen die bij het bouwen bleken en die je moet weten voordat je een actie
+aanzet:
+
+- **Een categoriekorting op onderdelen kan niet**, en het paneel biedt hem
+  daarom niet aan. De categorieboom van Wearparts hangt aan een auto
+  (`/category` zonder `carId` geeft ERR_MISSING_MANDATORY_PARAMETER), en een
+  artikel dat via het zoekveld binnenkomt draagt helemaal geen categorie maar
+  `zoekresultaat`. Dezelfde korting zou dus op de ene pagina wél gelden en op
+  de andere niet. Wat wél kan: de hele groep onderdelen, of één artikel.
+- **Familie- en categorieacties op onderdelen komen niet in de carrousel.** Ze
+  werken gewoon in de winkel — daar wordt per artikel gekeken — maar de
+  aanbiedingenlijst redeneert andersom (van regel naar artikelen) en kan die
+  catalogus niet bevragen zonder gekozen auto. Eén artikel aanwijzen kan wel.
+
+De kortingsvlag ("-15%") staat er ook, zonder doorgestreepte van-prijs. Dat is
+geen tussenoplossing maar de wet: tot er dertig dagen prijsgeschiedenis is mag
+die tweede prijs er niet bij.
+
+### GEBOUWD 2026-09-17: de prijsmeting, en wat hij kost
+
+De eigenaar vroeg of dit niet te veel API-verzoeken kost, en of het niet met een
+SQL-trigger kon. Allebei beantwoord met een meting op het echte account.
+
+**Wat het kost.** De eerste echte meting van zijn winteractie:
+
+| | |
+|---|---|
+| Acties | 1 (25% op Auto / SUV) |
+| Artikelen gemeten | **1.603** |
+| API-verzoeken | **4** |
+| Tijd | 110 seconden |
+
+Eén verzoek draagt 500 prijzen, dus de rekening gaat over het aantal acties en
+niet over het aantal artikelen. De leverancier staat 100 verzoeken per minuut
+toe voor de héle winkel; dit kost er vier per dag. **Zonder lopende actie kost
+het nul.**
+
+**Waarom geen SQL-trigger of stored procedure.** Gemeten op de database:
+`event_scheduler` staat op `OFF` en de winkelgebruiker heeft alleen
+`GRANT USAGE ON *.*` — hij mag hem niet aanzetten. Maar de doorslaggevende
+reden is een andere: **de prijzen staan niet in de database maar achter de API
+van de leverancier, en MariaDB kan geen HTTP-verzoek doen.** Een trigger vuurt
+op een tabelwijziging, een procedure alleen als iemand hem aanroept; geen van
+beide kan iets ophalen.
+
+Het hostingpakket toont geen taakplanner in hPanel. Daarom drie ingangen die
+allemaal dezelfde dag claimen in `job_runs`:
+
+1. een cron-taak die `GET /api/jobs/prices` aanroept met `CARO_JOB_TOKEN`;
+2. de klok in de server zelf (`instrumentation.ts`), die elk uur kijkt;
+3. de knop **Nu meten** in het beheerpaneel.
+
+De eerste die de dag claimt draait; de rest krijgt "overgeslagen" terug. De
+cron-taak mag dus gerust elk uur lopen.
+
+### Het venster ligt vóór de actie — GEVONDEN BIJ HET NAREKENEN
+
+De eerste opzet nam de laagste prijs van de dertig dagen vóór **vandaag**. Dat
+werkt niet: dan zit de actieprijs zelf in dat venster, is de laagste prijs
+altijd gelijk aan wat het artikel nu kost, en verschijnt er nooit een
+van-prijs. Het venster hoort te liggen vóór de **startdatum van de actie** —
+dat is ook wat de richtlijn zegt ("voorafgaand aan de toepassing van de
+prijsvermindering").
+
+Daar volgt een werkregel uit die de beheerder moet kennen:
+
+> **Plan een actie een maand vooruit en de doorgestreepte van-prijs mag.
+> Begin je hem vandaag, dan ziet de klant alleen het percentage.**
+
+Bewezen met dertig dagen geplante geschiedenis op één band, waarvan één dag
+lager stond: de winkel toonde **€ 44,00** (die laagste dag) en niet de € 45,98
+van de dag ervoor. De verzonnen geschiedenis is daarna verwijderd.
+
 ### Kortingscodes
 
 Gekeurd op de server, in `startPayment()` vlak voordat de betaling wordt
@@ -977,6 +1057,32 @@ erbij, zeg het als je er anders over denkt:
 
 Een code die de bestelling op nul zet kan niet: Mollie weigert een betaling van
 nul. Dat is een randgeval om bewust af te vangen, geen theoretisch probleem.
+
+### BEANTWOORD 2026-09-17 door de eigenaar, en gebouwd
+
+Allebei de voorstellen hierboven zijn akkoord:
+
+- **de gratis-verzendgrens kijkt naar het bedrag ná de korting**;
+- **een code geldt niet op artikelen die al in de aanbieding zijn** — hij telt
+  alleen over de rest van de wagen, en het minimumbedrag kijkt naar datzelfde
+  bedrag zodat drempel en korting over hetzelfde geld gaan.
+
+Bij het bouwen kwam er een derde regel bij, die niemand had bedacht maar die
+uit de eerste twee volgt. **Een korting mag een bestelling nooit duurder
+maken.** GEMETEN: € 100 aan artikelen is gratis verzonden; met een code van 5%
+werd dat € 95 + € 7,45 verzendkosten = € 102,45. De klant betaalde dus méér
+mét zijn code. Nu houdt hij in dat geval de verzending die hij zonder code ook
+had gekregen. In alle normale gevallen — een korting groter dan het
+verzendtarief — verandert er niets: 10% op € 110 kost nog steeds € 7,45
+verzending en komt uit op € 106,45.
+
+**Één keer per klant hangt aan de database, niet aan een controle in code.** De
+unieke sleutel `(code_id, email_key)` is wat het afdwingt; twee bestellingen
+tegelijk lezen allebei "nog niet gebruikt" en de tweede ketst af. Aftekenen
+gebeurt pas als er betaald is, dus een afgebroken checkout kost de klant zijn
+enige kans niet. Ketst het af terwijl het geld al binnen is, dan gaat de
+bestelling gewoon door en komt het in de log — een betaalde klant zijn
+bevestiging onthouden om een teller is de verkeerde afweging.
 
 ---
 

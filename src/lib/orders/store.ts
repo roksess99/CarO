@@ -46,6 +46,7 @@ interface OrderRow {
   street: string;
   city: string;
   country: string;
+  discount_code_id: number | null;
   document_json: string | OrderDocument;
   created_at: Date;
   paid_at: Date | null;
@@ -90,6 +91,9 @@ function toStoredOrder(row: OrderRow, lines: LineRow[]): StoredOrder {
     paidAt: isoOrNull(row.paid_at),
     notifiedAt: isoOrNull(row.notified_at),
     document,
+    ...(row.discount_code_id === null
+      ? {}
+      : { discountCodeId: row.discount_code_id }),
     items: lines.map((line) => ({
       partId: line.part_id,
       family: line.family as ProductFamily,
@@ -114,9 +118,10 @@ export async function saveOrder(order: StoredOrder): Promise<void> {
          email, first_name, last_name, phone,
          postcode, house_number, house_number_addition, street, city, country,
          items_gross_cents, shipping_gross_cents, discount_cents,
+         discount_code_id,
          total_gross_cents, total_vat_cents,
          document_json, created_at, paid_at, notified_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
          status = VALUES(status),
          payment_id = VALUES(payment_id),
@@ -142,7 +147,8 @@ export async function saveOrder(order: StoredOrder): Promise<void> {
         customer.country,
         document.itemsGrossCents,
         document.shippingGrossCents,
-        0,
+        document.discount?.grossCents ?? 0,
+        order.discountCodeId ?? null,
         document.totalGrossCents,
         document.totalVatCents,
         JSON.stringify(document),

@@ -22,6 +22,7 @@ export type AuditAction =
   | "korting.gestopt"
   | "kortingscode.aangemaakt"
   | "kortingscode.gestopt"
+  | "prijsmeting.handmatig"
   | "bestelling.ingekocht";
 
 export async function logAction(options: {

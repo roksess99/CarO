@@ -6,6 +6,10 @@ import { useCart } from "@/components/cart/use-cart";
 import { startPayment } from "@/components/checkout/actions";
 import { lookupAddressAction } from "@/components/checkout/address-actions";
 import {
+  applyCode,
+  useAppliedCode,
+} from "@/components/checkout/use-discount-code";
+import {
   type CheckoutDetails,
   type CheckoutField,
   validateCheckoutDetails,
@@ -35,10 +39,13 @@ const labelClass = "mb-1 block text-sm font-medium";
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
+  const tTotals = useTranslations("totals");
   const locale = useLocale();
   const cart = useCart();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [failure, setFailure] = useState<string | null>(null);
+  const [codeFailure, setCodeFailure] = useState<string | null>(null);
+  const applied = useAppliedCode();
   // Blijft `true` tot de browser weg navigeert: tussen het antwoord van de
   // server en de sprong naar Mollie zit een moment waarin de knop anders weer
   // aanklikbaar zou zijn, en dat levert een tweede betaling op.
@@ -126,11 +133,27 @@ export function CheckoutForm() {
     prefillCache = result.data;
 
     setBusy(true);
-    const response = await startPayment(result.data, cart.items, locale);
+    const response = await startPayment(
+      result.data,
+      cart.items,
+      locale,
+      applied?.code,
+    );
 
     if (!response.ok) {
       setBusy(false);
       if (response.fieldErrors) setErrors(response.fieldErrors as FieldErrors);
+      // De code is tussen invoeren en betalen ongeldig geworden — bijvoorbeeld
+      // omdat dit mailadres hem al gebruikt had, wat pas hier te controleren
+      // was. Hem laten staan zou de klant op de volgende poging opnieuw
+      // hetzelfde laten meemaken.
+      if (response.error === "code") {
+        applyCode(null);
+        setCodeFailure(response.codeReason ?? "unknown");
+        setFailure(null);
+        return;
+      }
+      setCodeFailure(null);
       setFailure(response.error);
       return;
     }
@@ -276,6 +299,11 @@ export function CheckoutForm() {
         )}
         {failure && (
           <p className="mt-4 text-sm text-danger">{t(`payErrors.${failure}`)}</p>
+        )}
+        {codeFailure && (
+          <p className="mt-4 text-sm text-danger">
+            {tTotals(`codeErrors.${codeFailure}`)}
+          </p>
         )}
       </div>
     </form>

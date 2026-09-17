@@ -5,6 +5,11 @@ import { useLocale, useTranslations } from "next-intl";
 import { OrderTotals } from "@/components/cart/order-totals";
 import { removeFromCart, setCartQuantity } from "@/components/cart/use-cart";
 import { useCartParts } from "@/components/cart/use-cart-parts";
+import { DiscountCodeField } from "@/components/checkout/discount-code-field";
+import { useAppliedCode } from "@/components/checkout/use-discount-code";
+import { DiscountBadge } from "@/components/discount-badge";
+import { OldPrice } from "@/components/old-price";
+import { codeBaseCents, codeDiscountCents } from "@/lib/discounts/code-base";
 import { ProductImagePlaceholder } from "@/components/product-image-placeholder";
 import { subtotalCents } from "@/lib/cart/cart";
 import { MAX_QUANTITY } from "@/lib/cart/types";
@@ -32,6 +37,7 @@ export function CartView() {
   const tProduct = useTranslations("product");
   const locale = useLocale();
   const { entries, loading } = useCartParts();
+  const applied = useAppliedCode();
 
   if (loading) {
     return (
@@ -70,6 +76,18 @@ export function CartView() {
       priceCents: part.priceCents,
     })),
   );
+
+  // Hetzelfde rekenwerk als in de checkout: de code telt alleen over artikelen
+  // zonder eigen actie. De ingevoerde code blijft staan als de klant doorloopt
+  // naar het afrekenen.
+  const codeBase = codeBaseCents(
+    entries.map(({ part, quantity }) => ({
+      priceCents: part.priceCents,
+      quantity,
+      discountPercent: part.discountPercent,
+    })),
+  );
+  const discountCents = applied ? codeDiscountCents(codeBase, applied.percent) : 0;
 
   return (
     <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12">
@@ -153,17 +171,43 @@ export function CartView() {
                 </button>
               </div>
             </div>
-            <p className="text-sm font-bold tabular-nums">
-              {formatPriceCents(part.priceCents * quantity)}
-            </p>
+            {/* De actieprijs zit al in priceCents — de wagen rekent nergens
+                zelf. De vlag erbij, anders ziet de klant het bedrag wel maar
+                niet dat het zijn korting is. */}
+            <div className="flex flex-col items-end gap-1">
+              <p className="text-sm font-bold tabular-nums">
+                {formatPriceCents(part.priceCents * quantity)}
+              </p>
+              <OldPrice
+                cents={part.listPriceCents ? part.listPriceCents * quantity : undefined}
+                className="text-xs"
+              />
+              <DiscountBadge percent={part.discountPercent} className="text-xs" />
+            </div>
           </li>
         ))}
       </ul>
 
       <aside className="w-full rounded-lg border border-border p-6 lg:max-w-sm">
         <h2 className="text-lg">{t("summaryTitle")}</h2>
+
+        {/* Ook hier en niet alleen bij het afrekenen: dit is de plek waar een
+            klant met een code in zijn hand gaat zoeken. */}
+        <DiscountCodeField />
+
         <div className="mt-4">
-          <OrderTotals subtotalCents={subtotal} />
+          <OrderTotals
+            subtotalCents={subtotal}
+            discount={
+              applied && discountCents > 0
+                ? {
+                    code: applied.code,
+                    percent: applied.percent,
+                    cents: discountCents,
+                  }
+                : undefined
+            }
+          />
         </div>
         {/* Verplicht vóór de laatste checkoutstap (CLAUDE.md, NL-recht) */}
         <p className="mt-4 text-sm text-muted">{t("withdrawalNote")}</p>

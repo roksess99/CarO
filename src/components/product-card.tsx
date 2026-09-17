@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { AvailabilityBadge } from "@/components/availability-badge";
+import { DiscountBadge } from "@/components/discount-badge";
+import { OldPrice } from "@/components/old-price";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { ProductImagePlaceholder } from "@/components/product-image-placeholder";
 import { Link } from "@/i18n/navigation";
@@ -34,7 +36,13 @@ export function ProductCard({ part }: { part: Part }) {
   } as const;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-border bg-background transition-colors hover:border-caro-orange">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-lg border border-border bg-background transition-colors hover:border-caro-orange">
+      {/* Buiten de beeldlink: die is aria-hidden, en dan zou een schermlezer
+          de korting niet horen. Hier hoort hij bij de kaart zelf. */}
+      <DiscountBadge
+        percent={part.discountPercent}
+        className="absolute start-2 top-2 z-10 shadow-sm"
+      />
       <Link href={href} tabIndex={-1} aria-hidden="true">
         {/* object-contain: een band is rond en mag niet bijgesneden worden.
             sizes volgt het grid (1 kolom mobiel → 4 op desktop), anders laadt
@@ -85,8 +93,11 @@ export function ProductCard({ part }: { part: Part }) {
         <div className="mt-auto pt-3">
           <AvailabilityBadge availability={part.availability} />
 
-          <p className="mt-2 text-xl font-bold tabular-nums">
-            {formatPriceCents(part.priceCents)}
+          <p className="mt-2 flex flex-wrap items-baseline gap-x-2">
+            <span className="text-xl font-bold tabular-nums">
+              {formatPriceCents(part.priceCents)}
+            </span>
+            <OldPrice cents={part.listPriceCents} className="text-sm" />
           </p>
           <p className="text-xs text-muted">{t("inclVat")}</p>
 

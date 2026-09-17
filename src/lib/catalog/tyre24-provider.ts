@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { discountedPriceCents } from "../pricing";
 import {
-  type DiscountSet,
-  NO_DISCOUNTS,
-  activeDiscounts,
-} from "@/lib/discounts/rules";
+  PLAIN_PRICING,
+  type PricingContext,
+  pricingContext,
+} from "@/lib/pricing-context";
 import {
   categoryIdFromSlug,
   categoryLabelKey,
@@ -496,7 +496,7 @@ function toPart(
   source: FamilySource & { token: string },
   family: ProductFamily,
   allowedCategoryIds: ReadonlySet<number> | null,
-  discounts: DiscountSet = NO_DISCOUNTS,
+  pricing: PricingContext = PLAIN_PRICING,
 ): Part | null {
   const parsed = tyreItemSchema.safeParse(raw);
   if (!parsed.success) return null;
@@ -540,12 +540,22 @@ function toPart(
   const priced = discountedPriceCents({
     purchaseCents,
     recommendedCents,
-    percent: discounts.percentFor({
+    percent: pricing.discounts.percentFor({
       id: String(item.itemId),
       family,
       categorySlug: catSlug,
     }),
   });
+
+  // De doorgestreepte prijs is de laagste prijs van de afgelopen dertig dagen,
+  // niet de adviesprijs van vandaag — dat is wat de wet als referentie vraagt.
+  // Is er geen geschiedenis, dan staat er geen "van"-prijs. Zie
+  // lib/prices/history.ts.
+  const reference = pricing.references.referenceFor(String(item.itemId));
+  const listPriceCents =
+    reference !== undefined && reference > priced.priceCents
+      ? reference
+      : undefined;
 
   return {
     id: String(item.itemId),
@@ -564,7 +574,9 @@ function toPart(
       item.identifications?.OEN?.[0] ?? item.manufacturerItemNumber ?? "",
     categorySlug: catSlug,
     categoryName: category?.name ?? "",
-    ...priced,
+    priceCents: priced.priceCents,
+    discountPercent: priced.discountPercent,
+    ...(listPriceCents === undefined ? {} : { listPriceCents }),
     availability: (item.stock ?? 0) > 0 ? "in-stock" : "out-of-stock",
     imageUrl: image?.imageLink ? imageUrl(image.imageLink) : undefined,
     specs,
@@ -623,12 +635,12 @@ async function fetchParts(
   }
   const parsed = itemsResponseSchema.safeParse(data);
   if (!parsed.success) return [];
-  const [allowed, discounts] = await Promise.all([
+  const [allowed, pricing] = await Promise.all([
     allowedCategoryIds(source),
-    activeDiscounts(),
+    pricingContext(),
   ]);
   return (parsed.data.result ?? [])
-    .map((raw) => toPart(raw, source, family, allowed, discounts))
+    .map((raw) => toPart(raw, source, family, allowed, pricing))
     .filter((part): part is Part => part !== null);
 }
 
@@ -823,7 +835,7 @@ export const tyre24Provider: CatalogProvider = {
       parentNodeId,
       ...filterParams,
       limit: query.limit,
-      page: FIRST_PAGE,
+      page: query.page ?? FIRST_PAGE,
     });
   },
 

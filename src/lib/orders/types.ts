@@ -46,6 +46,13 @@ export interface StoredOrder {
   /** De hele orderbevestiging, inclusief bedragen zoals afgerekend */
   document: OrderDocument;
   /**
+   * De gebruikte kortingscode, als er één was. Het id en niet de tekst: de
+   * teller en "één keer per klant" hangen aan de rij, en een code kan hernoemd
+   * of gestopt worden zonder dat oude bestellingen hun verband verliezen. De
+   * tekst zoals de klant hem intypte staat op het document zelf.
+   */
+  discountCodeId?: number;
+  /**
    * Wat de klant in de wagen had, om de inkoop bij de groothandel te kunnen
    * doen: het artikel-id van de leverancier plus de familie waar het bij hoort.
    */

@@ -1,13 +1,16 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import type { CategoryOptions } from "@/lib/admin/catalog-options";
+import type { ProductFamily } from "@/lib/catalog/families";
 import { addRule, type RuleResult } from "./actions";
 
 const labelClass = "mb-1 block text-sm font-medium";
 const inputClass =
   "w-full rounded-md border border-border bg-background px-3 py-2 text-base text-foreground";
+const selectClass = `${inputClass} bg-background text-foreground`;
 
-const FAMILIES = [
+const FAMILIES: ReadonlyArray<{ value: ProductFamily; label: string }> = [
   { value: "onderdelen", label: "Onderdelen" },
   { value: "banden", label: "Banden" },
   { value: "velgen", label: "Velgen" },
@@ -21,15 +24,57 @@ function today(offsetDays = 0): string {
   return date.toISOString().slice(0, 10);
 }
 
-export function RuleForm() {
+export function RuleForm({ categories }: { categories: CategoryOptions }) {
   const [state, action, pending] = useActionState<RuleResult, FormData>(
     addRule,
     undefined,
   );
+  // Alle velden staan in state, ook de tekstvelden. React maakt een formulier
+  // na een Server Action namelijk leeg, óók als die action een fout teruggaf —
+  // dan stond de beheerder opnieuw alles in te tikken, en het keuzemenu sprong
+  // terug naar "de hele productgroep" terwijl het artikelveld bleef staan.
+  const [family, setFamily] = useState<ProductFamily>("banden");
   const [scope, setScope] = useState("family");
+  const [label, setLabel] = useState("");
+  const [target, setTarget] = useState("");
+  const [percent, setPercent] = useState("10");
+  const [startsAt, setStartsAt] = useState(today());
+  const [endsAt, setEndsAt] = useState(today(7));
+
+  const options = categories[family];
+  // Bij een categoriekorting moet er iets gekozen staan; anders stuurt het
+  // formulier een lege waarde mee omdat de browser de eerste optie wél toont.
+  const categoryValue =
+    options.some((option) => option.slug === target) ? target : (options[0]?.slug ?? "");
+  // Onderdelen kennen geen losse categoriekorting (zie catalog-options.ts).
+  // Staat die keuze nog open terwijl de beheerder naar onderdelen wisselt,
+  // dan valt hij terug op de hele familie in plaats van stil te blijven staan
+  // op een keuze die niet te maken is.
+  const canPickCategory = options.length > 0;
+  const effectiveScope = scope === "category" && !canPickCategory ? "family" : scope;
+
+  // React maakt het formulier leeg zodra een Server Action klaar is, ook bij
+  // een foutmelding. Tekstvelden herstelt het daarbij naar wat erin stond,
+  // maar een keuzemenu valt terug op de optie die bij het laden gekozen was:
+  // na een mislukte poging stond er "de hele productgroep" terwijl het
+  // artikelveld nog open stond. Dan liegt het scherm over wat er verstuurd
+  // wordt, dus zetten we de menu's na elk antwoord terug op de waarde die we
+  // zelf bijhouden. (GEMETEN 2026-09-17 in Chrome.)
+  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+    const set = (name: string, value: string) => {
+      const field = form.elements.namedItem(name);
+      if (field instanceof HTMLSelectElement) field.value = value;
+    };
+    set("family", family);
+    set("scope", effectiveScope);
+    set("target", categoryValue);
+  }, [state, family, effectiveScope, categoryValue]);
 
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-2">
+    <form ref={formRef} action={action} className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2">
         <label htmlFor="label" className={labelClass}>
           Naam van de actie
@@ -39,6 +84,8 @@ export function RuleForm() {
           name="label"
           required
           maxLength={120}
+          value={label}
+          onChange={(event) => setLabel(event.target.value)}
           placeholder="Winteractie remschijven"
           className={inputClass}
         />
@@ -48,59 +95,97 @@ export function RuleForm() {
       </div>
 
       <div>
+        <label htmlFor="family" className={labelClass}>
+          Productgroep
+        </label>
+        <select
+          id="family"
+          name="family"
+          value={family}
+          onChange={(event) => {
+            setFamily(event.target.value as ProductFamily);
+            // Anders blijft een categorie van de vorige productgroep staan
+            setTarget("");
+          }}
+          className={selectClass}
+        >
+          {FAMILIES.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
         <label htmlFor="scope" className={labelClass}>
           Geldt op
         </label>
         <select
           id="scope"
           name="scope"
-          value={scope}
-          onChange={(event) => setScope(event.target.value)}
-          className={`${inputClass} bg-background text-foreground`}
+          value={effectiveScope}
+          onChange={(event) => {
+            setScope(event.target.value);
+            setTarget("");
+          }}
+          className={selectClass}
         >
-          <option value="family">Een hele productgroep</option>
-          <option value="category">Eén categorie</option>
+          <option value="family">De hele productgroep</option>
+          {canPickCategory && <option value="category">Eén categorie</option>}
           <option value="part">Eén artikel</option>
         </select>
+        {!canPickCategory && (
+          <p className="mt-1 text-xs text-muted">
+            Bij onderdelen kan een korting niet op een categorie: die
+            categorieën hangen aan een auto, en een artikel dat via zoeken
+            binnenkomt heeft er geen.
+          </p>
+        )}
       </div>
 
-      <div>
-        <label htmlFor="target" className={labelClass}>
-          {scope === "family"
-            ? "Welke productgroep"
-            : scope === "category"
-              ? "Welke categorie"
-              : "Welk artikel"}
-        </label>
-        {scope === "family" ? (
+      {effectiveScope === "category" && (
+        <div className="sm:col-span-2">
+          <label htmlFor="target" className={labelClass}>
+            Welke categorie
+          </label>
           <select
             id="target"
             name="target"
-            className={`${inputClass} bg-background text-foreground`}
+            value={categoryValue}
+            onChange={(event) => setTarget(event.target.value)}
+            className={selectClass}
           >
-            {FAMILIES.map((family) => (
-              <option key={family.value} value={family.value}>
-                {family.label}
+            {options.map((option) => (
+              <option key={option.slug} value={option.slug}>
+                {option.name}
               </option>
             ))}
           </select>
-        ) : (
+        </div>
+      )}
+
+      {effectiveScope === "part" && (
+        <div className="sm:col-span-2">
+          <label htmlFor="target" className={labelClass}>
+            Welk artikel
+          </label>
           <input
             id="target"
             name="target"
             required
+            value={target}
+            onChange={(event) => setTarget(event.target.value)}
             className={inputClass}
-            placeholder={scope === "category" ? "auto-suv-1" : "818336"}
+            placeholder="818336 of de link van de productpagina"
           />
-        )}
-        {scope !== "family" && (
           <p className="mt-1 text-xs text-muted">
-            {scope === "category"
-              ? "Het laatste stuk van de categorie-URL, bijvoorbeeld auto-suv-1."
-              : "Het artikelnummer zoals het op de productpagina staat."}
+            Het artikelnummer, of plak gewoon de link van de productpagina. Ik
+            zoek het artikel op en noem de naam terug, zodat je ziet dat je de
+            goede te pakken hebt.
           </p>
-        )}
-      </div>
+        </div>
+      )}
 
       <div>
         <label htmlFor="percent" className={labelClass}>
@@ -112,7 +197,8 @@ export function RuleForm() {
           type="number"
           min={1}
           max={70}
-          defaultValue={10}
+          value={percent}
+          onChange={(event) => setPercent(event.target.value)}
           required
           className={`${inputClass} tabular-nums`}
         />
@@ -127,7 +213,8 @@ export function RuleForm() {
             id="startsAt"
             name="startsAt"
             type="date"
-            defaultValue={today()}
+            value={startsAt}
+            onChange={(event) => setStartsAt(event.target.value)}
             required
             className={`${inputClass} tabular-nums`}
           />
@@ -140,7 +227,8 @@ export function RuleForm() {
             id="endsAt"
             name="endsAt"
             type="date"
-            defaultValue={today(7)}
+            value={endsAt}
+            onChange={(event) => setEndsAt(event.target.value)}
             required
             className={`${inputClass} tabular-nums`}
           />
@@ -160,7 +248,7 @@ export function RuleForm() {
             <span className="text-sm text-danger">{state.error}</span>
           )}
           {state && "ok" in state && (
-            <span className="text-sm text-muted">De actie staat aan.</span>
+            <span className="text-sm text-muted">{state.ok}</span>
           )}
         </div>
       </div>

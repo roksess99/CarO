@@ -20,6 +20,8 @@ export interface DiscountRule {
   id: number;
   label: string;
   scope: DiscountScope;
+  /** Bij welke catalogus het doel hoort; de aanbiedingenpagina heeft dat nodig */
+  family: ProductFamily;
   target: string;
   percent: number;
   startsAt: Date;
@@ -32,6 +34,7 @@ interface RuleRow {
   id: number;
   label: string;
   scope: DiscountScope;
+  family: ProductFamily;
   target: string;
   percent: number;
   starts_at: Date;
@@ -45,6 +48,7 @@ function toRule(row: RuleRow): DiscountRule {
     id: row.id,
     label: row.label,
     scope: row.scope,
+    family: row.family,
     target: row.target,
     percent: Number(row.percent),
     startsAt: row.starts_at,
@@ -57,6 +61,7 @@ function toRule(row: RuleRow): DiscountRule {
 export async function createRule(input: {
   label: string;
   scope: DiscountScope;
+  family: ProductFamily;
   target: string;
   percent: number;
   startsAt: Date;
@@ -65,11 +70,12 @@ export async function createRule(input: {
 }): Promise<number> {
   const result = await execute(
     `INSERT INTO discount_rules
-       (label, scope, target, percent, starts_at, ends_at, created_by, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       (label, scope, family, target, percent, starts_at, ends_at, created_by, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       input.label,
       input.scope,
+      input.family,
       input.target,
       input.percent,
       input.startsAt,
@@ -128,7 +134,7 @@ export interface DiscountSet {
 export const NO_DISCOUNTS: DiscountSet = { percentFor: () => 0 };
 
 const CACHE_MS = 60_000;
-let cache: { at: number; set: DiscountSet } | null = null;
+let cache: { at: number; set: DiscountSet; rules: DiscountRule[] } | null = null;
 
 function build(rules: DiscountRule[]): DiscountSet {
   const byPart = new Map<string, number>();
@@ -160,9 +166,10 @@ function build(rules: DiscountRule[]): DiscountSet {
   };
 }
 
-export async function activeDiscounts(): Promise<DiscountSet> {
+/** De lopende regels, gecacht. Zowel de opzoektabel als de regels zelf. */
+async function loadActive(): Promise<{ set: DiscountSet; rules: DiscountRule[] }> {
   const now = Date.now();
-  if (cache && now - cache.at < CACHE_MS) return cache.set;
+  if (cache && now - cache.at < CACHE_MS) return cache;
 
   try {
     const rows = await query<RuleRow>(
@@ -170,16 +177,45 @@ export async function activeDiscounts(): Promise<DiscountSet> {
         WHERE disabled_at IS NULL AND starts_at <= ? AND ends_at > ?`,
       [new Date(), new Date()],
     );
-    const set = build(rows.map(toRule));
-    cache = { at: now, set };
-    return set;
+    const rules = rows.map(toRule);
+    const set = build(rules);
+    cache = { at: now, set, rules };
+    return cache;
   } catch (error) {
     // Ligt de database eruit, dan toont de winkel gewoon de normale prijs.
     // Dat is de goede kant om op te falen: te duur tonen kan de klant zien en
     // afwijzen, te goedkoop verkopen kost geld.
     console.error("Kortingsregels konden niet geladen worden", error);
-    return cache?.set ?? NO_DISCOUNTS;
+    return cache ?? { set: NO_DISCOUNTS, rules: [] };
   }
+}
+
+export async function activeDiscounts(): Promise<DiscountSet> {
+  return (await loadActive()).set;
+}
+
+/**
+ * De acties waarvan de nachtelijke prijsmeting de prijzen moet bewaren: alles
+ * wat nu loopt én alles wat binnenkort begint.
+ *
+ * Bewust niet uit de cache van hierboven: dit draait één keer per dag, en die
+ * cache kent alleen wat er nú loopt. Een actie die volgende week begint moet
+ * vandaag al gemeten worden, anders is er over dertig dagen geen "van"-prijs.
+ */
+export async function rulesToMeasure(
+  startingBefore: Date,
+): Promise<DiscountRule[]> {
+  const rows = await query<RuleRow>(
+    `SELECT * FROM discount_rules
+      WHERE disabled_at IS NULL AND starts_at <= ? AND ends_at > ?`,
+    [startingBefore, new Date()],
+  );
+  return rows.map(toRule);
+}
+
+/** Voor de aanbiedingenpagina: welke acties lopen er nu? */
+export async function activeRules(): Promise<DiscountRule[]> {
+  return (await loadActive()).rules;
 }
 
 /** Voor het beheerpaneel: na een wijziging hoeft niemand een minuut te wachten */

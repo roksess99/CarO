@@ -7,6 +7,11 @@ import { isValidCartItem } from "@/lib/cart/cart";
 import type { CartItem } from "@/lib/cart/types";
 import { buildOrderDocument } from "@/lib/checkout/order-document";
 import { validateCheckoutDetails } from "@/lib/checkout/schema";
+import {
+  checkCode,
+  codeBaseCents,
+  type CodeRejection,
+} from "@/lib/discounts/codes";
 import { mailIsConfigured } from "@/lib/mail";
 import { createPayment, mollieIsConfigured } from "@/lib/mollie/client";
 import { saveOrder } from "@/lib/orders/store";
@@ -26,8 +31,10 @@ export type StartPaymentResult =
   | { ok: true; checkoutUrl: string }
   | {
       ok: false;
-      error: "invalidDetails" | "emptyCart" | "notConfigured" | "failed";
+      error: "invalidDetails" | "emptyCart" | "notConfigured" | "failed" | "code";
       fieldErrors?: Record<string, string>;
+      /** Alleen bij `code`: waarom de kortingscode het niet deed */
+      codeReason?: CodeRejection;
     };
 
 /** Willekeurig teken voor de terugkeer-URL, zie StoredOrder.accessToken */
@@ -66,6 +73,7 @@ export async function startPayment(
   rawDetails: unknown,
   rawItems: unknown,
   rawLocale: unknown,
+  rawCode?: unknown,
 ): Promise<StartPaymentResult> {
   // Zonder betaalsleutel of zonder mail is bestellen niet af te maken. Dat nu
   // zeggen is eerlijker dan de klant laten betalen en daarna geen bevestiging
@@ -97,10 +105,21 @@ export async function startPayment(
     // artikel mag niet meebetaald worden. `available` en `entries` blijven
     // gelijk oplopen — de beheerdersmail koppelt regel n aan artikel n.
     const available: CartItem[] = [];
+    // Welke regels een eigen actie hebben; de kortingscode telt daar niet over
+    const codeLines: {
+      priceCents: number;
+      quantity: number;
+      discountPercent?: number;
+    }[] = [];
     const entries = items.flatMap((item) => {
       const part = partById.get(item.partId);
       if (!part) return [];
       available.push(item);
+      codeLines.push({
+        priceCents: part.priceCents,
+        quantity: item.quantity,
+        discountPercent: part.discountPercent,
+      });
       return [
         {
           name: part.name,
@@ -113,7 +132,37 @@ export async function startPayment(
     });
     if (entries.length === 0) return { ok: false, error: "emptyCart" };
 
-    const document = buildOrderDocument({ details: details.data, entries });
+    // De code wordt hier opnieuw gekeurd, met prijzen die de server zelf heeft
+    // opgehaald. Wat de browser meestuurt is alleen de tekst van de code.
+    // Klopt hij niet meer, dan gaat de betaling NIET door: de klant zag een
+    // bedrag met korting en mag niet zonder waarschuwing het volle bedrag
+    // afrekenen.
+    const typedCode = typeof rawCode === "string" ? rawCode.trim() : "";
+    let discount: { code: string; percent: number; grossCents: number } | undefined;
+    let discountCodeId: number | undefined;
+
+    if (typedCode) {
+      const check = await checkCode({
+        code: typedCode,
+        email: details.data.email,
+        baseGrossCents: codeBaseCents(codeLines),
+      });
+      if (!check.ok) {
+        return { ok: false, error: "code", codeReason: check.reason };
+      }
+      discount = {
+        code: check.code.code,
+        percent: check.code.percent,
+        grossCents: check.discountGrossCents,
+      };
+      discountCodeId = check.code.id;
+    }
+
+    const document = buildOrderDocument({
+      details: details.data,
+      entries,
+      discount,
+    });
     const token = accessToken();
     const returnPath = getPathname({ locale, href: "/checkout/status" });
     const redirectUrl = `${SITE_URL}${returnPath}?ref=${encodeURIComponent(document.reference)}&t=${token}`;
@@ -142,6 +191,7 @@ export async function startPayment(
       paidAt: null,
       notifiedAt: null,
       document,
+      ...(discountCodeId === undefined ? {} : { discountCodeId }),
       items: available,
     };
     // Opslaan vóór de doorverwijzing: staat de bestelling er niet, dan vindt de

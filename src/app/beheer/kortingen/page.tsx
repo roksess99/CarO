@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { categoryOptions } from "@/lib/admin/catalog-options";
 import { requireAdmin } from "@/lib/admin/session";
 import { listRules } from "@/lib/discounts/rules";
+import { historySize, jobIsLate, lastJobRun } from "@/lib/prices/history";
+import { PRICE_JOB } from "@/lib/prices/snapshot";
+import { PriceClock } from "./price-clock";
 import { RuleForm } from "./rule-form";
 import { StopButton } from "./stop-button";
 
@@ -18,6 +22,13 @@ const SCOPE_LABEL: Record<string, string> = {
   part: "artikel",
 };
 
+const FAMILY_LABEL: Record<string, string> = {
+  onderdelen: "Onderdelen",
+  banden: "Banden",
+  velgen: "Velgen",
+  toebehoren: "Toebehoren",
+};
+
 function statusOf(rule: {
   startsAt: Date;
   endsAt: Date;
@@ -32,7 +43,20 @@ function statusOf(rule: {
 
 export default async function KortingenPage() {
   await requireAdmin();
-  const rules = await listRules();
+  const [rules, categories, lastRun, size] = await Promise.all([
+    listRules(),
+    categoryOptions(),
+    lastJobRun(PRICE_JOB),
+    historySize(),
+  ]);
+
+  // De regel bewaart de slug; de beheerder herkent de naam. Staat de categorie
+  // niet meer in de catalogus, dan valt hij terug op de slug.
+  const categoryNames = new Map(
+    Object.values(categories)
+      .flat()
+      .map((option) => [option.slug, option.name]),
+  );
 
   return (
     <div className="mx-auto w-full max-w-4xl px-6 py-10">
@@ -59,9 +83,23 @@ export default async function KortingenPage() {
         </p>
       </div>
 
+      <PriceClock
+        lastRun={
+          lastRun
+            ? {
+                startedAt: lastRun.startedAt.toISOString(),
+                finishedAt: lastRun.finishedAt?.toISOString() ?? null,
+              }
+            : null
+        }
+        parts={size.parts}
+        days={size.parts > 0 ? Math.ceil(size.rows / size.parts) : 0}
+        stale={jobIsLate(lastRun)}
+      />
+
       <section className="mt-8 rounded-lg border border-border bg-background p-6">
         <h2 className="mb-4 text-base font-semibold">Nieuwe actie</h2>
-        <RuleForm />
+        <RuleForm categories={categories} />
       </section>
 
       <section className="mt-10">
@@ -92,7 +130,14 @@ export default async function KortingenPage() {
                         {rule.percent}%
                       </span>{" "}
                       op {SCOPE_LABEL[rule.scope]}{" "}
-                      <span className="font-mono text-xs">{rule.target}</span>
+                      <span className="text-foreground">
+                        {rule.scope === "family"
+                          ? (FAMILY_LABEL[rule.target] ?? rule.target)
+                          : (categoryNames.get(rule.target) ?? rule.target)}
+                      </span>
+                      {rule.scope !== "family" && rule.family && (
+                        <span> in {FAMILY_LABEL[rule.family] ?? rule.family}</span>
+                      )}
                     </p>
                     <p className="text-xs text-muted tabular-nums">
                       {dateFormat.format(rule.startsAt)} t/m{" "}
@@ -108,10 +153,10 @@ export default async function KortingenPage() {
       </section>
 
       <p className="mt-8 max-w-prose text-sm text-muted">
-        De doorgestreepte &ldquo;van&rdquo;-prijs staat nog niet op de site. Die
-        mag pas als er dertig dagen prijsgeschiedenis is: de wet vraagt de
-        laagste prijs van die periode, niet die van gisteren. Tot dan ziet de
-        klant alleen de nieuwe, lagere prijs.
+        De doorgestreepte &ldquo;van&rdquo;-prijs is de laagste prijs van de
+        afgelopen dertig dagen — dat is wat de wet als referentie vraagt, niet
+        de prijs van gisteren. Hij verschijnt per artikel vanzelf zodra die
+        dertig dagen gemeten zijn.
       </p>
     </div>
   );

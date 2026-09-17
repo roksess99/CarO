@@ -87,7 +87,7 @@ export function discountedPriceCents({
   recommendedCents?: number | null;
   /** 0 tot 100; buiten bereik telt als geen korting */
   percent: number;
-}): { priceCents: number; listPriceCents?: number; discountPercent: number } {
+}): { priceCents: number; discountPercent: number } {
   const listCents = consumerPriceCents({ purchaseCents, recommendedCents });
   if (!Number.isFinite(percent) || percent <= 0 || percent >= 100) {
     return { priceCents: listCents, discountPercent: 0 };
@@ -110,9 +110,11 @@ export function discountedPriceCents({
     return { priceCents: listCents, discountPercent: 0 };
   }
 
+  // Bewust géén "van"-prijs hier: die mag niet de prijs van vandaag zijn maar
+  // de laagste van dertig dagen, en die staat in onze eigen prijsgeschiedenis
+  // (lib/prices/history.ts). Dit bestand kent alleen inkoop en advies.
   return {
     priceCents,
-    listPriceCents: listCents,
     // Afgerond naar beneden: liever "19%" tonen bij een korting van 19,6% dan
     // een percentage beloven dat de klant niet terugziet in het bedrag.
     discountPercent: Math.floor(((listCents - priceCents) * 100) / listCents),

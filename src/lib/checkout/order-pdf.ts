@@ -350,6 +350,16 @@ function drawTotals(ctx: Ctx, order: OrderDocument): void {
     formatPriceCents(order.itemsNetCents),
     formatPriceCents(order.itemsGrossCents),
   );
+  if (order.discount) {
+    // Met een minteken ervoor: een bedrag zonder teken tussen twee optellingen
+    // leest als iets wat erbij komt.
+    drawTotalRow(
+      ctx,
+      `Kortingscode ${order.discount.code} (${order.discount.percent}%)`,
+      `-${formatPriceCents(order.discount.netCents)}`,
+      `-${formatPriceCents(order.discount.grossCents)}`,
+    );
+  }
   drawTotalRow(
     ctx,
     "Verzendkosten",
