@@ -3,12 +3,15 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { BottomSheet } from "@/components/bottom-sheet";
-import type { FamilyNavItem } from "@/components/family-nav";
 import { useCart } from "@/components/cart/use-cart";
 import { useVehicle } from "@/components/vehicle/use-vehicle";
 import { VehicleFinder } from "@/components/vehicle/vehicle-finder";
 import { countItems } from "@/lib/cart/cart";
-import { familySlug, NAV_GROUPS } from "@/lib/catalog/families";
+import {
+  familySlug,
+  PRODUCT_FAMILIES,
+  usesVehicleCatalog,
+} from "@/lib/catalog/families";
 import { MAINTENANCE_LINKS } from "@/lib/catalog/quick-links";
 import { Link, usePathname } from "@/i18n/navigation";
 
@@ -20,9 +23,6 @@ import { Link, usePathname } from "@/i18n/navigation";
  * Oranje op ink haalt 6,6:1 en is daarmee de enige toegestane combinatie
  * voor oranje tekst.
  */
-/** Vanaf dit aantal categorieën verschijnt er een zoekveld in de lade */
-const FILTER_FROM_CATEGORIES = 12;
-
 /** Streepje bovenaan de actieve tab, zoals in de referentie */
 function Indicator() {
   return (
@@ -34,16 +34,13 @@ function Indicator() {
 }
 
 export function BottomNav({
-  items,
   /** Merknamen voor de autokiezer; de rest volgt per stap uit een actie */
   makes,
 }: {
-  items: FamilyNavItem[];
   makes: string[];
 }) {
   const t = useTranslations("bottomNav");
   const tFamily = useTranslations("family");
-  const tCommon = useTranslations("common");
   const locale = useLocale();
   const pathname = usePathname();
   const cartCount = countItems(useCart());
@@ -51,34 +48,11 @@ export function BottomNav({
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [vehicleOpen, setVehicleOpen] = useState(false);
-  const [groupKey, setGroupKey] = useState<string | null>(null);
   const assortmentRef = useRef<HTMLButtonElement>(null);
   const vehicleRef = useRef<HTMLButtonElement>(null);
 
-  const [categoryQuery, setCategoryQuery] = useState("");
-
-  const closeDrawer = useCallback(() => {
-    setDrawerOpen(false);
-    setGroupKey(null);
-    setCategoryQuery("");
-  }, []);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   const closeVehicle = useCallback(() => setVehicleOpen(false), []);
-
-  const byFamily = new Map(items.map((item) => [item.family, item.categories]));
-  const groups = NAV_GROUPS.map((group) => ({
-    key: group.key,
-    families: group.families.filter((f) => byFamily.has(f)),
-  })).filter((group) => group.families.length > 0);
-  const activeGroup = groups.find((group) => group.key === groupKey);
-  const categoriesInGroup =
-    activeGroup?.families.reduce(
-      (sum, family) => sum + (byFamily.get(family)?.length ?? 0),
-      0,
-    ) ?? 0;
-  const groupLabel = (group: (typeof groups)[number]) =>
-    group.families.length === 1
-      ? tFamily(`${group.families[0]}.title`)
-      : tFamily(`group.${group.key}`);
 
   // Een kenteken is korter en herkenbaarder dan "Volkswagen Golf"; zonder
   // kenteken is het merk het enige dat in een tab past.
@@ -103,160 +77,79 @@ export function BottomNav({
           closeLabel={t("close")}
           onClose={closeDrawer}
           returnFocusTo={assortmentRef}
-          header={
-            activeGroup ? (
-              <button
-                type="button"
-                onClick={() => setGroupKey(null)}
-                className="-ms-2 inline-flex items-center gap-1 rounded-md px-2 py-2 text-sm font-semibold text-foreground hover:bg-surface"
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className="size-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m15 18-6-6 6-6" />
-                </svg>
-                {t("back")}
-              </button>
-            ) : undefined
-          }
         >
-          {/* Zoekveld zodra de lijst te lang wordt om te scannen. Op een
-              telefoon is scrollen door een lange categorielijst geen doen. */}
-          {activeGroup && categoriesInGroup > FILTER_FROM_CATEGORIES && (
-            <div className="border-b border-border p-2">
-              <label htmlFor="assortment-filter" className="sr-only">
-                {tCommon("filterPlaceholder")}
-              </label>
-              <input
-                id="assortment-filter"
-                type="search"
-                value={categoryQuery}
-                onChange={(event) => setCategoryQuery(event.target.value)}
-                placeholder={tCommon("filterPlaceholder")}
-                autoComplete="off"
-                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm"
-              />
-            </div>
-          )}
-
+          {/* Eén niveau. De lade had een tweede scherm met de categorieën per
+              familie; sinds 2026-09-17 opent een familie meteen haar pagina,
+              waar diezelfde categorieën als filterrij staan (family-nav.tsx). */}
           <nav aria-label={t("assortment")} className="flex-1 overflow-y-auto p-2">
-              {!activeGroup ? (
-                <>
-                  {/* Onderhoudsdelen bovenaan en als directe link: op een
-                      telefoon is dit één tik in plaats van drie, en het is
-                      waar de meeste klanten voor komen. */}
-                  <ul className="mb-2 space-y-0.5 border-b border-border pb-2">
-                    {MAINTENANCE_LINKS.map((link) => (
-                      <li key={link.key}>
-                        <Link
-                          href={{
-                            pathname: "/[family]/[category]",
-                            params: {
-                              family: familySlug("onderdelen", locale),
-                              category: link.slug,
-                            },
-                            ...(vehicle?.carId
-                              ? { query: { auto: String(vehicle.carId) } }
-                              : {}),
-                          }}
-                          onClick={closeDrawer}
-                          className="flex items-center justify-between gap-3 rounded-lg px-4 py-3.5 text-base font-semibold text-foreground hover:bg-surface"
-                        >
-                          {tFamily(`quick.${link.key}`)}
-                          <svg
-                            aria-hidden="true"
-                            viewBox="0 0 24 24"
-                            className="size-5 shrink-0 text-caro-orange"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="m9 18 6-6-6-6" />
-                          </svg>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+            {/* Onderhoudsdelen bovenaan: op een telefoon is dit één tik in
+                plaats van drie, en het is waar de meeste klanten voor komen. */}
+            <ul className="mb-2 space-y-0.5 border-b border-border pb-2">
+              {MAINTENANCE_LINKS.map((link) => (
+                <li key={link.key}>
+                  <Link
+                    href={{
+                      pathname: "/[family]/[category]",
+                      params: {
+                        family: familySlug("onderdelen", locale),
+                        category: link.slug,
+                      },
+                      ...(vehicle?.carId
+                        ? { query: { auto: String(vehicle.carId) } }
+                        : {}),
+                    }}
+                    onClick={closeDrawer}
+                    className="flex items-center justify-between gap-3 rounded-lg px-4 py-3.5 text-base font-semibold text-foreground hover:bg-surface"
+                  >
+                    {tFamily(`quick.${link.key}`)}
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      className="size-5 shrink-0 text-caro-orange"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </Link>
+                </li>
+              ))}
+            </ul>
 
-                  <ul className="space-y-0.5">
-                  {groups.map((group) => (
-                    <li key={group.key}>
-                      <button
-                        type="button"
-                        onClick={() => setGroupKey(group.key)}
-                        className="flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3.5 text-start text-base font-semibold text-foreground hover:bg-surface"
-                      >
-                        {groupLabel(group)}
-                        <svg
-                          aria-hidden="true"
-                          viewBox="0 0 24 24"
-                          className="size-5 shrink-0 text-muted"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="m9 18 6-6-6-6" />
-                        </svg>
-                      </button>
-                    </li>
-                  ))}
-                  </ul>
-                </>
-              ) : (
-                <div className="space-y-4">
-                  {activeGroup.families.map((family) => {
-                    const slug = familySlug(family, locale);
-                    const needle = categoryQuery.trim().toLowerCase();
-                    const categories = (byFamily.get(family) ?? []).filter(
-                      (category) =>
-                        !needle || category.name.toLowerCase().includes(needle),
-                    );
-                    return (
-                      <div key={family}>
-                        <Link
-                          href={{ pathname: "/[family]", params: { family: slug } }}
-                          onClick={closeDrawer}
-                          className="flex items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3 text-base font-bold text-foreground"
-                        >
-                          {tFamily(`${family}.title`)}
-                          <span className="text-sm font-normal text-muted">
-                            {tFamily("viewAll")}
-                          </span>
-                        </Link>
-                        {categories.length > 0 && (
-                          <ul className="mt-1 space-y-0.5">
-                            {categories.map((category) => (
-                              <li key={category.slug}>
-                                <Link
-                                  href={{
-                                    pathname: "/[family]/[category]",
-                                    params: { family: slug, category: category.slug },
-                                  }}
-                                  onClick={closeDrawer}
-                                  className="block rounded-lg px-4 py-3 text-sm text-muted hover:bg-surface hover:text-foreground"
-                                >
-                                  {category.name}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-            )}
+            <ul className="space-y-0.5">
+              {PRODUCT_FAMILIES.map((family) => (
+                <li key={family}>
+                  <Link
+                    href={{
+                      pathname: "/[family]",
+                      params: { family: familySlug(family, locale) },
+                      ...(usesVehicleCatalog(family) && vehicle?.carId
+                        ? { query: { auto: String(vehicle.carId) } }
+                        : {}),
+                    }}
+                    onClick={closeDrawer}
+                    className="flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3.5 text-start text-base font-semibold text-foreground hover:bg-surface"
+                  >
+                    {tFamily(`${family}.title`)}
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      className="size-5 shrink-0 text-muted"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </nav>
         </BottomSheet>
       )}

@@ -94,6 +94,57 @@ heeft een dag in de shop gestaan en is er bewust uit gehaald:
 **De eigenschappen blijven bij de artikelgegevens op de productpagina staan.**
 Vergelijken kan dus nog steeds, voorselecteren niet.
 
+### Uitzondering 2026-09-17: motorolie krijgt wél drie filters
+
+De eigenaar vroeg om filters op **inhoud, merk en viscositeit** bij motorolie.
+Dat botst met de regel hierboven, dus eerst gemeten of de twee bezwaren daar
+ook gelden — vier auto's, 57 tot 389 flessen per auto:
+
+| Filter | Bron | Dekking |
+|---|---|---|
+| Merk | `brandName` | 100% |
+| Inhoud | `attr_423` "Inhoud [liter]" | 100% |
+| Viscositeit | `attr_2467` + `attr_1054` | 99% |
+
+**Geen van beide bezwaren houdt hier stand.** Het tweede (filteren verbergt
+artikelen zonder waarde) verdwijnt bij honderd procent dekking. Het eerste
+(leveranciersjargon) ook: 1 liter, 5W-30 en het merk staan letterlijk op de
+fles die de klant in zijn hand heeft. En de nood is groter dan elders —
+zonder filter liggen er 389 flessen door elkaar, van 1 liter tot een vat van
+208 liter, en dan is er niet in te winkelen.
+
+De regel blijft dus staan; motorolie is een gemeten uitzondering. Wil je er
+een groep bij zetten, dan is de volgorde: eerst de dekking meten, dan pas het
+id in `FILTERABLE_GROUPS` (`src/lib/catalog/part-filters.ts`).
+
+**Het filteren gebeurt in de shop, niet bij de leverancier**, en dat is geen
+luiheid. Viscositeit zit onder twee attribuut-ids waarvan er één niet in de
+facetten voorkomt; filteren via de API laat die artikelen stil vallen (op één
+auto 21 van de 297). Bijkomend voordeel: één ongefilterde vraag bedient élke
+filtercombinatie, dus het kost geen extra verzoeken en de aantallen achter de
+opties kloppen. Meetreeks in @docs/api/WEARPARTS.md.
+
+### Vastgesteld 2026-09-17: een productgroep is een link, geen menu
+
+Banden, velgen en toebehoren klapten op drie plekken uit naar hun
+categorieën: de tegels op de homepage, de knoppen in de headerrij en de
+lade onderaan op mobiel. Winkelkeuze van de eigenaar: **weg ermee**, een klik
+opent meteen de familiepagina — zoals Onderdelen dat altijd al deed.
+
+Dat kost niets, want de categorieën stáán op die pagina als filterrij, met de
+producten er meteen onder. Het paneel zette de klant voor een tweede keuze
+terwijl hij er al één had gemaakt.
+
+Twee dingen die eraan vastzitten:
+
+- **Olie en Filters blijven wél menu's.** Hun subgroepen hangen aan de
+  gekozen auto (een Citroën C3 heeft er zeven onder `Filter`, een McLaren
+  720S twee) en bestaan niet als pagina; er valt dus niets om naar door te
+  linken.
+- **Het scheelt vier categorielijsten per paginaweergave.** De layout haalde
+  ze voor élke pagina op, alleen om die panelen te kunnen vullen. Dat is er
+  nu uit — de homepage is de drukste pagina van de winkel.
+
 ### Vastgesteld 2026-09-05: welke filters de shop toont
 
 De filterrespons van Tyre24 bevat tientallen groepen per categorie, waarvan het
@@ -182,8 +233,28 @@ op de mock. Geen enkele andere plek in de code weet waar de data vandaan komt.
 
 ## 5. Prijsstrategie — VASTGESTELD 2026-08-07
 
-**Btw**: de klant heeft bevestigd dat de API-bedragen **exclusief btw** zijn.
-Wij tellen er 21% bij op. Daarmee is dit punt niet langer blokkerend.
+**Btw**: `ek` (inkoop) is **exclusief** btw, `evp` (advies) is **inclusief**
+btw. Wij tellen 21% op bij wat uit de inkoopprijs volgt, en laten de
+adviesprijs ongemoeid.
+
+**RECHTGEZET 2026-09-19.** Hier stond sinds 2026-08-07 dat allebei exclusief
+btw waren en dat de klant dat bevestigd had. Dat klopte maar half, en de
+eigenaar ving het zelf: *"wil je bij Alzura controleren of hun prijzen al
+incl. btw zijn? anders doen we 2 keer btw."* De shop telde er inderdaad
+nogmaals 21% bij op, dus elke prijs zonder prijsregel stond 21% te hoog.
+
+Bewijs is een schermafdruk van het platform met de prijsdetails open: "Uw
+netto EC € 23,38" en "marge € 11,62 **netto**" aan de inkoopkant, en aan de
+verkoopkant "€ 76,00 voor 2 stuks / € 152,00 voor 4 stuks" onder het
+onderschrift **"Prijs incl. BTW"**. Die € 38,00 per stuk is precies wat de API
+als `evp_3` teruggeeft en waar onze shop € 45,98 van maakte. Het artikel is
+herkenbaar aan de inkoopprijs van € 20,39 — exact het bedrag dat met 10%
+opslag uit de shop kwam. Meetreeks in docs/api/TYRE24.md.
+
+Een marktvergelijking leek het eerder nog de andere kant op te wijzen (onze
+€ 45,98 tegen € 47 bij de goedkoopste Nederlandse concurrent), maar die test
+kan de twee gevallen niet scheiden: € 38,00 is óók een normale winkelprijs.
+**Een plausibiliteitstoets is geen meting** — dat is de les die hier hoort.
 
 **Marge**: gemeten over 100 artikelen per familie ligt de adviesverkoopprijs
 (`evp`) structureel boven de inkoopprijs (`ek`), en élk artikel heeft er een:
@@ -202,6 +273,12 @@ marge bovenop doen zou ons boven de markt prijzen. Als vangnet geldt een
 geval een adviesprijs ontbreekt of te dicht op de inkoop ligt.
 
 Implementatie: `src/lib/pricing.ts`.
+
+**ACHTERHAALD 2026-09-19 zodra de eigenaar een prijsregel instelt — zie #17.**
+Hij bepaalt de opslag op de inkoopprijs nu zelf, per groep. De regel hierboven
+blijft wél het gedrag zolang er voor een artikel géén regel staat, en de
+meting van 66–85% blijft de maatstaf waar zijn percentage tegen afgezet
+wordt.
 
 ---
 
@@ -247,6 +324,27 @@ Wat daarmee vervalt:
 De oude analyse hieronder blijft staan als achtergrond bij de keuze.
 
 ---
+
+### Deelbesluit 2026-09-17: de autokiezer staat nu óók op /mijn-auto
+
+De eigenaar merkte op dat er bij het zelf kiezen van een auto nergens een
+auto-id in de URL verscheen, en vroeg of merk en model niet via ALZURA
+opgehaald konden worden.
+
+**Dat gebeurde al.** De kiezer in de hero loopt sinds 2026-09-07 door dezelfde
+TecDoc-boom als de kentekenzoeker (`/manufacturers` → `/modelSeries` →
+`/vehicles`) en levert een echte `carId` — nagekeken in de browser: na een
+keuze staat er `/nl/onderdelen?auto=115566` in de links.
+
+**Waar het wél misging: `/nl/mijn-auto`.** Die pagina is de landingsplek van
+de merkenlijst in de voettekst (`?merk=Audi`) en had helemaal geen kiezer. Wie
+daar binnenkwam kreeg alleen een zoekopdracht op naam — geen `carId`, dus geen
+passendheidscontrole en niets in de URL waar de onderdelencatalogus iets mee
+kan. Een doodlopende weg, precies de klacht.
+
+De kentekenzoeker én de merk/model/uitvoering-kiezer staan er nu bovenaan. De
+tekstzoekresultaten blijven eronder staan voor velgen en toebehoren: die
+families draaien op de Products-API en kennen geen `carId`.
 
 ### Oorspronkelijke analyse (2026-08-07) — kenteken → passende onderdelen
 
@@ -358,6 +456,24 @@ foto. De losse categoriefoto's die nergens meer gebruikt werden (filters,
 motor, remmen, verlichting, gereedschap, gebruikte onderdelen) zijn
 2026-09-07 verwijderd. Een tegel toevoegen is één regel in
 `src/lib/catalog/category-tiles.ts` plus een bestand.
+
+### Beeld bij de onderdeelgroepen: eigen tekeningen — VASTGESTELD 2026-09-17
+
+De eigenaar vroeg om een foto per categorie in de rij "meest gezocht". Die
+bestaat niet: GEMETEN 2026-09-07 en opnieuw 2026-09-17 dragen **alleen de 33
+hoofdgroepen** een `icon` van de leverancier; eindgroepen als Oliefilter,
+Remblok, motorolie en Accu geen enkele.
+
+Elf foto's inkopen zou elf licenties vragen, en dit punt staat hierboven juist
+open omdat er al een licentieprobleem ligt. Daarom **lijntekeningen in
+`currentColor`** (`src/components/catalog/group-icon.tsx`): eigen werk, dus
+geen rechtenvraag, één bestand voor beide thema's, en leesbaar op de 24 pixels
+die zo'n rij ervoor heeft — een foto van een remblok is op dat formaat een
+grijze vlek. Een groep zonder tekening valt terug op de moer uit het
+merkteken, zodat de rijen uitgelijnd blijven.
+
+Wil de eigenaar er alsnog foto's in, dan is dat één map met bestanden en één
+component; de keuze hierboven over beeldrechten geldt dan onverkort.
 
 ---
 
@@ -1086,6 +1202,197 @@ bevestiging onthouden om een teller is de verkeerde afweging.
 
 ---
 
+## 17. Eigen prijzen — VASTGESTELD 2026-09-19
+
+De eigenaar wil zelf bepalen wat een artikel kost, per groep in plaats van per
+artikel. Zijn woorden: *"de huidige prijzen marge op de webshop mag weg, vanaf
+het beheerderportaal vult de beheerder een procent, bijv. 10%, dus inkoopprijs
+van Alzura verhogen met 10%."*
+
+Dat vervangt de strategie uit #5 (de adviesprijs van de leverancier volgen),
+en het is een grotere ingreep dan het klinkt. **GEMETEN op de echte
+catalogus:** een GOODYEAR UG9+ 195/65 R15 kost € 38,00 met de adviesprijs en
+**€ 27,14** met een opslag van 10% — bijna dertig procent lager. De
+adviesprijs ligt netto gemeten zo'n 37–55% boven de inkoop (#5), dus een
+opslag van 10% is een heel ander winkelmodel: scherp zitten en het van volume
+hebben.
+
+(Die € 38,00 stond hier eerst als € 45,98. Dat was de btw-fout uit #5, die op
+19 september is rechtgezet; het verschil tussen de twee regimes is dus kleiner
+dan het eerst leek, maar nog altijd fors.)
+
+Dat is de keuze van de eigenaar en hij is gebouwd. Wel met de kanttekening die
+hij bij het invullen ziet: van 10% op een inkoop van € 50 blijft € 5 over,
+vóór de betaalkosten van Mollie (~€ 0,29 per iDEAL-transactie), de € 6,90 die
+Tyre24 per zending rekent en de retouren binnen de bedenktijd.
+
+### Drie regels die het veilig houden
+
+1. **Zonder regel staat de prijs van de leverancier er onaangeroerd.** Geldt
+   er voor een artikel geen enkele prijsregel, dan is de verkoopprijs de
+   adviesprijs van Alzura — die al inclusief btw is (#5), dus óók daar tellen
+   we niets bij op. Een leeg veld mag niet
+   betekenen dat de winkel ineens bijna op inkoopprijs verkoopt (dat zou het
+   bij een lege tabel wél doen), maar het mag er evenmin toe leiden dat wij
+   een bedrag tonen dat de leverancier niet vraagt.
+
+   **AANGESCHERPT 2026-09-19** op verzoek van de eigenaar: de ondergrens van
+   25% lag hier eerst nog overheen (`max(advies, inkoop x 1,25)`). Dat tilde
+   artikelen waar de adviesprijs krap boven de inkoop zit stilletjes omhoog,
+   en dan is het niet meer de prijs van de leverancier. De grens geldt nu nog
+   alleen als er **geen** adviesprijs bij een artikel staat; élk gemeten
+   artikel had er een, dus dat is een noodgreep en geen strategie.
+2. **De ondergrens van 25% geldt niet mét een opslag.** Dat lijkt tegendraads
+   maar is precies het punt: die grens zou een opslag van 10% naar 25% tillen
+   en dus negeren wat de eigenaar invulde. Wat er in álle gevallen wél geldt
+   is dat we nooit onder de inkoopprijs verkopen — ook niet als een
+   adviesprijs daar ooit onder zou duiken.
+
+   Voor een korting zónder prijsregel blijft de bodem 25% marge, maar nooit
+   hoger dan de prijs zelf. Zonder die aftopping zou een artikel waarvan de
+   adviesprijs onder die bodem ligt elke korting stil laten wegvallen.
+3. **Een korting kan nooit groter zijn dan de opslag.** Bij 10% opslag past er
+   hoogstens 9% korting (1 − 1/1,10 = 9,09%); het kortingsformulier weigert
+   meer en zegt wat er wél kan — dezelfde regel als in #14.
+
+### De sleutel verschilt per familie, en dat is geen willekeur
+
+| Familie | Waarop een regel kan |
+|---|---|
+| Banden, velgen, toebehoren | hele winkel, familie, **categorie**, artikel |
+| Onderdelen | hele winkel, familie, **soort onderdeel**, artikel |
+
+**Bij onderdelen kan een categorieregel niet.** De categorieboom van Wearparts
+hangt aan een auto en een artikel dat via het zoekveld binnenkomt draagt
+helemaal geen categorie maar `zoekresultaat` (#7). Bij een korting was dat al
+verwarrend; bij een prijs is het onacceptabel, want het afrekenen zoekt het
+artikel op id en zou dan een ánder bedrag uitrekenen dan de klant zag.
+
+Daarvoor in de plaats komt het **TecDoc-soortnummer**, dat op het artikel zelf
+staat en dus overal hetzelfde is. GEMETEN 2026-09-19 op twee auto's, identiek
+in beide bomen: oliefilter 7, luchtfilter 8, interieurfilter 424, remblok 402,
+remschijf 82, motorolie 3224, accu 1, wisserblad 298, bougie 686, schokdemper
+854, distributieriem 1123. Die elf staan in `src/lib/admin/part-kinds.ts` en
+zijn precies de rij "meest gezocht" die de klant ziet.
+
+**Een prijsregel is geen aanbieding.** Zet de eigenaar een prijs lager, dan is
+dat zijn nieuwe prijs: geen kortingsvlag, geen doorgestreepte van-prijs, niet
+op de aanbiedingenpagina. Voor een tijdelijke verlaging zijn de kortingsregels
+er (#14). Dat onderscheid is niet cosmetisch — een "van"-prijs mag alleen bij
+een *aangekondigde* verlaging en vraagt dertig dagen prijsgeschiedenis.
+
+### Bij het bouwen: dezelfde valkuil als bij de kortingscodes
+
+Het formulier in het paneel is een client component en importeerde
+`maxDiscountPercent` uit `lib/prices/markup.ts` — dat bestand praat met de
+database, dus de MySQL-driver belandde in de browserbundel en de hele pagina
+gaf HTTP 500 met "Can't resolve net". Precies wat er 2026-09-17 met
+`discounts/codes.ts` gebeurde. Het rekenwerk staat nu in `markup-math.ts`,
+zonder database eromheen.
+
+**Typecheck en lint zien dit geen van beide.** De enige controle die het vangt
+is de pagina openen of `pnpm build` draaien.
+
+---
+
+## 18. Beoordelingen van klanten — VASTGESTELD 2026-09-19
+
+De eigenaar wil beoordelingen ophalen per mail, ze bewaren en op de webshop
+tonen. Zijn keuzes: **twee soorten in één formulier** — één cijfer voor de
+webshopervaring en één voor de bestelling — plus optioneel een cijfer per
+artikel.
+
+### Wanneer de uitnodiging uitgaat
+
+We weten niet wanneer een pakket bezorgd is; er komt geen statusbericht van de
+vervoerder. Wat er wél is, is `purchased_at`: het moment waarop de eigenaar bij
+de groothandel inkocht (#10, dat blijft handwerk).
+
+> **Zeven dagen na de inkoop.** Heeft hij die niet afgetekend, dan veertien
+> dagen na de betaling.
+
+Die tweede termijn is laat en met opzet: te vroeg vragen om een oordeel over
+een pakket dat er nog niet is, is erger dan te laat vragen. In het paneel zit
+een knop **Nu uitnodigen** voor als hij weet dat het bezorgd is.
+
+De taak hangt aan dezelfde klok en dezelfde dagclaim als de prijsmeting
+(`job_runs`), en aan hetzelfde cron-adres — één cron-taak dekt nu beide.
+Hoogstens 25 mails per keer: de bevestigingsmails van bestellingen gaan over
+dezelfde mailbox en die mogen nooit achter een stapel verzoeken blijven staan.
+
+### Wat de wet hier vraagt, en wat dat betekent voor de knoppen
+
+**Negatieve beoordelingen wegfilteren mag niet.** Sinds de Omnibus-richtlijn
+is selectief publiceren een oneerlijke handelspraktijk, en de ACM handhaaft
+erop. Daar volgt de hele opzet van het paneel uit:
+
+- een beoordeling staat **meteen** op de site, er is geen goedkeuringsstap;
+- **verbergen kan alleen mét een reden**, die in de database én in het logboek
+  komt. Dat is het bewijs dat je verbergt om misbruik en niet om een cijfer;
+- wat je bij een klacht doet is er **openbaar op antwoorden**. Dat leest voor
+  een volgende klant beter dan vijf keer vijf sterren.
+
+**"Geverifieerde aankoop" mag je alleen zeggen als het waar is.** Daarom komt
+de uitnodiging per mail, werkt de link één keer, en komen de artikelen waar
+een cijfer op kan uit de bestelling zelf — niet uit het formulier. Met een
+geldige link kun je dus geen cijfer plakken op iets wat je nooit kocht.
+
+**De markering voor Google komt er pas met echte beoordelingen.**
+`aggregateRating` telt alleen wat zichtbaar is, dus wat de bezoeker kan
+nalezen. Dat stond al als regel in `.claude/rules/frontend.md` en blijft
+staan; alleen de reden om hem leeg te laten vervalt.
+
+### Wat er niet in zit
+
+- **Geen mailinglijst en geen uitschrijflink.** Dit is één bericht per
+  bestelling over een bestelling die de klant net kreeg; dat valt onder de
+  klantrelatie. Een uitschrijflink zou misleidend zijn, want er is geen lijst
+  (#15 blijft geparkeerd).
+- **Geen gemiddelde per product op de productpagina.** De gegevens liggen er
+  wél klaar (`review_products` draagt het artikelnummer), maar met dit
+  ordervolume zou er maandenlang "1 beoordeling" bij een artikel staan en dat
+  zegt niets. Zodra er genoeg zijn is het een query, geen verbouwing.
+
+---
+
+## 16. Privacyverklaring en cookiebanner — VASTGESTELD 2026-09-17
+
+De eigenaar vroeg: nu we mailadressen in een database bewaren, moet de
+privacyverklaring dan aangepast worden, en is er een cookiebanner nodig?
+
+**Privacyverklaring: ja, en dat is gebeurd.** Er stond alleen in wat er op het
+apparaat van de bezoeker terechtkomt. Wat er op ónze server staat — naam,
+adres, mailadres, telefoon, wat er besteld is, de factuur — ontbrak, terwijl
+dat juist het stuk is dat de AVG wil zien: welke gegevens, waarvoor, op welke
+grondslag en hoe lang. Er staat nu een tweede tabel op `/nl/privacy` met vier
+regels, en de bewaartermijn van zeven jaar (fiscale bewaarplicht) staat er
+eindelijk expliciet bij.
+
+Eén regel was echt nieuw en niet af te leiden uit de oude tekst: bij een
+kortingscode met "één keer per klant" bewaren we het **mailadres apart van de
+bestelling**, in kleine letters en niet gehasht (`discount_code_uses`). Het
+moet daar blijven staan óók als de bestelling ooit verdwijnt, anders is de
+code opnieuw te gebruiken. Dat is de enige plek in het schema waar een
+mailadres buiten een bestelling om bewaard wordt.
+
+**Cookiebanner: nee.** De toestemmingsplicht van art. 11.7a Telecommunicatiewet
+gaat uitsluitend over het plaatsen van of lezen van gegevens **op het apparaat
+van de bezoeker**. Wat een server in zijn eigen database zet valt daar niet
+onder — dat is een AVG-vraag, en die is hierboven beantwoord. De vijf sleutels
+in de browser zijn onveranderd en alle vijf noodzakelijk of zelfgekozen; de
+uitzondering van lid 3 blijft dus gelden.
+
+**De banner komt er wél** zodra er iets bijkomt dat geen van beide is:
+analytics, een advertentiepixel, een ingesloten YouTube-speler of een
+chatwidget van een derde. Dan moet het een banner **mét voorafgaande
+blokkering** zijn: weigeren net zo makkelijk als accepteren, en niets laden
+voordat er geklikt is. Een banner die nu al zou vragen om toestemming voor de
+winkelwagen is misleidend — je kunt er geen nee tegen zeggen.
+
+Onderbouwing en de bijwerkinstructie staan in @docs/PRIVACY.md.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -1193,3 +1500,10 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-14 | Marketingmail geparkeerd | Eigenaar pakt het later op, mogelijk met een apart mailadres (#15) |
 | 2026-09-16 | MySQL bij Hostinger, geen Supabase | Supabase aanmaken lukte niet; MySQL zit bij het pakket, kan transacties en zet geen klantgegevens bij een derde (#13) |
 | 2026-09-16 | Aanbiedingen in de hero-banner, vanzelf doorschuivend | Die plek stond al als plaatshouder in de code; met echte kortingen vervalt de reden om hem leeg te laten (#14) |
+| 2026-09-17 | Motorolie krijgt filters op inhoud, merk en viscositeit | De twee bezwaren tegen eigenschapsfilters gelden daar niet: dekking is 99–100% en het is geen jargon maar wat er op de fles staat (#7) |
+| 2026-09-17 | Productgroepen zijn links, geen uitklapmenu's | De categorieën staan al op de familiepagina; het menu voegde een klik toe en kostte vier API-lijsten per paginaweergave (#7) |
+| 2026-09-17 | Accu's in de rij "meest gezocht", met eigen tekeningen | Groep 653 staat in elke gemeten boom; de leverancier levert geen beeld bij eindgroepen, dus lijntekeningen in plaats van foto's (#9) |
+| 2026-09-17 | Privacyverklaring uitgebreid, geen cookiebanner | De AVG vraagt om wat er op onze server staat; de banner gaat alleen over het apparaat van de bezoeker (#16) |
+| 2026-09-19 | Eigen prijs: opslag op de inkoopprijs, per groep | De eigenaar bepaalt zijn marge zelf; de adviesprijs blijft staan waar hij niets invult (#17) |
+| 2026-09-19 | Prijs bij onderdelen hangt aan het soortnummer, niet aan de categorie | De categorie ontbreekt bij een zoekresultaat, en dan zou het afrekenen een ander bedrag uitrekenen dan de klant zag (#17) |
+| 2026-09-19 | Beoordelingen verschijnen meteen, verbergen alleen met reden | Selectief publiceren is een oneerlijke handelspraktijk; antwoorden werkt beter dan weghalen (#18) |

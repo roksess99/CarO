@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { GroupIcon } from "@/components/catalog/group-icon";
 import { Link } from "@/i18n/navigation";
 import type { AssemblyGroup } from "@/lib/catalog/wearparts";
 import { groupSlug } from "@/lib/catalog/wearparts-provider";
@@ -36,11 +37,11 @@ export function GroupList({
   familySlugParam,
   carId,
   /**
-   * De rij "meest gezocht" boven het rooster. Zelfde rijen, maar zonder
-   * pictogram en in vier kolommen: het zijn er tien, ze staan bovenaan, en
-   * met beeld zouden ze meer ruimte vragen dan het rooster waar ze naar
-   * verwijzen. Oranje rand, zodat de rij als snelkoppeling leest en niet als
-   * een tweede categorielijst.
+   * De rij "meest gezocht" boven het rooster. Zelfde rijen in vier kolommen,
+   * met een eigen lijntekening in plaats van het leveranciersbeeld — dat
+   * bestaat voor eindgroepen niet (group-icon.tsx). Oranje rand en oranje
+   * tekening, zodat de rij als snelkoppeling leest en niet als een tweede
+   * categorielijst.
    */
   compact = false,
 }: {
@@ -62,8 +63,15 @@ export function GroupList({
                 params: { family: familySlugParam, category: groupSlug(group) },
                 query: { auto: String(carId) },
               }}
-              className="flex h-full min-h-12 items-center gap-2 rounded-lg border border-caro-orange/40 bg-background px-3 py-2.5 transition-colors hover:border-caro-orange hover:bg-surface"
+              className="flex h-full min-h-12 items-center gap-2.5 rounded-lg border border-caro-orange/40 bg-background px-3 py-2.5 transition-colors hover:border-caro-orange hover:bg-surface"
             >
+              {/* Eigen lijntekening; de leverancier levert geen beeld bij
+                  eindgroepen (group-icon.tsx). Oranje, zodat de rij ook op
+                  een telefoon in één oogopslag te scannen is. */}
+              <GroupIcon
+                groupId={group.id}
+                className="size-6 shrink-0 text-caro-orange"
+              />
               <span className="flex-1 text-sm leading-snug font-semibold">
                 {group.name}
               </span>

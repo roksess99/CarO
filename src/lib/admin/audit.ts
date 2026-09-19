@@ -22,6 +22,12 @@ export type AuditAction =
   | "korting.gestopt"
   | "kortingscode.aangemaakt"
   | "kortingscode.gestopt"
+  | "prijsregel.toegevoegd"
+  | "prijsregel.gestopt"
+  | "beoordeling.uitgenodigd"
+  | "beoordeling.beantwoord"
+  | "beoordeling.verborgen"
+  | "beoordeling.getoond"
   | "prijsmeting.handmatig"
   | "bestelling.ingekocht";
 

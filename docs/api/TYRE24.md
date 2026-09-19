@@ -259,8 +259,9 @@ dat beschrijft alleen de gevonden treffers en is geen bladerbare boom.
    - `type: "evp_3"` = **adviesverkoopprijs** van de leverancier
    - Voorbeeld band: `ek 27.63` / `evp_3 48.00`
    - De sleutel binnen `prices` is **`"1"`**, *niet* de productAreaId.
-   - ⚠️ **Vermoedelijk exclusief btw** (B2B-marktplaats), maar de API zegt het
-     niet. Zie docs/DECISIONS.md #5 — navragen bij Tyre24 vóór livegang.
+   - **Allebei exclusief btw.** De API zegt het nergens met zoveel woorden —
+     niet in de swagger, niet in de AGB — dus dit is met bewijs vastgesteld,
+     zie "Btw: waarom we er 21% bij optellen" hieronder.
 2. **Productfoto's werken (nog) niet — `imageLink` is een sjabloon.**
    Gemeten 2026-08-07: **alle** areas leveren URL's met twee `%s`-placeholders,
    niet alleen banden:
@@ -327,6 +328,59 @@ Twee dingen om te weten voordat je dit automatiseert:
 - **`estimatedDelivery` lag vier dagen vooruit** (besteld op 10-09, levering
   14-09). De shop zegt bij `ordered` "levertijd 2–3 werkdagen". Die belofte
   klopt dus niet met wat de leverancier zegt.
+
+## Btw: `ek` is netto, `evp` is bruto — VASTGESTELD 2026-09-19
+
+De vraag van de eigenaar: *"zijn hun prijzen al incl. btw? anders doen we 2
+keer btw."* Terecht — en het antwoord is **voor de twee velden verschillend**.
+
+Alzura zet het nergens op schrift: niet in `tyre24-products-v13.yaml`, niet in
+`tyre24-alloys-v13.yaml`, niet in de AGB of de Nutzungsbedingungen (beide
+PDF, DE), en niet op de site. Wat het wél vaststelt is een schermafdruk van
+het platform, met de prijsdetails van één artikel open:
+
+| Regel op het scherm | Bedrag |
+|---|---|
+| Marktplaatsprijs per stuk | € 20,39 |
+| "Uw netto EC" | € 23,38 |
+| "Je marge is € 11,62 **netto** per stuk" | |
+| Berekende verkoopprijs (Consulting modus 3), 2 stuks | € 76,00 |
+| Berekende verkoopprijs (Consulting modus 3), 4 stuks | € 152,00 |
+| Onderschrift | **"Prijs incl. BTW"** |
+
+Het artikel is te herkennen aan de inkoopprijs: € 20,39 is exact wat er met
+10% opslag uit onze shop kwam (27,14 ÷ 1,21 ÷ 1,10). En € 76,00 / 2 =
+€ 152,00 / 4 = **€ 38,00 per stuk** — precies het getal dat de API als `evp_3`
+teruggeeft, waar onze shop € 45,98 van maakte.
+
+Daarmee ligt het vast:
+
+| Veld | Basis | Waaruit |
+|---|---|---|
+| `ek` / `price` | **exclusief btw** | "Uw netto EC", "marge € 11,62 netto" |
+| `evp` / `retailPrice` | **inclusief btw** | € 38,00 per stuk onder "Prijs incl. BTW" |
+
+Dat is ook de conventie: een inkoopprijs tussen bedrijven is netto, een
+*adviesverkoopprijs* is voor de consument en die is in Nederland bruto. Twee
+bases in één `prices`-object leest vreemd, maar het is wat de cijfers zeggen.
+
+`src/lib/pricing.ts` rekent daarom in **bruto centen**: btw komt er alleen bij
+op wat uit de inkoopprijs volgt, en de adviesprijs gaat er ongewijzigd
+doorheen. De btw wordt er bij het factureren weer uit gehaald
+(`vatPortionCents`), en dat is exact.
+
+**Wat er eerder stond en niet klopte.** Beslissing #5 noemde dit sinds
+2026-08-07 "bevestigd: beide exclusief btw", en deze pagina hield er een
+slag om de arm ("vermoedelijk — navragen vóór livegang"). Een marktvergelijking
+leek het eerst nog te bevestigen (€ 45,98 tegen € 47 bij de goedkoopste
+Nederlandse concurrent), maar die test kan de twee gevallen niet scheiden:
+€ 38,00 is óók een plausibele winkelprijs. De schermafdruk kan dat wel.
+
+**Nog dichter te timmeren** met de inkoopfactuur van Tyre24: staat daar de
+regelprijs gelijk aan `ek` met de btw apart onderaan, dan is ook de andere
+helft schriftelijk bevestigd.
+
+---
 
 ## Mapping naar ons datacontract (`src/lib/catalog/types.ts`)
 

@@ -37,6 +37,18 @@ export const routing = defineRouting({
       nl: "/aanbiedingen",
       en: "/offers",
     },
+    // De beoordelingen van klanten, en het formulier waarmee ze binnenkomen.
+    // Het token in de URL is de sleutel: er is geen account om mee in te
+    // loggen, dus die link is het enige bewijs dat deze beoordeling bij een
+    // echte, betaalde bestelling hoort.
+    "/reviews": {
+      nl: "/beoordelingen",
+      en: "/reviews",
+    },
+    "/reviews/[token]": {
+      nl: "/beoordelingen/[token]",
+      en: "/reviews/[token]",
+    },
     "/faq": {
       nl: "/veelgestelde-vragen",
       en: "/faq",

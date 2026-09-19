@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LoadMore } from "@/components/load-more";
 import { ProductGrid } from "@/components/product-grid";
+import { VehicleFinder } from "@/components/vehicle/vehicle-finder";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { familySlug, PRODUCT_FAMILIES } from "@/lib/catalog/families";
@@ -14,6 +15,7 @@ import {
   vehicleSearchTerms,
 } from "@/lib/catalog/vehicle-match";
 import { localizedMetadata } from "@/lib/site";
+import { vehicleMakeNames } from "@/lib/vehicle/makes";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -76,12 +78,9 @@ export default async function MyCarPage({ params, searchParams }: Props) {
       <div className="site-container py-12 md:py-16">
         <h1 className="text-3xl md:text-4xl">{t("title")}</h1>
         <p className="mt-4 max-w-xl text-muted">{t("noCar")}</p>
-        <Link
-          href="/"
-          className="mt-6 inline-flex rounded-md bg-caro-orange px-5 py-2.5 font-semibold text-caro-ink"
-        >
-          {t("chooseCar")}
-        </Link>
+        <div className="mt-8 max-w-md rounded-lg border border-border border-t-4 border-t-caro-orange bg-surface p-4 md:p-6">
+          <VehicleFinder makes={await vehicleMakeNames()} />
+        </div>
       </div>
     );
   }
@@ -130,6 +129,20 @@ export default async function MyCarPage({ params, searchParams }: Props) {
         {t("titleFor", { car: carLabel })}
       </h1>
       <p className="mt-4 max-w-2xl text-muted">{t("disclaimer")}</p>
+
+      {/* De kiezer stáát op deze pagina, en dat is het punt.
+          Een bezoeker die hier via de merkenlijst in de voettekst binnenkomt
+          (`?merk=Audi`) kreeg alleen een tekstzoekresultaat: geen carId, dus
+          geen passende onderdelen en niets in de URL waar de catalogus iets
+          mee kan. Merk, model en uitvoering komen uit dezelfde TecDoc-boom
+          als de kentekenzoeker, dus deze drie stappen leveren wél een carId —
+          en daarmee gaat de klant door naar /onderdelen?auto=<carId>, waar de
+          onderdelen écht op zijn auto passen. */}
+      <section className="mt-8 max-w-md rounded-lg border border-border border-t-4 border-t-caro-orange bg-surface p-4 md:p-6">
+        <h2 className="text-lg">{t("exactTitle")}</h2>
+        <p className="mt-1 mb-4 text-sm text-muted">{t("exactBody")}</p>
+        <VehicleFinder makes={await vehicleMakeNames()} />
+      </section>
 
       {withParts.length === 0 && (
         <p className="mt-10 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">

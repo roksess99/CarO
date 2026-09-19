@@ -102,6 +102,37 @@ function toStoredOrder(row: OrderRow, lines: LineRow[]): StoredOrder {
   };
 }
 
+/**
+ * De artikelen van één bestelling, met hun naam zoals die bij het bestellen
+ * gold.
+ *
+ * `StoredOrder.items` draagt alleen het artikelnummer en de familie — genoeg
+ * om in te kopen, te weinig om aan de klant te tonen. Het beoordelingsformulier
+ * vraagt een cijfer per artikel en moet dus de naam kunnen laten zien; die
+ * staat bevroren in `order_lines`, want de catalogus van de leverancier
+ * verandert en een beoordeling hoort bij wat er tóen stond.
+ */
+export async function orderProducts(reference: string): Promise<
+  Array<{ partId: string; family: string; name: string; quantity: number }>
+> {
+  const rows = await query<{
+    part_id: string;
+    family: string;
+    name: string;
+    quantity: number;
+  }>(
+    `SELECT part_id, family, name, quantity FROM order_lines
+      WHERE order_reference = ? ORDER BY id`,
+    [reference],
+  );
+  return rows.map((row) => ({
+    partId: row.part_id,
+    family: row.family,
+    name: row.name,
+    quantity: Number(row.quantity),
+  }));
+}
+
 export async function saveOrder(order: StoredOrder): Promise<void> {
   const { document } = order;
   const customer = document.customer;

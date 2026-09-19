@@ -76,10 +76,20 @@ export default async function KortingenPage() {
       <div className="mt-4 max-w-prose rounded-lg border border-border border-s-4 border-s-caro-orange bg-background p-4">
         <p className="text-sm">
           <span className="font-semibold">De marge gaat voor het percentage.</span>{" "}
-          Zou een artikel door jouw korting onder de ondergrens van 25% winst
-          zakken, dan krijgt dát artikel minder korting. De rest van de actie
-          gaat gewoon door. Zo kan er nooit met verlies verkocht worden, ook
-          niet als de leverancier zijn inkoopprijs later verhoogt.
+          Zou een artikel door jouw korting onder de ondergrens zakken, dan
+          krijgt dát artikel minder korting. De rest van de actie gaat gewoon
+          door. Zo kan er nooit met verlies verkocht worden, ook niet als de
+          leverancier zijn inkoopprijs later verhoogt.
+        </p>
+        <p className="mt-2 text-sm">
+          Waar die ondergrens ligt hangt af van{" "}
+          <Link href="/beheer/prijzen" className="underline underline-offset-4">
+            Prijzen
+          </Link>
+          . Heb je daar een opslag ingesteld, dan is de inkoopprijs de bodem en
+          past er hoogstens zoveel korting als je opslag toelaat — bij 10%
+          opslag is dat 9%. Staat er geen prijsregel, dan is de bodem 25% winst
+          op de inkoopprijs — of de adviesprijs zelf, als die lager ligt.
         </p>
       </div>
 

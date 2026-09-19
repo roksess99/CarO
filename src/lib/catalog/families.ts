@@ -81,19 +81,6 @@ export type ProductFamily = keyof typeof FAMILIES;
 export const PRODUCT_FAMILIES = Object.keys(FAMILIES) as ProductFamily[];
 
 /**
- * Indeling van de hoofdnavigatie. Elke familie heeft een eigen knop: de klant
- * ziet het hele assortiment in één oogopslag. De groepsvorm blijft bestaan
- * zodat families later alsnog gebundeld kunnen worden.
- */
-export const NAV_GROUPS = PRODUCT_FAMILIES.map((family) => ({
-  key: family,
-  families: [family],
-})) satisfies ReadonlyArray<{
-  key: string;
-  families: ReadonlyArray<ProductFamily>;
-}>;
-
-/**
  * URL-segment voor een familie.
  *
  * Arabisch deelt de Engelse slug: Arabisch schrift in een URL wordt

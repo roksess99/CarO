@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CaroLockup } from "@/components/brand/caro-lockup";
 import { CartButton } from "@/components/cart/cart-button";
-import { FamilyNav, type FamilyNavItem } from "@/components/family-nav";
+import { FamilyNav } from "@/components/family-nav";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SiteSearch } from "@/components/site-search";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -11,21 +11,18 @@ import { VehicleButton } from "@/components/vehicle/vehicle-button";
 import { Link } from "@/i18n/navigation";
 
 /**
- * De header haalt zijn assortimentsmenu en merkenlijst niet meer zelf op.
+ * De header haalt zijn merkenlijst niet zelf op.
  *
- * GEMETEN 2026-09-11 met `logging.fetches`: de categorielijst per familie en
- * `/manufacturers` kwamen **drie keer** langs in één paginaweergave — header,
- * tabbalk en de layout vroegen ze los van elkaar op. Ze waren gecacht, dus
- * het kostte geen netwerkverkeer, maar wel drie keer parsen en drie keer
- * hetzelfde werk. De layout haalt ze nu één keer op en geeft ze door.
+ * GEMETEN 2026-09-11 met `logging.fetches`: `/manufacturers` kwam **drie
+ * keer** langs in één paginaweergave — header, tabbalk en de layout vroegen
+ * hem los van elkaar op. Gecacht, dus het kostte geen netwerkverkeer, maar
+ * wel drie keer parsen. De layout haalt hem nu één keer op en geeft hem door.
+ *
+ * De categorielijst per familie is er 2026-09-17 helemaal uit: de
+ * familieknoppen zijn links geworden en hadden hem alleen nog nodig voor een
+ * uitklapmenu dat er niet meer is (family-nav.tsx).
  */
-export async function SiteHeader({
-  items,
-  makes,
-}: {
-  items: FamilyNavItem[];
-  makes: string[];
-}) {
+export async function SiteHeader({ makes }: { makes: string[] }) {
   const t = await getTranslations("header");
   const locale = await getLocale();
 
@@ -73,7 +70,7 @@ export async function SiteHeader({
           wat klanten van een onderdelenshop gewend zijn. */}
       <div className="hidden border-t border-border lg:block">
         <div className="site-container">
-          <FamilyNav items={items} />
+          <FamilyNav />
         </div>
       </div>
 

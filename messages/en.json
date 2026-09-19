@@ -18,7 +18,6 @@
     "cartAria": "Shopping cart, {count, plural, =0 {empty} =1 {1 item} other {# items}}",
     "vehicle": "My car",
     "vehicleSelected": "Your car: {plate}",
-    "back": "Back",
     "close": "Close"
   },
   "search": {
@@ -43,8 +42,6 @@
     "categoriesAria": "Categories",
     "featuredTitle": "Frequently bought",
     "viewAll": "View all",
-    "allIn": "All in {family}",
-    "menuTitle": "Range",
     "oenLabel": "Search for a part",
     "oenPlaceholder": "brake disc, oil filter or OE number",
     "oenSubmit": "Search",
@@ -54,7 +51,6 @@
     "onderdelen": {
       "title": "Parts",
       "intro": "New original spare parts. Search by name or number, or pick your car and browse by category.",
-      "menuAria": "Parts",
       "empty": "No parts are available yet.",
       "about": "CarO sells new parts for passenger cars and two-wheelers: brake discs and pads, filters, suspension, cooling, lighting and electrics. Enter your registration or pick make, model and version — the catalogue then shows only the articles that fit your car. Searching by name or OE number works without a car too. All prices include 21% Dutch VAT and you have fourteen days to change your mind.",
       "faq": {
@@ -75,7 +71,6 @@
     "banden": {
       "title": "Tyres",
       "intro": "Tyres for cars, SUVs, vans and two-wheelers.",
-      "menuAria": "Tyre categories",
       "empty": "No tyres are available yet.",
       "about": "Summer, winter and all-season tyres for cars, SUVs, vans and two-wheelers. Enter the size printed on the sidewall of your current tyre — width, height and rim diameter, for example 205/55 R16 — and narrow it down by season if you like. You get the range of hundreds of brands, with prices including 21% Dutch VAT.",
       "faq": {
@@ -96,7 +91,6 @@
     "velgen": {
       "title": "Wheels",
       "intro": "Steel wheels in all common sizes.",
-      "menuAria": "Wheel categories",
       "empty": "No wheels are available yet.",
       "about": "Steel wheels in every common size. Filter by bolt pattern, rim size, offset and load rating; those figures are stamped on the inside of your current wheel. Prices include 21% Dutch VAT and you have fourteen days to change your mind.",
       "faq": {
@@ -117,7 +111,6 @@
     "toebehoren": {
       "title": "Accessories",
       "intro": "Wheel and tyre accessories, from valves to storage systems.",
-      "menuAria": "Accessory categories",
       "empty": "No accessories are available yet.",
       "about": "Wheel and tyre accessories and car equipment: valves, wheel nuts, snow chains, storage systems, batteries, lighting, oils and car care. Filter by brand, size, colour or material. Prices include 21% Dutch VAT.",
       "faq": {
@@ -168,8 +161,7 @@
     "resultsInCategory": "{count, plural, =0 {No tyres in size {size} in this category} =1 {1 tyre in size {size}} other {# tyres in size {size}}}"
   },
   "categoryTiles": {
-    "title": "Find car parts in the catalogue",
-    "close": "Close"
+    "title": "Find car parts in the catalogue"
   },
   "vehicle": {
     "title": "Does it fit your car?",
@@ -182,10 +174,8 @@
     "pickerHeading": "Or select your car",
     "makeLabel": "Make",
     "modelLabel": "Model",
-    "yearLabel": "Year",
     "chooseMake": "Select make",
     "chooseModel": "Select model",
-    "chooseYear": "Select year",
     "browseParts": "Find parts for this car",
     "searching": "Searching…",
     "yourCar": "Your car",
@@ -208,8 +198,6 @@
   "category": {
     "metaDescription": "{category} for your car. All prices include 21% VAT.",
     "metaDescriptionParts": "Order {category} for your car. Enter your registration and see straight away which parts fit. Prices include 21% Dutch VAT.",
-    "brandFilterLabel": "Filter by brand",
-    "allBrands": "All brands",
     "breadcrumbAria": "Breadcrumb",
     "breadcrumbHome": "Home",
     "siblingsAria": "Other categories",
@@ -236,7 +224,9 @@
       "wheelMounting": "Wheel mounting",
       "colour": "Colour",
       "material": "Material",
-      "size": "Size"
+      "size": "Size",
+      "viscosity": "Viscosity (SAE)",
+      "volume": "Volume"
     },
     "values": {
       "kegel": "cone",
@@ -291,7 +281,8 @@
       "winterreifen_": "winter tyre"
     },
     "loadMore": "Load {count} more products",
-    "loadMoreBusy": "Loading…"
+    "loadMoreBusy": "Loading…",
+    "noResults": "No items match this combination of filters."
   },
   "localeSwitcher": {
     "label": "Language",
@@ -559,7 +550,8 @@
     "paymentTitle": "Payment methods",
     "paymentNote": "Payments run through Mollie. Your bank and card details never reach us.",
     "idealWeroAlt": "iDEAL and Wero",
-    "mollieAlt": "Secure payments powered by Mollie — Mastercard, Visa, American Express and more"
+    "mollieAlt": "Secure payments powered by Mollie — Mastercard, Visa, American Express and more",
+    "reviewsLink": "Reviews"
   },
   "terms": {
     "title": "Terms and conditions",
@@ -604,8 +596,8 @@
   },
   "privacy": {
     "title": "Privacy and cookies",
-    "intro": "This shop stores as little as possible. Below is exactly what is kept on your device, why, and for how long.",
-    "lastUpdated": "Last updated: 12 September 2026",
+    "intro": "This shop stores as little as possible. Below is exactly what is kept on your device, what goes into our database when you order, why, and for how long.",
+    "lastUpdated": "Last updated: 19 September 2026",
     "storageTitle": "What we store on your device",
     "storageIntro": "The law makes no distinction between cookies and other browser storage: the same rules apply to localStorage. That is why everything is listed together here.",
     "tableName": "Name",
@@ -639,7 +631,7 @@
       }
     },
     "noBannerTitle": "Why you do not see a cookie banner",
-    "noBannerBody": "Consent is required for storage that is not needed to make the site work — such as measuring visitor behaviour or advertising. Everything in the table above is either necessary for the shop to function, or a choice you made yourself. A legal exemption applies to that, so we do not have to ask for consent. We also consider it misleading to ask permission for something you cannot refuse without breaking the shopping cart.",
+    "noBannerBody": "Consent is required for storage that is not needed to make the site work — think of measuring visitor behaviour or advertising. Everything in the table above is either necessary for the shop to function, or a choice you made yourself. A legal exception covers that, so we do not have to ask. We also think it is misleading to ask permission for something you cannot refuse without the cart breaking. Note that this rule is only about what is placed on your device; what we keep on our own server about an order falls outside it — that is further down.",
     "noTracking": "We use no analytics, no advertising cookies, no social media buttons and no third-party trackers. The site also loads no fonts or scripts from external servers.",
     "personalDataTitle": "Personal data we process",
     "personalDataBody": "As long as you are only browsing, we process no personal data. That changes at three moments:",
@@ -656,7 +648,38 @@
     "rightsTitle": "Your rights",
     "rightsBody": "You may request which data we hold about you, have it corrected or deleted, and object to the processing. Contact us to do so. If we cannot resolve it together, you can file a complaint with the Dutch Data Protection Authority.",
     "contactTitle": "Contact",
-    "contactBody": "Questions about your data? Get in touch with:"
+    "contactBody": "Questions about your data? Get in touch with:",
+    "tableWhat": "What",
+    "serverTitle": "What we keep on our own server",
+    "serverIntro": "The table above is about your own device. When you place an order, data is also stored in our database. It sits with our hosting provider in the Netherlands; we do not hand it to another party.",
+    "server": {
+      "order": {
+        "what": "Your order: name, address, email address, phone number if given, and what you ordered",
+        "purpose": "Needed to carry out the purchase agreement — delivering, keeping you informed and answering later questions.",
+        "retention": "Seven years. An order is also an accounting record, and the Dutch tax authority sets that term."
+      },
+      "invoice": {
+        "what": "The invoice for your order, with amounts and VAT",
+        "purpose": "Legal obligation: an invoice has to be kept.",
+        "retention": "Seven years (statutory retention)."
+      },
+      "discountCode": {
+        "what": "For a code valid once per customer: your email address, the code and your order number",
+        "purpose": "Without this we cannot tell whether you already used a one-off code. It is the only way to enforce that rule fairly.",
+        "retention": "As long as the discount code exists, and at most a year after that."
+      },
+      "mail": {
+        "what": "Messages sent: your order confirmation and anything you send through the contact form",
+        "purpose": "So we can check what was said if you come back to it.",
+        "retention": "Contact messages stay in the mailbox until they are dealt with; they do not end up in a separate list."
+      },
+      "review": {
+        "what": "Your review: two ratings, your text and the name you chose to show",
+        "purpose": "To display it on the site. We keep your email address with it, so we know who is asking for removal and so the invitation is only sent once.",
+        "retention": "For as long as it is on the site. Ask us to remove it and we will."
+      }
+    },
+    "noMarketing": "We do not use your email address to send you advertising. There is no newsletter and no separate mailing list: your address is only used for the order you entered it with. Should that ever change, you will read it here first and we will ask you at checkout."
   },
   "error": {
     "title": "Something went wrong",
@@ -692,7 +715,9 @@
     "viewAll": "View all",
     "limitsTitle": "Where this does not work yet",
     "noMatchFor": "{family}: the supplier does not link these items to a car. Search by size or OE number.",
-    "loadMore": "Load more products"
+    "loadMore": "Load more products",
+    "exactTitle": "Your exact version",
+    "exactBody": "Enter your licence plate or pick make, model and version. We then show only parts that fit your car, instead of searching by name."
   },
   "categories": {
     "tyresCar": "Car / SUV",
@@ -822,5 +847,42 @@
     "clear": "Clear",
     "pickerHint": "Unsure about the bolt pattern? Write it as number of bolts × distance in millimetres, for example 5 × 112.",
     "resultsForSize": "{count, plural, =0 {No wheels in {size}} =1 {1 wheel in {size}} other {# wheels in {size}}}"
+  },
+  "review": {
+    "eyebrow": "Your opinion",
+    "title": "How did it go?",
+    "intro": "You are reviewing order {reference}. Two ratings are enough; the rest is optional.",
+    "shopLegend": "The shop",
+    "shopHint": "Searching, finding the right part, ordering.",
+    "orderLegend": "The order",
+    "orderHint": "Delivery time, packaging and whether you got what you expected.",
+    "productsLegend": "The items",
+    "productsHint": "Optional. Skip anything you have not used yet.",
+    "bodyLabel": "Anything you would like to add?",
+    "bodyPlaceholder": "What went well, and what could be better?",
+    "nameLabel": "Name shown with your review",
+    "nameHint": "This appears on the site. Never your full name or address — those stay with your order.",
+    "anonymous": "Rather stay anonymous",
+    "send": "Send review",
+    "sending": "Sending…",
+    "thanksTitle": "Thank you.",
+    "thanksBody": "Your review is on the site. If we reply, you will find it in the same place.",
+    "alreadyTitle": "Thanks for your review",
+    "alreadyBody": "It is now on the site. It can be done once per order; if something is wrong or you want it removed, send us an email.",
+    "readAll": "Read all reviews",
+    "privacyNote": "We send one email per order about this and never use your address for advertising. Want your review removed later? Send us an email."
+  },
+  "reviews": {
+    "eyebrow": "Customers",
+    "title": "Reviews",
+    "intro": "What customers thought of the shop and of their order. We publish all of them — the critical ones too.",
+    "empty": "There are no reviews yet. They will appear here once the first orders have been delivered.",
+    "count": "{count, plural, =1 {from 1 review} other {from # reviews}}",
+    "outOfFive": "{rating} out of 5 stars",
+    "shopAverage": "Shop",
+    "orderAverage": "Order",
+    "verified": "Every review belongs to a paid order: the invitation is emailed to the customer and the link works once. We remove nothing to polish the score; only abuse or personal data is hidden, and we record why.",
+    "replyFrom": "Reply from CarO",
+    "howToGet": "Want to leave a review yourself? You will be invited automatically after your order."
   }
 }

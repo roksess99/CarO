@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CategoryGrid } from "@/components/home/category-grid";
 import { Hero } from "@/components/home/hero";
 import { ProductGrid } from "@/components/product-grid";
+import { ReviewStrip } from "@/components/reviews/review-strip";
 import { Link } from "@/i18n/navigation";
 import { familySlug, PRODUCT_FAMILIES } from "@/lib/catalog/families";
 import { getCatalogProvider } from "@/lib/catalog/provider";
@@ -120,6 +121,12 @@ export default async function HomePage({ params }: Props) {
 
       <Suspense fallback={<RowsFallback />}>
         <CategoryGrid />
+      </Suspense>
+
+      {/* Zonder beoordelingen rendert dit niets, dus geen plaatshouder: een
+          strook die "nog geen beoordelingen" zegt verkoopt niets. */}
+      <Suspense fallback={null}>
+        <ReviewStrip />
       </Suspense>
 
       <Suspense fallback={<RowsFallback />}>

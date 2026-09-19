@@ -1,0 +1,128 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { logAction } from "@/lib/admin/audit";
+import { requireAdmin } from "@/lib/admin/session";
+import { runReviewInvites } from "@/lib/reviews/job";
+import {
+  findReview,
+  hideReview,
+  replyToReview,
+  unhideReview,
+} from "@/lib/reviews/store";
+
+export type ReviewAdminResult = { error: string } | { ok: string } | undefined;
+
+export async function postReply(
+  _previous: ReviewAdminResult,
+  formData: FormData,
+): Promise<ReviewAdminResult> {
+  const admin = await requireAdmin();
+  const id = Number(formData.get("id"));
+  const reply = String(formData.get("reply") ?? "").trim().slice(0, 2000);
+
+  if (!Number.isInteger(id)) return { error: "Onbekende beoordeling." };
+  if (!reply) return { error: "Schrijf eerst een antwoord." };
+  if (!(await replyToReview(id, reply))) {
+    return { error: "Die beoordeling bestaat niet of is nog niet ingevuld." };
+  }
+
+  await logAction({
+    adminId: admin.id,
+    action: "beoordeling.beantwoord",
+    detail: { id },
+  });
+  revalidatePath("/beheer/beoordelingen");
+  revalidatePath("/[locale]/reviews", "page");
+  return { ok: "Je antwoord staat erbij." };
+}
+
+/**
+ * Verbergen mag alleen bij misbruik, en nooit omdat het cijfer laag is.
+ *
+ * Daarom is de reden verplicht: hij komt in de database én in het logboek, en
+ * dat is precies het bewijs dat je nodig hebt als iemand ooit vraagt of je
+ * beoordelingen filtert. Negatieve beoordelingen wegfilteren is een
+ * oneerlijke handelspraktijk (Omnibus-richtlijn, de ACM handhaaft erop).
+ */
+export async function hide(
+  _previous: ReviewAdminResult,
+  formData: FormData,
+): Promise<ReviewAdminResult> {
+  const admin = await requireAdmin();
+  const id = Number(formData.get("id"));
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 190);
+
+  if (!Number.isInteger(id)) return { error: "Onbekende beoordeling." };
+  if (reason.length < 5) {
+    return { error: "Geef een reden op; die wordt vastgelegd." };
+  }
+
+  const review = await findReview(id);
+  if (!review) return { error: "Die beoordeling bestaat niet meer." };
+  if (!(await hideReview(id, reason))) {
+    return { error: "Die beoordeling stond al verborgen." };
+  }
+
+  await logAction({
+    adminId: admin.id,
+    action: "beoordeling.verborgen",
+    subject: review.orderReference,
+    detail: { id, reason, shopRating: review.shopRating, orderRating: review.orderRating },
+  });
+  revalidatePath("/beheer/beoordelingen");
+  revalidatePath("/[locale]/reviews", "page");
+  return { ok: "Verborgen, met de reden erbij." };
+}
+
+export async function unhide(
+  _previous: ReviewAdminResult,
+  formData: FormData,
+): Promise<ReviewAdminResult> {
+  const admin = await requireAdmin();
+  const id = Number(formData.get("id"));
+  if (!Number.isInteger(id)) return { error: "Onbekende beoordeling." };
+  if (!(await unhideReview(id))) return { error: "Die stond al zichtbaar." };
+
+  await logAction({
+    adminId: admin.id,
+    action: "beoordeling.getoond",
+    detail: { id },
+  });
+  revalidatePath("/beheer/beoordelingen");
+  revalidatePath("/[locale]/reviews", "page");
+  return { ok: "Weer zichtbaar." };
+}
+
+/**
+ * De uitnodigingen nu versturen in plaats van wachten op de dagelijkse taak.
+ *
+ * Beide parameters komen van `useActionState` en worden hier niet gebruikt:
+ * deze knop heeft geen invoer, alleen een bevestiging terug.
+ */
+export async function inviteNow(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- vaste handtekening van useActionState
+  _previous: ReviewAdminResult,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deze knop heeft geen invoer
+  _formData: FormData,
+): Promise<ReviewAdminResult> {
+  const admin = await requireAdmin();
+  const result = await runReviewInvites({ force: true });
+
+  await logAction({
+    adminId: admin.id,
+    action: "beoordeling.uitgenodigd",
+    detail: { invited: result.invited, errors: result.errors.length },
+  });
+  revalidatePath("/beheer/beoordelingen");
+
+  if (result.errors.length > 0) {
+    return { error: result.errors.join(" · ") };
+  }
+  return {
+    ok:
+      result.invited === 0
+        ? "Geen bestellingen die aan een uitnodiging toe zijn."
+        : `${result.invited} uitnodiging${result.invited === 1 ? "" : "en"} verstuurd.`,
+  };
+}

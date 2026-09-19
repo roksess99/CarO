@@ -1,51 +1,33 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { CategoryTiles } from "@/components/home/category-tiles";
-import type { FamilyNavItem } from "@/components/family-nav";
 import { FAMILY_TILE_IMAGES } from "@/lib/catalog/category-tiles";
 import { familySlug, PRODUCT_FAMILIES } from "@/lib/catalog/families";
-import { localizeCategories } from "@/lib/catalog/localized-categories";
-import { getCatalogProvider } from "@/lib/catalog/provider";
 
 /**
- * Catalogusblok: een beeldtegel per familie die uitklapt naar de
- * categorieën eronder.
+ * Catalogusblok: een beeldtegel per familie, rechtstreeks naar die familie.
  *
- * Uitklappen in plaats van doorlinken: de klant ziet zo in één klik wat er
- * ín een groep zit, zonder de homepage te verlaten en terug te moeten.
+ * Haalt sinds 2026-09-17 geen categorieën meer op. De tegels klappen niet
+ * meer uit (zie category-tiles.tsx), en daarmee vervalt de reden om bij het
+ * renderen van de homepage vier categorielijsten bij de leverancier op te
+ * vragen — de drukste pagina van de winkel werd daar alleen maar trager van.
  */
 export async function CategoryGrid() {
   const t = await getTranslations("categoryTiles");
   const tFamily = await getTranslations("family");
   const locale = await getLocale();
 
-  const provider = getCatalogProvider();
-  const items: FamilyNavItem[] = await Promise.all(
-    PRODUCT_FAMILIES.map(async (family) => ({
-      family,
-      categories: await localizeCategories(await provider.getCategories(family)),
-    })),
-  );
-
-  const tiles = items.map(({ family, categories }) => ({
+  const tiles = PRODUCT_FAMILIES.map((family) => ({
     family,
     slug: familySlug(family, locale),
     label: tFamily(`${family}.title`),
     image: FAMILY_TILE_IMAGES[family],
-    categories: categories.map((category) => ({
-      slug: category.slug,
-      name: category.name,
-    })),
   }));
 
   return (
     <section className="site-container py-12 md:py-16">
       <h2 className="text-center text-2xl md:text-3xl">{t("title")}</h2>
       <div className="mt-8">
-        <CategoryTiles
-          tiles={tiles}
-          viewAllLabel={tFamily("viewAll")}
-          closeLabel={t("close")}
-        />
+        <CategoryTiles tiles={tiles} />
       </div>
     </section>
   );

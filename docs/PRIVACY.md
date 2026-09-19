@@ -1,10 +1,18 @@
-# Wat de shop opslaat in de browser
+# Wat de shop opslaat
 
-Onderbouwing bij `/nl/privacy` (`src/app/[locale]/privacy/page.tsx`). De tabel
-op die pagina is voor de bezoeker; dit bestand zegt hoe hij gecontroleerd is,
-zodat niemand hem uit het hoofd hoeft bij te werken.
+Onderbouwing bij `/nl/privacy` (`src/app/[locale]/privacy/page.tsx`). De
+tabellen op die pagina zijn voor de bezoeker; dit bestand zegt hoe ze
+gecontroleerd zijn, zodat niemand ze uit het hoofd hoeft bij te werken.
 
-## De volledige lijst
+Het gaat om twee verschillende vragen, en die worden makkelijk door elkaar
+gehaald:
+
+1. **Wat komt er op het apparaat van de bezoeker?** Dat bepaalt of er een
+   toestemmingsbanner moet komen (Telecommunicatiewet art. 11.7a).
+2. **Wat bewaren wij op onze eigen server?** Dat bepaalt wat er in de
+   privacyverklaring moet staan (AVG): welke gegevens, waarvoor, hoe lang.
+
+## Op het apparaat van de bezoeker
 
 Vastgesteld 2026-09-12 door de code af te zoeken op élke schrijver
 (`localStorage`, `sessionStorage`, `document.cookie`) — een statische controle
@@ -22,16 +30,74 @@ mis je met bladeren.
 `sessionStorage` wordt nergens gebruikt, en de shop schrijft zelf geen enkele
 cookie: `NEXT_LOCALE` komt uit next-intl.
 
-## Waarom er geen toestemmingsbanner staat
+## Op onze eigen server
 
-Alle vijf zijn óf noodzakelijk om de winkel te laten werken (winkelwagen,
-bezorggegevens), óf het gevolg van een keuze die de bezoeker zelf maakt (taal,
-thema, zijn auto). Daarvoor geldt de uitzondering in artikel 11.7a lid 3
-Telecommunicatiewet en is geen toestemming nodig.
+Vastgesteld 2026-09-17 door `db/migrations/` langs te lopen op kolommen die
+een persoon aanwijzen. De verhuizing van JSON-bestanden naar MySQL
+(@docs/DECISIONS.md #13) veranderde juridisch niets — dezelfde gegevens,
+hetzelfde doel — maar er kwam één ding bij dat er eerder niet was.
 
-**Komt er ooit iets bij dat dat níet is** — analytics, een advertentiepixel, een
-ingesloten YouTube-speler — dan is een banner mét voorafgaande blokkering wél
-verplicht. Dat staat ook als waarschuwing boven `STORAGE_ITEMS` in de pagina.
+| Tabel | Persoonsgegeven | Grondslag | Bewaartermijn |
+|---|---|---|---|
+| `orders` | `email`, `first_name`, `last_name`, `phone`, `street`, `city`, postcode, huisnummer | Uitvoering van de overeenkomst (art. 6 lid 1 sub b AVG) | 7 jaar — een bestelling is ook een boekstuk |
+| `order_lines` | wat er besteld is | idem | 7 jaar |
+| `invoices` | bedragen, btw, koppeling aan de bestelling | Wettelijke plicht (art. 6 lid 1 sub c) | 7 jaar, fiscale bewaarplicht |
+| `discount_code_uses` | **`email_key`: het mailadres in kleine letters, niet gehasht** | Gerechtvaardigd belang: "één keer per klant" is niet af te dwingen zonder het adres | Zolang de code bestaat, daarna hoogstens een jaar |
+| `reviews` | de naam die de klant zelf koos, zijn tekst, en **`email_key`: het mailadres waar de uitnodiging heen ging** | Gerechtvaardigd belang: beoordelingen tonen, en weten wie om verwijdering vraagt | Zolang de beoordeling op de site staat |
+| `review_products` | welk artikel welk cijfer kreeg | idem | idem |
+| `admins`, `admin_sessions`, `admin_invites`, `audit_log` | mailadres van de beheerder | Noodzakelijk voor de toegangsbeveiliging | Zolang het account bestaat |
+
+`price_history` en `job_runs` bevatten geen persoonsgegevens: artikel-ids,
+datums en bedragen.
+
+**`discount_code_uses.email_key` is het nieuwe stuk.** Het staat daar los van
+de bestelling, dus het blijft ook staan als een bestelling ooit verwijderd
+wordt — en dat is precies de bedoeling, anders is de code opnieuw te
+gebruiken. Daarom staat het als eigen regel in de tabel op de pagina.
+
+**`reviews` draagt sinds 2026-09-19 ook een mailadres.** Om twee redenen die
+allebei nodig zijn: de uitnodiging mag maar één keer verstuurd worden, en als
+iemand vraagt zijn beoordeling te verwijderen moeten we weten welke van hem
+is. Anders dan bij een kortingscode verdwijnt deze rij wél met de bestelling
+(`ON DELETE CASCADE`): een beoordeling zónder de bestelling erachter kan niet
+meer als geverifieerde aankoop gelden, en dan hoort hij ook niet meer op de
+site te staan.
+
+**Geen mailinglijst.** Er is geen tabel met adressen voor marketing en die
+komt er ook niet zonder dat #15 opnieuw bekeken wordt: verzamelen voor een
+doel dat je nog niet hebt mag niet. De pagina zegt dat expliciet
+(`privacy.noMarketing`), zodat het een belofte is en geen omissie.
+
+**De beoordelingsmail is geen reclame.** Het is één bericht over een
+bestelling die de klant net heeft ontvangen, dus het valt onder de
+klantrelatie — geen toestemming vooraf nodig. Wat er wél bij hoort en er ook
+in staat: er gaat er precies één per bestelling uit, en wie hem niet wil mailt
+terug. Een uitschrijflink zou hier misleidend zijn, want er is geen lijst om
+je voor uit te schrijven.
+
+## Geen toestemmingsbanner nodig, ook nu de database er is
+
+Dit is 2026-09-17 nagelopen omdat de vraag terecht opkwam: als we mailadressen
+in een database bewaren, hebben we dan een cookiebanner nodig?
+
+**Nee.** De toestemmingsplicht van art. 11.7a Tw gaat uitsluitend over het
+plaatsen van of toegang krijgen tot gegevens **op de randapparatuur van de
+gebruiker** — cookies, localStorage, sessionStorage, fingerprinting. Wat een
+server in zijn eigen database zet valt er niet onder; dat is een AVG-vraag, en
+het antwoord daarop is de tabel hierboven plus de privacyverklaring.
+
+De lijst met browseropslag is sinds 2026-09-12 niet veranderd: nog steeds
+dezelfde vijf, en alle vijf zijn óf noodzakelijk om de winkel te laten werken
+(winkelwagen, bezorggegevens) óf het gevolg van een keuze die de bezoeker zelf
+maakt (taal, thema, zijn auto). Daarvoor geldt de uitzondering in artikel
+11.7a lid 3 Telecommunicatiewet. Dezelfde waarschuwing staat boven
+`STORAGE_ITEMS` in de pagina zelf.
+
+**De banner komt er alsnog** zodra er iets bijkomt dat geen van beide is:
+analytics, een advertentiepixel, een ingesloten YouTube-speler, een chatwidget
+van een derde. Dan is een banner **mét voorafgaande blokkering** verplicht —
+weigeren moet net zo makkelijk zijn als accepteren, en er mag niets laden
+voordat er geklikt is.
 
 ## Geen derden in de browser
 
@@ -51,11 +117,21 @@ Twee uitzonderingen die de bezoeker zelf in gang zet:
 
 ## Bijwerken
 
-Verandert er iets aan de opslag, dan moeten drie plekken mee:
+Verandert er iets aan de **browseropslag**, dan moeten drie plekken mee:
 
 1. `STORAGE_ITEMS` in `src/app/[locale]/privacy/page.tsx`
 2. `privacy.items.<sleutel>` in `messages/nl.json` én `messages/en.json`
 3. dit bestand
+
+Komt er een **kolom of tabel met persoonsgegevens** bij in `db/migrations/`,
+dan net zo:
+
+1. `SERVER_ITEMS` in diezelfde pagina
+2. `privacy.server.<sleutel>` in beide messagebestanden
+3. de tabel "Op onze eigen server" hierboven
+
+En werk `privacy.lastUpdated` bij — in beide talen. Een verklaring met een
+oude datum eronder is erger dan geen datum.
 
 Komt er een partij bij die gegevens van ons ontvangt, dan hoort die ook in de
 lijst "Partijen die gegevens van ons ontvangen" op de pagina. Mollie stond daar

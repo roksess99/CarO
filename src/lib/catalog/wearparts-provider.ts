@@ -21,8 +21,9 @@ import {
   searchArticles,
   type WearpartsArticle,
 } from "./wearparts";
+import { articleMatchesFilters, partFilterGroups } from "./part-filters";
 import { POPULAR_PART_GROUP_IDS } from "./quick-links";
-import type { Category, Part } from "./types";
+import type { FilterGroup, Part, SelectedFilters } from "./types";
 
 /**
  * Attributen die niets zeggen over het product zelf en dus niet op de
@@ -132,6 +133,24 @@ export function groupNameFromSlug(slug: string): string {
 }
 
 /**
+ * De TecDoc-soortnummers van een artikel.
+ *
+ * Waarvoor: de prijsopslag van de beheerder hangt bij onderdelen aan dit
+ * nummer en niet aan de categorie. De categorie komt uit de URL en ontbreekt
+ * bij een zoekresultaat; dit nummer zit op het artikel zelf en is dus overal
+ * hetzelfde — ook bij het afrekenen, waar het artikel op id wordt opgezocht.
+ *
+ * Eén artikel kan er meerdere dragen. GEMETEN: motorolie komt terug als
+ * `[1862, 3224]`, en het schema perst dat tot "1862,3224". Vandaar de split.
+ */
+function articleKinds(article: WearpartsArticle): string[] {
+  return (article.genericArticleId ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+/**
  * Artikel → Part. Het goedkoopste aanbod telt: de klant koopt er één, en de
  * `offerList` staat niet gegarandeerd op prijs gesorteerd.
  */
@@ -144,17 +163,20 @@ export function groupNameFromSlug(slug: string): string {
 function priceFor(
   id: string,
   categorySlug: string,
+  kinds: ReadonlyArray<string>,
   best: { purchase: number; recommended: number | null },
   pricing: PricingContext,
 ): { priceCents: number; discountPercent: number; listPriceCents?: number } {
+  const subject = { id, family: "onderdelen" as const, categorySlug, kinds };
   const priced = discountedPriceCents({
     purchaseCents: best.purchase,
     recommendedCents: best.recommended,
-    percent: pricing.discounts.percentFor({
-      id,
-      family: "onderdelen",
-      categorySlug,
-    }),
+    // De opslag hangt bij onderdelen aan het TecDoc-soortnummer en niet aan
+    // de categorie: dat nummer zit op het artikel zelf en is dus overal
+    // hetzelfde, óók bij een zoekresultaat en bij het afrekenen. Zie
+    // lib/prices/markup.ts.
+    markupPercent: pricing.markups.markupFor(subject),
+    percent: pricing.discounts.percentFor(subject),
   });
 
   // De laagste prijs van de afgelopen dertig dagen, niet de adviesprijs van
@@ -254,18 +276,12 @@ export function toPart(
     // De korting wordt hier verrekend en niet ergens achteraf: alleen hier is
     // de inkoopprijs nog bekend, en zonder die waarde valt de marge-ondergrens
     // niet te bewaken (docs/DECISIONS.md #14).
-    ...priceFor(article.id, categorySlug, best, pricing),
+    ...priceFor(article.id, categorySlug, articleKinds(article), best, pricing),
     availability: best.stock > 0 ? "in-stock" : "out-of-stock",
     imageUrl: article.image,
     specs,
     stock: best.stock,
   };
-}
-
-/** Hoofdgroepen van een auto, als categorieën voor de navigatie */
-export async function partCategories(carId: number): Promise<Category[]> {
-  const groups = await assemblyGroups(carId);
-  return groups.map((group) => ({ slug: groupSlug(group), name: group.name }));
 }
 
 export async function partGroupById(
@@ -529,6 +545,77 @@ export async function partsInGroup({
       return part ? [part] : [];
     }),
     total,
+  };
+}
+
+/**
+ * Zoveel artikelen halen we maximaal op om ze zelf te kunnen filteren.
+ *
+ * GEMETEN 2026-09-17: `limit` is bij de leverancier afgetopt op 300, en de
+ * grootste oliegroep die we tegenkwamen telt er 389 (VW Golf VII). Twee
+ * pagina's dekken dat, en het zijn twee verzoeken die vijf minuten in de
+ * cache blijven en élke filtercombinatie bedienen — zie part-filters.ts.
+ */
+const FILTER_FETCH_LIMIT = 300;
+const FILTER_FETCH_PAGES = 2;
+
+/**
+ * Onderdelen binnen één categorie, mét filterpaneel.
+ *
+ * Alleen voor de groepen waar `groupSupportsFilters()` ja op zegt; de rest
+ * blijft bij `partsInGroup()` en haalt gewoon één pagina op.
+ */
+export async function filteredPartsInGroup({
+  carId,
+  categoryId,
+  categorySlug,
+  categoryName,
+  genericArticleId,
+  filters,
+  limit = 20,
+}: {
+  carId: number;
+  categoryId: number;
+  categorySlug: string;
+  categoryName: string;
+  genericArticleId?: string;
+  filters: SelectedFilters;
+  limit?: number;
+}): Promise<{ parts: Part[]; total: number; groups: FilterGroup[] }> {
+  // Ná elkaar, niet tegelijk. GEMETEN 2026-09-17: twee gelijktijdige
+  // `/articles`-vragen op dezelfde categorie met limit 300 leverden op één
+  // van de twee HTTP 500 — en omdat searchArticles een fout opvangt en een
+  // lege lijst teruggeeft, verdween daarmee stil de halve categorie. De
+  // pagina toonde toen de duurste vaten bovenaan in plaats van de flessen.
+  const articles: WearpartsArticle[] = [];
+  for (let page = 0; page < FILTER_FETCH_PAGES; page++) {
+    const result = await searchArticles({
+      carId,
+      categoryId,
+      genericArticleId,
+      limit: FILTER_FETCH_LIMIT,
+      page,
+    });
+    articles.push(...result.articles);
+    // Alles binnen? Dan is een tweede vraag verspilling.
+    if (result.articles.length === 0 || articles.length >= result.total) break;
+  }
+
+  const pricing = await pricingContext();
+  // De filtergroepen tellen over álles wat we hebben, niet over de zichtbare
+  // pagina: anders zou "meer laden" de aantallen laten groeien.
+  const groups = partFilterGroups(articles, filters);
+  const matching = articles.filter((article) =>
+    articleMatchesFilters(article, filters),
+  );
+
+  return {
+    parts: matching.slice(0, limit).flatMap((article) => {
+      const part = toPart(article, categorySlug, categoryName, pricing);
+      return part ? [part] : [];
+    }),
+    total: matching.length,
+    groups,
   };
 }
 

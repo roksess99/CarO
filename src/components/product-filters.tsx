@@ -20,6 +20,12 @@ type Props = {
   /** Route-params van de categoriepagina waar de links naartoe wijzen */
   family: string;
   category: string;
+  /**
+   * Querystring die op elke filterlink mee moet. Bij onderdelen staat daar de
+   * gekozen auto in (`?auto=115566`); zonder dat zou een klik op een filter de
+   * hele categorie kwijtraken, want die boom hangt aan het voertuig.
+   */
+  extraQuery?: Record<string, string>;
 };
 
 /**
@@ -32,6 +38,7 @@ export async function ProductFilters({
   selected,
   family,
   category,
+  extraQuery,
 }: Props) {
   const t = await getTranslations("filters");
   if (groups.length === 0) return null;
@@ -41,7 +48,7 @@ export async function ProductFilters({
   const hrefFor = (next: SelectedFilters) => ({
     pathname: "/[family]/[category]" as const,
     params: { family, category },
-    query: { [FILTER_PARAM]: toFilterParam(next) },
+    query: { ...extraQuery, [FILTER_PARAM]: toFilterParam(next) },
   });
 
   return (

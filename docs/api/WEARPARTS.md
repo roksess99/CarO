@@ -108,7 +108,7 @@ Wat **niet** werkt: `filter[articleId]` bestaat niet (HTTP 400), en
 `vehicleAttributes` op een artikel komt leeg terug zodra je het zonder auto
 opvraagt.
 
-### Filteren op eigenschap — KAN WEL, DOEN WE NIET — GEMETEN 2026-09-11
+### Filteren op eigenschap — ALLEEN WAAR DE DATA HET DRAAGT — GEMETEN 2026-09-11 en 2026-09-17
 
 Naast de artikelen geeft `/articles` **facetten** terug: per eigenschap de
 waarden met hun aantal. `attr_*`-facetten verschijnen alleen als
@@ -147,7 +147,7 @@ categorieën voor dezelfde auto:
 De grens ligt rond 40%; `src/lib/catalog/part-filters.ts` past hem toe, samen
 met "alleen tekstwaarden" (getallen zijn maatvoering) en 2 tot 8 waarden.
 
-#### Winkelkeuze 2026-09-11: geen filters op eigenschap
+#### Winkelkeuze 2026-09-11: als regel geen filters op eigenschap
 
 Dit heeft een dag in de shop gestaan en is er bewust weer uit gehaald. Twee
 redenen, en de tweede is de zwaarste:
@@ -176,6 +176,51 @@ om te vinden. Wil je dit ooit terug, dan is de eerste vraag niet "hoe" maar
 "welke eigenschap is voor een consument een echte keuze" — en de tweede: wat
 doe je met de artikelen zonder waarde.
 
+#### Uitzondering 2026-09-17: motorolie krijgt wél filters
+
+De winkelkeuze hierboven blijft staan voor remblokken, schokdempers en de
+rest. Bij **motorolie (groep 1371)** gaat geen van beide argumenten op, en dat
+is gemeten op vier auto's — 57 tot 389 artikelen per auto:
+
+| Wat | Waar | Dekking |
+|---|---|---|
+| Merk | `brandName` | 100% |
+| Inhoud in liters | `attr_423` "Inhoud [liter]" | 100% |
+| SAE-viscositeit | `attr_2467` + `attr_1054` | 99% (297/300) |
+
+Het zijn ook geen jargonkoppen maar precies wat er op een fles staat. Zonder
+filter liggen er 389 flessen door elkaar, van 1 liter tot een vat van 208.
+
+**Twee vondsten die de bouw bepaalden:**
+
+1. **Viscositeit zit onder twee attribuut-ids.** Op carId 115566: 276
+   artikelen dragen `attr_2467`, 21 dragen `attr_1054`, geen enkele allebei —
+   en `attr_1054` komt in de facetten **helemaal niet voor**. Filteren via
+   `filter[attr_2467]=5W-30` laat die 21 dus stil vallen. Daarom filtert de
+   shop zelf, over de opgehaalde lijst (`src/lib/catalog/part-filters.ts`).
+2. **Merk filter je met `filter[man_id]`, niet met een naam.** Gemeten:
+   `filter[brandName]`, `filter[brand]`, `filter[manufacturer]`,
+   `filter[manId]`, `filter[manufacturerId]`, `filter[brandId]` en
+   `filter[manuId]` worden allemaal genegeerd (57 van 57 terug);
+   `filter[man_id]=461` geeft 20 — precies het facetaantal van RAVENOL.
+
+De waarde van een attribuutfilter gaat **zonder eenheid** mee:
+`filter[attr_423]=1` → 17 treffers, `filter[attr_423]=1 L` → HTTP 500.
+
+#### `limit` is afgetopt op 300, en twee tegelijk breekt
+
+GEMETEN 2026-09-17, en allebei verrassend:
+
+- `limit=300` is het maximum. Een groep met `numFound: 389` geeft bij
+  `limit=300&page=0` er 300 en bij `page=1` de resterende 89. Hoger vragen
+  levert niet meer op.
+- **Twee gelijktijdige `/articles`-vragen op dezelfde categorie met `limit=300`
+  geven op één van de twee HTTP 500.** Ná elkaar gaan ze allebei goed. Dat is
+  een stille fout: `searchArticles()` vangt hem op en geeft een lege lijst
+  terug, dus de halve categorie verdwijnt zonder foutmelding — de oliepagina
+  toonde daardoor de duurste vaten bovenaan in plaats van de flessen. Haal
+  pagina's dus sequentieel op.
+
 ### Kosten per paginaweergave — GEMETEN 2026-09-11
 
 Met `logging: { fetches: { fullUrl: true } }` in `next.config.ts` logt Next
@@ -184,7 +229,9 @@ elke call. Twee dingen kwamen daaruit:
 - **De navigatie werd drie keer opgehaald.** Header, tabbalk en layout
   vroegen de categorielijst per familie en `/manufacturers` los van elkaar
   op. Gecacht, dus geen netwerkverkeer, maar wel drie keer hetzelfde werk.
-  De layout doet het nu één keer en geeft het door.
+  De layout doet `/manufacturers` nu één keer en geeft hem door; de
+  categorielijst is 2026-09-17 helemaal uit de navigatie verdwenen, want de
+  familieknoppen klappen niet meer uit (@docs/DECISIONS.md #7).
 - **Het filterblok was de duurste call van een categoriepagina**:
   `/items?limit=100` duurde koud 2,8 s, tegen 1,3 s voor de artikelen zelf.
   Opgelost door `FILTER_SAMPLE_SIZE` naar 20 te zetten — dat kost niets,

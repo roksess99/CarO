@@ -24,6 +24,29 @@ const STORAGE_ITEMS = [
   { key: "theme", kind: "local" },
 ] as const;
 
+/**
+ * Wat er op ónze server in de database staat — een andere vraag dan de tabel
+ * hierboven, en een die daar niet in thuishoort.
+ *
+ * Toegevoegd 2026-09-17, toen de bestellingen van losse JSON-bestanden naar
+ * MySQL verhuisden (@docs/DECISIONS.md #13). Die verhuizing veranderde
+ * juridisch niets — dezelfde gegevens, hetzelfde doel — maar er kwam wél iets
+ * bij wat er eerder niet was: bij een kortingscode met "één keer per klant"
+ * bewaren we het mailadres apart van de bestelling, en dat moet een bezoeker
+ * kunnen lezen.
+ *
+ * De sleutels staan onder `privacy.server.<sleutel>` in messages/. Verandert
+ * het schema in `db/migrations/`, dan hoort deze lijst mee te veranderen —
+ * zie de bijwerkinstructie in docs/PRIVACY.md.
+ */
+const SERVER_ITEMS = [
+  "order",
+  "invoice",
+  "discountCode",
+  "review",
+  "mail",
+] as const;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "privacy" });
@@ -92,6 +115,44 @@ export default async function PrivacyPage({ params }: Props) {
         <li>{t("personalAddress")}</li>
         <li>{t("personalPlate")}</li>
       </ul>
+
+      <h2 className="mt-12 text-2xl">{t("serverTitle")}</h2>
+      <p className="mt-3 text-muted">{t("serverIntro")}</p>
+
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-border text-start">
+              <th scope="col" className="py-3 pe-4 font-semibold">
+                {t("tableWhat")}
+              </th>
+              <th scope="col" className="py-3 pe-4 font-semibold">
+                {t("tablePurpose")}
+              </th>
+              <th scope="col" className="py-3 font-semibold">
+                {t("tableRetention")}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {SERVER_ITEMS.map((key) => (
+              <tr key={key} className="border-b border-border align-top">
+                <td className="py-3 pe-4 font-medium">
+                  {t(`server.${key}.what`)}
+                </td>
+                <td className="py-3 pe-4 text-muted">
+                  {t(`server.${key}.purpose`)}
+                </td>
+                <td className="py-3 text-muted">
+                  {t(`server.${key}.retention`)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="mt-4 text-muted">{t("noMarketing")}</p>
 
       <h2 className="mt-12 text-2xl">{t("thirdPartiesTitle")}</h2>
       <p className="mt-3 text-muted">{t("thirdPartiesBody")}</p>
