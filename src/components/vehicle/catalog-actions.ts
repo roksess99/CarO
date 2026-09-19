@@ -38,10 +38,6 @@ async function modelIdByName(
   return match?.id ?? null;
 }
 
-export async function makesAction(): Promise<string[]> {
-  return (await vehicleMakes()).map((make) => make.name);
-}
-
 export async function modelsForMakeAction(make: string): Promise<string[]> {
   const manuId = await makeIdByName(make);
   if (manuId === null) return [];

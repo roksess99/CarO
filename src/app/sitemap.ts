@@ -120,6 +120,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }),
 
+    // Beoordelingen zijn juist wat een zoekende klant wil lezen, en er komen
+    // er regelmatig bij. Het formulier (`/beoordelingen/<token>`) staat er
+    // bewust níet in: dat is een persoonlijke link.
+    ...entry((locale) => getPathname({ locale, href: "/reviews" }), {
+      changeFrequency: "weekly",
+      priority: 0.6,
+    }),
+
     ...entry((locale) => getPathname({ locale, href: "/faq" }), {
       changeFrequency: "monthly",
       priority: 0.6,

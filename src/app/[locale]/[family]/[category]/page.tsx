@@ -161,6 +161,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             : 20
         }
         showAllTypes={query.alles === "1"}
+        filters={parseFilterParam(query[FILTER_PARAM])}
       />
     );
   }

@@ -38,6 +38,12 @@ export type MaintenanceLink = (typeof MAINTENANCE_LINKS)[number];
  * Aveo 26605, VW Golf 7 115566): deze `assemblyGroupNodeId`s zijn in alle
  * drie de bomen identiek. Het id is dus niet auto-afhankelijk — de vraag óf
  * de groep in de boom zit wél, en dat kijkt `popularPartGroups()` na.
+ *
+ * Accu's erbij 2026-09-17. GEMETEN op dezelfde drie auto's: groep 653
+ * "Batterij Accu" staat in alle drie de bomen, is een eindgroep en bevat 13
+ * tot 33 artikelen. Eén soort ("Accu / Batterij"), dus élke accu die de
+ * leverancier voor die auto heeft valt eronder — er is geen tweede groep met
+ * startaccu's die we zouden missen.
  */
 export const POPULAR_PART_GROUP_IDS = [
   543, // Oliefilter
@@ -46,6 +52,7 @@ export const POPULAR_PART_GROUP_IDS = [
   568, // Remblok
   569, // Remschijf
   1371, // motorolie
+  653, // Batterij Accu
   947, // Wisserblad / Rubber
   634, // Bougie
   774, // Schokdempers

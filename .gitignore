@@ -20,6 +20,8 @@ next-env.d.ts
 .env.development.local
 .env.test.local
 .env.production.local
+# Kant-en-klaar bestand voor de import bij de hostingpartij; staat vol sleutels
+.env.hostinger
 *.pem
 
 # --- Claude Code ---

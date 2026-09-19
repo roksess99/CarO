@@ -537,14 +537,17 @@ function toPart(
   // Prijs inclusief een eventuele actie. Dit gebeurt hier en niet ergens
   // achteraf, omdat de inkoopprijs alleen hier nog bekend is: zonder die
   // waarde is de marge-ondergrens niet te bewaken (docs/DECISIONS.md #14).
+  const subject = {
+    id: String(item.itemId),
+    family,
+    categorySlug: catSlug,
+  };
   const priced = discountedPriceCents({
     purchaseCents,
     recommendedCents,
-    percent: pricing.discounts.percentFor({
-      id: String(item.itemId),
-      family,
-      categorySlug: catSlug,
-    }),
+    // De opslag van de beheerder; zonder regel blijft de adviesprijs staan
+    markupPercent: pricing.markups.markupFor(subject),
+    percent: pricing.discounts.percentFor(subject),
   });
 
   // De doorgestreepte prijs is de laagste prijs van de afgelopen dertig dagen,

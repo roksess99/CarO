@@ -9,27 +9,29 @@ import {
 } from "@/components/catalog/actions";
 import {
   familySlug,
-  NAV_GROUPS,
-  type ProductFamily,
+  PRODUCT_FAMILIES,
   usesVehicleCatalog,
 } from "@/lib/catalog/families";
 import { MAINTENANCE_LINKS } from "@/lib/catalog/quick-links";
-import type { Category } from "@/lib/catalog/types";
 import { Link } from "@/i18n/navigation";
 
-export interface FamilyNavItem {
-  family: ProductFamily;
-  categories: Category[];
-}
-
-/** Categorieën per familie in het paneel; de rest via "alles bekijken" */
-const CATEGORIES_PER_FAMILY = 8;
-
-
-// Eén knop per productgroep in plaats van alles onder één menu. De groep
-// "Assortiment" bundelt de twee onderdelen-families; de rest zijn losse
-// knoppen met hun eigen categorieën eronder.
-export function FamilyNav({ items }: { items: FamilyNavItem[] }) {
+/**
+ * De vier productfamilies in de tweede headerrij, plus Olie en Filters.
+ *
+ * **Een familie is een link, geen menu.** Banden, velgen en toebehoren
+ * klapten tot 2026-09-17 uit naar hun categorieën; winkelkeuze van de
+ * eigenaar is dat een klik meteen de familiepagina opent, zoals Onderdelen
+ * dat altijd al deed. De categorieën staan op die pagina zelf als filterrij,
+ * met de producten eronder — dus het paneel voegde een klik toe zonder
+ * ergens eerder te komen. Het scheelt bovendien vier categorielijsten bij de
+ * leverancier per paginaweergave.
+ *
+ * Olie en Filters blijven wél menu's, en dat is geen inconsequentie: hun
+ * subgroepen hangen aan de gekozen auto (een Citroën C3 heeft er zeven onder
+ * `Filter`, een McLaren 720S twee). Die lijst bestaat niet als pagina, dus er
+ * valt niet naar door te linken.
+ */
+export function FamilyNav() {
   const t = useTranslations("family");
   const tCommon = useTranslations("common");
   const carId = useVehicle()?.carId;
@@ -72,146 +74,29 @@ export function FamilyNav({ items }: { items: FamilyNavItem[] }) {
     };
   }, [openKey]);
 
-  const byFamily = new Map(items.map((item) => [item.family, item.categories]));
-
   return (
     <div ref={rootRef} className="flex items-center gap-0.5">
-      {NAV_GROUPS.map((group) => {
-        const families = group.families.filter((f) => byFamily.has(f));
-        if (families.length === 0) return null;
-
-        const open = openKey === group.key;
-        const menuId = `nav-menu-${group.key}`;
-        // Eén familie in de groep: de knop draagt de familienaam.
-        // Meerdere: een groepsnaam met de families als kopjes eronder.
-        const single = families.length === 1 ? families[0] : null;
-        const label = single ? t(`${single}.title`) : t(`group.${group.key}`);
-        const totalCategories = families.reduce(
-          (sum, f) => sum + (byFamily.get(f)?.length ?? 0),
-          0,
-        );
-
-        // Geen categorieën én één familie: gewoon een link, geen leeg menu
-        if (single && totalCategories === 0) {
-          return (
-            <Link
-              key={group.key}
-              href={{
-                pathname: "/[family]",
-                params: { family: familySlug(single, locale) },
-                // De onderdelencatalogus hangt aan een TecDoc-voertuig; met
-                // de auto al in de link hoeft de pagina niet eerst te laden
-                // en dan te herladen.
-                ...(usesVehicleCatalog(single) && carId
-                  ? { query: { auto: String(carId) } }
-                  : {}),
-              }}
-              className="rounded-md px-3 py-2 text-sm font-semibold whitespace-nowrap text-foreground hover:bg-surface"
-            >
-              {label}
-            </Link>
-          );
-        }
-
-        return (
-          <div key={group.key} className="relative">
-            <button
-              ref={(node) => {
-                triggerRefs.current[group.key] = node;
-              }}
-              type="button"
-              aria-expanded={open}
-              aria-controls={menuId}
-              onClick={() => setOpenKey(open ? null : group.key)}
-              className="inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-semibold whitespace-nowrap text-foreground hover:bg-surface"
-            >
-              {label}
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                className={`size-4 transition-transform ${open ? "rotate-180" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </button>
-
-            {open && (
-              <nav
-                id={menuId}
-                aria-label={label}
-                className={`absolute start-0 z-40 mt-2 rounded-lg border border-border bg-background p-4 shadow-xl ${
-                  families.length > 1 || totalCategories > 6
-                    ? "w-[min(40rem,calc(100vw-2rem))]"
-                    : "w-64"
-                }`}
-              >
-                <div
-                  className={
-                    families.length > 1 || totalCategories > 6
-                      ? "grid grid-cols-2 gap-6"
-                      : ""
-                  }
-                >
-                  {families.map((family) => {
-                    const slug = familySlug(family, locale);
-                    const categories = byFamily.get(family) ?? [];
-                    return (
-                      <div key={family}>
-                        <Link
-                          href={{ pathname: "/[family]", params: { family: slug } }}
-                          onClick={() => setOpenKey(null)}
-                          className="block rounded-md px-2 py-1 text-sm font-bold text-foreground hover:bg-surface"
-                        >
-                          {t(`${family}.title`)}
-                        </Link>
-                        {categories.length > 0 && (
-                          <ul className="mt-1">
-                            {categories.slice(0, CATEGORIES_PER_FAMILY).map((category) => (
-                              <li key={category.slug}>
-                                <Link
-                                  href={{
-                                    pathname: "/[family]/[category]",
-                                    params: { family: slug, category: category.slug },
-                                  }}
-                                  onClick={() => setOpenKey(null)}
-                                  className="block truncate rounded-md px-2 py-1.5 text-sm text-muted hover:bg-surface hover:text-foreground"
-                                >
-                                  {category.name}
-                                </Link>
-                              </li>
-                            ))}
-                            {categories.length > CATEGORIES_PER_FAMILY && (
-                              <li>
-                                <Link
-                                  href={{ pathname: "/[family]", params: { family: slug } }}
-                                  onClick={() => setOpenKey(null)}
-                                  className="block rounded-md px-2 py-1.5 text-sm text-muted underline underline-offset-4 hover:text-foreground"
-                                >
-                                  {t("viewAll")}
-                                </Link>
-                              </li>
-                            )}
-                          </ul>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </nav>
-            )}
-          </div>
-        );
-      })}
+      {PRODUCT_FAMILIES.map((family) => (
+        <Link
+          key={family}
+          href={{
+            pathname: "/[family]",
+            params: { family: familySlug(family, locale) },
+            // De onderdelencatalogus hangt aan een TecDoc-voertuig; met de
+            // auto al in de link hoeft de pagina niet eerst te laden en dan
+            // te herladen.
+            ...(usesVehicleCatalog(family) && carId
+              ? { query: { auto: String(carId) } }
+              : {}),
+          }}
+          className="rounded-md px-3 py-2 text-sm font-semibold whitespace-nowrap text-foreground hover:bg-surface"
+        >
+          {t(`${family}.title`)}
+        </Link>
+      ))}
 
       {/* Olie en Filters. Ze horen bij Onderdelen maar liggen daar verstopt
-          tussen 36 hoofdgroepen — zie lib/catalog/quick-links.ts. Zelfde
-          opbouw als de familieknoppen hiernaast: knop met een menu eronder,
-          zodat de balk één patroon houdt. */}
+          tussen 36 hoofdgroepen — zie lib/catalog/quick-links.ts. */}
       {MAINTENANCE_LINKS.map((link) => {
         const open = openKey === link.key;
         const menuId = `nav-menu-${link.key}`;

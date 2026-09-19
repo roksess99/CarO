@@ -18,7 +18,6 @@
     "cartAria": "Winkelwagen, {count, plural, =0 {leeg} =1 {1 artikel} other {# artikelen}}",
     "vehicle": "Mijn auto",
     "vehicleSelected": "Jouw auto: {plate}",
-    "back": "Terug",
     "close": "Sluiten"
   },
   "search": {
@@ -43,8 +42,6 @@
     "categoriesAria": "Categorieën",
     "featuredTitle": "Veelgekocht",
     "viewAll": "Alles bekijken",
-    "allIn": "Alles in {family}",
-    "menuTitle": "Assortiment",
     "oenLabel": "Zoek een onderdeel",
     "oenPlaceholder": "remschijf, oliefilter of OE-nummer",
     "oenSubmit": "Zoeken",
@@ -54,7 +51,6 @@
     "onderdelen": {
       "title": "Onderdelen",
       "intro": "Nieuwe originele onderdelen. Zoek op naam of nummer, of kies je auto en blader per categorie.",
-      "menuAria": "Onderdelen",
       "empty": "Er is nog geen onderdelenaanbod beschikbaar.",
       "about": "Bij CarO bestel je nieuwe onderdelen voor personenauto's en tweewielers: remschijven en remblokken, filters, wielophanging, koeling, verlichting en elektra. Geef je kenteken op of kies merk, model en uitvoering — daarna toont de catalogus alleen artikelen die op jouw auto passen. Zoeken op naam of OE-nummer kan ook zonder auto. Alle prijzen zijn inclusief 21% btw en je hebt veertien dagen bedenktijd.",
       "faq": {
@@ -75,7 +71,6 @@
     "banden": {
       "title": "Banden",
       "intro": "Banden voor auto, SUV, bestelwagen en tweewieler.",
-      "menuAria": "Bandencategorieën",
       "empty": "Er is nog geen bandenaanbod beschikbaar.",
       "about": "Zomerbanden, winterbanden en allseasonbanden voor auto, SUV, bestelwagen en tweewieler. Vul de maat in die op de zijkant van je huidige band staat — breedte, hoogte en velgdiameter, bijvoorbeeld 205/55 R16 — en kies eventueel het seizoen. Je ziet het aanbod van honderden merken, met de prijs inclusief 21% btw.",
       "faq": {
@@ -96,7 +91,6 @@
     "velgen": {
       "title": "Velgen",
       "intro": "Stalen velgen in alle gangbare maten.",
-      "menuAria": "Velgencategorieën",
       "empty": "Er is nog geen velgenaanbod beschikbaar.",
       "about": "Stalen velgen in alle gangbare maten. Filter op steekcirkel, velgmaat, ET en draagvermogen; die waarden staan op de binnenkant van je huidige velg. Prijzen zijn inclusief 21% btw en je hebt veertien dagen bedenktijd.",
       "faq": {
@@ -117,7 +111,6 @@
     "toebehoren": {
       "title": "Toebehoren",
       "intro": "Wiel- en bandenaccessoires, van ventielen tot opbergsystemen.",
-      "menuAria": "Toebehorencategorieën",
       "empty": "Er is nog geen aanbod aan toebehoren beschikbaar.",
       "about": "Wiel- en bandenaccessoires en auto-uitrusting: ventielen, wielmoeren, sneeuwkettingen, opbergsystemen, accu's, verlichting, oliën en autoverzorging. Filter op merk, maat, kleur of materiaal. Prijzen zijn inclusief 21% btw.",
       "faq": {
@@ -168,8 +161,7 @@
     "resultsInCategory": "{count, plural, =0 {Geen banden in maat {size} in deze categorie} =1 {1 band in maat {size}} other {# banden in maat {size}}}"
   },
   "categoryTiles": {
-    "title": "Auto-onderdelen vinden in de catalogus",
-    "close": "Sluiten"
+    "title": "Auto-onderdelen vinden in de catalogus"
   },
   "vehicle": {
     "title": "Past het op jouw auto?",
@@ -182,10 +174,8 @@
     "pickerHeading": "Selecteer je auto",
     "makeLabel": "Merk",
     "modelLabel": "Model",
-    "yearLabel": "Bouwjaar",
     "chooseMake": "Automerk selecteren",
     "chooseModel": "Model selecteren",
-    "chooseYear": "Bouwjaar selecteren",
     "browseParts": "Zoek onderdelen voor deze auto",
     "searching": "Zoeken…",
     "yourCar": "Jouw auto",
@@ -208,8 +198,6 @@
   "category": {
     "metaDescription": "{category} voor jouw auto. Alle prijzen inclusief 21% btw.",
     "metaDescriptionParts": "{category} bestellen voor jouw auto. Vul je kenteken in en zie direct welke onderdelen passen. Prijzen inclusief 21% btw.",
-    "brandFilterLabel": "Filter op merk",
-    "allBrands": "Alle merken",
     "breadcrumbAria": "Kruimelpad",
     "breadcrumbHome": "Home",
     "siblingsAria": "Andere categorieën",
@@ -236,7 +224,9 @@
       "wheelMounting": "Wielmontage",
       "colour": "Kleur",
       "material": "Materiaal",
-      "size": "Maat"
+      "size": "Maat",
+      "viscosity": "Viscositeit (SAE)",
+      "volume": "Inhoud"
     },
     "values": {
       "kegel": "kegel",
@@ -291,7 +281,8 @@
       "winterreifen_": "winterband"
     },
     "loadMore": "Nog {count} producten laden",
-    "loadMoreBusy": "Bezig met laden…"
+    "loadMoreBusy": "Bezig met laden…",
+    "noResults": "Geen artikelen met deze combinatie van filters."
   },
   "localeSwitcher": {
     "label": "Taal",
@@ -559,7 +550,8 @@
     "paymentTitle": "Betaalmethoden",
     "paymentNote": "Betalen gaat via Mollie. Je bank- en kaartgegevens komen nooit bij ons binnen.",
     "idealWeroAlt": "iDEAL en Wero",
-    "mollieAlt": "Veilige betalingen mogelijk gemaakt door Mollie — Mastercard, Visa, American Express en meer"
+    "mollieAlt": "Veilige betalingen mogelijk gemaakt door Mollie — Mastercard, Visa, American Express en meer",
+    "reviewsLink": "Beoordelingen"
   },
   "terms": {
     "title": "Algemene voorwaarden",
@@ -604,8 +596,8 @@
   },
   "privacy": {
     "title": "Privacy en cookies",
-    "intro": "Deze webshop slaat zo min mogelijk op. Hieronder staat precies wat er op je apparaat wordt bewaard, waarom, en hoe lang.",
-    "lastUpdated": "Laatst bijgewerkt: 12 september 2026",
+    "intro": "Deze webshop slaat zo min mogelijk op. Hieronder staat precies wat er op je apparaat wordt bewaard, wat er bij een bestelling in onze database komt, waarom, en hoe lang.",
+    "lastUpdated": "Laatst bijgewerkt: 19 september 2026",
     "storageTitle": "Wat we op je apparaat opslaan",
     "storageIntro": "De wet maakt geen onderscheid tussen cookies en andere opslag in je browser: voor localStorage gelden dezelfde regels. Daarom staat alles hier in één overzicht.",
     "tableName": "Naam",
@@ -639,7 +631,7 @@
       }
     },
     "noBannerTitle": "Waarom je geen cookiebanner ziet",
-    "noBannerBody": "Toestemming vragen is verplicht voor opslag die niet nodig is om de site te laten werken — denk aan het meten van bezoekersgedrag of advertenties. Alles in de tabel hierboven is óf noodzakelijk om de webshop te laten functioneren, óf een keuze die je zelf hebt gemaakt. Daarvoor geldt een wettelijke uitzondering en hoeven we geen toestemming te vragen. We vinden het bovendien misleidend om toestemming te vragen voor iets dat je niet kunt weigeren zonder dat de winkelwagen stopt met werken.",
+    "noBannerBody": "Toestemming vragen is verplicht voor opslag die niet nodig is om de site te laten werken — denk aan het meten van bezoekersgedrag of advertenties. Alles in de tabel hierboven is óf noodzakelijk om de webshop te laten functioneren, óf een keuze die je zelf hebt gemaakt. Daarvoor geldt een wettelijke uitzondering en hoeven we geen toestemming te vragen. We vinden het bovendien misleidend om toestemming te vragen voor iets dat je niet kunt weigeren zonder dat de winkelwagen stopt met werken. De regel gaat trouwens alleen over wat er op jóuw apparaat wordt gezet; wat we van een bestelling op onze eigen server bewaren valt eronder niet — dat staat verderop.",
     "noTracking": "We gebruiken geen analytics, geen advertentiecookies, geen social-mediaknoppen en geen trackers van derden. De site laadt ook geen lettertypen of scripts van externe servers.",
     "personalDataTitle": "Persoonsgegevens die we verwerken",
     "personalDataBody": "Zolang je alleen rondkijkt, verwerken we geen persoonsgegevens. Dat verandert op drie momenten:",
@@ -656,7 +648,38 @@
     "rightsTitle": "Je rechten",
     "rightsBody": "Je mag opvragen welke gegevens we van je hebben, ze laten corrigeren of laten verwijderen, en bezwaar maken tegen de verwerking. Neem daarvoor contact met ons op. Kom je er met ons niet uit, dan kun je een klacht indienen bij de Autoriteit Persoonsgegevens.",
     "contactTitle": "Contact",
-    "contactBody": "Vragen over je gegevens? Neem contact op met:"
+    "contactBody": "Vragen over je gegevens? Neem contact op met:",
+    "tableWhat": "Wat",
+    "serverTitle": "Wat we op onze eigen server bewaren",
+    "serverIntro": "De tabel hierboven gaat over je eigen apparaat. Bestel je iets, dan komen er ook gegevens in onze database te staan. Die staat bij onze hostingpartij in Nederland; we zetten hem niet bij een andere partij neer.",
+    "server": {
+      "order": {
+        "what": "Je bestelling: naam, adres, e-mailadres, eventueel telefoonnummer, en wat je besteld hebt",
+        "purpose": "Nodig om de koopovereenkomst uit te voeren — bezorgen, je op de hoogte houden en vragen achteraf kunnen beantwoorden.",
+        "retention": "Zeven jaar. Een bestelling is tegelijk een boekstuk, en de Belastingdienst schrijft die termijn voor."
+      },
+      "invoice": {
+        "what": "De factuur bij je bestelling, met bedragen en btw",
+        "purpose": "Wettelijke plicht: een factuur moet bewaard worden.",
+        "retention": "Zeven jaar (fiscale bewaarplicht)."
+      },
+      "discountCode": {
+        "what": "Bij een code die één keer per klant geldt: je e-mailadres, de code en je ordernummer",
+        "purpose": "Zonder dat kunnen we niet zien of je een eenmalige code al gebruikt hebt. Het is de enige manier om die regel eerlijk te handhaven.",
+        "retention": "Zolang de kortingscode bestaat, en daarna hoogstens een jaar."
+      },
+      "mail": {
+        "what": "Verzonden berichten: de bevestiging van je bestelling en wat je via het contactformulier stuurt",
+        "purpose": "Zodat we kunnen nagaan wat er is gezegd als je ergens op terugkomt.",
+        "retention": "Contactberichten blijven in de mailbox tot ze afgehandeld zijn; ze komen niet in een aparte lijst terecht."
+      },
+      "review": {
+        "what": "Je beoordeling: twee cijfers, je tekst en de naam die je er zelf bij koos",
+        "purpose": "Om hem op de site te kunnen tonen. We bewaren er ook je e-mailadres bij, zodat we weten wie om verwijdering vraagt en zodat de uitnodiging maar één keer verstuurd wordt.",
+        "retention": "Zolang hij op de site staat. Vraag je om verwijdering, dan halen we hem weg."
+      }
+    },
+    "noMarketing": "We gebruiken je e-mailadres niet om je reclame te sturen. Er is geen nieuwsbrief en er staat geen aparte mailinglijst: je adres wordt alleen gebruikt voor de bestelling waar je het bij hebt ingevuld. Verandert dat ooit, dan lees je het eerst hier en vragen we het je in de kassa."
   },
   "error": {
     "title": "Er ging iets mis",
@@ -692,7 +715,9 @@
     "viewAll": "Alles bekijken",
     "limitsTitle": "Waar dit nog niet werkt",
     "noMatchFor": "{family}: de leverancier koppelt deze artikelen niet aan een auto. Zoek op maat of OE-nummer.",
-    "loadMore": "Meer producten laden"
+    "loadMore": "Meer producten laden",
+    "exactTitle": "Precies jouw uitvoering",
+    "exactBody": "Vul je kenteken in of kies merk, model en uitvoering. Dan tonen we alleen onderdelen die op jouw auto passen, in plaats van te zoeken op naam."
   },
   "categories": {
     "tyresCar": "Auto / SUV",
@@ -822,5 +847,42 @@
     "clear": "Wissen",
     "pickerHint": "Twijfel je over de steekcirkel? Die schrijf je als aantal gaten × afstand in millimeter, bijvoorbeeld 5 × 112.",
     "resultsForSize": "{count, plural, =0 {Geen velgen in {size}} =1 {1 velg in {size}} other {# velgen in {size}}}"
+  },
+  "review": {
+    "eyebrow": "Jouw mening",
+    "title": "Hoe ging het?",
+    "intro": "Je beoordeelt bestelling {reference}. Twee cijfers zijn genoeg; de rest mag je overslaan.",
+    "shopLegend": "De webshop",
+    "shopHint": "Zoeken, het juiste onderdeel vinden, bestellen.",
+    "orderLegend": "De bestelling",
+    "orderHint": "Levertijd, verpakking en of je kreeg wat je verwachtte.",
+    "productsLegend": "De artikelen",
+    "productsHint": "Optioneel. Sla gerust over wat je nog niet gebruikt hebt.",
+    "bodyLabel": "Wil je er iets bij vertellen?",
+    "bodyPlaceholder": "Wat ging goed, en wat kon beter?",
+    "nameLabel": "Naam bij je beoordeling",
+    "nameHint": "Dit komt op de site te staan. Je volledige naam en je adres nooit — die blijven bij je bestelling.",
+    "anonymous": "Liever anoniem",
+    "send": "Beoordeling versturen",
+    "sending": "Bezig met versturen…",
+    "thanksTitle": "Bedankt.",
+    "thanksBody": "Je beoordeling staat op de site. Reageren we erop, dan lees je dat op dezelfde plek.",
+    "alreadyTitle": "Bedankt voor je beoordeling",
+    "alreadyBody": "Hij staat nu op de site. Per bestelling kan het één keer; klopt er iets niet of wil je hem laten verwijderen, mail ons dan even.",
+    "readAll": "Alle beoordelingen lezen",
+    "privacyNote": "We sturen je hierover één mail per bestelling en gebruiken je adres niet voor reclame. Wil je je beoordeling later weg hebben, mail ons dan."
+  },
+  "reviews": {
+    "eyebrow": "Klanten",
+    "title": "Beoordelingen",
+    "intro": "Wat klanten van de webshop en van hun bestelling vonden. We plaatsen ze allemaal — ook de kritische.",
+    "empty": "Er zijn nog geen beoordelingen. Zodra de eerste bestellingen bezorgd zijn verschijnen ze hier.",
+    "count": "{count, plural, =1 {uit 1 beoordeling} other {uit # beoordelingen}}",
+    "outOfFive": "{rating} van de 5 sterren",
+    "shopAverage": "Webshop",
+    "orderAverage": "Bestelling",
+    "verified": "Elke beoordeling hoort bij een betaalde bestelling: de uitnodiging gaat per mail naar de klant en de link werkt één keer. We halen niets weg om het cijfer op te poetsen; alleen scheldwoorden of persoonsgegevens verbergen we, en dan leggen we vast waarom.",
+    "replyFrom": "Reactie van CarO",
+    "howToGet": "Zelf een beoordeling achterlaten? Na je bestelling krijg je er vanzelf een uitnodiging voor."
   }
 }

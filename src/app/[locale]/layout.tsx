@@ -9,10 +9,6 @@ import { SiteFooter } from "@/components/site-footer";
 import { BottomNav } from "@/components/bottom-nav";
 import { SiteHeader } from "@/components/site-header";
 import { routing } from "@/i18n/routing";
-import type { FamilyNavItem } from "@/components/family-nav";
-import { PRODUCT_FAMILIES } from "@/lib/catalog/families";
-import { localizeCategories } from "@/lib/catalog/localized-categories";
-import { getCatalogProvider } from "@/lib/catalog/provider";
 import { SITE_URL } from "@/lib/site";
 import { vehicleMakeNames } from "@/lib/vehicle/makes";
 import "../globals.css";
@@ -66,21 +62,10 @@ export default async function LocaleLayout({
   }
   setRequestLocale(locale);
   const t = await getTranslations("common");
-  // Assortimentsmenu en merkenlijst: één keer per paginaweergave, hier.
-  // Header, tabbalk en autokiezer delen ze — apart opgehaald stonden dezelfde
-  // calls drie keer in het log (zie site-header.tsx).
-  const provider = getCatalogProvider();
-  const [navItems, makes] = await Promise.all([
-    Promise.all(
-      PRODUCT_FAMILIES.map(async (family) => ({
-        family,
-        categories: await localizeCategories(
-          await provider.getCategories(family),
-        ),
-      })),
-    ) as Promise<FamilyNavItem[]>,
-    vehicleMakeNames(),
-  ]);
+  // Merkenlijst: één keer per paginaweergave, hier. Header, tabbalk en
+  // autokiezer delen hem — apart opgehaald stond dezelfde call drie keer in
+  // het log (zie site-header.tsx).
+  const makes = await vehicleMakeNames();
 
   return (
     <html
@@ -103,13 +88,13 @@ export default async function LocaleLayout({
           >
             {t("skipToContent")}
           </a>
-          <SiteHeader items={navItems} makes={makes} />
+          <SiteHeader makes={makes} />
           <main id="main" className="flex-1">
             {children}
           </main>
           <SiteFooter />
           <BackToTop />
-          <BottomNav items={navItems} makes={makes} />
+          <BottomNav makes={makes} />
         </NextIntlClientProvider>
       </body>
     </html>

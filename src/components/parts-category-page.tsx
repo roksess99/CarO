@@ -3,12 +3,21 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { GroupList } from "@/components/catalog/group-list";
 import { JsonLd } from "@/components/json-ld";
 import { LoadMore } from "@/components/load-more";
+import { ProductFilters } from "@/components/product-filters";
 import { ProductGrid } from "@/components/product-grid";
 import { SelectedCarInUrl } from "@/components/vehicle/use-selected-car";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { ProductFamily } from "@/lib/catalog/families";
 import {
+  countActiveFilters,
+  FILTER_PARAM,
+  toFilterParam,
+} from "@/lib/catalog/filter-params";
+import { groupSupportsFilters } from "@/lib/catalog/part-filters";
+import type { SelectedFilters } from "@/lib/catalog/types";
+import {
+  filteredPartsInGroup,
   groupIdFromSlug,
   partGroupById,
   partLeafGroups,
@@ -34,6 +43,7 @@ export async function PartsCategoryPage({
   carId,
   limit,
   showAllTypes,
+  filters,
 }: {
   family: ProductFamily;
   familySlugParam: string;
@@ -42,6 +52,12 @@ export async function PartsCategoryPage({
   limit: number;
   /** Ook de bijbehorende schroefjes en ringen tonen, niet alleen het product */
   showAllTypes: boolean;
+  /**
+   * Gekozen eigenschapsfilters. Alleen groepen waar de data het draagt
+   * hebben ze — bij motorolie zijn dat merk, viscositeit en inhoud
+   * (lib/catalog/part-filters.ts).
+   */
+  filters: SelectedFilters;
 }) {
   const t = await getTranslations("category");
   const tFamily = await getTranslations("family");
@@ -99,18 +115,56 @@ export async function PartsCategoryPage({
       ? undefined
       : current.defaultGenericArticleId;
 
-  const { parts, total } = showArticles
-    ? await partsInGroup({
-        carId,
-        categoryId: groupId,
-        categorySlug,
-        categoryName: name,
-        genericArticleId: typeFilter,
-        limit,
-      })
-    : { parts: [], total: 0 };
+  // Filteren op eigenschap staat alleen aan waar de leverancier het veld bij
+  // vrijwel elk artikel invult — anders verbergt een filter artikelen die wél
+  // passen. Zie part-filters.ts voor de meting achter die grens.
+  const filterable = showArticles && groupSupportsFilters(groupId);
 
-  const query = { auto: String(carId) };
+  const { parts, total, groups: filterGroups } = showArticles
+    ? filterable
+      ? await filteredPartsInGroup({
+          carId,
+          categoryId: groupId,
+          categorySlug,
+          categoryName: name,
+          genericArticleId: typeFilter,
+          filters,
+          limit,
+        })
+      : {
+          ...(await partsInGroup({
+            carId,
+            categoryId: groupId,
+            categorySlug,
+            categoryName: name,
+            genericArticleId: typeFilter,
+            limit,
+          })),
+          groups: [],
+        }
+    : { parts: [], total: 0, groups: [] };
+
+  const activeFilters = countActiveFilters(filters);
+  // De auto hoort op élke link terug te komen: zonder `auto` valt de hele
+  // categorieboom weg, want die hangt aan het voertuig.
+  const carQuery = { auto: String(carId) };
+  const query = {
+    ...carQuery,
+    ...(activeFilters > 0 ? { [FILTER_PARAM]: toFilterParam(filters) } : {}),
+  };
+
+  const filterPanel = (
+    <ProductFilters
+      groups={filterGroups}
+      selected={filters}
+      family={familySlugParam}
+      category={categorySlug}
+      extraQuery={{
+        ...carQuery,
+        ...(showAllTypes ? { alles: "1" } : {}),
+      }}
+    />
+  );
 
   // Zelfde stappen als het zichtbare kruimelpad hieronder. De paden dragen
   // geen `?auto=`: dat is de auto van déze bezoeker, niet van de pagina.
@@ -152,7 +206,7 @@ export async function PartsCategoryPage({
               href={{
                 pathname: "/[family]",
                 params: { family: familySlugParam },
-                query,
+                query: carQuery,
               }}
               className="hover:text-foreground"
             >
@@ -198,66 +252,119 @@ export async function PartsCategoryPage({
         </p>
       )}
 
-      {showArticles &&
-        (parts.length === 0 ? (
-          // Deze groep hoort niet meer in een lijst te staan (lege groepen
-          // filteren we weg), maar een oude link of een bladwijzer komt hier
-          // nog uit. Dan liever een wegwijzer dan "0 resultaten".
-          <p className="mt-8 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
-            {t("noParts")}
-          </p>
-        ) : (
-          <>
-            <p className="mt-8 flex flex-wrap items-baseline gap-x-3 text-sm text-muted">
-              <span>{tFilters("resultCount", { count: parts.length })}</span>
-              {/* Alleen aanbieden als er écht iets verborgen is */}
-              {typeFilter && (
-                <Link
-                  href={{
-                    pathname: "/[family]/[category]",
-                    params: {
-                      family: familySlugParam,
-                      category: categorySlug,
-                    },
-                    query: { ...query, alles: "1" },
-                  }}
-                  className="underline underline-offset-4 hover:text-foreground"
-                >
-                  {t("showAllTypes")}
-                </Link>
-              )}
-              {showAllTypes && current.defaultGenericArticleId && (
-                <Link
-                  href={{
-                    pathname: "/[family]/[category]",
-                    params: {
-                      family: familySlugParam,
-                      category: categorySlug,
-                    },
-                    query,
-                  }}
-                  className="underline underline-offset-4 hover:text-foreground"
-                >
-                  {t("onlyThisType", { type: name })}
-                </Link>
-              )}
-            </p>
-            <div className="mt-4">
-              <ProductGrid parts={parts} />
-            </div>
-          </>
-        ))}
+      {showArticles && (
+        <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+          {filterGroups.length > 0 && (
+            <>
+              {/* Mobiel uitklapbaar, zodat de artikelen bovenaan blijven;
+                  vanaf lg een vaste zijbalk. Zelfde opbouw als bij banden en
+                  velgen, zodat filteren overal hetzelfde voelt. */}
+              <details className="rounded-lg border border-border lg:hidden">
+                <summary className="cursor-pointer px-4 py-3 font-semibold">
+                  {tFilters("toggle")}
+                  {activeFilters > 0 && (
+                    <span className="ms-2 rounded-full bg-caro-orange px-2 py-0.5 text-xs text-caro-ink tabular-nums">
+                      {activeFilters}
+                    </span>
+                  )}
+                </summary>
+                <div className="border-t border-border p-4">{filterPanel}</div>
+              </details>
 
-      {parts.length < total && (
-        <LoadMore
-          href={{
-            pathname: "/[family]/[category]",
-            params: { family: familySlugParam, category: categorySlug },
-            query: { ...query, toon: String(limit + PAGE_SIZE) },
-          }}
-          label={tFilters("loadMore", { count: PAGE_SIZE })}
-          busyLabel={tFilters("loadMoreBusy")}
-        />
+              <aside className="hidden w-64 shrink-0 lg:block">
+                {filterPanel}
+              </aside>
+            </>
+          )}
+
+          <div className="min-w-0 flex-1">
+            {parts.length === 0 ? (
+              activeFilters > 0 ? (
+                // Een lege lijst ná filteren is iets anders dan een lege
+                // groep: er is wél aanbod, alleen niet in deze combinatie.
+                // Zonder dat onderscheid leest het als "hier is niets".
+                <p className="max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+                  {tFilters("noResults")}{" "}
+                  <Link
+                    href={{
+                      pathname: "/[family]/[category]",
+                      params: {
+                        family: familySlugParam,
+                        category: categorySlug,
+                      },
+                      query: carQuery,
+                    }}
+                    className="underline underline-offset-4 hover:text-foreground"
+                  >
+                    {tFilters("clearAll")}
+                  </Link>
+                </p>
+              ) : (
+                // Deze groep hoort niet meer in een lijst te staan (lege
+                // groepen filteren we weg), maar een oude link of een
+                // bladwijzer komt hier nog uit. Dan liever een wegwijzer dan
+                // "0 resultaten".
+                <p className="max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+                  {t("noParts")}
+                </p>
+              )
+            ) : (
+              <>
+                <p className="flex flex-wrap items-baseline gap-x-3 text-sm text-muted">
+                  <span>
+                    {tFilters("resultCount", { count: parts.length })}
+                  </span>
+                  {/* Alleen aanbieden als er écht iets verborgen is */}
+                  {typeFilter && (
+                    <Link
+                      href={{
+                        pathname: "/[family]/[category]",
+                        params: {
+                          family: familySlugParam,
+                          category: categorySlug,
+                        },
+                        query: { ...query, alles: "1" },
+                      }}
+                      className="underline underline-offset-4 hover:text-foreground"
+                    >
+                      {t("showAllTypes")}
+                    </Link>
+                  )}
+                  {showAllTypes && current.defaultGenericArticleId && (
+                    <Link
+                      href={{
+                        pathname: "/[family]/[category]",
+                        params: {
+                          family: familySlugParam,
+                          category: categorySlug,
+                        },
+                        query,
+                      }}
+                      className="underline underline-offset-4 hover:text-foreground"
+                    >
+                      {t("onlyThisType", { type: name })}
+                    </Link>
+                  )}
+                </p>
+                <div className="mt-4">
+                  <ProductGrid parts={parts} />
+                </div>
+              </>
+            )}
+
+            {parts.length < total && (
+              <LoadMore
+                href={{
+                  pathname: "/[family]/[category]",
+                  params: { family: familySlugParam, category: categorySlug },
+                  query: { ...query, toon: String(limit + PAGE_SIZE) },
+                }}
+                label={tFilters("loadMore", { count: PAGE_SIZE })}
+                busyLabel={tFilters("loadMoreBusy")}
+              />
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

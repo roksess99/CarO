@@ -1,8 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 import { runPriceSnapshot } from "@/lib/prices/snapshot";
+import { runReviewInvites } from "@/lib/reviews/job";
 
 /**
- * De dagelijkse prijsmeting aanroepen van buitenaf.
+ * De dagelijkse taken aanroepen van buitenaf: de prijsmeting én de
+ * beoordelingsuitnodigingen.
  *
  *     curl -fsS -H "Authorization: Bearer <CARO_JOB_TOKEN>" \
  *          https://caroparts.nl/api/jobs/prices
@@ -18,7 +20,8 @@ import { runPriceSnapshot } from "@/lib/prices/snapshot";
  */
 
 export const dynamic = "force-dynamic";
-// Een categorie van 1.600 artikelen kost vier verzoeken van ~25 s
+// Een categorie van 1.600 artikelen kost vier verzoeken van ~25 s; de
+// uitnodigingen komen daar bovenop, hooguit 25 mails.
 export const maxDuration = 300;
 
 function tokenMatches(given: string, expected: string): boolean {
@@ -50,15 +53,25 @@ async function handle(request: Request): Promise<Response> {
     return Response.json({ ok: false }, { status: 401 });
   }
 
+  // Ná elkaar en met een eigen vangnet per taak: mislukt de prijsmeting, dan
+  // horen de uitnodigingen er niet onder te lijden en andersom.
+  const uitnodigingen = await runReviewInvites().catch((error: unknown) => {
+    console.error(
+      "Beoordelingsuitnodigingen mislukt:",
+      error instanceof Error ? error.message : "onbekende fout",
+    );
+    return null;
+  });
+
   try {
-    const result = await runPriceSnapshot();
-    return Response.json({ ok: true, ...result });
+    const prijzen = await runPriceSnapshot();
+    return Response.json({ ok: true, prijzen, uitnodigingen });
   } catch (error) {
     console.error(
       "Prijsmeting mislukt:",
       error instanceof Error ? error.message : "onbekende fout",
     );
-    return Response.json({ ok: false }, { status: 500 });
+    return Response.json({ ok: false, uitnodigingen }, { status: 500 });
   }
 }
 

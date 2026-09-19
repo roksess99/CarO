@@ -1,7 +1,9 @@
+import { runReviewInvites } from "@/lib/reviews/job";
 import { runPriceSnapshot } from "./snapshot";
 
 /**
- * De klok achter de prijsmeting.
+ * De klok achter de dagelijkse taken: de prijsmeting en de
+ * beoordelingsuitnodigingen.
  *
  * Elk uur kijken of de meting van vandaag al gedaan is. Niet één keer per
  * etmaal, want dan bepaalt het toevallige moment van de laatste serverherstart
@@ -26,23 +28,49 @@ export function startPriceClock(): void {
   if (started) return;
   started = true;
 
+  /**
+   * Ná elkaar, niet tegelijk: allebei praten ze met dezelfde database, en de
+   * uitnodigingen met dezelfde mailbox als de bevestigingsmails. Er is geen
+   * haast — dit draait elk uur en doet hooguit één keer per dag iets.
+   *
+   * Elke taak vangt zijn eigen fout op. De winkel moet blijven verkopen, ook
+   * als de leverancier, de database of de mailserver even wegvalt, en een
+   * mislukte prijsmeting mag de uitnodigingen niet meenemen.
+   */
   const tick = () => {
-    void runPriceSnapshot()
-      .then((result) => {
-        if (result.skipped) return;
-        console.log(
-          `Prijsmeting: ${result.parts} artikelen uit ${result.rules} acties, ${result.requests} verzoeken, ${Math.round(result.ms / 1000)} s`,
+    void (async () => {
+      try {
+        const result = await runReviewInvites();
+        if (!result.skipped && result.invited > 0) {
+          console.log(
+            `Beoordelingen: ${result.invited} uitnodigingen verstuurd`,
+          );
+        }
+        for (const error of result.errors) {
+          console.error("Beoordelingen:", error);
+        }
+      } catch (error) {
+        console.error(
+          "Beoordelingsuitnodigingen mislukt:",
+          error instanceof Error ? error.message : "onbekende fout",
         );
+      }
+
+      try {
+        const result = await runPriceSnapshot();
+        if (!result.skipped) {
+          console.log(
+            `Prijsmeting: ${result.parts} artikelen uit ${result.rules} acties, ${result.requests} verzoeken, ${Math.round(result.ms / 1000)} s`,
+          );
+        }
         for (const error of result.errors) console.error("Prijsmeting:", error);
-      })
-      .catch((error: unknown) => {
-        // Nooit de server omtrekken om een meting: de winkel moet blijven
-        // verkopen, ook als de leverancier of de database even wegvalt.
+      } catch (error) {
         console.error(
           "Prijsmeting mislukt:",
           error instanceof Error ? error.message : "onbekende fout",
         );
-      });
+      }
+    })();
   };
 
   const first = setTimeout(() => {

@@ -39,6 +39,12 @@ export default async function BeheerPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link
+            href="/beheer/prijzen"
+            className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface"
+          >
+            Prijzen
+          </Link>
+          <Link
             href="/beheer/kortingen"
             className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface"
           >
@@ -49,6 +55,12 @@ export default async function BeheerPage() {
             className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface"
           >
             Kortingscodes
+          </Link>
+          <Link
+            href="/beheer/beoordelingen"
+            className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface"
+          >
+            Beoordelingen
           </Link>
           <Link
             href="/beheer/facturen"
