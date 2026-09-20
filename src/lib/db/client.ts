@@ -1,3 +1,4 @@
+import net from "node:net";
 import mysql from "mysql2/promise";
 
 /**
@@ -46,6 +47,11 @@ const globalForDb = globalThis as unknown as {
   caroDbPool?: mysql.Pool;
 };
 
+/** De database draait op dezelfde machine als de winkel */
+function isLocalHost(host: string): boolean {
+  return ["localhost", "127.0.0.1", "::1"].includes(host);
+}
+
 function pool(): mysql.Pool {
   if (globalForDb.caroDbPool) return globalForDb.caroDbPool;
 
@@ -57,9 +63,25 @@ function pool(): mysql.Pool {
     );
   }
 
+  const host = process.env.DATABASE_HOST as string;
+  const port = Number(process.env.DATABASE_PORT) || 3306;
+
   const created = mysql.createPool({
-    host: process.env.DATABASE_HOST,
-    port: Number(process.env.DATABASE_PORT) || 3306,
+    host,
+    port,
+    // Bij een database op afstand: altijd over IPv4 verbinden.
+    //
+    // De witte lijst van Remote MySQL bij Hostinger kent alleen IPv4-adressen.
+    // Node kiest zelf tussen het A- en het AAAA-record, dus dezelfde laptop
+    // kwam de ene verbinding over IPv4 binnen en de volgende over IPv6 — en
+    // dat tweede adres kán niet op de lijst staan. Het gevolg was een
+    // "Access denied" die willekeurig leek te komen en gaan.
+    //
+    // Op de server zelf laten we het met rust: daar is `localhost` de
+    // verbinding en die hoort niet over het internet te lopen (#13).
+    ...(isLocalHost(host)
+      ? {}
+      : { stream: () => net.connect({ host, port, family: 4 }) }),
     database: process.env.DATABASE_NAME,
     user: process.env.DATABASE_USER,
     password: process.env.DATABASE_PASSWORD,
@@ -134,4 +156,18 @@ export async function transaction<T>(
     // hangen is er één minder voor de volgende klant.
     connection.release();
   }
+}
+
+/**
+ * Een JSON-kolom uitlezen, ongeacht wat de driver ervan maakt.
+ *
+ * MariaDB bewaart JSON als tekst en geeft het als tekst terug; MySQL 8 leest
+ * het zelf al om en levert een object. Wie blind `JSON.parse()` doet krijgt op
+ * de ene server het juiste antwoord en op de andere
+ * `SyntaxError: "[object Object]" is not valid JSON`. GEBEURD 2026-09-20 bij
+ * `job_runs.detail_json`, terwijl de order- en factuuropslag het al goed
+ * deden — vandaar dat dit hier staat en niet drie keer los.
+ */
+export function readJson<T>(value: string | T): T {
+  return typeof value === "string" ? (JSON.parse(value) as T) : value;
 }

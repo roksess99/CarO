@@ -11,12 +11,19 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import net from "node:net";
 import mysql from "mysql2/promise";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 
-/** Tabellen die er na 0001_init.sql horen te staan, in de volgorde van het bestand */
+/**
+ * Alle tabellen uit db/migrations/, in de volgorde waarin ze ontstaan.
+ *
+ * Komt er een migratie bij, zet de tabel er dan hier ook bij — anders meldt
+ * dit script hem als "niet in het schema" en lijkt een nieuwe tabel een fout.
+ */
 const EXPECTED = [
+  // 0001_init.sql
   "admins",
   "admin_invites",
   "admin_sessions",
@@ -30,6 +37,13 @@ const EXPECTED = [
   "discount_codes",
   "discount_code_uses",
   "price_history",
+  // 0004_job_runs.sql
+  "job_runs",
+  // 0005_price_rules.sql
+  "price_rules",
+  // 0006_reviews.sql
+  "reviews",
+  "review_products",
 ];
 
 function readEnvFile() {
@@ -66,11 +80,20 @@ if (missing.length > 0) {
   process.exit();
 }
 
+const host = env.DATABASE_HOST;
+const port = Number(env.DATABASE_PORT) || 3306;
+const local = ["localhost", "127.0.0.1", "::1"].includes(host);
+
 let connection;
 try {
   connection = await mysql.createConnection({
-    host: env.DATABASE_HOST,
-    port: Number(env.DATABASE_PORT) || 3306,
+    host,
+    port,
+    // Zelfde reden als in src/lib/db/client.ts: de witte lijst van Remote
+    // MySQL kent alleen IPv4, dus een verbinding over IPv6 kan er nooit op
+    // staan. Zonder dit noemde dit script een IPv6-adres om toe te voegen —
+    // advies dat niet uit te voeren is.
+    ...(local ? {} : { stream: () => net.connect({ host, port, family: 4 }) }),
     database: env.DATABASE_NAME,
     user: env.DATABASE_USER,
     password: env.DATABASE_PASSWORD,

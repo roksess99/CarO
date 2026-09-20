@@ -879,6 +879,28 @@ Twee dingen om bij het bouwen niet te vergeten:
   ontwikkelen zet je tijdelijk je eigen IP op de lijst, of je draait een MySQL
   op je eigen machine.
 
+### Twee dingen die bij het bouwen misgingen — GEVONDEN 2026-09-20
+
+**`next build` mag de database nooit nódig hebben.** De eigenaar wisselde van
+wifi, zijn IP stond niet meer op de witte lijst, en de build viel om met
+`Error occurred prerendering page "/en"`. Alle databaselezers van de winkel
+vingen dat netjes af — behalve het gemiddelde van de beoordelingen, en dat
+strookje staat op de homepage, die wordt voorgerenderd. Één uitzondering daar
+nekt dus de hele build. `publishedReviews()` en `reviewSummary()` vangen hem
+nu af, net als de kortingsregels: geen database betekent geen beoordelingen,
+geen kapotte winkel.
+
+De regel die eruit volgt: **elke lezer die op een voorgerenderde pagina
+terechtkomt valt terug op leeg.** Schrijvers niet — die horen luid te falen.
+
+**Een verbinding op afstand gaat altijd over IPv4.** In hetzelfde logboek stond
+dezelfde laptop één keer als `77.173.210.20` en één keer als
+`2a02:a46e:...`: Node koos per verbinding tussen het A- en het AAAA-record.
+De witte lijst van Remote MySQL kent alleen IPv4, dus dat tweede adres kan er
+nooit op staan — en de "Access denied" kwam en ging daardoor willekeurig.
+`src/lib/db/client.ts` en `scripts/check-db.mjs` dwingen nu `family: 4` af
+zodra de host niet `localhost` is. Op de server zelf verandert er niets.
+
 De vraag over de schijf hierboven blijft staan, maar hij blokkeert niets meer:
 de bestellingen verhuizen naar de database en die staat niet in de projectmap.
 

@@ -1,5 +1,5 @@
 import type { OrderDocument } from "@/lib/checkout/order-document";
-import { query, queryOne, transaction } from "@/lib/db/client";
+import { query, queryOne, readJson, transaction } from "@/lib/db/client";
 import type { ProductFamily } from "@/lib/catalog/families";
 import type { OrderStatus, StoredOrder } from "./types";
 
@@ -57,15 +57,6 @@ interface LineRow {
   part_id: string;
   family: string;
   quantity: number;
-}
-
-/**
- * MariaDB bewaart JSON als tekst en geeft het als tekst terug; MySQL 8 leest
- * het zelf al om. Allebei afvangen, zodat een verhuizing naar een andere
- * server dit bestand niet raakt.
- */
-function readJson<T>(value: string | T): T {
-  return typeof value === "string" ? (JSON.parse(value) as T) : value;
 }
 
 /** Een lege optionele waarde hoort als NULL in de database, niet als "" */
