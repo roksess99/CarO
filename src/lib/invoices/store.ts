@@ -1,5 +1,5 @@
 import type { OrderDocument } from "@/lib/checkout/order-document";
-import { query, queryOne, transaction } from "@/lib/db/client";
+import { query, queryOne, readJson, transaction } from "@/lib/db/client";
 import type { StoredOrder } from "@/lib/orders/types";
 
 /**
@@ -77,10 +77,7 @@ export async function findInvoice(number: string): Promise<
     [number],
   );
   if (!row) return null;
-  const document =
-    typeof row.snapshot_json === "string"
-      ? (JSON.parse(row.snapshot_json) as OrderDocument)
-      : row.snapshot_json;
+  const document = readJson<OrderDocument>(row.snapshot_json);
   return { ...toInvoice(row), document };
 }
 

@@ -1,4 +1,4 @@
-import { execute, query, queryOne } from "@/lib/db/client";
+import { execute, query, queryOne, readJson } from "@/lib/db/client";
 
 /**
  * Prijsgeschiedenis: wat een artikel de afgelopen dagen kostte.
@@ -148,7 +148,7 @@ interface JobRow {
   ran_on: Date | string;
   started_at: Date;
   finished_at: Date | null;
-  detail_json: string | null;
+  detail_json: string | object | null;
 }
 
 /**
@@ -191,9 +191,7 @@ export async function lastJobRun(name: string): Promise<JobRun | null> {
     ranOn: typeof row.ran_on === "string" ? row.ran_on : dayKey(row.ran_on),
     startedAt: row.started_at,
     finishedAt: row.finished_at,
-    detail: row.detail_json
-      ? (JSON.parse(row.detail_json) as unknown)
-      : null,
+    detail: row.detail_json ? readJson<unknown>(row.detail_json) : null,
   };
 }
 
@@ -206,10 +204,18 @@ export function jobIsLate(run: JobRun | null, now: number = Date.now()): boolean
   return now - run.startedAt.getTime() > 36 * 60 * 60 * 1000;
 }
 
-/** Hoeveel artikelen en dagen er nu bewaard zijn — voor het paneel */
+/**
+ * Hoeveel artikelen en dagen er nu bewaard zijn — voor het paneel.
+ *
+ * De tweede kolom heet in SQL bewust `total` en niet `rows`: **`ROWS` is een
+ * gereserveerd woord in MariaDB** (sinds 10.6, voor de `ROWS`-clausule) en
+ * gaf een syntaxfout. Aanhalingstekens eromheen zou ook werken, maar een
+ * gereserveerd woord helemaal vermijden scheelt de volgende lezer een
+ * zoektocht.
+ */
 export async function historySize(): Promise<{ parts: number; rows: number }> {
-  const row = await queryOne<{ parts: number; rows: number }>(
-    `SELECT COUNT(DISTINCT part_id) AS parts, COUNT(*) AS rows FROM price_history`,
+  const row = await queryOne<{ parts: number; total: number }>(
+    `SELECT COUNT(DISTINCT part_id) AS parts, COUNT(*) AS total FROM price_history`,
   );
-  return { parts: Number(row?.parts ?? 0), rows: Number(row?.rows ?? 0) };
+  return { parts: Number(row?.parts ?? 0), rows: Number(row?.total ?? 0) };
 }

@@ -240,17 +240,30 @@ export async function submitReview(input: ReviewSubmission): Promise<boolean> {
 // Wat de winkel toont
 // ---------------------------------------------------------------------------
 
-/** Ingevuld, niet verborgen, nieuwste eerst */
+/**
+ * Ingevuld, niet verborgen, nieuwste eerst.
+ *
+ * **Valt stil terug op niets als de database wegvalt.** Deze lijst staat op de
+ * homepage en die wordt bij het bouwen voorgerenderd; een uitzondering hier
+ * laat `next build` struikelen op een machine die niet bij de database kan.
+ * Zelfde keuze als bij de kortingsregels: de winkel blijft werken, er staan
+ * alleen even geen beoordelingen.
+ */
 export async function publishedReviews(limit = 50): Promise<Review[]> {
-  const rows = await query<ReviewRow>(
-    `SELECT * FROM reviews
-      WHERE submitted_at IS NOT NULL AND hidden_at IS NULL
-      ORDER BY submitted_at DESC
-      LIMIT ?`,
-    [limit],
-  );
-  const products = await productsFor(rows.map((row) => row.id));
-  return rows.map((row) => toReview(row, products.get(row.id) ?? []));
+  try {
+    const rows = await query<ReviewRow>(
+      `SELECT * FROM reviews
+        WHERE submitted_at IS NOT NULL AND hidden_at IS NULL
+        ORDER BY submitted_at DESC
+        LIMIT ?`,
+      [limit],
+    );
+    const products = await productsFor(rows.map((row) => row.id));
+    return rows.map((row) => toReview(row, products.get(row.id) ?? []));
+  } catch (error) {
+    console.error("Beoordelingen konden niet geladen worden", error);
+    return [];
+  }
 }
 
 export interface ReviewSummary {
@@ -268,17 +281,26 @@ export interface ReviewSummary {
  * bezoeker kan nalezen. Een gemiddelde over rijen die niemand kan zien is
  * niet controleerbaar en daarmee precies het soort cijfer waar de markering
  * van Google over struikelt.
+ *
+ * Valt de database weg, dan komt er `null` uit en verdwijnt de strook — net
+ * alsof er nog geen beoordelingen zijn. Zie `publishedReviews`.
  */
 export async function reviewSummary(): Promise<ReviewSummary | null> {
-  const row = await queryOne<{
-    n: number;
-    shop: string | null;
-    ord: string | null;
-  }>(
-    `SELECT COUNT(*) AS n, AVG(shop_rating) AS shop, AVG(order_rating) AS ord
-       FROM reviews
-      WHERE submitted_at IS NOT NULL AND hidden_at IS NULL`,
-  );
+  let row;
+  try {
+    row = await queryOne<{
+      n: number;
+      shop: string | null;
+      ord: string | null;
+    }>(
+      `SELECT COUNT(*) AS n, AVG(shop_rating) AS shop, AVG(order_rating) AS ord
+         FROM reviews
+        WHERE submitted_at IS NOT NULL AND hidden_at IS NULL`,
+    );
+  } catch (error) {
+    console.error("Gemiddelde beoordeling kon niet geladen worden", error);
+    return null;
+  }
   if (!row || row.shop === null || row.ord === null) return null;
   const count = Number(row.n);
   if (count === 0) return null;
