@@ -289,7 +289,14 @@ export default async function ProductPage({ params }: Props) {
               // srcset, ook op een telefoon. De foto beslaat hier de halve
               // breedte op desktop en de volle daaronder.
               sizes="(min-width: 1024px) 45vw, 100vw"
-              className="w-full rounded-lg border border-border bg-surface object-contain"
+              // **Hoogte afgetopt op een telefoon.** `height={600}` bepaalt de
+              // verhouding niet: na het laden neemt de browser die van het
+              // bestand zelf over, en de leverancier levert vierkant aan. GEMETEN
+              // 2026-09-21 op 375x812: de foto werd 343x344 — 42% van het scherm
+              // — en duwde de koopknop naar 872px, dus onder de vouw. Met 224px
+              // staan prijs (603) en knop (752) er allebei op. Vanaf `lg` staat
+              // de foto in een eigen kolom naast de tekst en hoeft er niets af.
+              className="max-h-56 w-full rounded-lg border border-border bg-surface object-contain sm:max-h-80 lg:max-h-none"
             />
           ) : (
             <ProductImagePlaceholder
