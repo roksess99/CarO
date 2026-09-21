@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { ROLES, ROLE_LABELS } from "@/lib/admin/roles";
 import { type InviteResult, sendInvite } from "./actions";
 
 export function InviteForm() {
@@ -24,6 +25,27 @@ export function InviteForm() {
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-base"
           />
         </div>
+        <div className="min-w-0">
+          <label htmlFor="invite-role" className="mb-1 block text-sm font-medium">
+            Rol
+          </label>
+          {/* Geen standaardkeuze op "eigenaar": de veiligste optie hoort
+              vooraan te staan, zodat doorklikken zonder nadenken de minste
+              rechten geeft en niet de meeste. */}
+          <select
+            id="invite-role"
+            name="role"
+            defaultValue="marketing"
+            required
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-base text-foreground"
+          >
+            {ROLES.map((role) => (
+              <option key={role} value={role} className="bg-background text-foreground">
+                {ROLE_LABELS[role].naam}
+              </option>
+            ))}
+          </select>
+        </div>
         <button
           type="submit"
           disabled={pending}
@@ -32,6 +54,17 @@ export function InviteForm() {
           {pending ? "Bezig…" : "Uitnodigen"}
         </button>
       </form>
+
+      <ul className="grid gap-1 text-xs text-muted sm:grid-cols-3">
+        {ROLES.map((role) => (
+          <li key={role}>
+            <span className="font-medium text-foreground">
+              {ROLE_LABELS[role].naam}
+            </span>{" "}
+            — {ROLE_LABELS[role].uitleg}
+          </li>
+        ))}
+      </ul>
 
       <div role="status" aria-live="polite">
         {state && "error" in state && (

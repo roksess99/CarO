@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { logAction } from "@/lib/admin/audit";
-import { requireAdmin } from "@/lib/admin/session";
+import { requirePermission } from "@/lib/admin/session";
 import { runReviewInvites } from "@/lib/reviews/job";
 import {
   findReview,
@@ -17,7 +17,7 @@ export async function postReply(
   _previous: ReviewAdminResult,
   formData: FormData,
 ): Promise<ReviewAdminResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("beoordelingen");
   const id = Number(formData.get("id"));
   const reply = String(formData.get("reply") ?? "").trim().slice(0, 2000);
 
@@ -49,7 +49,7 @@ export async function hide(
   _previous: ReviewAdminResult,
   formData: FormData,
 ): Promise<ReviewAdminResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("beoordelingen");
   const id = Number(formData.get("id"));
   const reason = String(formData.get("reason") ?? "").trim().slice(0, 190);
 
@@ -79,7 +79,7 @@ export async function unhide(
   _previous: ReviewAdminResult,
   formData: FormData,
 ): Promise<ReviewAdminResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("beoordelingen");
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) return { error: "Onbekende beoordeling." };
   if (!(await unhideReview(id))) return { error: "Die stond al zichtbaar." };
@@ -106,7 +106,7 @@ export async function inviteNow(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deze knop heeft geen invoer
   _formData: FormData,
 ): Promise<ReviewAdminResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("beoordelingen");
   const result = await runReviewInvites({ force: true });
 
   await logAction({

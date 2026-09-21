@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { execute, query, queryOne, transaction } from "@/lib/db/client";
 import { hashPassword } from "./password";
+import { isRole, type Role } from "./roles";
 import { sealSecret } from "./totp";
 
 /**
@@ -17,6 +18,7 @@ import { sealSecret } from "./totp";
 export interface Admin {
   id: number;
   email: string;
+  role: Role;
   passwordHash: string;
   totpSecret: Buffer | null;
   totpConfirmedAt: Date | null;
@@ -26,16 +28,34 @@ export interface Admin {
 interface AdminRow {
   id: number;
   email: string;
+  role: string;
   password_hash: string;
   totp_secret: Buffer | null;
   totp_confirmed_at: Date | null;
   disabled_at: Date | null;
 }
 
+function readRole(value: unknown): Role {
+  if (isRole(value)) return value;
+  console.error(
+    `Beheerder zonder leesbare rol (${String(value)}) — teruggevallen op marketing`,
+  );
+  return "marketing";
+}
+
 function toAdmin(row: AdminRow): Admin {
   return {
     id: row.id,
     email: row.email,
+    // Onbekende waarde uit de database? Dan de minste rechten, niet de meeste.
+    // Een kapotte rij hoort niemand tot eigenaar te maken.
+    //
+    // Maar wél luid. GEVONDEN 2026-09-21: `findAdminById` haalde `role`
+    // helemaal niet op (de kolommen staan met de hand in de SELECT), en omdat
+    // `queryOne<AdminRow>` een cast is en geen controle, zag TypeScript dat
+    // niet. Iedereen werd stilletjes marketing — inclusief de eigenaar. Een
+    // stille terugval verbergt precies de fout die hij hoort af te vangen.
+    role: readRole(row.role),
     passwordHash: row.password_hash,
     totpSecret: row.totp_secret,
     totpConfirmedAt: row.totp_confirmed_at,
@@ -54,7 +74,7 @@ export function sha256(value: string): string {
 
 export async function findAdminByEmail(email: string): Promise<Admin | null> {
   const row = await queryOne<AdminRow>(
-    `SELECT id, email, password_hash, totp_secret, totp_confirmed_at, disabled_at
+    `SELECT id, email, role, password_hash, totp_secret, totp_confirmed_at, disabled_at
        FROM admins WHERE email = ?`,
     [emailKey(email)],
   );
@@ -63,7 +83,7 @@ export async function findAdminByEmail(email: string): Promise<Admin | null> {
 
 export async function findAdminById(id: number): Promise<Admin | null> {
   const row = await queryOne<AdminRow>(
-    `SELECT id, email, password_hash, totp_secret, totp_confirmed_at, disabled_at
+    `SELECT id, email, role, password_hash, totp_secret, totp_confirmed_at, disabled_at
        FROM admins WHERE id = ?`,
     [id],
   );
@@ -95,6 +115,8 @@ export async function markLogin(adminId: number): Promise<void> {
 export async function createAdmin(options: {
   email: string;
   password: string;
+  /** Verplicht: de kolom heeft geen standaardwaarde, zie migratie 0007 */
+  role: Role;
   totpSecret: Buffer;
   totpConfirmed: boolean;
 }): Promise<{ id: number; recoveryCodes: string[] }> {
@@ -105,10 +127,11 @@ export async function createAdmin(options: {
 
   const id = await transaction(async (tx) => {
     const [result] = await tx.execute(
-      `INSERT INTO admins (email, password_hash, totp_secret, totp_confirmed_at, created_at)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO admins (email, role, password_hash, totp_secret, totp_confirmed_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
       [
         emailKey(options.email),
+        options.role,
         passwordHash,
         sealed,
         options.totpConfirmed ? now : null,
@@ -171,6 +194,7 @@ export async function unusedRecoveryCodeCount(adminId: number): Promise<number> 
 export interface AdminListItem {
   id: number;
   email: string;
+  role: Role;
   lastLoginAt: Date | null;
   disabledAt: Date | null;
 }
@@ -179,16 +203,60 @@ export async function listAdmins(): Promise<AdminListItem[]> {
   const rows = await query<{
     id: number;
     email: string;
+    role: string;
     last_login_at: Date | null;
     disabled_at: Date | null;
-  }>(`SELECT id, email, last_login_at, disabled_at FROM admins ORDER BY email`);
+  }>(
+    `SELECT id, email, role, last_login_at, disabled_at FROM admins ORDER BY email`,
+  );
 
   return rows.map((row) => ({
     id: row.id,
     email: row.email,
+    role: readRole(row.role),
     lastLoginAt: row.last_login_at,
     disabledAt: row.disabled_at,
   }));
+}
+
+/** Hoeveel actieve eigenaren er zijn. Onder de één mag het paneel nooit komen. */
+export async function countActiveOwners(): Promise<number> {
+  const row = await queryOne<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM admins
+      WHERE role = 'eigenaar' AND disabled_at IS NULL`,
+  );
+  return Number(row?.n ?? 0);
+}
+
+/**
+ * De rol van iemand anders wijzigen.
+ *
+ * **Weigert het wegnemen van de laatste eigenaar.** Zonder die controle kan de
+ * eigenaar zichzelf per ongeluk tot boekhouder maken, en dan is er niemand
+ * meer die rollen kan uitdelen — het paneel is dan alleen nog met toegang tot
+ * de database te repareren. Zelfde gedachte als bij `disableAdmin()`.
+ */
+export async function setAdminRole(
+  adminId: number,
+  role: Role,
+): Promise<"ok" | "laatste-eigenaar" | "onbekend"> {
+  const huidig = await findAdminById(adminId);
+  if (!huidig) return "onbekend";
+  if (huidig.role === role) return "ok";
+
+  if (huidig.role === "eigenaar" && (await countActiveOwners()) <= 1) {
+    return "laatste-eigenaar";
+  }
+
+  const result = await execute(`UPDATE admins SET role = ? WHERE id = ?`, [
+    role,
+    adminId,
+  ]);
+  if (result.affectedRows !== 1) return "onbekend";
+
+  // Lopende sessies houden geen rol vast — `currentAdmin()` leest de rij elke
+  // keer opnieuw — dus een wijziging geldt meteen, ook in een open tabblad.
+  return "ok";
 }
 
 /**
@@ -200,8 +268,16 @@ export async function listAdmins(): Promise<AdminListItem[]> {
  */
 export async function disableAdmin(
   adminId: number,
-): Promise<"ok" | "laatste" | "onbekend"> {
+): Promise<"ok" | "laatste" | "laatste-eigenaar" | "onbekend"> {
   if ((await countAdmins()) <= 1) return "laatste";
+
+  // Ook met drie beheerders erbij: zonder eigenaar kan niemand nog rollen
+  // uitdelen of prijzen wijzigen. Een marketingmedewerker en een boekhouder
+  // samen krijgen het paneel niet meer open voor de rest.
+  const doelwit = await findAdminById(adminId);
+  if (doelwit?.role === "eigenaar" && (await countActiveOwners()) <= 1) {
+    return "laatste-eigenaar";
+  }
   const result = await execute(
     `UPDATE admins SET disabled_at = ? WHERE id = ? AND disabled_at IS NULL`,
     [new Date(), adminId],

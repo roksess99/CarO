@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { logAction } from "@/lib/admin/audit";
-import { requireAdmin } from "@/lib/admin/session";
+import { requirePermission } from "@/lib/admin/session";
 import {
   categoryOptions,
   isKnownCategory,
@@ -53,7 +53,7 @@ export async function addRule(
   _previous: RuleResult,
   formData: FormData,
 ): Promise<RuleResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("kortingen");
 
   const label = String(formData.get("label") ?? "").trim();
   const family = String(formData.get("family") ?? "") as ProductFamily;
@@ -135,7 +135,7 @@ export async function endRule(
   _previous: RuleResult,
   formData: FormData,
 ): Promise<RuleResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("kortingen");
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) return { error: "Onbekende actie." };
 
@@ -166,7 +166,7 @@ export type MeasureResult = { error: string } | { ok: string } | undefined;
  * verzoeken het kostte, want dat is precies waar de twijfel over ging.
  */
 export async function measureNow(): Promise<MeasureResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("kortingen");
 
   try {
     const result = await runPriceSnapshot({ force: true });

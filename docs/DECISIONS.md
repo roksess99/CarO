@@ -863,6 +863,91 @@ houdt zijn kenmerk `CARO-…` en blijft een orderbevestiging.
 
 ---
 
+## 19. Rollen in het beheerpaneel — VASTGESTELD 2026-09-21
+
+Tot nu toe gaf elke uitnodiging volledige toegang. De eigenaar wil dat kunnen
+beperken: *"voor boekhouder alleen toegang tot omzet data en facturatie, een
+marketing medewerker krijgt alleen toegang tot beoordelingen."*
+
+**Drie vaste rollen, geen vinkjes per persoon.** Ook zijn keuze. Vinkjes
+klinken flexibeler maar leveren combinaties op die niemand nodig heeft en die
+niemand test — "mag prijzen wijzigen maar geen facturen zien" is geen functie,
+dat is een ongeluk.
+
+| | Eigenaar | Boekhouder | Marketing |
+|---|---|---|---|
+| Bestellingen + klantgegevens | ✓ | | |
+| Facturen en omzet | ✓ | ✓ | |
+| Prijzen | ✓ | | |
+| Kortingen en kortingscodes | ✓ | | ✓ |
+| Beoordelingen | ✓ | | ✓ |
+| Beheerders | ✓ | | |
+
+De matrix staat op één plek: `src/lib/admin/roles.ts`. Dat bestand praat geen
+database aan, zodat ook een client component hem mag importeren (#17).
+
+### Drie dingen die niet onderhandelbaar zijn
+
+1. **Prijzen en Beheerders blijven bij de eigenaar.** Het eerste zet in één
+   formulier de verkoopprijs van de hele winkel om; het tweede kan rechten
+   uitdelen en daarmee élk ander recht.
+2. **De laatste eigenaar blijft staan.** `setAdminRole()` en `disableAdmin()`
+   weigeren allebei zodra het de laatste actieve eigenaar zou zijn. Zonder dat
+   kan de eigenaar zichzelf tot boekhouder maken en is het paneel alleen nog
+   met toegang tot de database te repareren.
+3. **De rol zit op de rij, niet in de sessie.** `currentAdmin()` leest de
+   beheerder elke keer opnieuw, dus een gewijzigde rol geldt meteen — ook in
+   een tabblad dat al open stond.
+
+### Waar klantgegevens heen mogen (AVG)
+
+Gekozen: *alleen wie het nodig heeft*. De bestellijst met naam, adres en
+mailadres is voor de eigenaar. De boekhouder ziet die gegevens alsnog — ze
+staan op de factuur — maar via zijn eigen scherm en met een grondslag erachter.
+Marketing ziet ze nergens.
+
+Dat is ook in de code zo: het dashboard **haalt** de bestellingen niet op voor
+wie ze niet mag zien. Afschermen in de weergave en niet ophalen zijn twee
+verschillende dingen.
+
+### Twee gaten die bij het testen bovenkwamen
+
+**De factuur-PDF toetste alleen of je ingelogd was.** `/beheer/facturen/
+<nummer>/pdf` is een route handler zonder layout eromheen, en factuurnummers
+lopen op (`2026-0001`). Een marketingmedewerker had de hele klantenlijst
+kunnen binnenhalen door te tellen, terwijl hij de facturenpagina niet eens mag
+openen. Nu 403.
+
+**`findAdminById()` haalde de nieuwe kolom niet op.** De SELECT noemt zijn
+kolommen met de hand, en `queryOne<AdminRow>` is een cast en geen controle —
+dus TypeScript zweeg. Iedereen werd stilletjes marketing, ook de eigenaar.
+GEMETEN: boekhouder en marketing gaven exact dezelfde antwoorden op alle zeven
+schermen. De terugval op de minste rechten was goed gekozen (fail closed), maar
+hij was stil; hij logt nu een fout.
+
+### Hoe het getest is
+
+Twee tijdelijke sessies rechtstreeks in de database gezet (geen wachtwoorden),
+alle schermen opgevraagd, daarna de rijen weer verwijderd:
+
+| Pad | Boekhouder | Marketing |
+|---|---|---|
+| `/beheer` | 200 | 200 |
+| `/beheer/facturen` | 200 | 307 |
+| `/beheer/prijzen` | 307 | 307 |
+| `/beheer/kortingen` | 307 | 200 |
+| `/beheer/kortingscodes` | 307 | 200 |
+| `/beheer/beoordelingen` | 307 | 200 |
+| `/beheer/beheerders` | 307 | 307 |
+| factuur-PDF | 200 | **403** |
+
+Plus een telling over élke Server Action onder `/beheer`: alle acties die een
+controle nodig hebben, hebben er één. De vier zonder controle zijn inloggen,
+uitloggen, de eerste beheerder aanmaken en een uitnodiging accepteren — die
+draaien per definitie vóór er een sessie is.
+
+---
+
 ## 13. Opslag: MySQL — VASTGESTELD 2026-09-16
 
 Tot nu toe stonden bestellingen als JSON-bestand en was dat verdedigbaar (#10):

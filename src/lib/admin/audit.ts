@@ -17,6 +17,7 @@ export type AuditAction =
   | "beheerder.uitgenodigd"
   | "beheerder.aangemaakt"
   | "beheerder.uitgeschakeld"
+  | "beheerder.rol-gewijzigd"
   | "korting.aangemaakt"
   | "korting.gewijzigd"
   | "korting.gestopt"

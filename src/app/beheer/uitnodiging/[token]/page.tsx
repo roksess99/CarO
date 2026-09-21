@@ -1,6 +1,7 @@
 import { CaroMark } from "@/components/brand/caro-mark";
 import { findPendingInvite } from "@/lib/admin/invites";
 import { newTotpSecret, otpauthUri, toBase32 } from "@/lib/admin/totp";
+import { ROLE_LABELS } from "@/lib/admin/roles";
 import { AcceptForm } from "./accept-form";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +43,14 @@ export default async function InvitePage({
           <p className="text-sm text-muted">caroparts.nl</p>
         </div>
       </div>
+
+      {/* Zeggen waar hij aan toe is vóórdat hij een wachtwoord kiest. Een
+          boekhouder die het hele paneel verwacht en alleen facturen ziet,
+          denkt dat er iets stuk is. */}
+      <p className="mb-6 rounded-lg border border-border border-s-4 border-s-caro-orange bg-background p-4 text-sm">
+        Je wordt <strong>{ROLE_LABELS[invite.role].naam.toLowerCase()}</strong>{" "}
+        — {ROLE_LABELS[invite.role].uitleg}
+      </p>
 
       <div className="rounded-xl border border-border bg-background p-6 shadow-sm">
         <AcceptForm

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/admin/session";
+import { requirePermission } from "@/lib/admin/session";
 import { formatPriceCents } from "@/lib/format";
 import { invoiceTotalsByMonth, listInvoices } from "@/lib/invoices/store";
 
@@ -22,7 +22,7 @@ function monthLabel(month: string): string {
 }
 
 export default async function FacturenPage() {
-  await requireAdmin();
+  await requirePermission("facturen");
   const year = new Date().getUTCFullYear();
   const [invoices, months] = await Promise.all([
     listInvoices(50),

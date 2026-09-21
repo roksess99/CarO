@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { logAction } from "@/lib/admin/audit";
 import { categoryOptions, isKnownCategory } from "@/lib/admin/catalog-options";
 import { isKnownPartKind, partKindName } from "@/lib/admin/part-kinds";
-import { requireAdmin } from "@/lib/admin/session";
+import { requirePermission } from "@/lib/admin/session";
 import { PRODUCT_FAMILIES, type ProductFamily } from "@/lib/catalog/families";
 import { loadPartById, loadPartBySlug } from "@/lib/catalog/lookup";
 import { forgetOffers } from "@/lib/discounts/offers";
@@ -44,7 +44,7 @@ export async function addPriceRule(
   _previous: PriceRuleResult,
   formData: FormData,
 ): Promise<PriceRuleResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("prijzen");
 
   const scope = String(formData.get("scope") ?? "") as PriceScope;
   if (!SCOPES.includes(scope)) return { error: "Kies waar de prijs op geldt." };
@@ -146,7 +146,7 @@ export async function endPriceRule(
   _previous: PriceRuleResult,
   formData: FormData,
 ): Promise<PriceRuleResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("prijzen");
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) return { error: "Onbekende regel." };
 

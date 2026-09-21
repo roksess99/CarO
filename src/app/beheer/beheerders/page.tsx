@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { listAdmins } from "@/lib/admin/admins";
 import { recentAudit } from "@/lib/admin/audit";
-import { requireAdmin } from "@/lib/admin/session";
+import { ROLE_LABELS } from "@/lib/admin/roles";
+import { requirePermission } from "@/lib/admin/session";
 import { InviteForm } from "./invite-form";
 import { RevokeButton } from "./revoke-button";
+import { RoleSelect } from "./role-select";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +17,7 @@ const dateFormat = new Intl.DateTimeFormat("nl-NL", {
 });
 
 export default async function BeheerdersPage() {
-  const me = await requireAdmin();
+  const me = await requirePermission("beheerders");
   const [admins, audit] = await Promise.all([listAdmins(), recentAudit(15)]);
 
   return (
@@ -54,6 +56,8 @@ export default async function BeheerdersPage() {
                   )}
                 </p>
                 <p className="text-xs text-muted">
+                  {ROLE_LABELS[admin.role].naam}
+                  {" · "}
                   {admin.disabledAt
                     ? `Uitgeschakeld op ${dateFormat.format(admin.disabledAt)}`
                     : admin.lastLoginAt
@@ -62,7 +66,14 @@ export default async function BeheerdersPage() {
                 </p>
               </div>
               {!admin.disabledAt && admin.id !== me.id && (
-                <RevokeButton id={admin.id} email={admin.email} />
+                <div className="flex flex-wrap items-center gap-3">
+                  <RoleSelect
+                    id={admin.id}
+                    email={admin.email}
+                    role={admin.role}
+                  />
+                  <RevokeButton id={admin.id} email={admin.email} />
+                </div>
               )}
             </li>
           ))}

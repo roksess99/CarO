@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { categoryOptions } from "@/lib/admin/catalog-options";
-import { requireAdmin } from "@/lib/admin/session";
+import { requirePermission } from "@/lib/admin/session";
 import { listRules } from "@/lib/discounts/rules";
 import { historySize, jobIsLate, lastJobRun } from "@/lib/prices/history";
 import { PRICE_JOB } from "@/lib/prices/snapshot";
@@ -42,7 +42,7 @@ function statusOf(rule: {
 }
 
 export default async function KortingenPage() {
-  await requireAdmin();
+  await requirePermission("kortingen");
   const [rules, categories, lastRun, size] = await Promise.all([
     listRules(),
     categoryOptions(),

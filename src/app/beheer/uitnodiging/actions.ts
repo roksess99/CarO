@@ -61,6 +61,10 @@ export async function acceptInvite(
     const { id, recoveryCodes } = await createAdmin({
       email: invite.email,
       password,
+      // De rol stond al vast toen de uitnodiging verstuurd werd; hem hier uit
+      // het formulier halen zou betekenen dat de uitgenodigde zijn eigen
+      // rechten kiest.
+      role: invite.role,
       totpSecret: secret,
       totpConfirmed: true,
     });
@@ -68,7 +72,7 @@ export async function acceptInvite(
     await logAction({
       adminId: id,
       action: "beheerder.aangemaakt",
-      subject: invite.email,
+      subject: `${invite.email} (${invite.role})`,
     });
 
     return { codes: recoveryCodes, email: invite.email };
