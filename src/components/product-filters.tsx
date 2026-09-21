@@ -162,6 +162,16 @@ export async function ProductFilters({
                   );
                 })}
               </ul>
+              {/* Eerlijk zijn over wat een filter wegneemt. De fabrikant vult
+                  lang niet elk veld in: van 261 remblokken dragen er 116 een
+                  Inbouwplaats. Zonder deze regel leest een gefilterde lijst
+                  als "meer is er niet", en dát was de reden om de filters bij
+                  onderdelen ooit helemaal uit te zetten (DECISIONS #7). */}
+              {group.missingCount !== undefined && group.missingCount > 0 && (
+                <p className="px-4 pb-3 text-xs text-muted">
+                  {t("missingValue", { count: group.missingCount })}
+                </p>
+              )}
             </details>
           );
         })}

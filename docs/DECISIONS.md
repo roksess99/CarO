@@ -124,6 +124,68 @@ auto 21 van de 297). Bijkomend voordeel: één ongefilterde vraag bedient élke
 filtercombinatie, dus het kost geen extra verzoeken en de aantallen achter de
 opties kloppen. Meetreeks in @docs/api/WEARPARTS.md.
 
+### TERUGGEDRAAID 2026-09-21: filters bij onderdelen komen terug
+
+De eigenaar kreeg de melding dat er op `/nl/onderdelen/oliefilter-543` en
+`/nl/onderdelen/remschijf-569` geen filters meer stonden, en vroeg om merk en
+passing (vooras/achteras) terug — **overal waar het kan**, niet alleen bij
+motorolie. Dat draait de keuze van 2026-09-11 hierboven terug.
+
+**Welke filters verschijnen bepaalt nu de data, niet een lijst met groep-ids.**
+Een allowlist werkt niet: elk artikeltype heeft eigen attributen. De regels
+staan in `usable()` in `src/lib/catalog/part-filters.ts`:
+
+| Regel | Waarom |
+|---|---|
+| dekking ≥ 35% | Onder die grens is het leveranciersadministratie |
+| alleen tekstwaarden | Getallen zijn maatvoering en horen bij de artikelgegevens |
+| 2 tot 8 waarden | Eén optie filtert niets; meer is een lijst, geen keuze |
+| merk en de bekende filters: geen bovengrens | Zie hieronder |
+
+GEMETEN 2026-09-21 op carId 128598, en de grens valt precies in het gat:
+
+| Remschijf (192 artikelen) | Dekking | Waarden | |
+|---|---|---|---|
+| Remschijftype | 100% | 5 | wel |
+| Oppervlakte | 73% | 5 | wel |
+| **Inbouwplaats** | **43%** | Vooras / Achteras | **wel** |
+| Controleteken | 31% | 18 | niet |
+| Remschijfdikte, Hoogte, Gewicht | 100–28% | getallen | niet |
+
+**Het bezwaar van 2026-09-11 is niet verdwenen, het is zichtbaar gemaakt.**
+Van 192 remschijven dragen er 82 een `Inbouwplaats`; wie op "Vooras" filtert
+ziet er 42 en mist de 110 waarvoor de fabrikant het veld leeg liet. Elke
+filtergroep telt nu hoeveel artikelen de eigenschap **niet** hebben
+(`missingCount`) en het paneel zegt dat eronder: *"110 artikelen hebben dit
+niet ingevuld en vallen weg als je hier filtert."* Verbergen doen we nog
+steeds — anders filtert het filter niet — maar niet meer stilletjes.
+
+Twee dingen die bij het bouwen bleken en allebei een regressie waren:
+
+- **Merk viel weg.** GEMETEN: 124 oliefilters van 77 merken, 192 remschijven
+  van 67 merken. Met een bovengrens van acht (en ook van veertig) verdween
+  juist het filter waar de eigenaar als eerste om vroeg. Merk is geen
+  eigenschap maar een naam en heeft daarom géén bovengrens — bij banden staan
+  er 191 in de lijst.
+- **"Inhoud" bij motorolie viel weg**, want die heeft elf waarden (1 tot 208
+  liter). De filters die we bij naam kennen (viscositeit, inhoud) vallen nu
+  ook buiten de bovengrens.
+
+**Wat het kost, en wat dat weer oplost.** Elke onderdelencategorie haalt nu
+300 artikelen op in plaats van 20, want zonder de hele lijst kloppen de
+aantallen achter de filteropties niet. GEMETEN in het serverlog: zo'n antwoord
+is 2,4 MB (motorolie) tot 4,0 MB (remblokken) — en **Next weigert alles boven
+2 MB** ("items over 2MB can not be cached"). Elke paginaweergave haalde de
+categorie dus opnieuw op, en juist filteren maakt veel weergaves: elke klik op
+een optie is een nieuwe pagina.
+
+Daarom houdt `wearparts-provider.ts` die lijsten vijf minuten in het geheugen
+van de server, hoogstens drie categorieën tegelijk. GEMETEN op een koud
+gestarte server: vier weergaven van dezelfde categorie met verschillende
+filters kostten **één** call (5,8 s koud, daarna 0,7–1,0 s).
+
+---
+
 ### Vastgesteld 2026-09-17: een productgroep is een link, geen menu
 
 Banden, velgen en toebehoren klapten op drie plekken uit naar hun

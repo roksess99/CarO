@@ -282,7 +282,8 @@
     },
     "loadMore": "Load {count} more products",
     "loadMoreBusy": "Loading…",
-    "noResults": "No items match this combination of filters."
+    "noResults": "No items match this combination of filters.",
+    "missingValue": "{count, plural, one {# item has no value here and drops out if you filter on it} other {# items have no value here and drop out if you filter on it}}"
   },
   "localeSwitcher": {
     "label": "Language",

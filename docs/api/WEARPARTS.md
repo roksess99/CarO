@@ -147,6 +147,28 @@ categorieën voor dezelfde auto:
 De grens ligt rond 40%; `src/lib/catalog/part-filters.ts` past hem toe, samen
 met "alleen tekstwaarden" (getallen zijn maatvoering) en 2 tot 8 waarden.
 
+#### TERUGGEDRAAID 2026-09-21: filters staan weer aan, overal waar de data ze draagt
+
+De winkelkeuze hieronder is op verzoek van de eigenaar teruggedraaid
+(@docs/DECISIONS.md #7). De meetreeks blijft staan omdat de API-kant klopt en
+de dekkingsgrens er rechtstreeks uit volgt.
+
+Twee metingen die er 2026-09-21 bij kwamen, op carId 128598:
+
+| Categorie | Artikelen | Merken | Bruikbare eigenschappen |
+|---|---|---|---|
+| Oliefilter (543) | 124 | **77** | Filter type (52%) |
+| Remschijf (569) | 192 | **67** | Remschijftype 100%, Oppervlakte 73%, Inbouwplaats 43% |
+
+Dat merkenaantal is het punt: een bovengrens op het aantal filteropties moet
+niet voor merk gelden, anders verdwijnt juist het meest gevraagde filter.
+
+**En een kostenval:** een `/articles`-antwoord met `limit=300` is 2,4 MB
+(motorolie) tot 4,0 MB (remblokken), en **Next cachet niets boven 2 MB** —
+`items over 2MB can not be cached`. De shop houdt die lijsten daarom zelf vijf
+minuten in het geheugen (`wearparts-provider.ts`); zonder dat kostte elke klik
+op een filteroptie een nieuwe call van vier megabyte.
+
 #### Winkelkeuze 2026-09-11: als regel geen filters op eigenschap
 
 Dit heeft een dag in de shop gestaan en is er bewust weer uit gehaald. Twee

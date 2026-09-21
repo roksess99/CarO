@@ -21,7 +21,11 @@ import {
   searchArticles,
   type WearpartsArticle,
 } from "./wearparts";
-import { articleMatchesFilters, partFilterGroups } from "./part-filters";
+import {
+  articleMatchesFilters,
+  buildPartFilters,
+  partFilterGroups,
+} from "./part-filters";
 import { POPULAR_PART_GROUP_IDS } from "./quick-links";
 import type { FilterGroup, Part, SelectedFilters } from "./types";
 
@@ -516,38 +520,6 @@ function rankByName(parts: Part[], term: string): Part[] {
     .map((entry) => entry.part);
 }
 
-/** Onderdelen binnen één categorie van één auto */
-export async function partsInGroup({
-  carId,
-  categoryId,
-  categorySlug,
-  categoryName,
-  genericArticleId,
-  limit = 20,
-  page = 0,
-}: {
-  carId: number;
-  categoryId: number;
-  categorySlug: string;
-  categoryName: string;
-  /** Beperk tot het soort waar de groep over gaat; zie ArticleQuery */
-  genericArticleId?: string;
-  limit?: number;
-  page?: number;
-}): Promise<{ parts: Part[]; total: number }> {
-  const [{ articles, total }, pricing] = await Promise.all([
-    searchArticles({ carId, categoryId, genericArticleId, limit, page }),
-    pricingContext(),
-  ]);
-  return {
-    parts: articles.flatMap((article) => {
-      const part = toPart(article, categorySlug, categoryName, pricing);
-      return part ? [part] : [];
-    }),
-    total,
-  };
-}
-
 /**
  * Zoveel artikelen halen we maximaal op om ze zelf te kunnen filteren.
  *
@@ -560,10 +532,59 @@ const FILTER_FETCH_LIMIT = 300;
 const FILTER_FETCH_PAGES = 2;
 
 /**
+ * Eigen geheugen voor die grote lijsten, want de cache van Next pakt ze niet.
+ *
+ * GEMETEN 2026-09-21 in het serverlog: een antwoord met 300 artikelen is
+ * 2,4 MB (motorolie) tot 4,0 MB (remblokken), en Next weigert alles boven
+ * 2 MB — "items over 2MB can not be cached". Zonder dit haalt élke
+ * paginaweergave de hele categorie opnieuw op.
+ *
+ * Dat is precies de verkeerde kant op sinds er filters zijn: elke klik op een
+ * filteroptie is een nieuwe paginaweergave van dezelfde categorie. Eén
+ * bezoeker die vier filters probeert kostte zo vier keer 4 MB en vier calls,
+ * op een limiet van 100 per minuut voor de hele winkel.
+ *
+ * Bewust klein gehouden: drie categorieën tegelijk is genoeg om één bezoeker
+ * te bedienen die aan het filteren is, en meer zou op gedeelde hosting aan
+ * geheugen kosten wat het aan calls bespaart. Vijf minuten, net als de
+ * cachetijd die `searchArticles` aan Next meegeeft.
+ */
+const LIST_CACHE_MS = 5 * 60 * 1000;
+const LIST_CACHE_MAX = 3;
+const listCache = new Map<
+  string,
+  { at: number; articles: WearpartsArticle[] }
+>();
+
+function cachedList(key: string): WearpartsArticle[] | null {
+  const hit = listCache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > LIST_CACHE_MS) {
+    listCache.delete(key);
+    return null;
+  }
+  // Opnieuw invoegen: de oudste sleutel valt er straks als eerste uit
+  listCache.delete(key);
+  listCache.set(key, hit);
+  return hit.articles;
+}
+
+function rememberList(key: string, articles: WearpartsArticle[]): void {
+  listCache.set(key, { at: Date.now(), articles });
+  while (listCache.size > LIST_CACHE_MAX) {
+    const oudste = listCache.keys().next().value;
+    if (oudste === undefined) break;
+    listCache.delete(oudste);
+  }
+}
+
+/**
  * Onderdelen binnen één categorie, mét filterpaneel.
  *
- * Alleen voor de groepen waar `groupSupportsFilters()` ja op zegt; de rest
- * blijft bij `partsInGroup()` en haalt gewoon één pagina op.
+ * Sinds 2026-09-21 het pad voor **elke** onderdelencategorie: welke filters
+ * er verschijnen bepaalt de data (`buildPartFilters`), niet een lijst met
+ * groep-ids. Draagt een categorie niets bruikbaars, dan komt er geen paneel
+ * haalt dit gewoon de artikelen op zonder paneel eromheen.
  */
 export async function filteredPartsInGroup({
   carId,
@@ -587,26 +608,34 @@ export async function filteredPartsInGroup({
   // van de twee HTTP 500 — en omdat searchArticles een fout opvangt en een
   // lege lijst teruggeeft, verdween daarmee stil de halve categorie. De
   // pagina toonde toen de duurste vaten bovenaan in plaats van de flessen.
-  const articles: WearpartsArticle[] = [];
-  for (let page = 0; page < FILTER_FETCH_PAGES; page++) {
-    const result = await searchArticles({
-      carId,
-      categoryId,
-      genericArticleId,
-      limit: FILTER_FETCH_LIMIT,
-      page,
-    });
-    articles.push(...result.articles);
-    // Alles binnen? Dan is een tweede vraag verspilling.
-    if (result.articles.length === 0 || articles.length >= result.total) break;
+  const cacheKey = `${carId}:${categoryId}:${genericArticleId ?? ""}`;
+  let articles = cachedList(cacheKey);
+  if (!articles) {
+    articles = [];
+    for (let page = 0; page < FILTER_FETCH_PAGES; page++) {
+      const result = await searchArticles({
+        carId,
+        categoryId,
+        genericArticleId,
+        limit: FILTER_FETCH_LIMIT,
+        page,
+      });
+      articles.push(...result.articles);
+      // Alles binnen? Dan is een tweede vraag verspilling.
+      if (result.articles.length === 0 || articles.length >= result.total) break;
+    }
+    // Niets onthouden van een mislukte vraag: dan zou een storing van de
+    // leverancier vijf minuten lang een lege categorie opleveren.
+    if (articles.length > 0) rememberList(cacheKey, articles);
   }
 
   const pricing = await pricingContext();
   // De filtergroepen tellen over álles wat we hebben, niet over de zichtbare
   // pagina: anders zou "meer laden" de aantallen laten groeien.
-  const groups = partFilterGroups(articles, filters);
+  const defs = buildPartFilters(articles);
+  const groups = partFilterGroups(articles, filters, defs);
   const matching = articles.filter((article) =>
-    articleMatchesFilters(article, filters),
+    articleMatchesFilters(article, filters, defs),
   );
 
   return {
