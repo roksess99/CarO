@@ -292,7 +292,8 @@
   },
   "themeToggle": {
     "light": "Switch to light theme",
-    "dark": "Switch to dark theme"
+    "dark": "Switch to dark theme",
+    "system": "Follow your device setting"
   },
   "home": {
     "metaTitle": "CarO — Car parts",

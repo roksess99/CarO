@@ -292,7 +292,8 @@
   },
   "themeToggle": {
     "light": "Schakel naar licht thema",
-    "dark": "Schakel naar donker thema"
+    "dark": "Schakel naar donker thema",
+    "system": "Volg de instelling van je apparaat"
   },
   "home": {
     "metaTitle": "CarO — Auto-onderdelen",
