@@ -7,6 +7,7 @@ import {
   categoryOptions,
   isKnownCategory,
 } from "@/lib/admin/catalog-options";
+import { isKnownPartKind, partKindName } from "@/lib/admin/part-kinds";
 import {
   PRODUCT_FAMILIES,
   type ProductFamily,
@@ -24,7 +25,7 @@ import {
 
 export type RuleResult = { error: string } | { ok: string } | undefined;
 
-const SCOPES: DiscountScope[] = ["family", "category", "part"];
+const SCOPES: DiscountScope[] = ["family", "kind", "category", "part"];
 
 /** 00:00 van de opgegeven dag, of 23:59:59 als het een einddatum is */
 function parseDay(value: string, endOfDay: boolean): Date | null {
@@ -79,6 +80,19 @@ export async function addRule(
       return { error: "Die categorie bestaat niet in deze productgroep." };
     }
     target = chosen;
+  }
+
+  if (scope === "kind") {
+    // Het soortnummer hoort bij onderdelen en nergens anders: banden dragen
+    // het niet, dus zo'n regel zou stil op niets slaan.
+    if (family !== "onderdelen") {
+      return { error: "Een soort onderdeel kan alleen bij Onderdelen." };
+    }
+    if (!isKnownPartKind(chosen)) {
+      return { error: "Kies een soort onderdeel." };
+    }
+    target = chosen;
+    found = partKindName(chosen) ?? "";
   }
 
   if (scope === "part") {

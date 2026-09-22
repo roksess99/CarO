@@ -1246,7 +1246,8 @@ aanzet:
   (`/category` zonder `carId` geeft ERR_MISSING_MANDATORY_PARAMETER), en een
   artikel dat via het zoekveld binnenkomt draagt helemaal geen categorie maar
   `zoekresultaat`. Dezelfde korting zou dus op de ene pagina wél gelden en op
-  de andere niet. Wat wél kan: de hele groep onderdelen, of één artikel.
+  de andere niet. Wat wél kan: de hele groep onderdelen, of één artikel —
+  **en sinds 2026-09-22 ook één soort onderdeel, zie hieronder.**
 - **Familie- en categorieacties op onderdelen komen niet in de carrousel.** Ze
   werken gewoon in de winkel — daar wordt per artikel gekeken — maar de
   aanbiedingenlijst redeneert andersom (van regel naar artikelen) en kan die
@@ -1255,6 +1256,47 @@ aanzet:
 De kortingsvlag ("-15%") staat er ook, zonder doorgestreepte van-prijs. Dat is
 geen tussenoplossing maar de wet: tot er dertig dagen prijsgeschiedenis is mag
 die tweede prijs er niet bij.
+
+### UITGEBREID 2026-09-22: korting op één soort onderdeel
+
+Gevraagd door de eigenaar: bij onderdelen zat er niets tussen "alle
+onderdelen" en "dit ene artikel", terwijl bij de prijsregels wél een soort te
+kiezen was. Dat gat is gedicht met dezelfde sleutel als daar — het
+TecDoc-soortnummer uit `src/lib/admin/part-kinds.ts` (#17).
+
+**Waarom dat wél mag en een categorie niet.** Het soortnummer staat op het
+artikel zelf en komt met elk artikel mee, ongeacht hoe de klant erop uitkomt.
+De hierboven beschreven fout — op de ene pagina wel, op de andere niet — kan
+hier dus niet optreden.
+
+GEMETEN 2026-09-22 met een tijdelijke actie van 12% op soort 7 (Oliefilter),
+naast een lopende actie van 3% op de hele groep onderdelen:
+
+| Waar | Artikel | Korting |
+|---|---|---|
+| Categoriepagina oliefilter | BOSCH F 026 407 143 | −8% |
+| Productpagina van datzelfde artikel | idem | −8% |
+| **Zoekresultaat, dus zonder categorie** | FEBI BILSTEIN Oliefilter 172139 | **−9%** |
+| Zoekresultaat, pakking oliefilterhuis | ELRING 763.260 | −3% |
+| Categoriepagina remschijf | — | −3% |
+
+Twee dingen staan daarmee vast. De korting volgt het artikel tot in het
+zoekresultaat (en dus tot in de winkelwagen, die langs dezelfde `partById`
+loopt), en hij raakt alleen het gekozen soort: een pakking vóór een
+oliefilterhuis houdt gewoon de 3% van de groep.
+
+Dat het geen 12% is maar 8 of 9 is geen fout maar de marge-ondergrens: op
+oliefilters staat een prijsregel van 10% opslag, en daar past hoogstens 9%
+korting in (#17). De actie wordt dus per artikel getrimd in plaats van
+geweigerd.
+
+**Wat het niet verandert:** zo'n actie komt nog steeds niet in de carrousel en
+krijgt geen doorgestreepte van-prijs. Beide om dezelfde reden als bij een
+familieactie op onderdelen — die catalogus is niet te bevragen zonder gekozen
+auto, dus de nachtelijke prijsmeting heeft er geen artikelen van. De
+kortingsvlag zelf staat er wel.
+
+De database kent de waarde sinds `db/migrations/0008_discount_kind.sql`.
 
 ### GEBOUWD 2026-09-17: de prijsmeting, en wat hij kost
 
