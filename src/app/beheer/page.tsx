@@ -220,19 +220,7 @@ export default async function BeheerPage({
       )}
 
       {/* Eerlijk zijn over wat er nog niet is, in plaats van lege knoppen */}
-      {can(admin.role, "beheerders") && (
-        <section className="mt-10 rounded-lg border border-border bg-background p-6">
-          <h2 className="text-base font-semibold">Nog te bouwen</h2>
-          <ul className="mt-3 space-y-1 text-sm text-muted">
-            <li>Creditfacturen bij een terugbetaling</li>
-            <li>
-              De doorgestreepte &ldquo;van&rdquo;-prijs (vraagt 30 dagen
-              prijsgeschiedenis)
-            </li>
-            <li>Inkoop bij de groothandel vanuit het paneel</li>
-          </ul>
-        </section>
-      )}
+
     </div>
   );
 }
