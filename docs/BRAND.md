@@ -39,12 +39,25 @@ Bestanden in `public/brand/`:
 
 | Bestand | Gebruik |
 |---|---|
-| `caro-lockup.svg` | Standaard: CAR + moer. Site header, facturen |
-| `caro-lockup-dark.svg` | Omgekeerd, wit woordmerk. Donkere achtergrond, foto-overlays |
-| `caro-lockup-descriptor.svg` | Met "ONDERDELEN". Verpakking, formele plaatsingen |
-| `caro-mark.svg` | Alleen de moer. Social profiel, boxsticker |
+| `caro-mark.svg` | Alleen de moer. Bron voor alles hieronder |
 | `caro-mark-line.svg` | Open lijnversie. **Verplicht onder 40px** |
-| `favicon.svg` + `icon-512.png` | Browser tab, PWA |
+| `favicon.svg` | Browsertabblad |
+| `caro-lockup-email.png` | Lockup (CAR + moer) voor de bevestigingsmail |
+| `caro-profiel-{1024,512,180}.png` | **Profielfoto social media**, oranje moer op antraciet |
+| `caro-profiel-licht-512.png` | Zelfde, op wit |
+| `caro-qr.png` / `.svg` | QR-code naar caroparts.nl, met de moer in het midden |
+| `caro-qr-kaal.png` / `.svg` | Zelfde zonder logo, voor klein drukwerk |
+
+De bestanden met `caro-profiel` en `caro-qr` komen uit `pnpm brand:build`
+(`scripts/make-brand-assets.mjs`). Niet met de hand bijwerken.
+
+**CORRECTIE 2026-09-22.** Hier stonden vier bestanden die niet bestaan:
+`caro-lockup.svg`, `caro-lockup-dark.svg`, `caro-lockup-descriptor.svg` en
+`icon-512.png`. De outlines uit `CarO_logo_brand.pdf` zijn nooit aangeleverd;
+de site zet het lockup daarom samen uit tekst in Anton plus de moer
+(`components/brand/caro-lockup.tsx`, met een TODO die daarnaar verwijst).
+Zolang die outlines er niet zijn is er **geen vectorlogo mét woordmerk** —
+dat is het enige gat in deze map.
 
 ## Logoregels
 
