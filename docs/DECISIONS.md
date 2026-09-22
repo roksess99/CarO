@@ -124,6 +124,68 @@ auto 21 van de 297). Bijkomend voordeel: één ongefilterde vraag bedient élke
 filtercombinatie, dus het kost geen extra verzoeken en de aantallen achter de
 opties kloppen. Meetreeks in @docs/api/WEARPARTS.md.
 
+### TERUGGEDRAAID 2026-09-21: filters bij onderdelen komen terug
+
+De eigenaar kreeg de melding dat er op `/nl/onderdelen/oliefilter-543` en
+`/nl/onderdelen/remschijf-569` geen filters meer stonden, en vroeg om merk en
+passing (vooras/achteras) terug — **overal waar het kan**, niet alleen bij
+motorolie. Dat draait de keuze van 2026-09-11 hierboven terug.
+
+**Welke filters verschijnen bepaalt nu de data, niet een lijst met groep-ids.**
+Een allowlist werkt niet: elk artikeltype heeft eigen attributen. De regels
+staan in `usable()` in `src/lib/catalog/part-filters.ts`:
+
+| Regel | Waarom |
+|---|---|
+| dekking ≥ 35% | Onder die grens is het leveranciersadministratie |
+| alleen tekstwaarden | Getallen zijn maatvoering en horen bij de artikelgegevens |
+| 2 tot 8 waarden | Eén optie filtert niets; meer is een lijst, geen keuze |
+| merk en de bekende filters: geen bovengrens | Zie hieronder |
+
+GEMETEN 2026-09-21 op carId 128598, en de grens valt precies in het gat:
+
+| Remschijf (192 artikelen) | Dekking | Waarden | |
+|---|---|---|---|
+| Remschijftype | 100% | 5 | wel |
+| Oppervlakte | 73% | 5 | wel |
+| **Inbouwplaats** | **43%** | Vooras / Achteras | **wel** |
+| Controleteken | 31% | 18 | niet |
+| Remschijfdikte, Hoogte, Gewicht | 100–28% | getallen | niet |
+
+**Het bezwaar van 2026-09-11 is niet verdwenen, het is zichtbaar gemaakt.**
+Van 192 remschijven dragen er 82 een `Inbouwplaats`; wie op "Vooras" filtert
+ziet er 42 en mist de 110 waarvoor de fabrikant het veld leeg liet. Elke
+filtergroep telt nu hoeveel artikelen de eigenschap **niet** hebben
+(`missingCount`) en het paneel zegt dat eronder: *"110 artikelen hebben dit
+niet ingevuld en vallen weg als je hier filtert."* Verbergen doen we nog
+steeds — anders filtert het filter niet — maar niet meer stilletjes.
+
+Twee dingen die bij het bouwen bleken en allebei een regressie waren:
+
+- **Merk viel weg.** GEMETEN: 124 oliefilters van 77 merken, 192 remschijven
+  van 67 merken. Met een bovengrens van acht (en ook van veertig) verdween
+  juist het filter waar de eigenaar als eerste om vroeg. Merk is geen
+  eigenschap maar een naam en heeft daarom géén bovengrens — bij banden staan
+  er 191 in de lijst.
+- **"Inhoud" bij motorolie viel weg**, want die heeft elf waarden (1 tot 208
+  liter). De filters die we bij naam kennen (viscositeit, inhoud) vallen nu
+  ook buiten de bovengrens.
+
+**Wat het kost, en wat dat weer oplost.** Elke onderdelencategorie haalt nu
+300 artikelen op in plaats van 20, want zonder de hele lijst kloppen de
+aantallen achter de filteropties niet. GEMETEN in het serverlog: zo'n antwoord
+is 2,4 MB (motorolie) tot 4,0 MB (remblokken) — en **Next weigert alles boven
+2 MB** ("items over 2MB can not be cached"). Elke paginaweergave haalde de
+categorie dus opnieuw op, en juist filteren maakt veel weergaves: elke klik op
+een optie is een nieuwe pagina.
+
+Daarom houdt `wearparts-provider.ts` die lijsten vijf minuten in het geheugen
+van de server, hoogstens drie categorieën tegelijk. GEMETEN op een koud
+gestarte server: vier weergaven van dezelfde categorie met verschillende
+filters kostten **één** call (5,8 s koud, daarna 0,7–1,0 s).
+
+---
+
 ### Vastgesteld 2026-09-17: een productgroep is een link, geen menu
 
 Banden, velgen en toebehoren klapten op drie plekken uit naar hun
@@ -801,6 +863,91 @@ houdt zijn kenmerk `CARO-…` en blijft een orderbevestiging.
 
 ---
 
+## 19. Rollen in het beheerpaneel — VASTGESTELD 2026-09-21
+
+Tot nu toe gaf elke uitnodiging volledige toegang. De eigenaar wil dat kunnen
+beperken: *"voor boekhouder alleen toegang tot omzet data en facturatie, een
+marketing medewerker krijgt alleen toegang tot beoordelingen."*
+
+**Drie vaste rollen, geen vinkjes per persoon.** Ook zijn keuze. Vinkjes
+klinken flexibeler maar leveren combinaties op die niemand nodig heeft en die
+niemand test — "mag prijzen wijzigen maar geen facturen zien" is geen functie,
+dat is een ongeluk.
+
+| | Eigenaar | Boekhouder | Marketing |
+|---|---|---|---|
+| Bestellingen + klantgegevens | ✓ | | |
+| Facturen en omzet | ✓ | ✓ | |
+| Prijzen | ✓ | | |
+| Kortingen en kortingscodes | ✓ | | ✓ |
+| Beoordelingen | ✓ | | ✓ |
+| Beheerders | ✓ | | |
+
+De matrix staat op één plek: `src/lib/admin/roles.ts`. Dat bestand praat geen
+database aan, zodat ook een client component hem mag importeren (#17).
+
+### Drie dingen die niet onderhandelbaar zijn
+
+1. **Prijzen en Beheerders blijven bij de eigenaar.** Het eerste zet in één
+   formulier de verkoopprijs van de hele winkel om; het tweede kan rechten
+   uitdelen en daarmee élk ander recht.
+2. **De laatste eigenaar blijft staan.** `setAdminRole()` en `disableAdmin()`
+   weigeren allebei zodra het de laatste actieve eigenaar zou zijn. Zonder dat
+   kan de eigenaar zichzelf tot boekhouder maken en is het paneel alleen nog
+   met toegang tot de database te repareren.
+3. **De rol zit op de rij, niet in de sessie.** `currentAdmin()` leest de
+   beheerder elke keer opnieuw, dus een gewijzigde rol geldt meteen — ook in
+   een tabblad dat al open stond.
+
+### Waar klantgegevens heen mogen (AVG)
+
+Gekozen: *alleen wie het nodig heeft*. De bestellijst met naam, adres en
+mailadres is voor de eigenaar. De boekhouder ziet die gegevens alsnog — ze
+staan op de factuur — maar via zijn eigen scherm en met een grondslag erachter.
+Marketing ziet ze nergens.
+
+Dat is ook in de code zo: het dashboard **haalt** de bestellingen niet op voor
+wie ze niet mag zien. Afschermen in de weergave en niet ophalen zijn twee
+verschillende dingen.
+
+### Twee gaten die bij het testen bovenkwamen
+
+**De factuur-PDF toetste alleen of je ingelogd was.** `/beheer/facturen/
+<nummer>/pdf` is een route handler zonder layout eromheen, en factuurnummers
+lopen op (`2026-0001`). Een marketingmedewerker had de hele klantenlijst
+kunnen binnenhalen door te tellen, terwijl hij de facturenpagina niet eens mag
+openen. Nu 403.
+
+**`findAdminById()` haalde de nieuwe kolom niet op.** De SELECT noemt zijn
+kolommen met de hand, en `queryOne<AdminRow>` is een cast en geen controle —
+dus TypeScript zweeg. Iedereen werd stilletjes marketing, ook de eigenaar.
+GEMETEN: boekhouder en marketing gaven exact dezelfde antwoorden op alle zeven
+schermen. De terugval op de minste rechten was goed gekozen (fail closed), maar
+hij was stil; hij logt nu een fout.
+
+### Hoe het getest is
+
+Twee tijdelijke sessies rechtstreeks in de database gezet (geen wachtwoorden),
+alle schermen opgevraagd, daarna de rijen weer verwijderd:
+
+| Pad | Boekhouder | Marketing |
+|---|---|---|
+| `/beheer` | 200 | 200 |
+| `/beheer/facturen` | 200 | 307 |
+| `/beheer/prijzen` | 307 | 307 |
+| `/beheer/kortingen` | 307 | 200 |
+| `/beheer/kortingscodes` | 307 | 200 |
+| `/beheer/beoordelingen` | 307 | 200 |
+| `/beheer/beheerders` | 307 | 307 |
+| factuur-PDF | 200 | **403** |
+
+Plus een telling over élke Server Action onder `/beheer`: alle acties die een
+controle nodig hebben, hebben er één. De vier zonder controle zijn inloggen,
+uitloggen, de eerste beheerder aanmaken en een uitnodiging accepteren — die
+draaien per definitie vóór er een sessie is.
+
+---
+
 ## 13. Opslag: MySQL — VASTGESTELD 2026-09-16
 
 Tot nu toe stonden bestellingen als JSON-bestand en was dat verdedigbaar (#10):
@@ -1099,7 +1246,8 @@ aanzet:
   (`/category` zonder `carId` geeft ERR_MISSING_MANDATORY_PARAMETER), en een
   artikel dat via het zoekveld binnenkomt draagt helemaal geen categorie maar
   `zoekresultaat`. Dezelfde korting zou dus op de ene pagina wél gelden en op
-  de andere niet. Wat wél kan: de hele groep onderdelen, of één artikel.
+  de andere niet. Wat wél kan: de hele groep onderdelen, of één artikel —
+  **en sinds 2026-09-22 ook één soort onderdeel, zie hieronder.**
 - **Familie- en categorieacties op onderdelen komen niet in de carrousel.** Ze
   werken gewoon in de winkel — daar wordt per artikel gekeken — maar de
   aanbiedingenlijst redeneert andersom (van regel naar artikelen) en kan die
@@ -1108,6 +1256,47 @@ aanzet:
 De kortingsvlag ("-15%") staat er ook, zonder doorgestreepte van-prijs. Dat is
 geen tussenoplossing maar de wet: tot er dertig dagen prijsgeschiedenis is mag
 die tweede prijs er niet bij.
+
+### UITGEBREID 2026-09-22: korting op één soort onderdeel
+
+Gevraagd door de eigenaar: bij onderdelen zat er niets tussen "alle
+onderdelen" en "dit ene artikel", terwijl bij de prijsregels wél een soort te
+kiezen was. Dat gat is gedicht met dezelfde sleutel als daar — het
+TecDoc-soortnummer uit `src/lib/admin/part-kinds.ts` (#17).
+
+**Waarom dat wél mag en een categorie niet.** Het soortnummer staat op het
+artikel zelf en komt met elk artikel mee, ongeacht hoe de klant erop uitkomt.
+De hierboven beschreven fout — op de ene pagina wel, op de andere niet — kan
+hier dus niet optreden.
+
+GEMETEN 2026-09-22 met een tijdelijke actie van 12% op soort 7 (Oliefilter),
+naast een lopende actie van 3% op de hele groep onderdelen:
+
+| Waar | Artikel | Korting |
+|---|---|---|
+| Categoriepagina oliefilter | BOSCH F 026 407 143 | −8% |
+| Productpagina van datzelfde artikel | idem | −8% |
+| **Zoekresultaat, dus zonder categorie** | FEBI BILSTEIN Oliefilter 172139 | **−9%** |
+| Zoekresultaat, pakking oliefilterhuis | ELRING 763.260 | −3% |
+| Categoriepagina remschijf | — | −3% |
+
+Twee dingen staan daarmee vast. De korting volgt het artikel tot in het
+zoekresultaat (en dus tot in de winkelwagen, die langs dezelfde `partById`
+loopt), en hij raakt alleen het gekozen soort: een pakking vóór een
+oliefilterhuis houdt gewoon de 3% van de groep.
+
+Dat het geen 12% is maar 8 of 9 is geen fout maar de marge-ondergrens: op
+oliefilters staat een prijsregel van 10% opslag, en daar past hoogstens 9%
+korting in (#17). De actie wordt dus per artikel getrimd in plaats van
+geweigerd.
+
+**Wat het niet verandert:** zo'n actie komt nog steeds niet in de carrousel en
+krijgt geen doorgestreepte van-prijs. Beide om dezelfde reden als bij een
+familieactie op onderdelen — die catalogus is niet te bevragen zonder gekozen
+auto, dus de nachtelijke prijsmeting heeft er geen artikelen van. De
+kortingsvlag zelf staat er wel.
+
+De database kent de waarde sinds `db/migrations/0008_discount_kind.sql`.
 
 ### GEBOUWD 2026-09-17: de prijsmeting, en wat hij kost
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { categoryOptions } from "@/lib/admin/catalog-options";
-import { requireAdmin } from "@/lib/admin/session";
+import { partKindName } from "@/lib/admin/part-kinds";
+import { requirePermission } from "@/lib/admin/session";
 import { listRules } from "@/lib/discounts/rules";
 import { historySize, jobIsLate, lastJobRun } from "@/lib/prices/history";
 import { PRICE_JOB } from "@/lib/prices/snapshot";
@@ -18,6 +19,7 @@ const dateFormat = new Intl.DateTimeFormat("nl-NL", {
 
 const SCOPE_LABEL: Record<string, string> = {
   family: "productgroep",
+  kind: "soort onderdeel",
   category: "categorie",
   part: "artikel",
 };
@@ -42,7 +44,7 @@ function statusOf(rule: {
 }
 
 export default async function KortingenPage() {
-  await requireAdmin();
+  await requirePermission("kortingen");
   const [rules, categories, lastRun, size] = await Promise.all([
     listRules(),
     categoryOptions(),
@@ -69,8 +71,9 @@ export default async function KortingenPage() {
 
       <h1 className="mt-4 text-xl font-semibold tracking-tight">Kortingen</h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        Een actie geldt op een hele productgroep, één categorie of één artikel,
-        tussen twee datums. Je kunt hem vooruit plannen.
+        Een actie geldt op een hele productgroep, één soort onderdeel, één
+        categorie of één artikel, tussen twee datums. Je kunt hem vooruit
+        plannen.
       </p>
 
       <div className="mt-4 max-w-prose rounded-lg border border-border border-s-4 border-s-caro-orange bg-background p-4">
@@ -143,7 +146,9 @@ export default async function KortingenPage() {
                       <span className="text-foreground">
                         {rule.scope === "family"
                           ? (FAMILY_LABEL[rule.target] ?? rule.target)
-                          : (categoryNames.get(rule.target) ?? rule.target)}
+                          : rule.scope === "kind"
+                            ? (partKindName(rule.target) ?? rule.target)
+                            : (categoryNames.get(rule.target) ?? rule.target)}
                       </span>
                       {rule.scope !== "family" && rule.family && (
                         <span> in {FAMILY_LABEL[rule.family] ?? rule.family}</span>

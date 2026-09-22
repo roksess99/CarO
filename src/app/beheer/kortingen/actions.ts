@@ -2,11 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { logAction } from "@/lib/admin/audit";
-import { requireAdmin } from "@/lib/admin/session";
+import { requirePermission } from "@/lib/admin/session";
 import {
   categoryOptions,
   isKnownCategory,
 } from "@/lib/admin/catalog-options";
+import { isKnownPartKind, partKindName } from "@/lib/admin/part-kinds";
 import {
   PRODUCT_FAMILIES,
   type ProductFamily,
@@ -24,7 +25,7 @@ import {
 
 export type RuleResult = { error: string } | { ok: string } | undefined;
 
-const SCOPES: DiscountScope[] = ["family", "category", "part"];
+const SCOPES: DiscountScope[] = ["family", "kind", "category", "part"];
 
 /** 00:00 van de opgegeven dag, of 23:59:59 als het een einddatum is */
 function parseDay(value: string, endOfDay: boolean): Date | null {
@@ -53,7 +54,7 @@ export async function addRule(
   _previous: RuleResult,
   formData: FormData,
 ): Promise<RuleResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("kortingen");
 
   const label = String(formData.get("label") ?? "").trim();
   const family = String(formData.get("family") ?? "") as ProductFamily;
@@ -79,6 +80,19 @@ export async function addRule(
       return { error: "Die categorie bestaat niet in deze productgroep." };
     }
     target = chosen;
+  }
+
+  if (scope === "kind") {
+    // Het soortnummer hoort bij onderdelen en nergens anders: banden dragen
+    // het niet, dus zo'n regel zou stil op niets slaan.
+    if (family !== "onderdelen") {
+      return { error: "Een soort onderdeel kan alleen bij Onderdelen." };
+    }
+    if (!isKnownPartKind(chosen)) {
+      return { error: "Kies een soort onderdeel." };
+    }
+    target = chosen;
+    found = partKindName(chosen) ?? "";
   }
 
   if (scope === "part") {
@@ -135,7 +149,7 @@ export async function endRule(
   _previous: RuleResult,
   formData: FormData,
 ): Promise<RuleResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("kortingen");
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) return { error: "Onbekende actie." };
 
@@ -166,7 +180,7 @@ export type MeasureResult = { error: string } | { ok: string } | undefined;
  * verzoeken het kostte, want dat is precies waar de twijfel over ging.
  */
 export async function measureNow(): Promise<MeasureResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("kortingen");
 
   try {
     const result = await runPriceSnapshot({ force: true });

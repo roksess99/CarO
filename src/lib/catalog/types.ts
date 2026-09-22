@@ -78,6 +78,13 @@ export interface FilterGroup {
   label: string;
   /** Sleutel onder `filters.labels`; ontbreekt hij, dan wint `label` */
   labelKey?: string;
+  /**
+   * Hoeveel artikelen deze eigenschap niet hebben en dus wegvallen zodra je
+   * er op filtert. Alleen bij onderdelen: de fabrikant vult lang niet elk
+   * veld in, en zonder dit getal leest een gefilterde lijst als "meer is er
+   * niet" (@docs/DECISIONS.md #7).
+   */
+  missingCount?: number;
   options: FilterOption[];
 }
 

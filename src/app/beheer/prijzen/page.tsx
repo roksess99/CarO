@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { categoryOptions } from "@/lib/admin/catalog-options";
 import { partKindName } from "@/lib/admin/part-kinds";
-import { requireAdmin } from "@/lib/admin/session";
+import { requirePermission } from "@/lib/admin/session";
 import { listPriceRules } from "@/lib/prices/markup";
 import { maxDiscountPercent } from "@/lib/prices/markup-math";
 import { MarkupForm } from "./markup-form";
@@ -31,7 +31,7 @@ const FAMILY_LABEL: Record<string, string> = {
 };
 
 export default async function PrijzenPage() {
-  await requireAdmin();
+  await requirePermission("prijzen");
   const [rules, categories] = await Promise.all([
     listPriceRules(),
     categoryOptions(),

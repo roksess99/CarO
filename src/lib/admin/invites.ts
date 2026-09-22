@@ -3,6 +3,7 @@ import { execute, queryOne } from "@/lib/db/client";
 import { sendMail } from "@/lib/mail";
 import { SITE_URL } from "@/lib/site";
 import { emailKey, sha256 } from "./admins";
+import { isRole, ROLE_LABELS, type Role } from "./roles";
 
 /**
  * Een tweede beheerder uitnodigen.
@@ -25,6 +26,7 @@ const LIFETIME_MS = 48 * 60 * 60 * 1000;
 export interface PendingInvite {
   id: number;
   email: string;
+  role: Role;
 }
 
 /**
@@ -33,16 +35,19 @@ export interface PendingInvite {
  */
 export async function inviteAdmin(options: {
   email: string;
+  /** Verplicht: de kolom heeft geen standaardwaarde, zie migratie 0007 */
+  role: Role;
   invitedBy: number;
 }): Promise<{ link: string; mailed: boolean }> {
   const token = randomBytes(32).toString("base64url");
   const now = new Date();
 
   await execute(
-    `INSERT INTO admin_invites (email, token_hash, invited_by, created_at, expires_at)
-     VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO admin_invites (email, role, token_hash, invited_by, created_at, expires_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
     [
       emailKey(options.email),
+      options.role,
       sha256(token),
       options.invitedBy,
       now,
@@ -59,6 +64,8 @@ export async function inviteAdmin(options: {
       subject: "Je bent uitgenodigd voor het beheer van caroparts.nl",
       text: [
         "Je kunt een beheerdersaccount aanmaken voor de webshop van CarO.",
+        "",
+        `Je rol wordt: ${ROLE_LABELS[options.role].naam.toLowerCase()} — ${ROLE_LABELS[options.role].uitleg}`,
         "",
         "Open deze link en kies een wachtwoord:",
         link,
@@ -86,12 +93,18 @@ export async function inviteAdmin(options: {
 export async function findPendingInvite(
   token: string,
 ): Promise<PendingInvite | null> {
-  const row = await queryOne<{ id: number; email: string }>(
-    `SELECT id, email FROM admin_invites
+  const row = await queryOne<{ id: number; email: string; role: string }>(
+    `SELECT id, email, role FROM admin_invites
       WHERE token_hash = ? AND accepted_at IS NULL AND expires_at > ?`,
     [sha256(token), new Date()],
   );
-  return row ? { id: row.id, email: row.email } : null;
+  if (!row) return null;
+  return {
+    id: row.id,
+    email: row.email,
+    // Onleesbare rol: de minste rechten, nooit de meeste (zie roles.ts)
+    role: isRole(row.role) ? row.role : "marketing",
+  };
 }
 
 /**

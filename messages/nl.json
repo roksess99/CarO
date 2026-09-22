@@ -282,7 +282,8 @@
     },
     "loadMore": "Nog {count} producten laden",
     "loadMoreBusy": "Bezig met laden…",
-    "noResults": "Geen artikelen met deze combinatie van filters."
+    "noResults": "Geen artikelen met deze combinatie van filters.",
+    "missingValue": "{count, plural, one {# artikel heeft dit niet ingevuld en valt weg als je hier filtert} other {# artikelen hebben dit niet ingevuld en vallen weg als je hier filtert}}"
   },
   "localeSwitcher": {
     "label": "Taal",
@@ -292,7 +293,8 @@
   },
   "themeToggle": {
     "light": "Schakel naar licht thema",
-    "dark": "Schakel naar donker thema"
+    "dark": "Schakel naar donker thema",
+    "system": "Volg de instelling van je apparaat"
   },
   "home": {
     "metaTitle": "CarO — Auto-onderdelen",

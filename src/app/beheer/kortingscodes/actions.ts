@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { logAction } from "@/lib/admin/audit";
-import { requireAdmin } from "@/lib/admin/session";
+import { requirePermission } from "@/lib/admin/session";
 import {
   createCode,
   findCode,
@@ -32,7 +32,7 @@ export async function addCode(
   _previous: CodeResult,
   formData: FormData,
 ): Promise<CodeResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("kortingen");
 
   const code = normalizeCode(String(formData.get("code") ?? ""));
   const percent = Number(formData.get("percent"));
@@ -100,7 +100,7 @@ export async function endCode(
   _previous: CodeResult,
   formData: FormData,
 ): Promise<CodeResult> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("kortingen");
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) return { error: "Onbekende code." };
 

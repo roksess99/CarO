@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/admin/session";
+import { requirePermission } from "@/lib/admin/session";
 import { listCodes } from "@/lib/discounts/codes";
 import { formatPriceCents } from "@/lib/format";
 import { CodeForm } from "./code-form";
@@ -29,7 +29,7 @@ function statusOf(code: {
 }
 
 export default async function KortingscodesPage() {
-  await requireAdmin();
+  await requirePermission("kortingen");
   const codes = await listCodes();
 
   return (

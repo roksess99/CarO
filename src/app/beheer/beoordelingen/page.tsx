@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/admin/session";
+import { requirePermission } from "@/lib/admin/session";
 import { allReviews, reviewSummary } from "@/lib/reviews/store";
 import {
   HideForm,
@@ -21,7 +21,7 @@ function score(value: number | null): string {
 }
 
 export default async function BeoordelingenPage() {
-  await requireAdmin();
+  await requirePermission("beoordelingen");
   const [reviews, summary] = await Promise.all([allReviews(), reviewSummary()]);
 
   const waiting = reviews.filter((review) => !review.submittedAt).length;

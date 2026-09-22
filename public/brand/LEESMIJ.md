@@ -9,6 +9,59 @@ alleen wat er in deze map staat en hoe het gemaakt is.
 | `caro-mark-line.svg` | Open lijnversie. **Verplicht onder 40px** — de volle vulling loopt dan dicht |
 | `favicon.svg` | Browsertabblad |
 | `caro-lockup-email.png` | Het lockup (CAR + moer) voor de bevestigingsmail |
+| `caro-profiel*.png` / `.svg` | Profielfoto voor social media — zie hieronder |
+| `caro-qr*.png` / `.svg` | QR-code naar caroparts.nl — zie hieronder |
+
+De bestanden met `caro-profiel` en `caro-qr` in de naam zijn **gegenereerd**.
+Pas ze niet met de hand aan; draai `pnpm brand:build` na een wijziging in
+`scripts/make-brand-assets.mjs`.
+
+## Profielfoto voor social media
+
+| Bestand | Waarvoor |
+|---|---|
+| `caro-profiel-1024.png` | LinkedIn, Facebook, alles wat groot wil |
+| `caro-profiel-512.png` | De meeste platformen, en als algemene versie |
+| `caro-profiel-180.png` | Kleine weergaven en app-pictogrammen |
+| `caro-profiel-licht-512.png` | Voor een plek die om een lichte achtergrond vraagt |
+| `caro-profiel.svg` | De bron, als er ooit een ander formaat nodig is |
+
+**Alleen de moer, met ruime marge.** Dat is geen smaak maar noodzaak: vrijwel
+elk platform snijdt een vierkante foto tot een cirkel, en de hoeken van een
+beeldvullend logo verdwijnen daarin. De moer staat daarom binnen de
+ingeschreven cirkel, met de vrije ruimte die docs/BRAND.md vraagt.
+
+**Geen woordmerk.** "CAR" plus de moer is op 32 pixels — het formaat waarop
+een profielfoto in een tijdlijn staat — een vlek. De moer alleen is op dat
+formaat nog herkenbaar, en dat is precies waar docs/BRAND.md de losse moer
+voor aanwijst.
+
+**Donker is de standaard.** Oranje op antraciet is het merkaccent uit de
+huisstijl en valt op in een lichte tijdlijn. De lichte versie is er voor een
+plek die een witte achtergrond voorschrijft.
+
+## QR-code
+
+| Bestand | Waarvoor |
+|---|---|
+| `caro-qr.png` (2048×2048) | Drukwerk: sticker, doos, bon, advertentie |
+| `caro-qr.svg` | Vector, voor een drukker of groot formaat |
+| `caro-qr-kaal.png` / `.svg` | Zonder logo in het midden — voor heel klein drukwerk |
+
+Wijst naar `https://caroparts.nl`, foutcorrectieniveau H.
+
+**GECONTROLEERD door hem te laten scannen** (2026-09-22), op vier formaten:
+1200, 600, 300 en 150 pixels. Alle vier gaven `https://caroparts.nl` terug.
+Dat is de enige controle die telt — een QR die er goed uitziet kan
+onleesbaar zijn, en dat merk je pas als het drukwerk er ligt.
+
+**De modules blijven antraciet op wit.** Oranje zou mooier staan, maar
+`#FF6A13` haalt 2,87:1 op wit en dat is te weinig voor een scanner in een
+donkere garage. Het oranje zit in de moer in het midden, waar de
+foutcorrectie hem opvangt.
+
+Drukregels: minimaal 2 cm breed op papier, de witte rand eromheen laten staan
+(die hoort bij de code), en niet op een donkere ondergrond plakken.
 
 ## Waarom het lockup voor de mail een PNG is
 

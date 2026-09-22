@@ -186,12 +186,12 @@ function Slide({
               // voorrang, de rest pas als de klant doorschuift.
               priority={first}
               sizes="(min-width: 1024px) 14rem, (min-width: 640px) 40vw, 90vw"
-              className="aspect-square w-full rounded-lg bg-surface object-contain"
+              className="aspect-4/3 w-full rounded-lg bg-surface object-contain sm:aspect-square"
             />
           ) : (
             <ProductImagePlaceholder
               label={tProduct("noImage")}
-              className="aspect-square rounded-lg opacity-60"
+              className="aspect-4/3 rounded-lg opacity-60 sm:aspect-square"
             />
           )}
           <DiscountBadge

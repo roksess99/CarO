@@ -45,21 +45,30 @@ export function ProductCard({ part }: { part: Part }) {
       />
       <Link href={href} tabIndex={-1} aria-hidden="true">
         {/* object-contain: een band is rond en mag niet bijgesneden worden.
-            sizes volgt het grid (1 kolom mobiel → 4 op desktop), anders laadt
-            Next voor elke kaart een afbeelding op volle breedte. */}
+
+            **Op een telefoon 4:3, daarboven vierkant.** GEMETEN 2026-09-21 op
+            375px: een vierkante foto was 162px hoog en daarmee 39% van een
+            kaart van 412px — er pasten precies twee kaarten op een scherm, en
+            klanten meldden dat de foto's te groot waren. Met 4:3 wordt de foto
+            122px en de kaart 371px. Vanaf `sm` is er ruimte zat en blijft
+            vierkant staan, want dat toont een band het mooist.
+
+            sizes volgt het grid (2 kolommen mobiel → 4 op desktop), anders
+            laadt Next voor elke kaart een afbeelding op volle breedte. Mobiel
+            is een kaart gemeten 162 van 375px, dus 45vw en geen 50. */}
         {part.imageUrl ? (
           <Image
             src={part.imageUrl}
             alt=""
             width={400}
             height={400}
-            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
-            className="aspect-square w-full bg-surface object-contain transition-opacity group-hover:opacity-90"
+            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 45vw"
+            className="aspect-4/3 w-full bg-surface object-contain transition-opacity group-hover:opacity-90 sm:aspect-square"
           />
         ) : (
           <ProductImagePlaceholder
             label={t("noImage")}
-            className="aspect-square opacity-60 transition-opacity group-hover:opacity-100"
+            className="aspect-4/3 opacity-60 transition-opacity group-hover:opacity-100 sm:aspect-square"
           />
         )}
       </Link>

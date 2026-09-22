@@ -12,9 +12,23 @@ import type { ProductFamily } from "@/lib/catalog/families";
  *
  * **Stoppen is niet weggooien.** Een afgelopen actie blijft staan met een
  * einddatum, anders verdwijnt waaróm een oude bestelling die prijs had.
+ *
+ * ## Waarom er vier soorten doelen zijn en niet drie
+ *
+ * Bij banden, velgen en toebehoren draagt elk artikel zijn categorie, dus
+ * daar kan een actie op een categorieslug. **Bij onderdelen kan dat niet**:
+ * die categorieboom hangt aan een auto, en een artikel dat via het zoekveld
+ * binnenkomt draagt helemaal geen categorie (docs/DECISIONS.md #7). Daar
+ * bleef dus alleen "alle onderdelen" of "dit ene artikel" over.
+ *
+ * `kind` vult dat gat, met dezelfde sleutel als de prijsregels: het
+ * TecDoc-soortnummer dat de leverancier op het artikel zelf meelevert en dat
+ * dus overal hetzelfde is — ook bij zoeken en bij het afrekenen. Zie
+ * src/lib/admin/part-kinds.ts voor de lijst en lib/prices/markup.ts voor de
+ * meting waar die nummers vandaan komen.
  */
 
-export type DiscountScope = "part" | "category" | "family";
+export type DiscountScope = "part" | "kind" | "category" | "family";
 
 export interface DiscountRule {
   id: number;
@@ -128,6 +142,12 @@ export interface DiscountSet {
     id: string;
     family: ProductFamily;
     categorySlug: string;
+    /**
+     * TecDoc-soortnummers van het artikel. Alleen onderdelen hebben ze, en
+     * een artikel kan er meerdere dragen — motorolie komt terug als
+     * [1862, 3224].
+     */
+    kinds?: ReadonlyArray<string>;
   }): number;
 }
 
@@ -138,6 +158,7 @@ let cache: { at: number; set: DiscountSet; rules: DiscountRule[] } | null = null
 
 function build(rules: DiscountRule[]): DiscountSet {
   const byPart = new Map<string, number>();
+  const byKind = new Map<string, number>();
   const byCategory = new Map<string, number>();
   const byFamily = new Map<string, number>();
 
@@ -145,9 +166,11 @@ function build(rules: DiscountRule[]): DiscountSet {
     const target =
       rule.scope === "part"
         ? byPart
-        : rule.scope === "category"
-          ? byCategory
-          : byFamily;
+        : rule.scope === "kind"
+          ? byKind
+          : rule.scope === "category"
+            ? byCategory
+            : byFamily;
     // Lopen er twee acties op hetzelfde artikel, dan wint de hoogste. Stapelen
     // doen we niet: twee kortingen over elkaar heen is voor niemand na te
     // rekenen, en de ondergrens zou het verschil toch opeten.
@@ -157,8 +180,18 @@ function build(rules: DiscountRule[]): DiscountSet {
 
   return {
     percentFor(part) {
+      // Draagt een artikel meerdere soorten, dan telt de hoogste korting.
+      // Dat is dezelfde kant als hierboven: van twee regels die passen wint
+      // die het gunstigst is voor de klant, want de getoonde prijs en de
+      // afrekenprijs komen uit deze ene functie.
+      let kind = 0;
+      for (const id of part.kinds ?? []) {
+        kind = Math.max(kind, byKind.get(id) ?? 0);
+      }
+
       return Math.max(
         byPart.get(part.id) ?? 0,
+        kind,
         byCategory.get(part.categorySlug) ?? 0,
         byFamily.get(part.family) ?? 0,
       );

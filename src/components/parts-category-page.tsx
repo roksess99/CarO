@@ -14,14 +14,12 @@ import {
   FILTER_PARAM,
   toFilterParam,
 } from "@/lib/catalog/filter-params";
-import { groupSupportsFilters } from "@/lib/catalog/part-filters";
 import type { SelectedFilters } from "@/lib/catalog/types";
 import {
   filteredPartsInGroup,
   groupIdFromSlug,
   partGroupById,
   partLeafGroups,
-  partsInGroup,
 } from "@/lib/catalog/wearparts-provider";
 import { breadcrumbJsonLd } from "@/lib/site";
 
@@ -115,33 +113,19 @@ export async function PartsCategoryPage({
       ? undefined
       : current.defaultGenericArticleId;
 
-  // Filteren op eigenschap staat alleen aan waar de leverancier het veld bij
-  // vrijwel elk artikel invult — anders verbergt een filter artikelen die wél
-  // passen. Zie part-filters.ts voor de meting achter die grens.
-  const filterable = showArticles && groupSupportsFilters(groupId);
-
+  // Welke filters er verschijnen bepaalt de data, niet een lijst met groepen
+  // (winkelkeuze 2026-09-21, @docs/DECISIONS.md #7). Draagt een categorie
+  // niets bruikbaars, dan geeft dit gewoon geen paneel terug.
   const { parts, total, groups: filterGroups } = showArticles
-    ? filterable
-      ? await filteredPartsInGroup({
-          carId,
-          categoryId: groupId,
-          categorySlug,
-          categoryName: name,
-          genericArticleId: typeFilter,
-          filters,
-          limit,
-        })
-      : {
-          ...(await partsInGroup({
-            carId,
-            categoryId: groupId,
-            categorySlug,
-            categoryName: name,
-            genericArticleId: typeFilter,
-            limit,
-          })),
-          groups: [],
-        }
+    ? await filteredPartsInGroup({
+        carId,
+        categoryId: groupId,
+        categorySlug,
+        categoryName: name,
+        genericArticleId: typeFilter,
+        filters,
+        limit,
+      })
     : { parts: [], total: 0, groups: [] };
 
   const activeFilters = countActiveFilters(filters);

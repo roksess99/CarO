@@ -1,3 +1,4 @@
+import { can } from "@/lib/admin/roles";
 import { currentAdmin } from "@/lib/admin/session";
 import { renderOrderPdf } from "@/lib/checkout/order-pdf";
 import { findInvoice } from "@/lib/invoices/store";
@@ -11,13 +12,23 @@ import { findInvoice } from "@/lib/invoices/store";
  *
  * De controle op de beheerder staat hier en niet in een layout: een route
  * handler heeft er geen, en is een eigen ingang naar klantgegevens.
+ *
+ * **En hij toetst het recht, niet alleen of iemand ingelogd is.** Op een
+ * factuur staan naam, adres en mailadres van een klant, en de nummers lopen op
+ * (`2026-0001`) — dus raadbaar. Zonder deze regel kon een marketingmedewerker
+ * de hele klantenlijst binnenhalen door te tellen, terwijl hij de
+ * facturenpagina niet eens mag openen.
  */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ number: string }> },
 ) {
-  if (!(await currentAdmin())) {
+  const admin = await currentAdmin();
+  if (!admin) {
     return new Response("Niet toegestaan", { status: 401 });
+  }
+  if (!can(admin.role, "facturen")) {
+    return new Response("Geen toegang", { status: 403 });
   }
 
   const { number } = await params;

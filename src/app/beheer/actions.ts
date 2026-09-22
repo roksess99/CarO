@@ -16,6 +16,7 @@ import {
   clearAttempts,
   recordFailure,
 } from "@/lib/admin/rate-limit";
+import { ROLE_HOME } from "@/lib/admin/roles";
 import { createSession, destroySession } from "@/lib/admin/session";
 import { fromBase32, openSecret, verifyCode } from "@/lib/admin/totp";
 
@@ -96,7 +97,9 @@ export async function signIn(
   clearAttempts(key);
   await createSession(admin.id);
   await markLogin(admin.id);
-  redirect("/beheer");
+  // Meteen naar het scherm waar deze rol voor is. Een boekhouder op een
+  // dashboard zonder cijfers laten landen is onnodig verwarrend.
+  redirect(ROLE_HOME[admin.role]);
 }
 
 export async function signOut(): Promise<void> {
@@ -168,6 +171,9 @@ export async function completeSetup(
   const { recoveryCodes } = await createAdmin({
     email,
     password,
+    // De eerste beheerder is altijd eigenaar: er is nog niemand die hem
+    // rechten kan geven, dus hij moet er zelf alles mee kunnen.
+    role: "eigenaar",
     totpSecret: secret,
     // De code is zojuist gecontroleerd, dus de app staat aantoonbaar goed
     totpConfirmed: true,

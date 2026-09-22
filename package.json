@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "brand:build": "node scripts/make-brand-assets.mjs",
     "db:check": "node scripts/check-db.mjs",
     "mail:check": "node scripts/check-mail.mjs",
     "mollie:check": "node scripts/check-mollie.mjs",

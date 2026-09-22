@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { execute, queryOne } from "@/lib/db/client";
 import { type Admin, findAdminById, sha256 } from "./admins";
+import { can, type Permission } from "./roles";
 
 /**
  * Sessies van het beheerpaneel.
@@ -102,6 +103,30 @@ export async function currentAdmin(): Promise<Admin | null> {
 export async function requireAdmin(): Promise<Admin> {
   const admin = await currentAdmin();
   if (!admin) redirect("/beheer/login");
+  return admin;
+}
+
+/**
+ * Zoals `requireAdmin()`, maar eist ook een recht.
+ *
+ * **Roep dit aan in de pagina én in elke Server Action van dat scherm.** Een
+ * pagina afschermen is niet genoeg: een actie is een eigen ingang die ook
+ * draait als de pagina nooit geopend is, en een `<form>` is met de hand na te
+ * bouwen. Dat gold al voor `requireAdmin()` en geldt hier net zo hard — het
+ * verschil is dat een rechtencontrole die je vergeet er van buitenaf
+ * hetzelfde uitziet als eentje die werkt.
+ *
+ * Wie het recht mist gaat naar het dashboard met een uitleg, niet naar de
+ * inlogpagina: hij ís ingelogd, hij hoort hier alleen niet. Doorsturen naar
+ * inloggen zou hem laten denken dat zijn sessie verlopen was.
+ */
+export async function requirePermission(
+  permission: Permission,
+): Promise<Admin> {
+  const admin = await requireAdmin();
+  if (!can(admin.role, permission)) {
+    redirect(`/beheer?geen-toegang=${permission}`);
+  }
   return admin;
 }
 
