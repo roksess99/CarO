@@ -16,10 +16,13 @@ import { formatPriceCents } from "@/lib/format";
  *
  * Drie dingen zitten er met opzet in en mogen er niet uit:
  *
- * - **Een pauzeknop.** WCAG 2.2.2 eist dat bewegende inhoud die langer dan vijf
- *   seconden doorloopt te stoppen is. Hij pauzeert ook vanzelf zodra de muis
- *   erop staat of het toetsenbord erin komt, en bij `prefers-reduced-motion`
- *   beweegt hij helemaal niet.
+ * - **Een pauzemogelijkheid.** WCAG 2.2.2 eist dat bewegende inhoud die langer
+ *   dan vijf seconden doorloopt te stoppen is. De eigenaar wil die knop niet in
+ *   beeld (2026-09-25), dus staat hij er nog wél maar onzichtbaar: hij springt
+ *   tevoorschijn zodra het toetsenbord hem bereikt en verdwijnt weer. Voor de
+ *   muisgebruiker pauzeert de carrousel vanzelf bij hover, en bij
+ *   `prefers-reduced-motion` beweegt hij helemaal niet. Zo is de eis vervuld
+ *   zonder dat er een knop op de homepage staat.
  * - **Alle dia's staan in de HTML.** Dit is het grootste beeld van de pagina en
  *   dus de LCP; het eerste artikel moet meekomen met het antwoord van de
  *   server, niet pas door JavaScript worden opgehaald.
@@ -80,12 +83,20 @@ export function OfferCarousel({ parts }: { parts: Part[] }) {
       </div>
 
       {total > 1 && (
-        <div className="flex items-center gap-3 border-t border-border px-4 py-3">
+        <div className="relative flex items-center gap-3 border-t border-border px-4 py-3">
+          {/* Onzichtbaar tot hij focus krijgt. Twee dingen die hier misgingen
+              en waarom het zo staat (GEMETEN 2026-09-25 in de browser):
+              `sr-only` + `focus:not-sr-only` werkt niet — Tailwind zet
+              `.sr-only` ná `.not-sr-only`, dus hij bleef 1×1. En `size-0`
+              werkt evenmin: een element van nul bij nul kan in Chrome
+              helemaal geen focus krijgen, en dan is de eis van WCAG 2.2.2
+              niet meer vervuld. Absoluut gepositioneerd houdt hem op formaat
+              (dus bereikbaar) zonder ruimte in te nemen. */}
           <button
             type="button"
             onClick={() => setPlaying((on) => !on)}
             aria-pressed={!playing}
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-border text-foreground hover:bg-surface"
+            className="pointer-events-none absolute start-4 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-md border border-border bg-background text-foreground opacity-0 focus:pointer-events-auto focus:opacity-100"
             title={playing ? t("offersPause") : t("offersPlay")}
           >
             <span className="sr-only">

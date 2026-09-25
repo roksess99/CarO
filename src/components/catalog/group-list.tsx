@@ -69,7 +69,7 @@ export function GroupList({
                   eindgroepen (group-icon.tsx). Oranje, zodat de rij ook op
                   een telefoon in één oogopslag te scannen is. */}
               <GroupIcon
-                groupId={group.id}
+                iconKey={group.quickKey}
                 className="size-6 shrink-0 text-caro-orange"
               />
               <span className="flex-1 text-sm leading-snug font-semibold">

@@ -43,6 +43,25 @@ Remblokken, ABS-wielsensoren, Hoofdremcilinder…).
 Hiermee is het visuele mega-menu met iconen mogelijk — de iconen komen van de
 leverancier, we hoeven ze niet zelf te tekenen.
 
+#### `assemblyGroupNodeId` is geen sleutel — GEMETEN 2026-09-25
+
+Het nummer van een groep is stabiel **binnen één versie van de boom**, niet
+over de tijd. Elf nummers die in september waren vastgelegd wezen nu tien keer
+naar de groep ernaast: 543 was "Oliefilter" en is nu de hoofdgroep "Filter",
+653 was "Batterij Accu" en is nu een subgroep die "Onderdelen" heet. De
+nummers zijn wél voor élke auto gelijk — het verschil zit in de tijd, niet in
+het voertuig.
+
+Dat is stil kapot: er komt geen fout, de link werkt, hij wijst alleen naar een
+ander onderdeel. En doordat de boom een dag gecacht staat, klopt het scherm op
+een auto die je net bezocht hebt en niet op een verse.
+
+**Bewaar dus geen nodeId's in code.** Zoek de groep op naam op in de boom die
+je toch al ophaalt (`src/lib/catalog/quick-links.ts`). Namen zijn wél stabiel;
+ze komen van het NL-platform. Wat je wél mag vastleggen is
+`defaultGenericArticleId` — dat is het TecDoc-soortnummer van het artikel en
+staat los van de boom.
+
 ### Zoeken op naam — GEMETEN
 
 `GET /categoryBySearchString?carId=…&searchPattern=remschijf` → 10 groepen.

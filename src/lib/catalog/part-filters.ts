@@ -296,6 +296,18 @@ function optionLabel(def: PartFilterDef, value: string): string {
  * Per groep tellen we op de artikelen die aan de **andere** groepen voldoen.
  * Anders zou de laatste keuze binnen een groep alle andere opties daar op nul
  * zetten en kon de klant er niet meer bijkiezen.
+ *
+ * **Een groep die de categorie draagt blijft staan, ook als er nog maar één
+ * waarde op uitkomt.** GEVONDEN 2026-09-25 door de eigenaar: op remschijven
+ * verdwenen Remschijftype, Oppervlakte en Inbouwplaats zodra je een merk
+ * aanklikte. Dat kwam door een ondergrens van twee opties die hier óók gold,
+ * dus ná het filteren: heeft het gekozen merk maar één inbouwplaats, dan viel
+ * het hele filter weg. Het paneel sprong daardoor in elkaar en de klant kon
+ * niet meer zien waar hij op gefilterd had.
+ *
+ * Die ondergrens hoort thuis bij `usable()`, over de hele categorie, en daar
+ * staat hij ook. Hier geldt alleen nog: is er niets meer te kiezen, dan is er
+ * geen groep.
  */
 export function partFilterGroups(
   articles: ReadonlyArray<WearpartsArticle>,
@@ -321,8 +333,13 @@ export function partFilterGroups(
       counts.set(value, (counts.get(value) ?? 0) + 1);
     }
 
-    // Eén optie filtert niets: elk artikel valt er toch al onder.
-    if (counts.size < MIN_OPTIONS) continue;
+    // Wat de klant zelf aanklikte hoort er altijd bij te staan, ook als er
+    // niets meer op uitkomt. Anders is de keuze niet meer terug te draaien
+    // zonder het hele filter te wissen.
+    for (const value of selected[def.key] ?? []) {
+      if (!counts.has(value)) counts.set(value, 0);
+    }
+    if (counts.size === 0) continue;
 
     groups.push({
       key: def.key,
