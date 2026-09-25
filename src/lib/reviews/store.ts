@@ -168,6 +168,79 @@ export async function invitableOrders(now: Date = new Date()): Promise<PendingIn
   );
 }
 
+export interface WaitingOrder extends PendingInvite {
+  /** Wanneer de uitnodiging vanzelf de deur uit zou gaan */
+  dueAt: Date;
+  paidAt: Date;
+  /**
+   * 1 als die datum al geweest is. Uit de query en niet uit een `Date.now()`
+   * in de weergave: de React-compiler weigert een onzuivere aanroep tijdens
+   * het renderen, en terecht — dan zou de server iets anders tekenen dan de
+   * browser.
+   */
+  isDue: number;
+}
+
+/**
+ * Betaalde bestellingen die nog geen uitnodiging hebben — **ook de
+ * bestellingen waarvan de termijn nog niet om is.**
+ *
+ * Dat verschil is het hele punt van deze functie. De dagelijkse taak wacht
+ * zeven dagen na de inkoop of veertien na de betaling, want de winkel hoort
+ * niet te vragen hoe een pakket beviel dat nog onderweg is. Maar de beheerder
+ * wéét soms dat het bezorgd is, en dan moet hij niet hoeven wachten. Wat hij
+ * daarvoor nodig heeft is deze lijst plus de datum waarop het vanzelf zou
+ * gebeuren, zodat hij ziet dat hij vooruitloopt en niet iets repareert.
+ */
+export async function ordersAwaitingInvite(
+  limit = 25,
+  now: Date = new Date(),
+): Promise<WaitingOrder[]> {
+  return query<WaitingOrder>(
+    `SELECT o.reference, o.email, o.first_name AS firstName, o.locale,
+            o.paid_at AS paidAt,
+            COALESCE(
+              DATE_ADD(o.purchased_at, INTERVAL 7 DAY),
+              DATE_ADD(o.paid_at, INTERVAL 14 DAY)
+            ) AS dueAt,
+            COALESCE(
+              DATE_ADD(o.purchased_at, INTERVAL 7 DAY),
+              DATE_ADD(o.paid_at, INTERVAL 14 DAY)
+            ) <= ? AS isDue
+       FROM orders o
+       LEFT JOIN reviews r ON r.order_reference = o.reference
+      WHERE o.status = 'paid'
+        AND o.paid_at IS NOT NULL
+        AND r.id IS NULL
+      ORDER BY o.paid_at DESC
+      LIMIT ?`,
+    [now, limit],
+  );
+}
+
+/**
+ * Eén bestelling opzoeken om met de hand uit te nodigen.
+ *
+ * Dezelfde voorwaarden als hierboven, mínus de wachttermijn: betaald, en er
+ * staat nog geen uitnodiging. Die twee blijven wél staan — een onbetaalde
+ * bestelling beoordelen kan niet, en twee keer vragen doen we nooit.
+ */
+export async function findOrderAwaitingInvite(
+  reference: string,
+): Promise<PendingInvite | null> {
+  const row = await queryOne<PendingInvite>(
+    `SELECT o.reference, o.email, o.first_name AS firstName, o.locale
+       FROM orders o
+       LEFT JOIN reviews r ON r.order_reference = o.reference
+      WHERE o.reference = ?
+        AND o.status = 'paid'
+        AND o.paid_at IS NOT NULL
+        AND r.id IS NULL`,
+    [reference],
+  );
+  return row ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // Invullen
 // ---------------------------------------------------------------------------

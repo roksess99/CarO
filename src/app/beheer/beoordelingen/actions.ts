@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { logAction } from "@/lib/admin/audit";
 import { requirePermission } from "@/lib/admin/session";
-import { runReviewInvites } from "@/lib/reviews/job";
+import { inviteOrderNow, runReviewInvites } from "@/lib/reviews/job";
 import {
   findReview,
   hideReview,
@@ -125,4 +125,54 @@ export async function inviteNow(
         ? "Geen bestellingen die aan een uitnodiging toe zijn."
         : `${result.invited} uitnodiging${result.invited === 1 ? "" : "en"} verstuurd.`,
   };
+}
+
+/**
+ * Eén bestelling nu uitnodigen, zonder de wachttermijn af te wachten.
+ *
+ * **Waarom deze knop er is.** "Nu uitnodigen" hiernaast slaat alleen de
+ * dagclaim over, niet het wachten: hij verstuurt wat tóch al aan de beurt
+ * was. GEVONDEN 2026-09-25 doordat de eigenaar erop drukte en er niets
+ * gebeurde — zijn twee betaalde bestellingen zijn pas op 4 en 8 oktober aan
+ * de beurt, dus de knop meldde terecht "geen bestellingen". Alleen deed hij
+ * daarmee niet wat docs/DECISIONS.md #18 belooft: *"een knop Nu uitnodigen
+ * voor als hij weet dat het bezorgd is."*
+ *
+ * Per bestelling en niet in bulk, want dat is precies wat die belofte zegt:
+ * de beheerder weet van déze zending dat hij er is.
+ */
+export async function inviteOrder(
+  _previous: ReviewAdminResult,
+  formData: FormData,
+): Promise<ReviewAdminResult> {
+  const admin = await requirePermission("beoordelingen");
+  const reference = String(formData.get("reference") ?? "").trim();
+  if (!reference) return { error: "Onbekende bestelling." };
+
+  let outcome: Awaited<ReturnType<typeof inviteOrderNow>>;
+  try {
+    outcome = await inviteOrderNow(reference);
+  } catch (error) {
+    console.error("Uitnodiging versturen mislukt:", error);
+    return { error: "De mail is niet verstuurd. Kijk in de serverlog." };
+  }
+
+  if (outcome === "geen-smtp") {
+    return { error: "SMTP staat niet ingesteld; er is niets verstuurd." };
+  }
+  if (outcome === "onbekend") {
+    return { error: "Die bestelling is niet betaald of staat er niet meer." };
+  }
+  if (outcome === "al-uitgenodigd") {
+    return { error: "Voor die bestelling is al een uitnodiging verstuurd." };
+  }
+
+  await logAction({
+    adminId: admin.id,
+    action: "beoordeling.uitgenodigd",
+    subject: reference,
+    detail: { invited: 1, handmatig: true },
+  });
+  revalidatePath("/beheer/beoordelingen");
+  return { ok: `Uitnodiging verstuurd voor ${reference}.` };
 }

@@ -1611,6 +1611,36 @@ geldige link kun je dus geen cijfer plakken op iets wat je nooit kocht.
 nalezen. Dat stond al als regel in `.claude/rules/frontend.md` en blijft
 staan; alleen de reden om hem leeg te laten vervalt.
 
+### GEVONDEN 2026-09-25: "Nu uitnodigen" kon niet uitnodigen
+
+De eigenaar drukte op de knop en er gebeurde niets. Nagelopen in de database:
+de knop had gedraaid en netjes `invited: 0, errors: 0` gemeld. Dat klopte ook
+— zijn twee betaalde bestellingen (20 en 24 september, geen `purchased_at`)
+zijn pas op 4 en 8 oktober aan de beurt.
+
+**Maar dat is niet wat de knop belooft.** Hierboven staat: *"In het paneel zit
+een knop Nu uitnodigen voor als hij weet dat het bezorgd is."* Wat hij deed
+was alleen de **dagclaim** overslaan (`force: true`), niet de wachttermijn van
+zeven of veertien dagen. Hij verstuurde dus wat tóch al aan de beurt was, en
+dat is precies het geval waarin je niet hoeft te drukken.
+
+Rechtgezet met twee dingen op de beoordelingenpagina:
+
+1. **Een lijst "nog niet uitgenodigd"** met per bestelling de datum waarop het
+   vanzelf gebeurt. Alleen al daarmee is het antwoord zichtbaar in plaats van
+   een stille nul.
+2. **Een knop per bestelling** die de wachttermijn wél overslaat, met een
+   bevestiging ertussen. Per bestelling en niet in bulk, want de belofte gaat
+   over déze zending waarvan de beheerder weet dat hij bezorgd is.
+
+Wat er niet verandert: betaald zijn, nog geen uitnodiging hebben, en de unieke
+sleutel die een tweede mail tegenhoudt. Die drie bewaakt de handmatige weg
+net zo goed als de dagelijkse taak.
+
+**De lijst toont geen naam en geen mailadres**, alleen het ordernummer. Deze
+pagina mag ook een marketingmedewerker openen en klantgegevens horen daar niet
+(#19).
+
 ### Wat er niet in zit
 
 - **Geen mailinglijst en geen uitschrijflink.** Dit is één bericht per
