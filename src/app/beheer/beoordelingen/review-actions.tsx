@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import {
   hide,
   inviteNow,
+  inviteOrder,
   postReply,
   type ReviewAdminResult,
   unhide,
@@ -15,6 +16,62 @@ const feedback = (state: ReviewAdminResult) => (
     {state && "ok" in state && <span className="text-muted">{state.ok}</span>}
   </span>
 );
+
+/**
+ * Eén bestelling nu uitnodigen, vóór de termijn om is.
+ *
+ * Met een bevestiging ertussen. Dit verstuurt een echte mail naar een echte
+ * klant en kan niet teruggedraaid worden: er gaat er precies één per
+ * bestelling uit, dus een misklik kost die klant zijn uitnodiging.
+ */
+export function InviteOrderButton({ reference }: { reference: string }) {
+  const [state, action, pending] = useActionState<ReviewAdminResult, FormData>(
+    inviteOrder,
+    undefined,
+  );
+  const [asking, setAsking] = useState(false);
+
+  if (state && "ok" in state) {
+    return <span className="text-sm text-muted">{state.ok}</span>;
+  }
+
+  return (
+    <form
+      action={action}
+      className="flex flex-wrap items-center justify-end gap-2"
+    >
+      <input type="hidden" name="reference" value={reference} />
+      {asking ? (
+        <>
+          <span className="text-sm text-muted">Mail nu versturen?</span>
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-md bg-caro-orange px-3 py-1.5 text-sm font-semibold text-caro-ink disabled:opacity-60"
+          >
+            {pending ? "Bezig…" : "Ja, versturen"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setAsking(false)}
+            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-surface"
+          >
+            Nee
+          </button>
+        </>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAsking(true)}
+          className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-surface"
+        >
+          Nu uitnodigen
+        </button>
+      )}
+      {feedback(state)}
+    </form>
+  );
+}
 
 /** Uitnodigingen nu versturen, zonder te wachten op de dagelijkse taak */
 export function InviteButton() {

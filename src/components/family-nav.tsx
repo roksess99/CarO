@@ -5,14 +5,14 @@ import { useVehicle } from "@/components/vehicle/use-vehicle";
 import { useEffect, useRef, useState } from "react";
 import {
   quickLinkChildrenAction,
-  type QuickLinkChild,
+  type QuickLinkMenu,
 } from "@/components/catalog/actions";
 import {
   familySlug,
   PRODUCT_FAMILIES,
   usesVehicleCatalog,
 } from "@/lib/catalog/families";
-import { MAINTENANCE_LINKS } from "@/lib/catalog/quick-links";
+import { MAINTENANCE_GROUPS } from "@/lib/catalog/quick-links";
 import { Link } from "@/i18n/navigation";
 
 /**
@@ -40,18 +40,17 @@ export function FamilyNav() {
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  // Subgroepen achter Olie en Filters: pas ophalen als het menu opengaat, en
-  // per auto onthouden. Zie components/catalog/actions.ts voor het waarom.
-  const [quickChildren, setQuickChildren] = useState<
-    Record<string, QuickLinkChild[]>
-  >({});
+  // Het menu achter Olie en Filters: pas ophalen als het opengaat, en per
+  // auto onthouden. Zie components/catalog/actions.ts voor het waarom — ook
+  // de hoofdgroep zelf komt daaruit, want zijn nummer verschilt per auto.
+  const [menus, setMenus] = useState<Record<string, QuickLinkMenu>>({});
 
   function openQuickMenu(key: string) {
     const next = openKey === key ? null : key;
     setOpenKey(next);
-    if (next === null || !carId || quickChildren[key]) return;
-    void quickLinkChildrenAction(carId, key).then((children) => {
-      setQuickChildren((current) => ({ ...current, [key]: children }));
+    if (next === null || !carId || menus[key]) return;
+    void quickLinkChildrenAction(carId, key).then((menu) => {
+      setMenus((current) => ({ ...current, [key]: menu }));
     });
   }
 
@@ -97,11 +96,12 @@ export function FamilyNav() {
 
       {/* Olie en Filters. Ze horen bij Onderdelen maar liggen daar verstopt
           tussen 36 hoofdgroepen — zie lib/catalog/quick-links.ts. */}
-      {MAINTENANCE_LINKS.map((link) => {
+      {MAINTENANCE_GROUPS.map((link) => {
         const open = openKey === link.key;
         const menuId = `nav-menu-${link.key}`;
         const partsSlug = familySlug("onderdelen", locale);
-        const children = quickChildren[link.key];
+        const menu = menus[link.key];
+        const children = menu?.children;
         const label = t(`quick.${link.key}`);
 
         return (
@@ -137,12 +137,23 @@ export function FamilyNav() {
                 aria-label={label}
                 className="absolute end-0 z-40 mt-2 w-72 rounded-lg border border-border bg-background p-4 shadow-xl"
               >
+                {/* Zonder auto (of zolang de boom nog niet binnen is) weten
+                    we het groepsnummer niet; dan wijst de kop naar de
+                    onderdelenpagina in plaats van naar een gokje. */}
                 <Link
-                  href={{
-                    pathname: "/[family]/[category]",
-                    params: { family: partsSlug, category: link.slug },
-                    ...(carId ? { query: { auto: String(carId) } } : {}),
-                  }}
+                  href={
+                    menu?.slug
+                      ? {
+                          pathname: "/[family]/[category]" as const,
+                          params: { family: partsSlug, category: menu.slug },
+                          ...(carId ? { query: { auto: String(carId) } } : {}),
+                        }
+                      : {
+                          pathname: "/[family]" as const,
+                          params: { family: partsSlug },
+                          ...(carId ? { query: { auto: String(carId) } } : {}),
+                        }
+                  }
                   onClick={() => setOpenKey(null)}
                   className="block rounded-md px-2 py-1 text-sm font-bold text-foreground hover:bg-surface"
                 >

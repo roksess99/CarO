@@ -13,9 +13,14 @@
  * in de rij "Meest gezocht" ervoor heeft — een foto van een remblok is op
  * dat formaat een grijze vlek.
  *
- * De sleutel is het TecDoc-`assemblyGroupNodeId`, hetzelfde nummer als in
- * `lib/catalog/quick-links.ts`. Een groep zonder tekening krijgt de moer uit
- * het merkteken (@docs/BRAND.md), zodat de rijen uitgelijnd blijven.
+ * **De sleutel is de naam uit `lib/catalog/quick-links.ts`, niet het
+ * groepsnummer.** Dat stond hier tot 2026-09-25 wél zo, en die nummers zijn
+ * inmiddels één opgeschoven bij de leverancier: de tekening van het oliefilter
+ * kwam daardoor naast de hoofdgroep "Filter" te staan. Zie quick-links.ts voor
+ * de meting.
+ *
+ * Een groep zonder tekening krijgt de moer uit het merkteken
+ * (@docs/BRAND.md), zodat de rijen uitgelijnd blijven.
  */
 
 /** Zeskantmoer met open gat — het merkteken, als terugval */
@@ -26,9 +31,33 @@ const NUT = (
   </>
 );
 
-const PATHS: Record<number, React.ReactNode> = {
+const PATHS: Record<string, React.ReactNode> = {
+  // Brandstoffilter — cilinder met aan- en afvoer
+  brandstoffilter: (
+    <>
+      <rect x="6.5" y="6" width="11" height="12" rx="2.5" />
+      <path d="M6.5 10h11M6.5 14h11" />
+      <path d="M3 12h3.5M17.5 12H21" />
+    </>
+  ),
+  // Remvloeistof — reservoir met vloeistofpeil
+  remvloeistof: (
+    <>
+      <path d="M6 7.5h12V18a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z" />
+      <path d="M9.5 7.5V5.5A1.5 1.5 0 0 1 11 4h2a1.5 1.5 0 0 1 1.5 1.5v2" />
+      <path d="M6 13.5h12" />
+    </>
+  ),
+  // Koelvloeistof — radiateur met druppel
+  koelvloeistof: (
+    <>
+      <rect x="3.5" y="5.5" width="12" height="13" rx="1.5" />
+      <path d="M7 5.5v13M11.5 5.5v13" />
+      <path d="M19 10.5c1.3 1.6 2 2.8 2 3.7a2 2 0 1 1-4 0c0-.9.7-2.1 2-3.7Z" />
+    </>
+  ),
   // Oliefilter — bus met kraag
-  543: (
+  oliefilter: (
     <>
       <rect x="7" y="7" width="10" height="13" rx="2" />
       <path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7" />
@@ -36,14 +65,14 @@ const PATHS: Record<number, React.ReactNode> = {
     </>
   ),
   // Luchtfilter — geplooid paneel
-  544: (
+  luchtfilter: (
     <>
       <rect x="3" y="7" width="18" height="10" rx="1.5" />
       <path d="M7.5 7v10M12 7v10M16.5 7v10" />
     </>
   ),
   // Interieurfilter — paneel met luchtstroom
-  546: (
+  interieurfilter: (
     <>
       <rect x="3.5" y="6" width="11" height="12" rx="1.5" />
       <path d="M7.2 6v12M10.8 6v12" />
@@ -51,14 +80,14 @@ const PATHS: Record<number, React.ReactNode> = {
     </>
   ),
   // Remblok — drager met wrijvingslaag
-  568: (
+  remblok: (
     <>
       <path d="M5 8.5h14A1.5 1.5 0 0 1 20.5 10v1.5h-17V10A1.5 1.5 0 0 1 5 8.5Z" />
       <path d="M3.5 11.5h17V14a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 14z" />
     </>
   ),
   // Remschijf — schijf met naaf
-  569: (
+  remschijf: (
     <>
       <circle cx="12" cy="12" r="8.5" />
       <circle cx="12" cy="12" r="3.2" />
@@ -66,7 +95,7 @@ const PATHS: Record<number, React.ReactNode> = {
     </>
   ),
   // Accu — met plus en min
-  653: (
+  accu: (
     <>
       <rect x="3" y="7" width="18" height="12" rx="2" />
       <path d="M7 7V5h3v2M14 7V5h3v2" />
@@ -74,7 +103,7 @@ const PATHS: Record<number, React.ReactNode> = {
     </>
   ),
   // Bougie — aansluiting, zeskant, schroefdraad, massa-elektrode
-  634: (
+  bougie: (
     <>
       <path d="M11 2.5h2v3h-2z" />
       <path d="M9.5 5.5h5V9h-5z" />
@@ -84,7 +113,7 @@ const PATHS: Record<number, React.ReactNode> = {
     </>
   ),
   // Wisserblad — ruit met arm
-  947: (
+  wisserblad: (
     <>
       <path d="M4 18a8 8 0 0 1 16 0z" />
       <path d="M6.5 18 17 7.5" />
@@ -92,7 +121,7 @@ const PATHS: Record<number, React.ReactNode> = {
     </>
   ),
   // motorolie — fles met druppel
-  1371: (
+  motorolie: (
     <>
       <path d="M10 2.5h4v3h-4z" />
       <path d="M8 8.5A3 3 0 0 1 11 5.5h2a3 3 0 0 1 3 3V18a3.5 3.5 0 0 1-3.5 3.5h-1A3.5 3.5 0 0 1 8 18z" />
@@ -100,7 +129,7 @@ const PATHS: Record<number, React.ReactNode> = {
     </>
   ),
   // Schokdemper — oog, veer, oog
-  774: (
+  schokdemper: (
     <>
       <circle cx="12" cy="3.4" r="1.9" />
       <path d="M12 5.3v1.2" />
@@ -110,7 +139,7 @@ const PATHS: Record<number, React.ReactNode> = {
     </>
   ),
   // Distributieriem — riem om twee poelies
-  269: (
+  distributieriem: (
     <>
       <circle cx="7.5" cy="14.5" r="4" />
       <circle cx="17" cy="8.5" r="2.8" />
@@ -121,10 +150,11 @@ const PATHS: Record<number, React.ReactNode> = {
 };
 
 export function GroupIcon({
-  groupId,
+  iconKey,
   className = "size-6",
 }: {
-  groupId: number;
+  /** Sleutel uit POPULAR_PART_GROUPS; ontbreekt hij, dan komt de moer */
+  iconKey?: string;
   className?: string;
 }) {
   return (
@@ -138,7 +168,7 @@ export function GroupIcon({
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {PATHS[groupId] ?? NUT}
+      {(iconKey && PATHS[iconKey]) ?? NUT}
     </svg>
   );
 }

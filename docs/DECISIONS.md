@@ -186,6 +186,64 @@ filters kostten **één** call (5,8 s koud, daarna 0,7–1,0 s).
 
 ---
 
+### GEVONDEN 2026-09-25: een groep-id van de leverancier is geen sleutel
+
+De eigenaar meldde vier dingen die op één oorzaak bleken te staan: in "meest
+gezocht" stond een tegel **"Onderdelen 81"** waar de accu hoorde, bougie en
+schokdemper heetten "Ontstekingsspoel- /eenheid" en "Vering", er stonden
+tegels `Filter` en `smeermiddelen` die naar een tussenscherm leiden in plaats
+van naar artikelen, en de knoppen **Olie** en **Filters** in de header gaven
+op zijn auto **pagina niet gevonden**.
+
+`src/lib/catalog/quick-links.ts` hield elf `assemblyGroupNodeId`s vast, met de
+aantekening dat die op drie auto's gemeten en identiek waren. Dat laatste
+klopt nog steeds — het zijn dezelfde nummers voor elke auto — maar **ze wijzen
+niet meer naar wat er stond**. GEMETEN 2026-09-25, tien van de elf zitten er
+één naast:
+
+| In de lijst | Wat daar vandaag staat | Waar de groep nu staat |
+|---|---|---|
+| 543 Oliefilter | `Filter` (hoofdgroep) | 544 |
+| 544 Luchtfilter | `Oliefilter` | 545 |
+| 546 Interieurfilter | `Brandstoffilter` | 547 |
+| 568 Remblok | `Schijfrem` (hoofdgroep) | 569 |
+| 569 Remschijf | `Remblok` | 570 |
+| 1371 motorolie | `smeermiddelen` (hoofdgroep) | 1372 |
+| 653 Batterij Accu | `Onderdelen` | 654 |
+| 947 Wisserblad / Rubber | `Wisserbladen / Toebehoren` (hoofdgroep) | 948 |
+| 634 Bougie | `Ontstekingsspoel- /eenheid` | 635 |
+| 774 Schokdempers | `Vering` | 775 |
+| 269 Distributieriem | `Distributieriem` | 269 — de enige die klopt |
+
+**Waarom niemand het zag.** De boom staat een dag in de cache. Op een auto die
+al eens bezocht was stond de oude nummering er nog en klopte het scherm; op
+een verse auto sloeg alles één op. Zelfde carId (115566), zelfde sessie, twee
+verschillende antwoorden — de pagina las de gecachte boom, de controle een
+verse.
+
+Dit is het gevaarlijke soort fout: er gaat niets stuk, er komt geen
+foutmelding, de tegel wijst gewoon naar een ander onderdeel. Alleen de
+hoofdgroepen vielen op, want die hebben geen telling en leiden naar een
+tussenscherm.
+
+**De regel die eruit volgt: een nummer van de leverancier is een verwijzing,
+geen sleutel.** De rij wordt nu op naam opgezocht in de boom die we tóch al
+ophalen (`POPULAR_PART_GROUPS`), dus het kost geen verzoek extra en hij kan
+niet meer stilletjes verschuiven. Hetzelfde geldt voor de hoofdgroepen achter
+Olie en Filters.
+
+**Let op het verschil met `src/lib/admin/part-kinds.ts`.** Díe nummers zijn
+`genericArticleId`s — het soort artikel, niet de plek in de boom — en die zijn
+wél stabiel. De prijsregels en de kortingen op soort onderdeel (#14, #17)
+raakt dit dus niet.
+
+Meegenomen, want het was dezelfde rij: de vier filtersoorten en de drie
+vloeistoffen staan er nu los in, op verzoek van de eigenaar. Op een VW Polo 6
+zijn dat dertien tegels (oliefilter, luchtfilter, brandstoffilter,
+interieurfilter, remblok, remschijf, motorolie, remvloeistof, koelvloeistof,
+accu, wisserblad, bougie, schokdemper) en geen enkele leidt nog naar een
+tussenscherm.
+
 ### Vastgesteld 2026-09-17: een productgroep is een link, geen menu
 
 Banden, velgen en toebehoren klapten op drie plekken uit naar hun
@@ -1552,6 +1610,36 @@ geldige link kun je dus geen cijfer plakken op iets wat je nooit kocht.
 `aggregateRating` telt alleen wat zichtbaar is, dus wat de bezoeker kan
 nalezen. Dat stond al als regel in `.claude/rules/frontend.md` en blijft
 staan; alleen de reden om hem leeg te laten vervalt.
+
+### GEVONDEN 2026-09-25: "Nu uitnodigen" kon niet uitnodigen
+
+De eigenaar drukte op de knop en er gebeurde niets. Nagelopen in de database:
+de knop had gedraaid en netjes `invited: 0, errors: 0` gemeld. Dat klopte ook
+— zijn twee betaalde bestellingen (20 en 24 september, geen `purchased_at`)
+zijn pas op 4 en 8 oktober aan de beurt.
+
+**Maar dat is niet wat de knop belooft.** Hierboven staat: *"In het paneel zit
+een knop Nu uitnodigen voor als hij weet dat het bezorgd is."* Wat hij deed
+was alleen de **dagclaim** overslaan (`force: true`), niet de wachttermijn van
+zeven of veertien dagen. Hij verstuurde dus wat tóch al aan de beurt was, en
+dat is precies het geval waarin je niet hoeft te drukken.
+
+Rechtgezet met twee dingen op de beoordelingenpagina:
+
+1. **Een lijst "nog niet uitgenodigd"** met per bestelling de datum waarop het
+   vanzelf gebeurt. Alleen al daarmee is het antwoord zichtbaar in plaats van
+   een stille nul.
+2. **Een knop per bestelling** die de wachttermijn wél overslaat, met een
+   bevestiging ertussen. Per bestelling en niet in bulk, want de belofte gaat
+   over déze zending waarvan de beheerder weet dat hij bezorgd is.
+
+Wat er niet verandert: betaald zijn, nog geen uitnodiging hebben, en de unieke
+sleutel die een tweede mail tegenhoudt. Die drie bewaakt de handmatige weg
+net zo goed als de dagelijkse taak.
+
+**De lijst toont geen naam en geen mailadres**, alleen het ordernummer. Deze
+pagina mag ook een marketingmedewerker openen en klantgegevens horen daar niet
+(#19).
 
 ### Wat er niet in zit
 

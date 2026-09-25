@@ -26,7 +26,11 @@ import {
   buildPartFilters,
   partFilterGroups,
 } from "./part-filters";
-import { POPULAR_PART_GROUP_IDS } from "./quick-links";
+import {
+  MAINTENANCE_GROUPS,
+  type PartGroupMatch,
+  POPULAR_PART_GROUPS,
+} from "./quick-links";
 import type { FilterGroup, Part, SelectedFilters } from "./types";
 
 /**
@@ -439,15 +443,20 @@ async function partGroupsAndPopular(
   // heeft geen ouder. Niet `=== undefined` — de API levert daar ook 0 voor.
   const mainGroups = tree.filter((group) => !group.parentId);
 
-  const present = POPULAR_PART_GROUP_IDS.map((id) => byId.get(id)).filter(
-    (group): group is AssemblyGroup => group !== undefined,
-  );
+  // Kandidaten op naam, niet op nummer: de boom is per auto genummerd
+  // (zie quick-links.ts). Er kunnen er meer dan één zijn — "Oliefilter"
+  // staat op de Polo zowel onder Filter (544) als onder de
+  // oliedrukschakelaar (299) — dus kiest de telling hieronder.
+  const candidates = POPULAR_PART_GROUPS.map((def) => ({
+    def,
+    groups: matchGroups(tree, byId, def),
+  }));
 
   // Alleen eindgroepen zijn te tellen: /articles geeft HTTP 500 op een groep
   // met subgroepen (zie articleCount).
   const ids = new Set<number>();
   for (const group of mainGroups) if (!group.hasChildren) ids.add(group.id);
-  for (const group of present) if (!group.hasChildren) ids.add(group.id);
+  for (const { groups } of candidates) for (const g of groups) ids.add(g.id);
 
   const counts = await articleCounts(carId, [...ids]);
   const withCount = (group: AssemblyGroup) => ({
@@ -455,11 +464,89 @@ async function partGroupsAndPopular(
     articleCount: counts.get(group.id),
   });
 
+  // Per soort de kandidaat met de meeste artikelen. Dat is meteen de
+  // ontdubbeling: de "Oliefilter" onder Filter heeft er honderd, die onder de
+  // oliedrukschakelaar een handvol.
+  const popular = candidates.flatMap(({ def, groups }) => {
+    const counted = groups.map(withCount).filter((g) => g.articleCount !== 0);
+    if (counted.length === 0) return [];
+    const best = counted.reduce((a, b) =>
+      (b.articleCount ?? 0) > (a.articleCount ?? 0) ? b : a,
+    );
+    // De sleutel reist mee tot in de tekening ervoor (group-icon.tsx)
+    return [{ ...best, quickKey: def.key }];
+  });
+
   return {
     // -1 is "telling mislukt": dan tonen we hem, net als in partLeafGroups.
     groups: mainGroups.map(withCount).filter((g) => g.articleCount !== 0),
-    popular: present.map(withCount).filter((g) => g.articleCount !== 0),
+    popular,
   };
+}
+
+/** Hoogstens zoveel kandidaten per soort tellen; meer is verspilde moeite */
+const MAX_CANDIDATES = 3;
+
+/** De namen van alle groepen bóven deze, van ouder naar wortel */
+function ancestorNames(
+  group: AssemblyGroup,
+  byId: Map<number, AssemblyGroup>,
+): string[] {
+  const names: string[] = [];
+  let current = group.parentId ? byId.get(group.parentId) : undefined;
+  // De boom is ondiep (drie niveaus); de grens is er tegen een kring in de
+  // data, niet omdat we er een verwachten.
+  for (let step = 0; current && step < 8; step++) {
+    names.push(current.name.trim());
+    current = current.parentId ? byId.get(current.parentId) : undefined;
+  }
+  return names;
+}
+
+/**
+ * De eindgroepen in deze boom die bij één omschrijving horen.
+ *
+ * Alleen eindgroepen: een hoofdgroep is een tussenscherm, en juist dat extra
+ * scherm is wat de eigenaar eruit wilde hebben.
+ */
+function matchGroups(
+  tree: ReadonlyArray<AssemblyGroup>,
+  byId: Map<number, AssemblyGroup>,
+  def: PartGroupMatch,
+): AssemblyGroup[] {
+  const found = tree.filter(
+    (group) => !group.hasChildren && def.match.test(group.name.trim()),
+  );
+  if (def.under) {
+    const under = found.filter((group) =>
+      ancestorNames(group, byId).some((name) => def.under?.test(name)),
+    );
+    // Staat hij niet onder de verwachte hoofdgroep, dan is de naam nog steeds
+    // het beste wat we hebben — beter een tegel te veel dan geen tegel.
+    if (under.length > 0) return under.slice(0, MAX_CANDIDATES);
+  }
+  return found.slice(0, MAX_CANDIDATES);
+}
+
+/**
+ * De hoofdgroep achter "Olie" of "Filters", opgezocht in de boom van déze
+ * auto.
+ *
+ * Geeft `null` als hij er niet in staat. De aanroeper linkt dan naar de
+ * onderdelenpagina in plaats van naar een groep die niet bestaat — dat was
+ * precies de 404 die hier 2026-09-25 uitkwam.
+ */
+export async function maintenanceGroup(
+  carId: number,
+  key: string,
+): Promise<AssemblyGroup | null> {
+  const def = MAINTENANCE_GROUPS.find((entry) => entry.key === key);
+  if (!def) return null;
+  const tree = await assemblyTree(carId);
+  const found = tree.find(
+    (group) => group.hasChildren && def.match.test(group.name.trim()),
+  );
+  return found ?? null;
 }
 
 /**

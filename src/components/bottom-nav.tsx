@@ -12,7 +12,11 @@ import {
   PRODUCT_FAMILIES,
   usesVehicleCatalog,
 } from "@/lib/catalog/families";
-import { MAINTENANCE_LINKS } from "@/lib/catalog/quick-links";
+import { MAINTENANCE_GROUPS } from "@/lib/catalog/quick-links";
+import {
+  quickLinkChildrenAction,
+  type QuickLinkMenu,
+} from "@/components/catalog/actions";
 import { Link, usePathname } from "@/i18n/navigation";
 
 /**
@@ -48,8 +52,25 @@ export function BottomNav({
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [vehicleOpen, setVehicleOpen] = useState(false);
+  // Olie en Filters: hun groepsnummer verschilt per auto (quick-links.ts),
+  // dus dat wordt opgezocht zodra de lade opengaat. Tot het binnen is wijst
+  // de rij naar de onderdelenpagina — nooit naar een nummer dat op deze auto
+  // niet bestaat, want dat was een harde 404.
+  const [menus, setMenus] = useState<Record<string, QuickLinkMenu>>({});
   const assortmentRef = useRef<HTMLButtonElement>(null);
   const vehicleRef = useRef<HTMLButtonElement>(null);
+
+  const carId = vehicle?.carId;
+  const openDrawer = useCallback(() => {
+    setDrawerOpen(true);
+    if (!carId) return;
+    for (const link of MAINTENANCE_GROUPS) {
+      if (menus[link.key]) continue;
+      void quickLinkChildrenAction(carId, link.key).then((menu) => {
+        setMenus((current) => ({ ...current, [link.key]: menu }));
+      });
+    }
+  }, [carId, menus]);
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   const closeVehicle = useCallback(() => setVehicleOpen(false), []);
@@ -85,19 +106,25 @@ export function BottomNav({
             {/* Onderhoudsdelen bovenaan: op een telefoon is dit één tik in
                 plaats van drie, en het is waar de meeste klanten voor komen. */}
             <ul className="mb-2 space-y-0.5 border-b border-border pb-2">
-              {MAINTENANCE_LINKS.map((link) => (
+              {MAINTENANCE_GROUPS.map((link) => (
                 <li key={link.key}>
                   <Link
-                    href={{
-                      pathname: "/[family]/[category]",
-                      params: {
-                        family: familySlug("onderdelen", locale),
-                        category: link.slug,
-                      },
-                      ...(vehicle?.carId
-                        ? { query: { auto: String(vehicle.carId) } }
-                        : {}),
-                    }}
+                    href={
+                      menus[link.key]?.slug
+                        ? {
+                            pathname: "/[family]/[category]" as const,
+                            params: {
+                              family: familySlug("onderdelen", locale),
+                              category: menus[link.key].slug as string,
+                            },
+                            ...(carId ? { query: { auto: String(carId) } } : {}),
+                          }
+                        : {
+                            pathname: "/[family]" as const,
+                            params: { family: familySlug("onderdelen", locale) },
+                            ...(carId ? { query: { auto: String(carId) } } : {}),
+                          }
+                    }
                     onClick={closeDrawer}
                     className="flex items-center justify-between gap-3 rounded-lg px-4 py-3.5 text-base font-semibold text-foreground hover:bg-surface"
                   >
@@ -197,7 +224,7 @@ export function BottomNav({
             ref={assortmentRef}
             type="button"
             aria-expanded={drawerOpen}
-            onClick={() => setDrawerOpen(true)}
+            onClick={openDrawer}
             className={`${tab} ${drawerOpen ? active : inactive}`}
           >
             {drawerOpen && <Indicator />}

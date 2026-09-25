@@ -125,6 +125,13 @@ export interface AssemblyGroup {
   /** Icoon van de leverancier; niet elke groep heeft er een */
   iconUrl?: string;
   /**
+   * Welke vaste ingang dit is, als de groep er een is: "oliefilter",
+   * "accu", … uit `quick-links.ts`. Gevuld door de resolver in
+   * `wearparts-provider.ts`, want de boom zelf kent alleen namen en
+   * per-auto-nummers. De tekening in `group-icon.tsx` hangt hieraan.
+   */
+  quickKey?: string;
+  /**
    * Aantal artikelen voor de gekozen auto. Alleen gevuld waar we het echt
    * nodig hebben (zie `articleCounts`); `-1` betekent "telling mislukt, bij
    * twijfel tonen".

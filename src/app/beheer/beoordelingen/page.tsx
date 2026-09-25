@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { requirePermission } from "@/lib/admin/session";
-import { allReviews, reviewSummary } from "@/lib/reviews/store";
+import {
+  allReviews,
+  ordersAwaitingInvite,
+  reviewSummary,
+} from "@/lib/reviews/store";
 import {
   HideForm,
   InviteButton,
+  InviteOrderButton,
   ReplyForm,
   UnhideButton,
 } from "./review-actions";
@@ -22,7 +27,11 @@ function score(value: number | null): string {
 
 export default async function BeoordelingenPage() {
   await requirePermission("beoordelingen");
-  const [reviews, summary] = await Promise.all([allReviews(), reviewSummary()]);
+  const [reviews, summary, waitingOrders] = await Promise.all([
+    allReviews(),
+    reviewSummary(),
+    ordersAwaitingInvite(),
+  ]);
 
   const waiting = reviews.filter((review) => !review.submittedAt).length;
 
@@ -80,11 +89,51 @@ export default async function BeoordelingenPage() {
         <InviteButton />
       </div>
 
+      {/* Bestellingen die nog geen uitnodiging hebben.
+          Bewust zónder naam en mailadres: deze pagina mag ook een
+          marketingmedewerker openen, en klantgegevens horen daar niet
+          (docs/DECISIONS.md #19). Het ordernummer is genoeg om te weten
+          welke zending je in handen had. */}
+      {waitingOrders.length > 0 && (
+        <section className="mt-6 rounded-lg border border-border bg-background p-4">
+          <h2 className="text-base font-semibold">Nog niet uitgenodigd</h2>
+          <p className="mt-1 max-w-prose text-sm text-muted">
+            Deze gaan vanzelf de deur uit op de datum erachter. Weet je dat een
+            bestelling al bezorgd is, dan kun je hem nu uitnodigen — dat is de
+            enige manier om eerder te vragen.
+          </p>
+          <ul className="mt-3 divide-y divide-border">
+            {waitingOrders.map((order) => {
+              const due = new Date(order.dueAt);
+              return (
+                <li
+                  key={order.reference}
+                  className="flex flex-wrap items-center justify-between gap-3 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="font-mono text-sm tabular-nums">
+                      {order.reference}
+                    </p>
+                    <p className="text-xs text-muted tabular-nums">
+                      betaald {dateFormat.format(new Date(order.paidAt))} ·{" "}
+                      {order.isDue
+                        ? "is aan de beurt"
+                        : `vanzelf op ${dateFormat.format(due)}`}
+                    </p>
+                  </div>
+                  <InviteOrderButton reference={order.reference} />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       <section className="mt-10">
         {reviews.length === 0 ? (
           <p className="rounded-lg border border-border bg-background p-4 text-sm text-muted">
             Er is nog niemand uitgenodigd. Dat gebeurt vanzelf zodra een
-            bestelling lang genoeg geleden is.
+            bestelling lang genoeg geleden is; hierboven staat wanneer.
           </p>
         ) : (
           <ul className="space-y-4">

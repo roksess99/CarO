@@ -6,7 +6,12 @@ import {
   reviewInviteUrl,
   reviewLogoAttachment,
 } from "./invite-mail";
-import { createInvite, invitableOrders } from "./store";
+import {
+  createInvite,
+  findOrderAwaitingInvite,
+  invitableOrders,
+  type PendingInvite,
+} from "./store";
 
 /**
  * De dagelijkse taak die beoordelingsuitnodigingen verstuurt.
@@ -65,31 +70,11 @@ export async function runReviewInvites({
   }
 
   const orders = (await invitableOrders(now)).slice(0, MAX_PER_RUN);
-  const logo = await reviewLogoAttachment();
   let invited = 0;
 
   for (const order of orders) {
     try {
-      const token = await createInvite(order.reference, order.email);
-      // `null` betekent dat een andere aanroep hem net voor was
-      if (!token) continue;
-
-      const locale = order.locale === "en" ? "en" : "nl";
-      const input = {
-        firstName: order.firstName,
-        reference: order.reference,
-        path: reviewInviteUrl(locale, token),
-        withLogo: logo !== null,
-      };
-
-      await sendMail({
-        to: order.email,
-        subject: `Hoe beviel je bestelling ${order.reference}?`,
-        text: renderInviteText(input),
-        html: renderInviteMail(input),
-        attachments: logo ? [logo] : undefined,
-      });
-      invited++;
+      if (await sendInvite(order)) invited++;
     } catch (error) {
       errors.push(
         `${order.reference}: ${error instanceof Error ? error.message : "onbekende fout"}`,
@@ -105,4 +90,52 @@ export async function runReviewInvites({
   };
   if (!force) await finishJob(REVIEW_JOB, { invited, errors }, now);
   return result;
+}
+
+/**
+ * Eén uitnodiging versturen. `false` betekent: er stond er al een.
+ *
+ * De rij in `reviews` wordt aangemaakt vóór de mail, met een unieke sleutel
+ * op het ordernummer — zie `createInvite`. Mislukt het versturen daarna, dan
+ * krijgt die klant geen tweede kans, en dat is met opzet de goede kant om op
+ * te falen.
+ */
+async function sendInvite(order: PendingInvite): Promise<boolean> {
+  const token = await createInvite(order.reference, order.email);
+  // `null` betekent dat een andere aanroep hem net voor was
+  if (!token) return false;
+
+  const logo = await reviewLogoAttachment();
+  const locale = order.locale === "en" ? "en" : "nl";
+  const input = {
+    firstName: order.firstName,
+    reference: order.reference,
+    path: reviewInviteUrl(locale, token),
+    withLogo: logo !== null,
+  };
+
+  await sendMail({
+    to: order.email,
+    subject: `Hoe beviel je bestelling ${order.reference}?`,
+    text: renderInviteText(input),
+    html: renderInviteMail(input),
+    attachments: logo ? [logo] : undefined,
+  });
+  return true;
+}
+
+/**
+ * Nu uitnodigen voor één bestelling, buiten de wachttermijn om.
+ *
+ * Dit is de knop van "ik weet dat het bezorgd is". Alles wat de dagelijkse
+ * taak bewaakt blijft staan — betaald, nog geen uitnodiging, en de unieke
+ * sleutel die een tweede mail tegenhoudt — alleen het wachten vervalt.
+ */
+export async function inviteOrderNow(
+  reference: string,
+): Promise<"ok" | "onbekend" | "al-uitgenodigd" | "geen-smtp"> {
+  if (!mailIsConfigured()) return "geen-smtp";
+  const order = await findOrderAwaitingInvite(reference);
+  if (!order) return "onbekend";
+  return (await sendInvite(order)) ? "ok" : "al-uitgenodigd";
 }
