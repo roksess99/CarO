@@ -157,7 +157,7 @@ export default async function PrivacyPage({ params }: Props) {
       <h2 className="mt-12 text-2xl">{t("thirdPartiesTitle")}</h2>
       <p className="mt-3 text-muted">{t("thirdPartiesBody")}</p>
       <ul className="mt-4 list-disc space-y-2 ps-5 text-muted">
-        <li>{t("thirdTyre24")}</li>
+        <li>{t("thirdSupplier")}</li>
         <li>{t("thirdMollie")}</li>
         <li>{t("thirdRdw")}</li>
         <li>{t("thirdPostcode")}</li>

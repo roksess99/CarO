@@ -642,7 +642,7 @@
     "personalPlate": "If you enter a licence plate, we send it to the Dutch RDW vehicle database to look up your car. A licence plate is personal data, which is why it never appears in a web address and is not kept in our logs.",
     "thirdPartiesTitle": "Parties that receive data from us",
     "thirdPartiesBody": "We do not sell your data and share it only where needed to fulfil your order:",
-    "thirdTyre24": "Tyre24 / ALZURA — our supplier. Receives the details needed to deliver your parcel when you place an order.",
+    "thirdSupplier": "Our wholesaler — receives the details needed to deliver your parcel when you place an order.",
     "thirdMollie": "Mollie — handles your payment. We pass on only the amount and our order number, not your name, address or what you ordered. What you enter on the payment screen, such as your account or card number, goes straight to Mollie and your bank; it never reaches our shop.",
     "thirdRdw": "overheid.io — provides the RDW vehicle data. Receives the licence plate you enter, and nothing else about you.",
     "thirdPostcode": "gratis-postcodedata.nl — looks up the street and town for your postcode. Receives only your postcode and house number and nothing else about you: the request goes through our server, so your IP address is not shared either.",

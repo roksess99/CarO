@@ -75,6 +75,23 @@ in staat: er gaat er precies één per bestelling uit, en wie hem niet wil mailt
 terug. Een uitschrijflink zou hier misleidend zijn, want er is geen lijst om
 je voor uit te schrijven.
 
+## De groothandel staat er zonder naam — 2026-09-28
+
+Winkelkeuze van de eigenaar: de naam van de leverancier geven we niet weg. Op
+`/nl/privacy` stond "Tyre24 / ALZURA — onze leverancier"; dat is nu "Onze
+groothandel" (`privacy.thirdSupplier`).
+
+**De regel zelf mag niet weg.** Art. 13 lid 1 sub e AVG vraagt "de ontvangers
+of **categorieën van ontvangers**" — een categorie noemen is dus toegestaan,
+een ontvanger verzwijgen niet. De hostingpartij staat er om dezelfde reden al
+zonder naam in.
+
+**Wat de naam nog wél weggeeft: de productfoto's.** Die staan op het CDN van de
+leverancier, en die URL komt op elke productpagina terug — in `<meta property="og:image">`,
+in de JSON-LD en in `/_next/image?url=…`. Wie de broncode opent leest daar de
+naam van de groothandel. Dat is niet met een tekstwijziging op te lossen; het
+vraagt dat de foto's via ons eigen domein lopen.
+
 ## Geen toestemmingsbanner nodig, ook nu de database er is
 
 Dit is 2026-09-17 nagelopen omdat de vraag terecht opkwam: als we mailadressen

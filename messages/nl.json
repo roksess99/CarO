@@ -642,7 +642,7 @@
     "personalPlate": "Als je een kenteken invult, sturen we dat naar de RDW-voertuigendatabase om je auto op te zoeken. Een kenteken is een persoonsgegeven, daarom staat het nooit in een webadres en bewaren we het niet in onze logboeken.",
     "thirdPartiesTitle": "Partijen die gegevens van ons ontvangen",
     "thirdPartiesBody": "We verkopen je gegevens niet en delen ze alleen waar dat nodig is om je bestelling uit te voeren:",
-    "thirdTyre24": "Tyre24 / ALZURA — onze leverancier. Ontvangt bij een bestelling de gegevens die nodig zijn om het pakket bij jou te bezorgen.",
+    "thirdSupplier": "Onze groothandel — ontvangt bij een bestelling de gegevens die nodig zijn om het pakket bij jou te bezorgen.",
     "thirdMollie": "Mollie — handelt je betaling af. Wij geven alleen het bedrag en ons ordernummer door, niet je naam, adres of wat je besteld hebt. Wat je op het betaalscherm invult, zoals je rekening- of kaartnummer, geef je rechtstreeks aan Mollie en je bank; dat komt nooit in onze winkel.",
     "thirdRdw": "overheid.io — levert de RDW-voertuiggegevens. Ontvangt het kenteken dat je invult, en verder niets over jou.",
     "thirdPostcode": "gratis-postcodedata.nl — zoekt straat en woonplaats op bij je postcode. Ontvangt alleen je postcode en huisnummer en verder niets over jou: de vraag gaat via onze server, dus ook je IP-adres komt er niet.",
