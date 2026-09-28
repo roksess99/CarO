@@ -1,3 +1,4 @@
+import { renderAdminMail } from "@/lib/orders/admin-mail";
 import { LOGO_CID, renderCustomerMail } from "@/lib/orders/customer-mail";
 import { productLabel } from "@/lib/orders/product-label";
 import { readOrder } from "@/lib/orders/store";
@@ -6,6 +7,9 @@ import { readOrder } from "@/lib/orders/store";
  * De bevestigingsmail bekijken zonder een bestelling te plaatsen.
  *
  *     /api/dev/order-mail?ref=CARO-20260912-0B64
+ *     /api/dev/order-mail?ref=CARO-20260912-0B64&view=beheer
+ *
+ * Zonder `view` de mail naar de klant, met `view=beheer` het inkoopbriefje.
  *
  * Zonder dit is de enige manier om een tekstwijziging te zien: afrekenen,
  * betalen bij Mollie, wachten op de mail. Dat is drie minuten per komma.
@@ -23,7 +27,8 @@ export async function GET(request: Request): Promise<Response> {
     return new Response(null, { status: 404 });
   }
 
-  const reference = new URL(request.url).searchParams.get("ref");
+  const params = new URL(request.url).searchParams;
+  const reference = params.get("ref");
   if (!reference) {
     return new Response("Geef ?ref=<ordernummer> mee", { status: 400 });
   }
@@ -31,6 +36,12 @@ export async function GET(request: Request): Promise<Response> {
   const order = await readOrder(reference);
   if (!order) {
     return new Response(`Onbekende bestelling: ${reference}`, { status: 404 });
+  }
+
+  const type = { "content-type": "text/html; charset=utf-8" };
+
+  if (params.get("view") === "beheer") {
+    return new Response(renderAdminMail(order), { headers: type });
   }
 
   const html = await renderCustomerMail(
@@ -42,7 +53,8 @@ export async function GET(request: Request): Promise<Response> {
     })),
   );
 
-  return new Response(html.replaceAll(`cid:${LOGO_CID}`, "/brand/caro-lockup-email.png"), {
-    headers: { "content-type": "text/html; charset=utf-8" },
-  });
+  return new Response(
+    html.replaceAll(`cid:${LOGO_CID}`, "/brand/caro-lockup-email.png"),
+    { headers: type },
+  );
 }

@@ -742,6 +742,30 @@ minuten tegenover veertien dagen bedenktijd staat. Wordt het drukker, dan gaat
 de inkoop alsnog via `POST /order` — de gegevens die daarvoor nodig zijn
 (artikel-id en familie per regel) worden nu al bij de bestelling bewaard.
 
+### Het inkoopbriefje is een HTML-tabel — 2026-09-28
+
+De beheerder las de mail en moest de kolommen zelf uit elkaar halen. De tabel
+was uitgevuld met spaties, en dat staat alléén recht in een vaste-breedte
+lettertype. Zodra een bericht een HTML-deel heeft toont een mailclient dát, in
+een proportioneel lettertype — en op een telefoon breken de regels van ~78
+tekens middenin een artikelnummer af.
+
+Het briefje is nu een echte tabel (`src/lib/orders/admin-mail.ts`): aantal,
+product, artikelnummer, OE-nummer en catalogus, om en om grijs, nummers in een
+vaste breedte. De platte tekst in `notify.ts` blijft eronder meegaan als
+alternatief — tekstclients en spamfilters lezen die.
+
+Twee dingen die eruit volgden:
+
+- **De regels staan op catalogus gesorteerd**, en bij twee catalogussen staat
+  er met zoveel woorden bij dat het twee aparte inkooporders worden. Dat volgt
+  uit #4 en stond eerder alleen als kolomwaarde in de tabel.
+- **Geen logo in deze mail.** De klantmail stuurt er één mee via `cid:`; hier
+  zou dat alleen de bijlagelijst naast de PDF vervuilen.
+
+Bekijken zonder te bestellen: `/api/dev/order-mail?ref=<nummer>&view=beheer`
+(alleen in ontwikkeling).
+
 ### Mollie zonder eigen client-library
 
 `@mollie/api-client` is niet toegevoegd. Er worden drie dingen gedaan —
