@@ -49,6 +49,14 @@ export const routing = defineRouting({
       nl: "/beoordelingen/[token]",
       en: "/reviews/[token]",
     },
+    // Een retour aanmelden. De link uit de bevestigingsmail draagt het
+    // ordernummer en het toegangsteken mee; zonder die link vraagt de pagina
+    // om ordernummer én mailadres, want een kenmerk alleen is te raden
+    // (docs/DECISIONS.md #20).
+    "/returns": {
+      nl: "/retour",
+      en: "/returns",
+    },
     "/faq": {
       nl: "/veelgestelde-vragen",
       en: "/faq",

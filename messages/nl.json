@@ -486,7 +486,8 @@
     "paid": {
       "title": "Bedankt voor je bestelling",
       "body": "Je betaling is gelukt. De bevestiging met de orderfactuur is onderweg naar {email}.",
-      "delivery": "Je krijgt bericht zodra je bestelling onderweg is. Je hebt 14 dagen bedenktijd."
+      "delivery": "Je krijgt bericht zodra je bestelling onderweg is. Je hebt 14 dagen bedenktijd.",
+      "returns": "Iets terugsturen? <link>Meld je retour aan</link> — je bestelling staat er dan al bij."
     },
     "pending": {
       "title": "We controleren je betaling",
@@ -523,7 +524,8 @@
       "linkFaq": "Veelgestelde vragen",
       "linkContact": "Contact",
       "coc": "KvK {value}",
-      "vatNumber": "Btw {value}"
+      "vatNumber": "Btw {value}",
+      "returnsLink": "Retour aanmelden"
     }
   },
   "footer": {
@@ -538,6 +540,7 @@
     "privacyLink": "Privacy en cookies",
     "termsLink": "Algemene voorwaarden",
     "faqLink": "Veelgestelde vragen",
+    "returnsLink": "Retour aanmelden",
     "contactLink": "Contact",
     "navLabel": "Footernavigatie",
     "serviceTitle": "Klantenservice",
@@ -819,6 +822,85 @@
       "invalid": "Deze waarde klopt niet.",
       "rateLimit": "Je hebt kort achter elkaar meerdere berichten gestuurd. Probeer het over een uur opnieuw, of mail rechtstreeks naar info@caroparts.nl.",
       "send": "Het bericht kon niet verstuurd worden. Mail ons rechtstreeks op info@caroparts.nl."
+    }
+  },
+  "returns": {
+    "metaTitle": "Retour aanmelden",
+    "metaDescription": "Meld je retour aan met je ordernummer en mailadres. Je krijgt een retournummer en het bedrag komt terug op de rekening waarmee je betaalde.",
+    "title": "Retour aanmelden",
+    "intro": "Vul je ordernummer en het mailadres van je bestelling in, kies wat er terug gaat en je krijgt meteen een retournummer. Kwam je hier via de link in je bevestigingsmail, dan staat je bestelling er al.",
+    "search": "Bestelling zoeken",
+    "searching": "Bezig met zoeken…",
+    "found": "Je bestelling",
+    "whatBack": "Wat gaat er terug?",
+    "whyBack": "Waarom gaat het terug?",
+    "quantity": "Aantal",
+    "ofOrdered": "van {count} mogelijk",
+    "alreadyReturned": "{count} al aangemeld",
+    "sending": "Bezig met versturen…",
+    "submitButton": "Retour aanmelden",
+    "fields": {
+      "reference": "Ordernummer",
+      "referenceHint": "Staat in je bevestigingsmail en op de PDF, bijvoorbeeld CARO-20260924-G5QG.",
+      "email": "E-mailadres van de bestelling",
+      "emailHint": "Hetzelfde adres waarmee je besteld hebt. We gebruiken die twee samen om je bestelling te vinden.",
+      "note": "Toelichting (niet verplicht)",
+      "noteHint": "Bij bedenktijd hoef je geen reden te geven. Bij een defect helpt het ons als je beschrijft wat er mis is."
+    },
+    "reasons": {
+      "withdrawal": "Bedenktijd",
+      "wrong": "Verkeerd artikel geleverd",
+      "damaged": "Beschadigd aangekomen",
+      "defect": "Defect of garantie"
+    },
+    "reasonHints": {
+      "withdrawal": "Je hebt veertien dagen na ontvangst om je bestelling te annuleren. Een reden hoef je niet te geven; de retourzending betaal je zelf.",
+      "wrong": "Je hebt iets anders gekregen dan je bestelde. De retourzending is voor onze rekening.",
+      "damaged": "Het artikel kwam beschadigd aan. De retourzending is voor onze rekening.",
+      "defect": "Het artikel ging kapot binnen de garantietermijn. De retourzending is voor onze rekening."
+    },
+    "summary": {
+      "items": "Artikelen",
+      "shipping": "Verzendkosten",
+      "shippingStays": "blijft staan",
+      "total": "Terug te ontvangen",
+      "note": "De verzendkosten krijg je terug als je hele bestelling terugkomt. Stuur je een deel terug, dan is er ook verzonden en blijven ze staan."
+    },
+    "lookup": {
+      "unknown": "We vinden geen bestelling met dit ordernummer en dit mailadres. Controleer beide, of stuur ons een bericht.",
+      "notPaid": "Voor deze bestelling is geen betaling afgerond, dus er valt niets terug te boeken. Neem contact op als dat niet klopt.",
+      "openReturn": "Voor deze bestelling loopt al een retour. We hebben je aanvraag dus al; je hoort van ons zodra het pakket binnen is.",
+      "nothingLeft": "Alle artikelen van deze bestelling zijn al aangemeld voor retour.",
+      "rateLimit": "Je hebt het te vaak achter elkaar geprobeerd. Wacht even en probeer het opnieuw.",
+      "error": "Er ging iets mis bij het zoeken. Probeer het later opnieuw of stuur ons een bericht."
+    },
+    "submit": {
+      "unknown": "We konden je bestelling niet meer terugvinden. Ververs de pagina en probeer het opnieuw.",
+      "empty": "Kies eerst hoeveel er van een artikel terug gaat.",
+      "rateLimit": "Je hebt het te vaak achter elkaar geprobeerd. Wacht even en probeer het opnieuw.",
+      "error": "Er ging iets mis bij het aanmelden. Probeer het later opnieuw of stuur ons een bericht."
+    },
+    "done": {
+      "title": "Je retour staat genoteerd",
+      "reference": "Retournummer:",
+      "amount": "Je krijgt {amount} terug op de rekening waarmee je betaald hebt.",
+      "next": "Schrijf het retournummer bij het pakket of leg de bevestigingsmail erbij, en gebruik het retourlabel dat bij je bestelling zat. Zodra het pakket binnen is boeken we het bedrag terug, binnen veertien dagen."
+    },
+    "rules": {
+      "title": "De regels kort",
+      "window": "Veertien dagen bedenktijd na ontvangst, en daarna nog veertien dagen om terug te sturen.",
+      "condition": "Onderdelen die gemonteerd zijn geweest of waarvan de verzegeling verbroken is, kunnen we niet terugnemen.",
+      "cost": "De retourzending betaal je zelf bij bedenktijd. Is er verkeerd of beschadigd geleverd, dan betalen wij hem.",
+      "refund": "We betalen binnen veertien dagen terug, op de rekening waarmee je betaalde. We mogen wachten tot het pakket binnen is."
+    },
+    "address": {
+      "title": "Retouradres",
+      "body": "Gebruik het retourlabel dat bij je bestelling zat. Ben je het kwijt, stuur dan naar:"
+    },
+    "help": {
+      "title": "Liever zelf schrijven?",
+      "body": "Dit formulier is een gemak, geen voorwaarde. Je mag je herroeping ook gewoon in een bericht sturen — via <contact>het contactformulier</contact> of per mail — zolang er maar uit blijkt dat je de bestelling wilt annuleren.",
+      "terms": "Het volledige herroepingsrecht staat in <terms>de algemene voorwaarden</terms>."
     }
   },
   "fitment": {

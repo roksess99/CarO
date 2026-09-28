@@ -45,7 +45,10 @@ hetzelfde doel — maar er kwam één ding bij dat er eerder niet was.
 | `discount_code_uses` | **`email_key`: het mailadres in kleine letters, niet gehasht** | Gerechtvaardigd belang: "één keer per klant" is niet af te dwingen zonder het adres | Zolang de code bestaat, daarna hoogstens een jaar |
 | `reviews` | de naam die de klant zelf koos, zijn tekst, en **`email_key`: het mailadres waar de uitnodiging heen ging** | Gerechtvaardigd belang: beoordelingen tonen, en weten wie om verwijdering vraagt | Zolang de beoordeling op de site staat |
 | `review_products` | welk artikel welk cijfer kreeg | idem | idem |
+| `returns` | het mailadres waarmee besteld is (`email_key`), plus wat er terugkomt en waarom | Uitvoering van de overeenkomst (art. 6 lid 1 sub b AVG): een retour is de afwikkeling van diezelfde koop | 7 jaar — een terugbetaling is een boekstuk |
 | `admins`, `admin_sessions`, `admin_invites`, `audit_log` | mailadres van de beheerder | Noodzakelijk voor de toegangsbeveiliging | Zolang het account bestaat |
+
+`return_lines` draagt geen persoonsgegeven: artikelnummers en aantallen.
 
 `price_history` en `job_runs` bevatten geen persoonsgegevens: artikel-ids,
 datums en bedragen.

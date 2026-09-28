@@ -1716,6 +1716,103 @@ Onderbouwing en de bijwerkinstructie staan in @docs/PRIVACY.md.
 
 ---
 
+## 20. Retourneren — VASTGESTELD 2026-09-28
+
+De eigenaar: *"we benoemen nergens retourneren in de webshop. Klanten krijgen
+al een retourticket per post in hun bestellingen, maar het moet natuurlijk
+bekend gemaakt worden bij de beheerder om vervolgens geld terug te storten."*
+
+Dat klopte half. Retourneren **stond** er wel — in de voorwaarden, bij de
+veelgestelde vragen en op elke productpagina ("14 dagen bedenktijd") — maar er
+was geen **weg om het te doen**: geen formulier, geen retouradres, en niet het
+modelformulier voor herroeping dat art. 6:230m BW verplicht stelt.
+
+### Ja, een ordernummer is te controleren — maar nooit alleen
+
+De vraag was of de shop kan nakijken of een ordernummer bestaat en betaald is
+voordat het formulier verstuurd wordt. Dat kan, en het gebeurt ook. **Maar
+niet op het nummer alleen.**
+
+Een kenmerk is `CARO-20260924-G5QG`: de datum is te raden en er blijven vier
+tekens over. Een formulier dat op een kaal nummer antwoordt "deze bestelling
+bestaat en is betaald" is een raadmachine — je leest ermee af dat er op een
+bepaalde dag besteld is. De winkel wist dat al: de statuslink draagt sinds de
+bouw een apart toegangsteken, juist omdat *"iemand anders zijn bestelling kan
+opvragen door het kenmerk te raden"* (lib/orders/types.ts).
+
+Daarom twee ingangen, allebei met twee gegevens:
+
+| Waar vandaan | Bewijs |
+|---|---|
+| Link in de bevestigingsmail (`?ref=…&t=…`) | het toegangsteken van de bestelling |
+| `/nl/retour` met de hand | ordernummer **+** het mailadres van de bestelling |
+
+En één antwoord als het paar niet klopt: "niet gevonden". Nooit "het nummer
+bestaat maar het adres klopt niet" — dat is precies de mededeling die het
+raden weer mogelijk maakt. GEMETEN 2026-09-28: goed nummer met een vreemd
+mailadres geeft dezelfde melding als een verzonnen nummer.
+
+### Wat de wet bepaalt, en wat dat in code werd
+
+Drie regels zitten in `lib/returns/eligibility.ts` en zijn geen keuze:
+
+1. **Verzendkosten gaan alleen mee terug bij een volledige herroeping**
+   (art. 6:230r lid 2 BW). Houdt de klant één artikel, dan is er verzonden en
+   blijven de kosten staan. Eerdere retouren tellen mee: wie eerst het ene en
+   later het andere artikel terugstuurt, heeft uiteindelijk alles herroepen.
+2. **Terugbetalen binnen veertien dagen na de melding**, maar wachten mag tot
+   het pakket binnen is (art. 6:230s lid 3 BW). Vandaar de tussenstap "pakket
+   ontvangen" in het paneel, en een melding op het dashboard zodra er iets
+   openstaat — dit is het enige scherm in het paneel waar een klok op staat.
+3. **De reden is een keuze en geen vrij tekstveld**, want het zijn vier
+   verschillende rechten: bedenktijd loopt veertien dagen, een defect valt
+   onder garantie en loopt twee jaar. Het formulier **weigert daarom niets op
+   de datum**. Het rekent de bedenktijd wel uit en zet hem in de melding aan
+   de beheerder, met erbij dat hij vanaf de betaling gerekend is en niet vanaf
+   ontvangst — die datum weten we niet, er komt geen bericht van de vervoerder
+   (#18).
+
+Een kortingscode wordt naar rato verrekend. Zonder dat krijgt iemand die met
+20% korting kocht en één artikel terugstuurt de volle prijs terug, en verdient
+hij aan zijn retour.
+
+### Terugbetalen via Mollie, niet met de hand
+
+Keuze van de eigenaar, en het scheelt een persoonsgegeven: een terugbetaling
+op de oorspronkelijke betaling gaat naar dezelfde rekening als waarmee betaald
+is, dus we vragen geen IBAN en bewaren geen bankgegevens. Wat we opslaan is
+het `re_…`-kenmerk dat Mollie teruggeeft.
+
+Vier dingen zitten met opzet zo in `app/beheer/retouren/actions.ts`:
+
+- **Het bedrag komt uit de database**, niet uit het formulier. Lager mag
+  (waardevermindering, art. 6:230s lid 3), hoger weigert de server.
+- **Mollie eerst, de database daarna.** Andersom zou een mislukte terugboeking
+  als "terugbetaald" in de administratie staan, en dan wacht de klant op geld
+  dat nooit komt.
+- **Het retournummer gaat als idempotentiesleutel mee**, zodat twee tabbladen
+  samen één terugboeking opleveren. De database kan een dubbele klik ook
+  tegenhouden, maar pas nádat het geld al weg zou zijn.
+- **Lukt Mollie wél en de database niet**, dan zegt het scherm dat met zoveel
+  woorden en staat het `re_…`-kenmerk in het logboek. Dat is de enige plek
+  waar het dan nog staat.
+
+`retouren` is een eigen recht en staat **alleen bij de eigenaar** (#19): er
+gaat geld naar buiten én de aanvraag draagt naam en mailadres.
+
+### Wat er niet in zit
+
+- **Geen creditfactuur.** Een terugbetaling hoort er een te krijgen, met een
+  eigen oplopend nummer (#12). De tellertabel en de PDF liggen er klaar voor;
+  dit is de eerstvolgende stap en hij is nu nog handwerk voor de boekhouding.
+- **Geen retourlabel uit de shop.** De klant krijgt er al een per post bij zijn
+  bestelling; de pagina verwijst daarnaar en noemt het retouradres voor wie het
+  kwijt is.
+- **Geen automatische retour bij de groothandel.** Inkopen is handwerk (#4) en
+  terugsturen dus ook.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -1829,4 +1926,5 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-17 | Privacyverklaring uitgebreid, geen cookiebanner | De AVG vraagt om wat er op onze server staat; de banner gaat alleen over het apparaat van de bezoeker (#16) |
 | 2026-09-19 | Eigen prijs: opslag op de inkoopprijs, per groep | De eigenaar bepaalt zijn marge zelf; de adviesprijs blijft staan waar hij niets invult (#17) |
 | 2026-09-19 | Prijs bij onderdelen hangt aan het soortnummer, niet aan de categorie | De categorie ontbreekt bij een zoekresultaat, en dan zou het afrekenen een ander bedrag uitrekenen dan de klant zag (#17) |
+| 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-19 | Beoordelingen verschijnen meteen, verbergen alleen met reden | Selectief publiceren is een oneerlijke handelspraktijk; antwoorden werkt beter dan weghalen (#18) |

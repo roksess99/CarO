@@ -486,7 +486,8 @@
     "paid": {
       "title": "Thank you for your order",
       "body": "Your payment went through. The confirmation with the order invoice is on its way to {email}.",
-      "delivery": "You will hear from us as soon as your order is on its way. You have 14 days to change your mind."
+      "delivery": "You will hear from us as soon as your order is on its way. You have 14 days to change your mind.",
+      "returns": "Need to send something back? <link>Start a return</link> — your order is already loaded."
     },
     "pending": {
       "title": "We are checking your payment",
@@ -523,7 +524,8 @@
       "linkFaq": "Frequently asked questions",
       "linkContact": "Contact",
       "coc": "Chamber of Commerce {value}",
-      "vatNumber": "VAT {value}"
+      "vatNumber": "VAT {value}",
+      "returnsLink": "Start a return"
     }
   },
   "footer": {
@@ -538,6 +540,7 @@
     "privacyLink": "Privacy and cookies",
     "termsLink": "Terms and conditions",
     "faqLink": "FAQ",
+    "returnsLink": "Start a return",
     "contactLink": "Contact",
     "navLabel": "Footer navigation",
     "serviceTitle": "Customer service",
@@ -819,6 +822,85 @@
       "invalid": "This value is not valid.",
       "rateLimit": "You have sent several messages in a short time. Try again in an hour, or email info@caroparts.nl directly.",
       "send": "The message could not be sent. Please email us directly at info@caroparts.nl."
+    }
+  },
+  "returns": {
+    "metaTitle": "Start a return",
+    "metaDescription": "Start your return with your order number and email address. You get a return number and the amount goes back to the account you paid with.",
+    "title": "Start a return",
+    "intro": "Enter your order number and the email address of your order, choose what goes back and you get a return number straight away. If you came here from the link in your confirmation email, your order is already loaded.",
+    "search": "Find order",
+    "searching": "Searching…",
+    "found": "Your order",
+    "whatBack": "What goes back?",
+    "whyBack": "Why is it going back?",
+    "quantity": "Quantity",
+    "ofOrdered": "of {count} possible",
+    "alreadyReturned": "{count} already registered",
+    "sending": "Sending…",
+    "submitButton": "Start return",
+    "fields": {
+      "reference": "Order number",
+      "referenceHint": "It is in your confirmation email and on the PDF, for example CARO-20260924-G5QG.",
+      "email": "Email address of the order",
+      "emailHint": "The same address you ordered with. We use the two together to find your order.",
+      "note": "Notes (optional)",
+      "noteHint": "For a cooling-off return you do not have to give a reason. For a defect it helps if you describe what is wrong."
+    },
+    "reasons": {
+      "withdrawal": "Cooling-off period",
+      "wrong": "Wrong item delivered",
+      "damaged": "Arrived damaged",
+      "defect": "Faulty or under warranty"
+    },
+    "reasonHints": {
+      "withdrawal": "You have fourteen days after delivery to cancel your order. No reason needed; you pay for the return shipment.",
+      "wrong": "You received something other than what you ordered. The return shipment is on us.",
+      "damaged": "The item arrived damaged. The return shipment is on us.",
+      "defect": "The item failed within the warranty period. The return shipment is on us."
+    },
+    "summary": {
+      "items": "Items",
+      "shipping": "Shipping",
+      "shippingStays": "not refunded",
+      "total": "To be refunded",
+      "note": "Shipping is refunded when your whole order comes back. If you return part of it, the parcel was still shipped and the cost stays."
+    },
+    "lookup": {
+      "unknown": "We cannot find an order with this order number and email address. Check both, or send us a message.",
+      "notPaid": "No payment was completed for this order, so there is nothing to refund. Get in touch if that is not right.",
+      "openReturn": "A return is already running for this order. We have your request; you will hear from us once the parcel arrives.",
+      "nothingLeft": "Every item in this order has already been registered for return.",
+      "rateLimit": "You have tried too often in a row. Wait a moment and try again.",
+      "error": "Something went wrong while searching. Try again later or send us a message."
+    },
+    "submit": {
+      "unknown": "We could not find your order any more. Refresh the page and try again.",
+      "empty": "First choose how many of an item go back.",
+      "rateLimit": "You have tried too often in a row. Wait a moment and try again.",
+      "error": "Something went wrong while registering your return. Try again later or send us a message."
+    },
+    "done": {
+      "title": "Your return is registered",
+      "reference": "Return number:",
+      "amount": "You will get {amount} back on the account you paid with.",
+      "next": "Write the return number on the parcel or include the confirmation email, and use the return label that came with your order. Once the parcel arrives we refund the amount, within fourteen days."
+    },
+    "rules": {
+      "title": "The rules in short",
+      "window": "Fourteen days to change your mind after delivery, and another fourteen days to send it back.",
+      "condition": "Parts that have been fitted, or whose seal is broken, cannot be taken back.",
+      "cost": "You pay for the return shipment when you change your mind. If we delivered the wrong or a damaged item, we pay.",
+      "refund": "We refund within fourteen days, to the account you paid with. We may wait until the parcel has arrived."
+    },
+    "address": {
+      "title": "Return address",
+      "body": "Use the return label that came with your order. Lost it? Send to:"
+    },
+    "help": {
+      "title": "Rather write it yourself?",
+      "body": "This form is a convenience, not a condition. You may also send your withdrawal in a message — through <contact>the contact form</contact> or by email — as long as it is clear that you want to cancel the order.",
+      "terms": "The full right of withdrawal is in <terms>the terms and conditions</terms>."
     }
   },
   "fitment": {

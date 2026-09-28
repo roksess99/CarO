@@ -44,6 +44,9 @@ const EXPECTED = [
   // 0006_reviews.sql
   "reviews",
   "review_products",
+  // 0009_returns.sql
+  "returns",
+  "return_lines",
 ];
 
 function readEnvFile() {

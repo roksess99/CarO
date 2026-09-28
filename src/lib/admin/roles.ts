@@ -32,6 +32,8 @@ export type Permission =
   | "kortingen"
   /** Beoordelingen beantwoorden, verbergen en uitnodigingen sturen */
   | "beoordelingen"
+  /** Retouren afhandelen en geld terugboeken */
+  | "retouren"
   /** Mensen uitnodigen, rollen wijzigen, toegang intrekken */
   | "beheerders";
 
@@ -41,6 +43,7 @@ const ALL: ReadonlyArray<Permission> = [
   "prijzen",
   "kortingen",
   "beoordelingen",
+  "retouren",
   "beheerders",
 ];
 
@@ -54,6 +57,11 @@ const ALL: ReadonlyArray<Permission> = [
  *   Dat is geen taak die je delegeert aan wie er toevallig ook bij moet.
  * - **`beheerders`** kan rechten uitdelen, en daarmee elk ander recht. Wie dit
  *   heeft, heeft in de praktijk alles.
+ *
+ * **`retouren`** staat er om beide redenen tegelijk: er gaat geld terug naar
+ * een klant, en de aanvraag draagt zijn naam en mailadres. Een boekhouder
+ * ziet de creditbedragen straks in het omzetoverzicht; de knop hoort bij de
+ * eigenaar.
  *
  * `bestellingen` staat er ook bij, maar om een andere reden: daar staan naam,
  * adres en mailadres van klanten in. Dataminimalisatie (AVG) zegt dat je die

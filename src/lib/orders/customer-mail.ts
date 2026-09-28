@@ -69,9 +69,11 @@ export async function renderCustomerMail(
   const doc = order.document;
   const customer = doc.customer;
 
-  const statusUrl = `${url(locale, "/checkout/status")}?ref=${encodeURIComponent(
-    order.reference,
-  )}&t=${encodeURIComponent(order.accessToken)}`;
+  const key = `?ref=${encodeURIComponent(order.reference)}&t=${encodeURIComponent(
+    order.accessToken,
+  )}`;
+  const statusUrl = `${url(locale, "/checkout/status")}${key}`;
+  const returnsUrl = `${url(locale, "/returns")}${key}`;
 
   const addressLines = [
     `${customer.firstName} ${customer.lastName}`,
@@ -245,6 +247,9 @@ export async function renderCustomerMail(
       </p>
       <p style="margin:0;font-family:${FONT};font-size:13px;line-height:1.6;color:${MUTED};">
         ${escapeHtml(t("returnsNote"))}
+        <!-- Met het toegangsteken erin: dan is de bestelling al bewezen en
+             hoeft de klant zijn ordernummer niet over te typen. -->
+        <a href="${returnsUrl}" style="color:${INK};text-decoration:underline;">${escapeHtml(t("returnsLink"))}</a>
       </p>
     </td>
   </tr>

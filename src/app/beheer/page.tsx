@@ -9,6 +9,7 @@ import {
 } from "@/lib/admin/roles";
 import { requireAdmin } from "@/lib/admin/session";
 import { listOrders, orderTotals } from "@/lib/orders/store";
+import { returnTotals } from "@/lib/returns/store";
 import { signOut } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,7 @@ const NAV: ReadonlyArray<{ href: string; label: string; needs: Permission }> = [
     label: "Beoordelingen",
     needs: "beoordelingen",
   },
+  { href: "/beheer/retouren", label: "Retouren", needs: "retouren" },
   { href: "/beheer/facturen", label: "Facturen", needs: "facturen" },
   { href: "/beheer/beheerders", label: "Beheerders", needs: "beheerders" },
 ];
@@ -57,6 +59,7 @@ const GEWEIGERD: Record<Permission, string> = {
   prijzen: "de prijzen",
   kortingen: "de kortingen en kortingscodes",
   beoordelingen: "de beoordelingen",
+  retouren: "de retouren",
   beheerders: "het beheer van gebruikers",
 };
 
@@ -74,9 +77,14 @@ export default async function BeheerPage({
   // Alleen ophalen wat deze rol mag zien. Klantgegevens niet uit de database
   // trekken voor iemand die ze toch niet te zien krijgt is geen detail: het
   // is het verschil tussen "afgeschermd" en "niet opgehaald".
-  const [totals, recent] = await Promise.all([
+  const magRetouren = can(admin.role, "retouren");
+  // De retourcijfers zijn optellingen zonder klantgegevens en horen bij de
+  // omzet: wie de omzet mag zien, hoort te zien wat er weer af ging. De
+  // aanvragen zelf (met naam en artikel) blijven achter `retouren` zitten.
+  const [totals, recent, returns] = await Promise.all([
     magOmzet || magBestellingen ? orderTotals() : null,
     magBestellingen ? listOrders({ limit: 10 }) : null,
+    magOmzet || magBestellingen ? returnTotals() : null,
   ]);
 
   const nav = NAV.filter((item) => can(admin.role, item.needs));
@@ -127,13 +135,55 @@ export default async function BeheerPage({
         </p>
       )}
 
+      {/* Een retour heeft een wettelijke termijn van veertien dagen; dat is
+          het enige op dit scherm waar een klok op staat. Daarom een melding en
+          geen tegel tussen de omzetcijfers. */}
+      {magRetouren && returns && returns.openCount > 0 && (
+        <p className="mt-6 rounded-lg border border-border border-s-4 border-s-caro-orange bg-background p-4 text-sm">
+          <Link href="/beheer/retouren" className="font-semibold underline">
+            {returns.openCount === 1
+              ? "Eén retour wacht op behandeling"
+              : `${returns.openCount} retouren wachten op behandeling`}
+          </Link>
+        </p>
+      )}
+
       {totals && (
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Tile label="Betaalde bestellingen" value={String(totals.paidCount)} />
           <Tile
             label="Omzet incl. btw"
             value={formatPriceCents(totals.paidGrossCents)}
-            note={`waarvan ${formatPriceCents(totals.paidVatCents)} btw`}
+            note={
+              <>
+                waarvan {formatPriceCents(totals.paidVatCents)} btw
+                {/* De omzet blijft staan op wat er binnenkwam; het bedrag ná
+                    retouren staat eronder in plaats van dat het stil van het
+                    grote getal af gaat. Twee verschillende vragen, en de
+                    boekhouding stelt ze allebei. */}
+                {returns && returns.refundedCents > 0 && (
+                  <span className="block">
+                    {formatPriceCents(totals.paidGrossCents - returns.refundedCents)}{" "}
+                    na retouren
+                  </span>
+                )}
+              </>
+            }
+          />
+          <Tile
+            label="Terugbetaald"
+            value={formatPriceCents(returns?.refundedCents ?? 0)}
+            note={
+              returns && returns.refundedCount > 0
+                ? `${returns.refundedCount} ${returns.refundedCount === 1 ? "retour" : "retouren"} afgerond${
+                    returns.openCount > 0
+                      ? ` · ${returns.openCount} nog open`
+                      : ""
+                  }`
+                : returns && returns.openCount > 0
+                  ? `${returns.openCount} ${returns.openCount === 1 ? "retour loopt" : "retouren lopen"} nog`
+                  : "nog geen retouren"
+            }
           />
           <Tile
             label="Wacht op betaling"
@@ -232,7 +282,8 @@ function Tile({
 }: {
   label: string;
   value: string;
-  note?: string;
+  /** Eén of twee regels onder het getal; mag opmaak dragen */
+  note?: React.ReactNode;
 }) {
   return (
     <div className="rounded-lg border border-border bg-background p-5">

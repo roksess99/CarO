@@ -1,12 +1,12 @@
 "use server";
 
-import { headers } from "next/headers";
 import {
   type ContactField,
   HONEYPOT_FIELD,
   validateContact,
 } from "@/lib/contact/schema";
 import { sendMail } from "@/lib/mail";
+import { callerKey, withinLimit } from "@/lib/rate-limit";
 
 export interface ContactState {
   status: "idle" | "sent" | "error";
@@ -16,44 +16,8 @@ export interface ContactState {
   error?: "rateLimit" | "send";
 }
 
-/**
- * Eenvoudige rem: hoeveel berichten één afzender per uur mag sturen.
- *
- * Bewust in het geheugen en niet in een database — die is er nog niet, en
- * een contactformulier is het niet waard er een op te tuigen. De gevolgen
- * daarvan, expliciet: de teller begint opnieuw bij elke herstart, en op meer
- * dan één instantie telt elke instantie apart. Het is een drempel tegen een
- * losgeslagen script, geen sluitende beveiliging. Het honeypot-veld vangt de
- * domme bots; dit vangt het herhalen.
- */
-const WINDOW_MS = 60 * 60 * 1000;
-const MAX_PER_WINDOW = 5;
-const recent = new Map<string, number[]>();
-
-function withinLimit(key: string): boolean {
-  const now = Date.now();
-  const times = (recent.get(key) ?? []).filter((at) => now - at < WINDOW_MS);
-  if (times.length >= MAX_PER_WINDOW) {
-    recent.set(key, times);
-    return false;
-  }
-  times.push(now);
-  recent.set(key, times);
-  // De map mag niet oneindig groeien als er dagenlang verkeer op staat
-  if (recent.size > 5000) {
-    for (const [otherKey, otherTimes] of recent) {
-      if (otherTimes.every((at) => now - at >= WINDOW_MS)) recent.delete(otherKey);
-    }
-  }
-  return true;
-}
-
-/** Het adres van de bezoeker, alleen om te tellen — het wordt niet bewaard */
-async function callerKey(): Promise<string> {
-  const list = await headers();
-  const forwarded = list.get("x-forwarded-for");
-  return forwarded?.split(",")[0]?.trim() || list.get("x-real-ip") || "onbekend";
-}
+/** Vijf berichten per uur per afzender; de rem zelf staat in lib/rate-limit */
+const LIMIT = { bucket: "contact", max: 5 } as const;
 
 export async function sendContactMessageAction(
   _previous: ContactState,
@@ -75,7 +39,7 @@ export async function sendContactMessageAction(
     return { status: "error", fieldErrors: result.fieldErrors };
   }
 
-  if (!withinLimit(await callerKey())) {
+  if (!withinLimit(await callerKey(), LIMIT)) {
     return { status: "error", error: "rateLimit" };
   }
 
