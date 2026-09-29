@@ -1860,6 +1860,52 @@ uitzondering.
 
 ---
 
+## 21. De productiebouw draait op webpack, niet op Turbopack — VASTGESTELD 2026-09-29
+
+De eerste deploy bij Hostinger viel om, en niet op onze code:
+
+```
+FATAL: An unexpected Turbopack error occurred.
+Error [TurbopackInternalError]: [project]/src/app/globals.css [app-client] (css)
+Caused by:
+- creating new process
+- node process exited before we could connect to it with exit status: 0
+- Execution of evaluate_webpack_loader failed
+```
+
+Wat daar gebeurt: Tailwind v4 draait als PostCSS-plugin, en **Turbopack voert
+een PostCSS-loader uit in een apart node-proces** dat het via een socket
+aanspreekt. Dat proces start op de bouwmachine van Hostinger en stopt meteen
+weer — status 0, geen uitvoer, geen foutmelding. Op gedeelde hosting is dat te
+verwachten: het aantal processen is er begrensd. Wij kunnen dat niet instellen
+en Turbopack heeft er geen schakelaar voor.
+
+**Dus bouwt productie met webpack:** `next build --webpack`. Webpack draait
+PostCSS *in* het bouwproces — geen tweede proces, geen socket, dus ook niets dat
+de hostingpartij kan weigeren. GEMETEN 2026-09-29 met
+`next build --webpack --experimental-build-mode compile`: "Compiled successfully
+in 6,5s", zonder waarschuwingen, en `experimental.inlineCss` werkt er ook (de
+webpack-CSS-loaders kennen die optie, nagekeken in de Next-bron).
+
+Alleen de bouw gaat om. `pnpm dev` blijft Turbopack, want daar is niets mis: het
+probleem zit in de bouwmachine van de hostingpartij, niet in Turbopack zelf.
+
+Twee andere wegen, en waarom niet:
+
+- **Tailwind vooraf naar gewone CSS draaien** met de Tailwind-CLI, en
+  `postcss.config.mjs` weggooien. Dan hoeft Turbopack geen loader te starten.
+  Kost een extra pakket en een extra stap vóór elke bouw — meer bewegende
+  delen dan één woord op de bouwregel.
+- **Lokaal bouwen en `.next` uploaden.** Werkt altijd, maar dan bouwt niemand
+  meer wat er in Git staat, en dat is precies het soort verschil waar je later
+  een uur aan kwijt bent.
+
+Blijft staan als risico: webpack vraagt meer geheugen dan Turbopack. Valt de
+bouw straks opnieuw om, maar dan met een geheugenmelding (of een proces dat op
+signaal 9 sneuvelt), dan is dát het volgende spoor — niet de CSS.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -1974,4 +2020,5 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-19 | Eigen prijs: opslag op de inkoopprijs, per groep | De eigenaar bepaalt zijn marge zelf; de adviesprijs blijft staan waar hij niets invult (#17) |
 | 2026-09-19 | Prijs bij onderdelen hangt aan het soortnummer, niet aan de categorie | De categorie ontbreekt bij een zoekresultaat, en dan zou het afrekenen een ander bedrag uitrekenen dan de klant zag (#17) |
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
+| 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-09-19 | Beoordelingen verschijnen meteen, verbergen alleen met reden | Selectief publiceren is een oneerlijke handelspraktijk; antwoorden werkt beter dan weghalen (#18) |

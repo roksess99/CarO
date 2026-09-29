@@ -9,7 +9,7 @@
     "mollie:check": "node scripts/check-mollie.mjs",
     "orders:migrate": "node scripts/migrate-orders.mjs",
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit"
