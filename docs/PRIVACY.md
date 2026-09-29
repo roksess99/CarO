@@ -45,7 +45,10 @@ hetzelfde doel — maar er kwam één ding bij dat er eerder niet was.
 | `discount_code_uses` | **`email_key`: het mailadres in kleine letters, niet gehasht** | Gerechtvaardigd belang: "één keer per klant" is niet af te dwingen zonder het adres | Zolang de code bestaat, daarna hoogstens een jaar |
 | `reviews` | de naam die de klant zelf koos, zijn tekst, en **`email_key`: het mailadres waar de uitnodiging heen ging** | Gerechtvaardigd belang: beoordelingen tonen, en weten wie om verwijdering vraagt | Zolang de beoordeling op de site staat |
 | `review_products` | welk artikel welk cijfer kreeg | idem | idem |
+| `returns` | het mailadres waarmee besteld is (`email_key`), plus wat er terugkomt en waarom | Uitvoering van de overeenkomst (art. 6 lid 1 sub b AVG): een retour is de afwikkeling van diezelfde koop | 7 jaar — een terugbetaling is een boekstuk |
 | `admins`, `admin_sessions`, `admin_invites`, `audit_log` | mailadres van de beheerder | Noodzakelijk voor de toegangsbeveiliging | Zolang het account bestaat |
+
+`return_lines` draagt geen persoonsgegeven: artikelnummers en aantallen.
 
 `price_history` en `job_runs` bevatten geen persoonsgegevens: artikel-ids,
 datums en bedragen.
@@ -74,6 +77,23 @@ klantrelatie — geen toestemming vooraf nodig. Wat er wél bij hoort en er ook
 in staat: er gaat er precies één per bestelling uit, en wie hem niet wil mailt
 terug. Een uitschrijflink zou hier misleidend zijn, want er is geen lijst om
 je voor uit te schrijven.
+
+## De groothandel staat er zonder naam — 2026-09-28
+
+Winkelkeuze van de eigenaar: de naam van de leverancier geven we niet weg. Op
+`/nl/privacy` stond "Tyre24 / ALZURA — onze leverancier"; dat is nu "Onze
+groothandel" (`privacy.thirdSupplier`).
+
+**De regel zelf mag niet weg.** Art. 13 lid 1 sub e AVG vraagt "de ontvangers
+of **categorieën van ontvangers**" — een categorie noemen is dus toegestaan,
+een ontvanger verzwijgen niet. De hostingpartij staat er om dezelfde reden al
+zonder naam in.
+
+**Wat de naam nog wél weggeeft: de productfoto's.** Die staan op het CDN van de
+leverancier, en die URL komt op elke productpagina terug — in `<meta property="og:image">`,
+in de JSON-LD en in `/_next/image?url=…`. Wie de broncode opent leest daar de
+naam van de groothandel. Dat is niet met een tekstwijziging op te lossen; het
+vraagt dat de foto's via ons eigen domein lopen.
 
 ## Geen toestemmingsbanner nodig, ook nu de database er is
 

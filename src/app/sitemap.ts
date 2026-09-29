@@ -132,6 +132,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     }),
+    // Hoe je iets terugstuurt is een vraag die mensen googelen vóórdat ze
+    // bestellen; die pagina hoort dus vindbaar te zijn. De varianten met een
+    // ordernummer erin sluit robots.ts uit.
+    ...entry((locale) => getPathname({ locale, href: "/returns" }), {
+      changeFrequency: "yearly",
+      priority: 0.5,
+    }),
     ...entry((locale) => getPathname({ locale, href: "/contact" }), {
       changeFrequency: "yearly",
       priority: 0.5,

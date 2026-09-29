@@ -40,6 +40,8 @@ export default function robots(): MetadataRoute.Robots {
           // "Meer laden" en filters maken varianten van een pagina die al in
           // de index staat.
           "/*?*toon=",
+          // De persoonlijke retourlink uit de bevestigingsmail
+          "/*?*ref=",
           "/*?*alles=",
           `/*?*${FILTER_PARAM}=`,
         ],

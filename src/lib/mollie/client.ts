@@ -89,10 +89,7 @@ function toPayment(data: MolliePaymentResponse): MolliePayment {
   };
 }
 
-async function request(
-  path: string,
-  init: RequestInit = {},
-): Promise<MolliePaymentResponse> {
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API}${path}`, {
     ...init,
     headers: {
@@ -113,7 +110,7 @@ async function request(
         : response.statusText;
     throw new MollieError(`Mollie ${response.status}: ${detail}`, response.status);
   }
-  return body as MolliePaymentResponse;
+  return body as T;
 }
 
 export interface CreatePaymentInput {
@@ -141,7 +138,7 @@ export interface CreatePaymentInput {
 export async function createPayment(
   input: CreatePaymentInput,
 ): Promise<MolliePayment> {
-  const data = await request("/payments", {
+  const data = await request<MolliePaymentResponse>("/payments", {
     method: "POST",
     headers: {
       // Een dubbele klik op "betalen" mag geen tweede betaling opleveren
@@ -163,5 +160,68 @@ export async function createPayment(
 }
 
 export async function getPayment(id: string): Promise<MolliePayment> {
-  return toPayment(await request(`/payments/${encodeURIComponent(id)}`));
+  return toPayment(
+    await request<MolliePaymentResponse>(`/payments/${encodeURIComponent(id)}`),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Terugbetalen
+// ---------------------------------------------------------------------------
+
+interface MollieRefundResponse {
+  id: string;
+  status: string;
+  amount: MollieAmount;
+}
+
+export interface MollieRefund {
+  /** `re_…` */
+  id: string;
+  /** `queued`, `pending`, `processing` of `refunded` */
+  status: string;
+  amountCents: number;
+}
+
+/**
+ * Boekt geld terug op een betaalde betaling.
+ *
+ * Het gaat terug naar dezelfde rekening als waarmee betaald is; we vragen dus
+ * nooit om een IBAN en bewaren geen bankgegevens (docs/DECISIONS.md #20).
+ *
+ * **`reference` is het retournummer en gaat mee als idempotentiesleutel.**
+ * Twee tabbladen die allebei op "terugbetalen" drukken leveren dan één
+ * terugboeking op: Mollie geeft bij de tweede dezelfde `re_…` terug in plaats
+ * van het bedrag nóg een keer over te maken. Dat is hier geen luxe — de
+ * database kan een dubbele aanroep wel tegenhouden, maar pas nádat het geld
+ * al weg zou zijn.
+ *
+ * Een bedrag hoger dan wat er betaald is weigert Mollie zelf; die controle
+ * hoeft hier niet nagebouwd te worden.
+ */
+export async function createRefund(input: {
+  paymentId: string;
+  amountCents: number;
+  description: string;
+  reference: string;
+}): Promise<MollieRefund> {
+  const data = await request<MollieRefundResponse>(
+    `/payments/${encodeURIComponent(input.paymentId)}/refunds`,
+    {
+      method: "POST",
+      headers: { "Idempotency-Key": input.reference },
+      body: JSON.stringify({
+        amount: {
+          currency: "EUR",
+          value: priceCentsToDecimalString(input.amountCents),
+        },
+        description: input.description.slice(0, 140),
+      }),
+    },
+  );
+  return {
+    id: data.id,
+    status: data.status,
+    amountCents: centsFromAmount(data.amount),
+  };
 }

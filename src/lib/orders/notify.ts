@@ -5,6 +5,7 @@ import { renderOrderPdf } from "@/lib/checkout/order-pdf";
 import { COMPANY } from "@/lib/company";
 import { formatPriceCents } from "@/lib/format";
 import { sendMail, type MailAttachment } from "@/lib/mail";
+import { renderAdminMail } from "./admin-mail";
 import { LOGO_CID, renderCustomerMail } from "./customer-mail";
 import { productLabel } from "./product-label";
 import type { StoredOrder } from "./types";
@@ -82,6 +83,10 @@ function textTable(rows: readonly (readonly string[])[]): string {
 /**
  * De inkooptabel voor de beheerder: alles wat hij nodig heeft om de artikelen
  * bij de groothandel te bestellen, zonder ze op naam te moeten terugzoeken.
+ *
+ * Dit is de platte-tekstversie; wat de beheerder in zijn mailprogramma ziet is
+ * de HTML-tabel uit lib/orders/admin-mail.ts. Beide tonen dezelfde kolommen —
+ * verandert er één, dan de ander ook.
  *
  * ARTIKELNR is het id van de leverancier — daarmee is het artikel direct te
  * vinden. OEM-NUMMER staat ernaast om te controleren of het om hetzelfde
@@ -231,6 +236,7 @@ export async function sendOrderNotifications(
       "",
       "De orderbevestiging zit als PDF bij deze mail.",
     ].join("\n"),
+    html: renderAdminMail(order),
     attachments: [attachment],
   });
 }

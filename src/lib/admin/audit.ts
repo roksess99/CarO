@@ -30,7 +30,14 @@ export type AuditAction =
   | "beoordeling.verborgen"
   | "beoordeling.getoond"
   | "prijsmeting.handmatig"
-  | "bestelling.ingekocht";
+  | "bestelling.ingekocht"
+  | "retour.ontvangen"
+  // Geld dat de deur uit gaat, en de enige regel hier die dat doet. Het
+  // `re_…`-kenmerk van Mollie staat in `detail`, ook als de rij daarna niet
+  // bijgewerkt kon worden — dan is dit logboek de enige plek waar het staat.
+  | "retour.terugbetaald"
+  | "retour.terugbetaling-mislukt"
+  | "retour.afgewezen";
 
 export async function logAction(options: {
   adminId: number;

@@ -4,6 +4,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { COMPANY, companyValue } from "@/lib/company";
 import { formatPriceCents } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
+import { escapeHtml, FONT, INK, LINE, MUTED, ORANGE, WHITE, ZINC } from "./mail-style";
 import type { StoredOrder } from "./types";
 
 /**
@@ -31,32 +32,11 @@ import type { StoredOrder } from "./types";
 /** Verwijzing waarmee de HTML het meegestuurde logo aanhaalt */
 export const LOGO_CID = "caro-lockup";
 
-// Kleuren uit docs/BRAND.md. Geen CSS-variabelen: die kent geen enkele
-// mailclient. De oranje knop krijgt inkt-zwarte tekst, nooit witte — wit op
-// oranje haalt 2,87:1 en zakt door elke contrasteis heen.
-const INK = "#0E1013";
-const ORANGE = "#FF6A13";
-const ZINC = "#F5F6F7";
-const MUTED = "#646b75";
-const LINE = "#e5e7e9";
-const WHITE = "#ffffff";
-
-const FONT =
-  "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
-
 /** Eén artikelregel zoals de mail hem toont; het label is al samengesteld */
 export interface CustomerMailLine {
   label: string;
   quantity: number;
   lineGrossCents: number;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 function url(locale: Locale, href: Parameters<typeof getPathname>[0]["href"]) {
@@ -89,9 +69,11 @@ export async function renderCustomerMail(
   const doc = order.document;
   const customer = doc.customer;
 
-  const statusUrl = `${url(locale, "/checkout/status")}?ref=${encodeURIComponent(
-    order.reference,
-  )}&t=${encodeURIComponent(order.accessToken)}`;
+  const key = `?ref=${encodeURIComponent(order.reference)}&t=${encodeURIComponent(
+    order.accessToken,
+  )}`;
+  const statusUrl = `${url(locale, "/checkout/status")}${key}`;
+  const returnsUrl = `${url(locale, "/returns")}${key}`;
 
   const addressLines = [
     `${customer.firstName} ${customer.lastName}`,
@@ -265,6 +247,9 @@ export async function renderCustomerMail(
       </p>
       <p style="margin:0;font-family:${FONT};font-size:13px;line-height:1.6;color:${MUTED};">
         ${escapeHtml(t("returnsNote"))}
+        <!-- Met het toegangsteken erin: dan is de bestelling al bewezen en
+             hoeft de klant zijn ordernummer niet over te typen. -->
+        <a href="${returnsUrl}" style="color:${INK};text-decoration:underline;">${escapeHtml(t("returnsLink"))}</a>
       </p>
     </td>
   </tr>

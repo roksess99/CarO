@@ -92,6 +92,27 @@ export default async function OrderStatusPage({ params, searchParams }: Props) {
 
         {paid && <p className="mt-6 text-sm text-muted">{t("paid.delivery")}</p>}
 
+        {/* Vanaf hier is de bestelling al bewezen — de bezoeker kwam binnen met
+            het toegangsteken — dus de retourlink draagt hem mee en de klant
+            hoeft niets in te typen. */}
+        {paid && (
+          <p className="mt-2 text-sm text-muted">
+            {t.rich("paid.returns", {
+              link: (chunks) => (
+                <Link
+                  href={{
+                    pathname: "/returns",
+                    query: { ref: order.reference, t: order.accessToken },
+                  }}
+                  className="underline underline-offset-4 hover:text-foreground"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
+        )}
+
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/"
