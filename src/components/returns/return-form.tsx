@@ -210,26 +210,41 @@ function ChooseLines({ order, token }: { order: FoundOrder; token?: string }) {
         </ul>
       </fieldset>
 
+      {/* Het veld staat naast het label en niet erin. Een label dat het rondje
+          omsluit maakt álle tekst eronder de naam van die optie, dus een
+          schermlezer leest "Bedenktijd Je hebt veertien dagen na ontvangst om
+          je bestelling te annuleren…" voor als naam. Nu is de naam kort en
+          hangt de uitleg eraan als beschrijving. */}
       <fieldset>
         <legend className="mb-2 font-bold">{t("whyBack")}</legend>
         <div className="space-y-2">
           {RETURN_REASONS.map((reason: ReturnReason, index) => (
-            <label key={reason} className="flex items-start gap-3 text-sm">
+            <div key={reason} className="flex items-start gap-3 text-sm">
               <input
+                id={`${uid}-${reason}`}
                 type="radio"
                 name="reason"
                 value={reason}
                 defaultChecked={index === 0}
                 required
+                aria-describedby={`${uid}-${reason}-hint`}
                 className="mt-1"
               />
               <span>
-                <span className="font-medium">{t(`reasons.${reason}`)}</span>
-                <span className="block text-muted">
+                <label
+                  htmlFor={`${uid}-${reason}`}
+                  className="font-medium cursor-pointer"
+                >
+                  {t(`reasons.${reason}`)}
+                </label>
+                <span
+                  id={`${uid}-${reason}-hint`}
+                  className="block text-muted"
+                >
                   {t(`reasonHints.${reason}`)}
                 </span>
               </span>
-            </label>
+            </div>
           ))}
         </div>
       </fieldset>

@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { execute, query, queryOne, transaction } from "@/lib/db/client";
 import type {
   ReturnLine,
@@ -85,6 +86,14 @@ function toStoredReturn(row: ReturnRow, lines: LineRow[]): StoredReturn {
  * Dit hoeft geen aaneengesloten reeks te zijn — het is een kenmerk en geen
  * boekstuk. Een creditfactuur is dat wél, en die krijgt zijn nummer uit de
  * tellertabel (docs/DECISIONS.md #12).
+ *
+ * **Het nummer is een label, geen sleutel.** Er is geen enkele ingang waar een
+ * retournummer iets opent: de drie acties die er één aannemen zitten allemaal
+ * achter `requirePermission("retouren")`. Het staat hier toch met `randomInt`
+ * uit `node:crypto` en niet met `Math.random()`, om twee redenen: een
+ * kwaliteitsscan blijft anders terecht vragen of dit een geheim is, en mocht
+ * er ooit wél een klantpagina op dit nummer komen, dan is die vraag al
+ * beantwoord. Het kost niets — dit draait één keer per retour.
  */
 function newReference(now: Date = new Date()): string {
   const date = [
@@ -92,7 +101,7 @@ function newReference(now: Date = new Date()): string {
     String(now.getMonth() + 1).padStart(2, "0"),
     String(now.getDate()).padStart(2, "0"),
   ].join("");
-  const suffix = Math.floor(Math.random() * 36 ** 4)
+  const suffix = randomInt(36 ** 4)
     .toString(36)
     .toUpperCase()
     .padStart(4, "0");
