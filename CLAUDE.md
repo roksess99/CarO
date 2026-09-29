@@ -136,7 +136,8 @@ Voeg geen libraries toe zonder te vragen. Geen state-manager, geen UI-kit.
 
 ```bash
 pnpm dev          # http://localhost:3000
-pnpm build        # moet slagen voor elke commit
+pnpm build        # moet slagen voor elke commit; bouwt met **webpack**,
+                  # niet met Turbopack (@docs/DECISIONS.md #21)
 pnpm lint
 pnpm typecheck    # tsc --noEmit
 pnpm mail:check   # SMTP los van de site testen (--send stuurt een bericht)
