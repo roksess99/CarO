@@ -142,9 +142,15 @@ export function refundFor(
   }
 
   const doc = order.document;
+  // Dezelfde kap als hierboven, en niet de rauwe keuze. Zonder dat telt een
+  // aantal van 99 op een regel waar er één terug kan als "alles terug", en dan
+  // gaan de verzendkosten mee terug op een gedeeltelijke retour.
   const isComplete = lines.every((line) => {
-    const after = line.alreadyReturned + (selection.get(line.partId) ?? 0);
-    return after >= line.ordered;
+    const wanted = Math.min(
+      Math.max(0, Math.trunc(selection.get(line.partId) ?? 0)),
+      line.returnable,
+    );
+    return line.alreadyReturned + wanted >= line.ordered;
   });
 
   const amounts = refundTotal({

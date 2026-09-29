@@ -876,6 +876,7 @@
     },
     "submit": {
       "unknown": "We could not find your order any more. Refresh the page and try again.",
+      "openReturn": "A return is already running for this order. We have your request; you will hear from us once the parcel arrives.",
       "empty": "First choose how many of an item go back.",
       "rateLimit": "You have tried too often in a row. Wait a moment and try again.",
       "error": "Something went wrong while registering your return. Try again later or send us a message."

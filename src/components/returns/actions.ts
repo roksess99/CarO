@@ -62,7 +62,15 @@ export async function lookupOrderAction(
 }
 
 export interface SubmitResult {
-  status: "idle" | "done" | "unknown" | "empty" | "rateLimit" | "error";
+  status:
+    | "idle"
+    | "done"
+    | "unknown"
+    /** Er liep al een retour op deze bestelling */
+    | "openReturn"
+    | "empty"
+    | "rateLimit"
+    | "error";
   /** Het retournummer dat bij het pakket moet */
   reference?: string;
   /** Wat er terugkomt, om meteen te tonen */
@@ -93,9 +101,10 @@ export async function submitReturnAction(
       token: String(formData.get("token") ?? "") || undefined,
     });
     if (!order || order.status !== "paid") return { status: "unknown" };
-    // Opnieuw controleren, en niet alleen bij het opzoeken: tussen het tonen
-    // van het formulier en het versturen kan er al een aanvraag binnen zijn.
-    if (await hasOpenReturn(order.reference)) return { status: "unknown" };
+    // Vroege uitstap zodat we geen werk doen voor een aanvraag die tóch
+    // afketst. Het echte slot zit in `createReturn` zelf: tussen deze lezing
+    // en het wegschrijven past een tweede verzoek.
+    if (await hasOpenReturn(order.reference)) return { status: "openReturn" };
 
     const done = await returnedQuantities(order.reference);
     const lines = returnableLines(order, done);
@@ -114,7 +123,7 @@ export async function submitReturnAction(
     const note = String(formData.get("note") ?? "")
       .trim()
       .slice(0, 1000);
-    const reference = await createReturn({
+    const created = await createReturn({
       orderReference: order.reference,
       emailKey: order.document.customer.email,
       reason,
@@ -123,10 +132,18 @@ export async function submitReturnAction(
       shippingCents: refund.shippingCents,
       lines: refund.lines,
     });
+    // Twee verzoeken tegelijk: het tweede heeft op de orderrij staan wachten
+    // en ziet nu het retour van het eerste. Er is niets weggeschreven, dus ook
+    // geen mail versturen.
+    if (!created.ok) return { status: "openReturn" };
 
-    await notify({ order, reference, reason, refund, note });
+    await notify({ order, reference: created.reference, reason, refund, note });
 
-    return { status: "done", reference, amountCents: refund.totalCents };
+    return {
+      status: "done",
+      reference: created.reference,
+      amountCents: refund.totalCents,
+    };
   } catch (error) {
     console.error("Retour aanmelden mislukt:", error);
     return { status: "error" };

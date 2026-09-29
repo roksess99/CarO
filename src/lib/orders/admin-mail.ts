@@ -1,4 +1,4 @@
-import { usesVehicleCatalog } from "@/lib/catalog/families";
+import { PRODUCT_FAMILIES, usesVehicleCatalog } from "@/lib/catalog/families";
 import { COMPANY } from "@/lib/company";
 import { formatPriceCents } from "@/lib/format";
 import {
@@ -52,6 +52,22 @@ interface PurchaseRow {
  * `order.items` en `order.document.lines` lopen gelijk op; zo wordt het in
  * components/checkout/actions.ts opgebouwd.
  */
+/**
+ * Welke catalogus, en een eerlijk "?" als we het niet weten.
+ *
+ * `usesVehicleCatalog()` slaat een familie op in `FAMILIES` en gooit dus op een
+ * familie die daar niet meer in staat — en er zijn er al twee verdwenen
+ * (gereedschap en gebruikte onderdelen, 2026-09-05). Deze mail wordt verstuurd
+ * vanuit `settle.ts`, dat een fout hier **bewust niet afvangt**: dan blijft
+ * `notifiedAt` leeg en probeert Mollie het een dag lang opnieuw — met elke
+ * keer een nieuwe bevestigingsmail naar de klant, want die gaat als eerste de
+ * deur uit. Eén onbekende familie mag dat niet veroorzaken.
+ */
+function catalogOf(family: StoredOrder["items"][number]["family"]): string {
+  if (!PRODUCT_FAMILIES.includes(family)) return "?";
+  return usesVehicleCatalog(family) ? "Wearparts" : "Products";
+}
+
 function purchaseRows(order: StoredOrder): PurchaseRow[] {
   const rows = order.items.map((item, index) => {
     const line = order.document.lines[index];
@@ -60,7 +76,7 @@ function purchaseRows(order: StoredOrder): PurchaseRow[] {
       supplierId: item.partId,
       oeNumber: line?.oeNumber || "—",
       family: item.family,
-      catalog: usesVehicleCatalog(item.family) ? "Wearparts" : "Products",
+      catalog: catalogOf(item.family),
       product: line ? productLabel(line) : "?",
     };
   });

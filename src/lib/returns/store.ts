@@ -118,21 +118,57 @@ export interface NewReturn {
   lines: ReturnLine[];
 }
 
+export type CreateReturnResult =
+  | { ok: true; reference: string }
+  /** Er liep al een retour op deze bestelling; er is niets weggeschreven */
+  | { ok: false; reason: "open" };
+
 /**
- * Een aanvraag vastleggen. Geeft het retournummer terug.
+ * Een aanvraag vastleggen.
  *
  * De regels gaan in dezelfde transactie mee: een retour zonder regels is een
  * lege claim waar niemand iets mee kan, en die mag dus niet half ontstaan.
  *
- * Botst het nummer met een bestaand nummer, dan proberen we het opnieuw. Dat
- * is met 36^4 mogelijkheden per dag zeldzaam, maar "zeldzaam" is geen reden
- * om een aanvraag te laten mislukken.
+ * **De transactie begint met een slot op de bestelling, en dat is geen detail.**
+ * Een controle vooraf ("loopt er al een retour?") en daarna een INSERT is een
+ * lees-dan-schrijf die twee gelijktijdige verzoeken allebei doorlaten: beide
+ * lezen "nog geen retour", beide schrijven er één, en de beheerder betaalt
+ * hetzelfde pakket twee keer terug. Precies de fout die bij de kortingscodes
+ * met een unieke sleutel is dichtgezet (docs/DECISIONS.md #14).
+ *
+ * Een unieke sleutel kan hier niet: die zou op "open_order" moeten staan, een
+ * gegenereerde kolom, en **MariaDB 11.8 weigert élke uitdrukking in een
+ * GENERATED ALWAYS AS-clausule op dit account** (errno 1901, gemeten
+ * 2026-09-29 — ook `CONCAT(kolom)` gaat eraf). Daarom een `SELECT … FOR UPDATE`
+ * op de orderrij: het tweede verzoek wacht tot het eerste klaar is, ziet dán
+ * het lopende retour en krijgt `{ ok: false }`. Dat is geen controle in code
+ * maar een serialisatiepunt van de database — hetzelfde effect, andere deur.
+ *
+ * Botst het retournummer met een bestaand nummer, dan proberen we het opnieuw.
+ * Dat is met 36^4 mogelijkheden per dag zeldzaam, maar "zeldzaam" is geen
+ * reden om een aanvraag te laten mislukken.
  */
-export async function createReturn(input: NewReturn): Promise<string> {
+export async function createReturn(
+  input: NewReturn,
+): Promise<CreateReturnResult> {
   for (let attempt = 0; attempt < 5; attempt++) {
     const reference = newReference();
     try {
-      await transaction(async (tx) => {
+      const taken = await transaction(async (tx) => {
+        // Het slot. De rij zelf hebben we niet nodig; het gaat om de wacht.
+        await tx.execute(`SELECT reference FROM orders WHERE reference = ? FOR UPDATE`, [
+          input.orderReference,
+        ]);
+
+        const [open] = await tx.execute(
+          `SELECT COUNT(*) AS n FROM returns
+            WHERE order_reference = ? AND status IN ('requested', 'received')`,
+          [input.orderReference],
+        );
+        // De driver typeert elk resultaat als 'kan ook een schrijfactie zijn'
+        const rows = open as unknown as ReadonlyArray<{ n: number }>;
+        if (Number(rows[0]?.n ?? 0) > 0) return true;
+
         await tx.execute(
           `INSERT INTO returns (
              reference, order_reference, status, reason, note, email_key,
@@ -165,8 +201,10 @@ export async function createReturn(input: NewReturn): Promise<string> {
             ],
           );
         }
+        return false;
       });
-      return reference;
+
+      return taken ? { ok: false, reason: "open" } : { ok: true, reference };
     } catch (error) {
       const code = (error as { code?: string }).code;
       if (code !== "ER_DUP_ENTRY") throw error;
@@ -300,24 +338,6 @@ export async function returnTotals(): Promise<ReturnTotals> {
     };
   } catch {
     return { openCount: 0, refundedCount: 0, refundedCents: 0 };
-  }
-}
-
-/**
- * Hoeveel retouren wachten op behandeling. Voor het dashboard.
- *
- * Valt terug op 0 als de database niet bereikbaar is: dit getal staat op een
- * pagina die moet blijven werken, en de regel uit docs/DECISIONS.md #13 is dat
- * een lezer terugvalt op leeg (schrijvers niet).
- */
-export async function openReturnCount(): Promise<number> {
-  try {
-    const row = await queryOne<{ n: number }>(
-      `SELECT COUNT(*) AS n FROM returns WHERE status IN ('requested', 'received')`,
-    );
-    return Number(row?.n ?? 0);
-  } catch {
-    return 0;
   }
 }
 

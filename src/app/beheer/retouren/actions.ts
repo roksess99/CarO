@@ -79,11 +79,24 @@ export async function refundReturn(
   const full = returnAmountCents(entry);
   // Een lager bedrag mag: een artikel dat beschadigd terugkomt is minder waard
   // (art. 6:230s lid 3 BW laat waardevermindering in mindering brengen). Hoger
-  // mag nooit — dan zou het paneel meer terugbetalen dan er besteld is.
-  const asked = Number(formData.get("amount") ?? full);
-  const cents = Number.isFinite(asked)
-    ? Math.min(Math.max(1, Math.round(asked)), full)
-    : full;
+  // mag niet — dan zou het paneel meer terugbetalen dan er betaald is.
+  //
+  // **Buiten bereik wordt geweigerd, niet afgekapt.** Afkappen leek veilig
+  // (nooit te veel), maar een getypte "-5" werd zo een terugboeking van één
+  // cent die het retour meteen op 'terugbetaald' zette — en dan kan de rest er
+  // niet meer doorheen. Zelfde reden als bij een te diepe korting: liever een
+  // melding dan een bedrag dat stilletjes iets anders wordt (DECISIONS #14).
+  const raw = formData.get("amount");
+  const asked = raw === null ? full : Number(raw);
+  if (!Number.isFinite(asked) || !Number.isInteger(asked)) {
+    return { error: "Vul een bedrag in." };
+  }
+  if (asked < 1 || asked > full) {
+    return {
+      error: `Het bedrag moet tussen € 0,01 en ${formatPriceCents(full)} liggen.`,
+    };
+  }
+  const cents = asked;
 
   const order = await readOrder(entry.orderReference);
   if (!order?.paymentId) {
@@ -91,6 +104,11 @@ export async function refundReturn(
   }
 
   let refundId: string;
+  // Wat er werkelijk is teruggeboekt, volgens Mollie. Dat hoeft niet te zijn
+  // wat we vroegen: het retournummer gaat als idempotentiesleutel mee, dus een
+  // tweede poging met een ánder bedrag krijgt de éérste terugboeking terug.
+  // De administratie moet het bankafschrift volgen, niet het formulier.
+  let refunded: number;
   try {
     const refund = await createRefund({
       paymentId: order.paymentId,
@@ -99,6 +117,7 @@ export async function refundReturn(
       reference: entry.reference,
     });
     refundId = refund.id;
+    refunded = refund.amountCents;
   } catch (error) {
     const detail =
       error instanceof MollieError ? error.message : "onbekende fout";
@@ -112,25 +131,35 @@ export async function refundReturn(
     return { error: `Mollie weigerde de terugbetaling (${detail}).` };
   }
 
-  const written = await markReturnRefunded(reference, admin.id, refundId, cents);
+  const written = await markReturnRefunded(
+    reference,
+    admin.id,
+    refundId,
+    refunded,
+  );
   await logAction({
     adminId: admin.id,
     action: "retour.terugbetaald",
     subject: reference,
-    detail: { cents, refundId, written },
+    detail: { gevraagd: cents, teruggeboekt: refunded, refundId, written },
   });
 
   if (!written) {
     // Het geld is weg, de rij niet bijgewerkt. Dat moet luid zijn.
     return {
-      error: `Let op: Mollie heeft ${formatPriceCents(cents)} teruggeboekt (${refundId}), maar de status kon niet worden bijgewerkt. Werk hem met de hand bij.`,
+      error: `Let op: Mollie heeft ${formatPriceCents(refunded)} teruggeboekt (${refundId}), maar de status kon niet worden bijgewerkt. Werk hem met de hand bij.`,
     };
   }
 
-  await tellCustomer(entry.emailKey, entry.reference, cents);
+  await tellCustomer(entry.emailKey, entry.reference, refunded);
   revalidatePath("/beheer/retouren");
   revalidatePath("/beheer");
-  return { ok: `${formatPriceCents(cents)} teruggeboekt.` };
+  return {
+    ok:
+      refunded === cents
+        ? `${formatPriceCents(refunded)} teruggeboekt.`
+        : `${formatPriceCents(refunded)} teruggeboekt — Mollie had deze terugbetaling al staan, dus dat bedrag geldt en niet de ${formatPriceCents(cents)} die je invulde.`,
+  };
 }
 
 /** Afwijzen, met een reden die in de database én in het logboek komt. */

@@ -1800,6 +1800,53 @@ Vier dingen zitten met opzet zo in `app/beheer/retouren/actions.ts`:
 `retouren` is een eigen recht en staat **alleen bij de eigenaar** (#19): er
 gaat geld naar buiten én de aanvraag draagt naam en mailadres.
 
+### Nagelopen 2026-09-29: vier dingen die geld raakten
+
+Een codereview over dit werk leverde zes punten op; drie ervan konden geld
+kosten. Wat eruit kwam en waarom het zo is opgelost:
+
+**Twee aanvragen tegelijk gaven twee retouren.** `hasOpenReturn()` las eerst en
+schreef daarna, en daartussen past een tweede verzoek: twee tabbladen leverden
+twee retouren op dezelfde artikelen, en dus twee terugbetalingen voor één
+pakket. Precies de fout die bij de kortingscodes met een unieke sleutel is
+dichtgezet (#14).
+
+Een unieke sleutel kon hier niet. Hij zou op een gegenereerde kolom moeten
+staan ("het ordernummer zolang het retour openstaat, anders NULL"), en
+**MariaDB 11.8 weigert op dit account élke uitdrukking in een
+GENERATED ALWAYS AS-clausule** — errno 1901, ook op `CONCAT(kolom)`, zowel
+STORED als in een CREATE TABLE. Gemeten met een wegwerptabel.
+
+Daarom begint `createReturn()` nu met `SELECT … FOR UPDATE` op de orderrij en
+doet de controle *binnen* die transactie. Het tweede verzoek wacht tot het
+eerste klaar is, ziet dan het lopende retour en schrijft niets. Dat is geen
+controle in code maar een serialisatiepunt van de database. GEMETEN 2026-09-29
+met twee verbindingen tegelijk: één retour aangemaakt, de tweede kreeg
+"loopt al" — en de klant krijgt die melding ook te zien.
+
+**Een negatief bedrag werd één cent.** Het paneel kapte het bedrag af met
+`Math.max(1, …)`. Een getypte "-5" werd daardoor een terugboeking van € 0,01
+die het retour meteen op 'terugbetaald' zette — en dan kon de rest er niet meer
+doorheen. Buiten bereik wordt nu geweigerd met een melding, niet afgekapt.
+Zelfde regel als bij een te diepe korting (#14): liever een melding dan een
+bedrag dat stilletjes iets anders wordt.
+
+**De administratie volgde het formulier in plaats van de bank.** We schreven
+weg wat er gevraagd was, niet wat Mollie zei te hebben teruggeboekt. Omdat het
+retournummer als idempotentiesleutel meegaat, krijgt een tweede poging met een
+ánder bedrag de éérste terugboeking terug — en dan klopt de rij niet meer met
+het bankafschrift. `refunded_cents` komt nu uit het antwoord van Mollie, en het
+scherm zegt het als de twee verschillen.
+
+**Een verdwenen familie kon de bevestigingsmail laten herhalen.** Het
+inkoopbriefje sloeg de familie op in `FAMILIES` om de catalogus te bepalen, en
+dat gooit op een familie die daar niet meer in staat — er zijn er al twee
+verdwenen (#7). Die mail gaat uit vanuit `settle.ts`, dat een fout daar bewust
+niet afvangt, dus `notifiedAt` zou leeg blijven en Mollie zou het een dag lang
+opnieuw proberen — met elke keer een nieuwe bevestiging naar de klant, want die
+gaat als eerste de deur uit. Nu staat er "?" in de kolom in plaats van een
+uitzondering.
+
 ### Wat er niet in zit
 
 - **Geen creditfactuur.** Een terugbetaling hoort er een te krijgen, met een

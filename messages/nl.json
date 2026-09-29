@@ -876,6 +876,7 @@
     },
     "submit": {
       "unknown": "We konden je bestelling niet meer terugvinden. Ververs de pagina en probeer het opnieuw.",
+      "openReturn": "Voor deze bestelling loopt al een retour. We hebben je aanvraag dus al; je hoort van ons zodra het pakket binnen is.",
       "empty": "Kies eerst hoeveel er van een artikel terug gaat.",
       "rateLimit": "Je hebt het te vaak achter elkaar geprobeerd. Wacht even en probeer het opnieuw.",
       "error": "Er ging iets mis bij het aanmelden. Probeer het later opnieuw of stuur ons een bericht."
