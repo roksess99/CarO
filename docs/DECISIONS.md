@@ -1334,6 +1334,9 @@ aanzet:
   werken gewoon in de winkel — daar wordt per artikel gekeken — maar de
   aanbiedingenlijst redeneert andersom (van regel naar artikelen) en kan die
   catalogus niet bevragen zonder gekozen auto. Eén artikel aanwijzen kan wel.
+  **Bijgesteld 2026-10-01:** het artikel komt er nog steeds niet in, maar de
+  actie zelf wél — als aankondiging met een knop naar de autokeuze. Zie
+  "OPGELOST 2026-10-01" hieronder.
 
 De kortingsvlag ("-15%") staat er ook, zonder doorgestreepte van-prijs. Dat is
 geen tussenoplossing maar de wet: tot er dertig dagen prijsgeschiedenis is mag
@@ -1372,13 +1375,68 @@ oliefilters staat een prijsregel van 10% opslag, en daar past hoogstens 9%
 korting in (#17). De actie wordt dus per artikel getrimd in plaats van
 geweigerd.
 
-**Wat het niet verandert:** zo'n actie komt nog steeds niet in de carrousel en
+**Wat het niet verandert:** zo'n actie komt nog steeds niet met artikelen in
+de carrousel (sinds 2026-10-01 wel met een aankondiging, zie hieronder) en
 krijgt geen doorgestreepte van-prijs. Beide om dezelfde reden als bij een
 familieactie op onderdelen — die catalogus is niet te bevragen zonder gekozen
 auto, dus de nachtelijke prijsmeting heeft er geen artikelen van. De
 kortingsvlag zelf staat er wel.
 
 De database kent de waarde sinds `db/migrations/0008_discount_kind.sql`.
+
+### OPGELOST 2026-10-01: de actie op onderdelen stáát nu in de hero
+
+De eigenaar had twee acties lopen — 10% op banden, 2% op onderdelen — en zag op
+zijn homepage alleen banden. Terecht de vraag of die tweede wel werkte.
+
+**Hij werkte.** GEMETEN 2026-10-01 op de live winkel, zoeken op "oliefilter":
+
+| Artikel | Prijs | Vlag |
+|---|---|---|
+| ELRING pakking 816.965 | € 1,85 | −2% |
+| FEBI oliefilter 172139 | € 1,70 | −1% |
+| FEBI afdichtring 35618 | € 0,28 | −3% |
+
+Dat gewiebel tussen 1 en 3 procent is afronding en geen fout in de regel: de
+prijs gaat in hele centen en het getal op de vlag wordt naar beneden afgerond.
+Bij € 1,11 is twee procent twee cent, en 2 van 111 is 1,8% → er staat −1%. Bij
+€ 0,28 is één cent al 3,5%. Boven een euro of twee staat er altijd netjes −2%.
+Het alternatief is een percentage tonen dat de klant niet terugziet in het
+bedrag, en dat is precies wat we bij de "van"-prijs ook niet doen.
+
+**Wat er wél ontbrak was de aankondiging.** De regel hierboven ("komt niet in
+de carrousel") klopte technisch, maar het gevolg was dat een actie op de
+grootste productgroep van de winkel nergens te zien was. Daarom is een dia
+voortaan een artikel **óf** een aankondiging: foto uit `public/categorieen/`,
+de kortingsvlag, "Nu tot 2% korting op alle onderdelen" en een knop. Zo'n
+aankondiging staat vooraan, want hij is het enige dat anders onzichtbaar
+blijft, en zijn beeld staat op onze eigen server — dat scheelt de LCP een
+verbinding met de media-servers van de leverancier.
+
+**Drie keuzes die erin zitten en een reden hebben:**
+
+- **"Nu tot 2%", niet "2%".** De marge-ondergrens kan een korting per artikel
+  kleiner maken dan de actie zegt (zie de meting van 2026-09-22 hierboven: 12%
+  werd 8). Bij twee procent gebeurt dat praktisch nooit, maar deze zin moet ook
+  kloppen als er ooit veertig procent staat.
+- **De knop hangt af van wat we van de klant weten.** Heeft hij een auto
+  gekozen, dan gaat het TecDoc-nummer mee (`/nl/onderdelen?auto=128136`) en
+  staat hij meteen in de categorieën. Zo niet, dan naar "Mijn auto", want dáár
+  staat het kentekenveld — de onderdelenpagina zonder auto zegt alleen dát je
+  er een moet kiezen. Die auto staat in localStorage, dus de dia is een
+  clientcomponent.
+- **Een soortregel zonder naam wordt géén dia.** Staat het soortnummer niet
+  (meer) in `PART_KINDS`, dan is er niets te noemen, en "korting op alle
+  onderdelen" zou meer beloven dan de regel geeft.
+
+**Wat dit níet oplost:** de doorgestreepte van-prijs. De nachtelijke
+prijsmeting loopt op dezelfde grens vast (`lib/prices/snapshot.ts`) en heeft
+van zo'n actie geen artikelen om te meten. Een actie op onderdelen houdt dus
+alleen de vlag. Wil je dat ook dichten, dan is de weg die er ligt: zoeken op
+naam werkt wél zonder auto (`searchParts`), dus een handvol veelgezochte
+termen zou een lijst opleveren. Daar hoort dan wel een prijsondergrens bij —
+zoeken zonder auto bracht hierboven een afdichtring van € 0,28 naar boven, en
+dat is geen aanbieding om mee te adverteren.
 
 ### GEBOUWD 2026-09-17: de prijsmeting, en wat hij kost
 
@@ -2021,4 +2079,5 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-19 | Prijs bij onderdelen hangt aan het soortnummer, niet aan de categorie | De categorie ontbreekt bij een zoekresultaat, en dan zou het afrekenen een ander bedrag uitrekenen dan de klant zag (#17) |
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
+| 2026-10-01 | Een actie op onderdelen wordt een aankondiging in de carrousel | Die catalogus is niet als lijst op te vragen zonder gekozen auto, dus zonder dia stond de grootste productgroep van de winkel nergens aangekondigd (#14) |
 | 2026-09-19 | Beoordelingen verschijnen meteen, verbergen alleen met reden | Selectief publiceren is een oneerlijke handelspraktijk; antwoorden werkt beter dan weghalen (#18) |
