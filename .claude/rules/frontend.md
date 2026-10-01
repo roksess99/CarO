@@ -97,6 +97,14 @@ kleuren van het select-element niet automatisch over in het popupvenster.
 - Elke afbeelding heeft `alt`; decoratief krijgt `alt=""`.
 - Focusring altijd zichtbaar. Nooit `outline: none` zonder vervanging.
 - Formulierfouten in tekst én gekoppeld via `aria-describedby`. Niet alleen kleur.
+- **Een knop die niet kan, zegt waarom.** `disabled` neemt de klik weg — ook
+  die van het toetsenbord — en dan staat er een knop die niets doet en niets
+  uitlegt; dat leest als een storing. Gebruik `aria-disabled` plus een
+  antwoord bij de klik, in een `role="status"` zodat een schermlezer het
+  voorleest zonder de focus te verplaatsen. Zo werkt de plusknop in de
+  winkelwagen als de voorraad op is (@docs/DECISIONS.md #22). Echt `disabled`
+  blijft goed waar er niets uit te leggen valt: de minknop op één, of een
+  knop tijdens het verzenden.
 - Alles bereikbaar met Tab. Respecteer `prefers-reduced-motion`.
 
 ## i18n
