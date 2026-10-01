@@ -1964,6 +1964,98 @@ signaal 9 sneuvelt), dan is dát het volgende spoor — niet de CSS.
 
 ---
 
+## 22. Voorraad hoort bij de aanbieding, niet bij het artikel — VASTGESTELD 2026-10-01
+
+De eigenaar meldde dat de voorraad van banden niet klopte met wat hij bij de
+groothandel zag. Dat klopte, en het zat dieper dan een verkeerd getal.
+
+**De winkel toonde twee dingen uit twee bronnen.** De prijs kwam van de
+goedkoopste groothandel, de voorraad uit `item.stock` — een veld bovenin het
+artikel. Bij onderdelen ging het altijd al goed: daar komen prijs en voorraad
+uit dezelfde aanbieding.
+
+GEMETEN 2026-10-01 over 605 artikelen uit de drie areas van de Products-API:
+`item.stock` komt bij ongeveer de helft niet overeen met de groothandels in
+hetzelfde antwoord (banden 156/300, velgen 40/100, toebehoren 117/205).
+
+```
+DUNLOP BLURES 195/65 R15 91 H      item.stock = 41
+  groothandel 205345   voorraad  1   inkoop € 29,70   ← deze prijs toonden wij
+  groothandel 206616   voorraad 20   inkoop € 46,08
+                                 ──
+                        samen    21
+
+SF VW GOLF VII 6,0X15              item.stock = 2741
+  20 groothandels, samen 981 stuks, de goedkoopste heeft er 1
+```
+
+`GET /distributors` geeft dezelfde groothandels als `/items`, dus de lijst is
+niet afgekapt. Wat dat getal dan wél telt weten we niet, en dat is precies de
+reden om het niet te gebruiken.
+
+**Eén geruststelling vooraf:** het vlaggetje stond nooit verkeerd om. Over alle
+605 artikelen was er geen enkel geval waarin "op voorraad" stond terwijl er bij
+geen enkele groothandel iets lag, en ook niet andersom. Alleen het aantal op de
+productpagina was fout.
+
+### Waarom dit geld kost en niet alleen slordig is
+
+Een klant koopt banden per vier. Van 300 banden:
+
+| Voorraad bij de goedkoopste groothandel | Aantal |
+|---|---|
+| 1 stuk | **154** |
+| 2 of 3 | 18 |
+| 4 of meer | 128 |
+
+Bij 172 van de 300 kan een set van vier dus niet bij de groothandel wiens prijs
+op de pagina staat, en bij 155 is zo'n set zelfs bij alle groothandels samen
+niet bij elkaar te krijgen. Waar het wél kan kost die set gemiddeld **€ 60,36**
+meer dan vier keer de getoonde prijs — en dat verschil betaalt de winkel, want
+de klant heeft de lage prijs al afgerekend. De winkelwagen liet er 99 toe.
+
+### Wat er nu staat
+
+**Eén aanbieding bepaalt alles.** `sellableOffer()` kiest de goedkoopste
+inkoopprijs **met voorraad**; prijs, vlaggetje en aantal komen daar allemaal
+vandaan. Een lege groothandel is geen aanbieding: zijn prijs tonen belooft iets
+dat niet te koop is. Heeft niemand voorraad, dan blijft de goedkoopste staan en
+klopt "uitverkocht" wél. Dezelfde regel is in de onderdelen-adapter gezet, waar
+de goedkoopste aanbieding tot nu toe werd gekozen zonder naar voorraad te
+kijken.
+
+**Het aantal is begrensd op wat er bij die groothandel ligt**
+(`lib/cart/stock.ts`). De plusknop stopt daar, met een regel erbij die zegt
+waarom — "er is er nog één tegen deze prijs" is ook gewoon een koopargument.
+Draagt een artikel geen voorraadgetal (de mock-catalogus bijvoorbeeld), dan
+geldt de oude bovengrens: niets weten is geen reden om de verkoop te blokkeren.
+
+**Het afrekenen weigert een wagen die eroverheen gaat.** Niet stilletjes
+verlagen: de klant zag een andere bestelling, net als bij een kortingscode die
+tussen invullen en betalen vervalt (#14). De winkelwagen zegt per regel wat er
+aan de hand is en biedt één knop om het recht te zetten.
+
+GEMETEN 2026-10-01 in de browser, op de GISLAVED SPEED2 (`item.stock` 2,
+groothandel 1): de pagina zegt nu "1 stuk", de plusknop stopt op één en een
+wagen met vijf stuks toont "Hier is er nog maar één van. Zet op 1" en zet hem
+daarmee op één. Een band met veertig stuks bij de goedkoopste groothandel
+gedraagt zich ongewijzigd.
+
+### Wat er niet in zit
+
+- **Bijkopen bij de tweede groothandel.** Vier banden verkopen waar de
+  goedkoopste er één heeft kán, maar dan moet de prijs over die vier worden
+  uitgerekend in plaats van per stuk. Dat is een prijsbeslissing van de
+  eigenaar, geen fout, en hij hoort bij #17.
+- **Voorraad reserveren.** Tussen afrekenen en inkopen zit handwerk (#4); een
+  band kan in die tijd weg zijn. Dat is niet op te lossen zonder de API van de
+  leverancier te laten reserveren, en dat kan niet.
+- **De voorraad van de aanbieding is vijf minuten gecacht**, net als de prijs.
+  Dat is bewust: de leverancier staat 100 verzoeken per minuut toe voor de hele
+  winkel.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -2079,5 +2171,6 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-19 | Prijs bij onderdelen hangt aan het soortnummer, niet aan de categorie | De categorie ontbreekt bij een zoekresultaat, en dan zou het afrekenen een ander bedrag uitrekenen dan de klant zag (#17) |
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
+| 2026-10-01 | Voorraad én prijs komen van dezelfde groothandel, en het aantal is erop begrensd | `item.stock` klopt bij de helft van de artikelen niet met de groothandels eronder; vier banden kopen waar er één ligt kostte gemiddeld € 60,36 per set (#22) |
 | 2026-10-01 | Een actie op onderdelen wordt een aankondiging in de carrousel | Die catalogus is niet als lijst op te vragen zonder gekozen auto, dus zonder dia stond de grootste productgroep van de winkel nergens aangekondigd (#14) |
 | 2026-09-19 | Beoordelingen verschijnen meteen, verbergen alleen met reden | Selectief publiceren is een oneerlijke handelspraktijk; antwoorden werkt beter dan weghalen (#18) |

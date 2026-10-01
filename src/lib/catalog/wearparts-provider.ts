@@ -218,7 +218,12 @@ export function toPart(
     )
     .sort((a, b) => a.purchase - b.purchase);
 
-  const best = priced[0];
+  // De goedkoopste mét voorraad. Een lege verkoper is geen aanbieding: zijn
+  // prijs tonen belooft iets dat niet te koop is, en het artikel zou als
+  // "uitverkocht" op de pagina staan terwijl de volgende verkoper er honderd
+  // heeft. Heeft niemand voorraad, dan blijft de goedkoopste staan en klopt
+  // "uitverkocht" wél. Zelfde regel als bij banden (`sellableOffer`).
+  const best = priced.find((offer) => offer.stock > 0) ?? priced[0];
   // Zonder inkoopprijs kunnen we niet verkopen — zelfde regel als bij banden.
   if (!best) return null;
 

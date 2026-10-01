@@ -4,6 +4,7 @@ import { lookupCartParts } from "@/components/cart/actions";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { isValidCartItem } from "@/lib/cart/cart";
+import { maxOrderable } from "@/lib/cart/stock";
 import type { CartItem } from "@/lib/cart/types";
 import { buildOrderDocument } from "@/lib/checkout/order-document";
 import { validateCheckoutDetails } from "@/lib/checkout/schema";
@@ -31,7 +32,13 @@ export type StartPaymentResult =
   | { ok: true; checkoutUrl: string }
   | {
       ok: false;
-      error: "invalidDetails" | "emptyCart" | "notConfigured" | "failed" | "code";
+      error:
+        | "invalidDetails"
+        | "emptyCart"
+        | "notConfigured"
+        | "failed"
+        | "code"
+        | "stock";
       fieldErrors?: Record<string, string>;
       /** Alleen bij `code`: waarom de kortingscode het niet deed */
       codeReason?: CodeRejection;
@@ -111,6 +118,18 @@ export async function startPayment(
       quantity: number;
       discountPercent?: number;
     }[] = [];
+    // Meer bestellen dan er bij de groothandel ligt kan niet doorgaan. De
+    // getoonde prijs is die van één groothandel; de rest zou duurder ingekocht
+    // moeten worden en dat verschil betaalt de winkel (lib/cart/stock.ts).
+    // Zelfde keuze als bij een vervallen kortingscode: niet stilletjes
+    // aanpassen maar weigeren, want de klant zag een andere bestelling. De
+    // winkelwagen zegt per regel wat er aan de hand is.
+    const tooMany = items.some((item) => {
+      const part = partById.get(item.partId);
+      return part !== undefined && item.quantity > maxOrderable(part);
+    });
+    if (tooMany) return { ok: false, error: "stock" };
+
     const entries = items.flatMap((item) => {
       const part = partById.get(item.partId);
       if (!part) return [];

@@ -12,7 +12,7 @@ import { OldPrice } from "@/components/old-price";
 import { codeBaseCents, codeDiscountCents } from "@/lib/discounts/code-base";
 import { ProductImagePlaceholder } from "@/components/product-image-placeholder";
 import { subtotalCents } from "@/lib/cart/cart";
-import { MAX_QUANTITY } from "@/lib/cart/types";
+import { maxOrderable } from "@/lib/cart/stock";
 import { familySlug } from "@/lib/catalog/families";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents } from "@/lib/format";
@@ -154,7 +154,7 @@ export function CartView() {
                   <button
                     type="button"
                     aria-label={t("increase", { name: part.name })}
-                    disabled={quantity >= MAX_QUANTITY}
+                    disabled={quantity >= maxOrderable(part)}
                     onClick={() => setCartQuantity(part.id, quantity + 1)}
                     className="size-8 text-foreground hover:bg-surface disabled:cursor-not-allowed disabled:text-muted"
                   >
@@ -170,6 +170,25 @@ export function CartView() {
                   <span className="sr-only"> — {part.name}</span>
                 </button>
               </div>
+
+              {/* De voorraad kan gezakt zijn tussen toevoegen en afrekenen.
+                  Het aantal zelf verlagen we niet: dat is de bestelling van de
+                  klant. Wél zeggen wat er aan de hand is, met de knop ernaast,
+                  want het afrekenen weigert dit straks (checkout/actions.ts). */}
+              {quantity > maxOrderable(part) && (
+                <p className="mt-2 text-sm text-danger">
+                  {t("stockDropped", { count: maxOrderable(part) })}{" "}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCartQuantity(part.id, maxOrderable(part))
+                    }
+                    className="underline underline-offset-4"
+                  >
+                    {t("stockFix", { count: maxOrderable(part) })}
+                  </button>
+                </p>
+              )}
             </div>
             {/* De actieprijs zit al in priceCents — de wagen rekent nergens
                 zelf. De vlag erbij, anders ziet de klant het bedrag wel maar

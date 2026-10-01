@@ -366,6 +366,7 @@
     "categoryLabel": "Categorie",
     "stockLabel": "Voorraad",
     "stockValue": "{count, plural, =1 {1 stuk} other {# stuks}}",
+    "stockLimit": "{count, plural, =1 {Er is er nog één tegen deze prijs.} other {Er zijn er nog # tegen deze prijs.}}",
     "specs": {
       "size": "Maat",
       "season": "Seizoen",
@@ -401,6 +402,8 @@
     "decrease": "Aantal verlagen van {name}",
     "increase": "Aantal verhogen van {name}",
     "remove": "Verwijderen",
+    "stockDropped": "{count, plural, =0 {Dit artikel is net uitverkocht.} =1 {Hier is er nog maar één van.} other {Hier zijn er nog maar # van.}}",
+    "stockFix": "{count, plural, =0 {Haal uit de wagen} other {Zet op #}}",
     "summaryTitle": "Overzicht",
     "subtotal": "Subtotaal",
     "inclVat": "Inclusief 21% btw",
@@ -473,7 +476,8 @@
       "emptyCart": "Je winkelwagen is leeg — er valt niets af te rekenen.",
       "notConfigured": "Betalen is op dit moment niet mogelijk. Probeer het later opnieuw of neem contact met ons op.",
       "failed": "Het starten van de betaling is mislukt. Probeer het opnieuw.",
-      "code": "De kortingscode geldt niet meer. Controleer je bestelling en probeer het opnieuw."
+      "code": "De kortingscode geldt niet meer. Controleer je bestelling en probeer het opnieuw.",
+      "stock": "Van één of meer artikelen zijn er minder beschikbaar dan in je winkelwagen staan. Pas je winkelwagen aan en probeer het opnieuw."
     },
     "addressLookup": {
       "busy": "Adres opzoeken…",
