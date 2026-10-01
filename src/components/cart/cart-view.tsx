@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 import { OrderTotals } from "@/components/cart/order-totals";
 import { removeFromCart, setCartQuantity } from "@/components/cart/use-cart";
 import { useCartParts } from "@/components/cart/use-cart-parts";
@@ -38,6 +39,9 @@ export function CartView() {
   const locale = useLocale();
   const { entries, loading } = useCartParts();
   const applied = useAppliedCode();
+  // Welke regel net tegen zijn voorraadgrens aan tikte. Eén tegelijk is genoeg:
+  // de klant klikt op één plusknop.
+  const [limitHit, setLimitHit] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -151,12 +155,29 @@ export function CartView() {
                   <span className="w-8 text-center text-sm font-medium tabular-nums">
                     {quantity}
                   </span>
+                  {/* Bewust niet `disabled`: een knop die niets doet én niets
+                      zegt leest als een storing, en met `disabled` krijgt hij
+                      ook geen klik meer om op te antwoorden. Hij blijft dus
+                      bereikbaar met muis en toetsenbord, meldt zich aan
+                      hulpsoftware als uitgeschakeld (`aria-disabled`) en zegt
+                      bij een klik waaróm het niet gaat. */}
                   <button
                     type="button"
                     aria-label={t("increase", { name: part.name })}
-                    disabled={quantity >= maxOrderable(part)}
-                    onClick={() => setCartQuantity(part.id, quantity + 1)}
-                    className="size-8 text-foreground hover:bg-surface disabled:cursor-not-allowed disabled:text-muted"
+                    aria-disabled={quantity >= maxOrderable(part)}
+                    onClick={() => {
+                      if (quantity >= maxOrderable(part)) {
+                        setLimitHit(part.id);
+                        return;
+                      }
+                      setLimitHit(null);
+                      setCartQuantity(part.id, quantity + 1);
+                    }}
+                    className={`size-8 text-foreground hover:bg-surface ${
+                      quantity >= maxOrderable(part)
+                        ? "cursor-not-allowed text-muted"
+                        : ""
+                    }`}
                   >
                     +
                   </button>
@@ -170,6 +191,17 @@ export function CartView() {
                   <span className="sr-only"> — {part.name}</span>
                 </button>
               </div>
+
+              {/* Antwoord op de plusknop. `role="status"` zodat een
+                  schermlezer het voorleest zonder de focus te verplaatsen. */}
+              {limitHit === part.id && quantity <= maxOrderable(part) && (
+                <p
+                  role="status"
+                  className="mt-2 text-sm text-muted"
+                >
+                  {tProduct("stockLimit", { count: maxOrderable(part) })}
+                </p>
+              )}
 
               {/* De voorraad kan gezakt zijn tussen toevoegen en afrekenen.
                   Het aantal zelf verlagen we niet: dat is de bestelling van de

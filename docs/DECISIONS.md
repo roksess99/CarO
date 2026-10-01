@@ -2027,6 +2027,16 @@ kijken.
 **Het aantal is begrensd op wat er bij die groothandel ligt**
 (`lib/cart/stock.ts`). De plusknop stopt daar, met een regel erbij die zegt
 waarom — "er is er nog één tegen deze prijs" is ook gewoon een koopargument.
+
+In de winkelwagen is die knop bewust **niet** `disabled` (opmerking van de
+eigenaar, 2026-10-01: "lijkt me handig om te melden wanneer de gebruiker op de
+plus klikt"). Een knop die niets doet én niets zegt leest als een storing, en
+met `disabled` krijgt hij ook geen klik meer om op te antwoorden — ook niet van
+het toetsenbord. Hij blijft dus bereikbaar, meldt zich met `aria-disabled` aan
+hulpsoftware als uitgeschakeld, en zegt bij een klik waarom het niet gaat
+(`role="status"`, dus een schermlezer leest het voor zonder de focus te
+verplaatsen). Op de productpagina staat die zin er al zodra het aantal de grens
+raakt; daar is geen klik voor nodig.
 Draagt een artikel geen voorraadgetal (de mock-catalogus bijvoorbeeld), dan
 geldt de oude bovengrens: niets weten is geen reden om de verkoop te blokkeren.
 
