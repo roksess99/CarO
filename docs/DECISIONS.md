@@ -1334,6 +1334,9 @@ aanzet:
   werken gewoon in de winkel — daar wordt per artikel gekeken — maar de
   aanbiedingenlijst redeneert andersom (van regel naar artikelen) en kan die
   catalogus niet bevragen zonder gekozen auto. Eén artikel aanwijzen kan wel.
+  **Bijgesteld 2026-10-01:** het artikel komt er nog steeds niet in, maar de
+  actie zelf wél — als aankondiging met een knop naar de autokeuze. Zie
+  "OPGELOST 2026-10-01" hieronder.
 
 De kortingsvlag ("-15%") staat er ook, zonder doorgestreepte van-prijs. Dat is
 geen tussenoplossing maar de wet: tot er dertig dagen prijsgeschiedenis is mag
@@ -1372,13 +1375,68 @@ oliefilters staat een prijsregel van 10% opslag, en daar past hoogstens 9%
 korting in (#17). De actie wordt dus per artikel getrimd in plaats van
 geweigerd.
 
-**Wat het niet verandert:** zo'n actie komt nog steeds niet in de carrousel en
+**Wat het niet verandert:** zo'n actie komt nog steeds niet met artikelen in
+de carrousel (sinds 2026-10-01 wel met een aankondiging, zie hieronder) en
 krijgt geen doorgestreepte van-prijs. Beide om dezelfde reden als bij een
 familieactie op onderdelen — die catalogus is niet te bevragen zonder gekozen
 auto, dus de nachtelijke prijsmeting heeft er geen artikelen van. De
 kortingsvlag zelf staat er wel.
 
 De database kent de waarde sinds `db/migrations/0008_discount_kind.sql`.
+
+### OPGELOST 2026-10-01: de actie op onderdelen stáát nu in de hero
+
+De eigenaar had twee acties lopen — 10% op banden, 2% op onderdelen — en zag op
+zijn homepage alleen banden. Terecht de vraag of die tweede wel werkte.
+
+**Hij werkte.** GEMETEN 2026-10-01 op de live winkel, zoeken op "oliefilter":
+
+| Artikel | Prijs | Vlag |
+|---|---|---|
+| ELRING pakking 816.965 | € 1,85 | −2% |
+| FEBI oliefilter 172139 | € 1,70 | −1% |
+| FEBI afdichtring 35618 | € 0,28 | −3% |
+
+Dat gewiebel tussen 1 en 3 procent is afronding en geen fout in de regel: de
+prijs gaat in hele centen en het getal op de vlag wordt naar beneden afgerond.
+Bij € 1,11 is twee procent twee cent, en 2 van 111 is 1,8% → er staat −1%. Bij
+€ 0,28 is één cent al 3,5%. Boven een euro of twee staat er altijd netjes −2%.
+Het alternatief is een percentage tonen dat de klant niet terugziet in het
+bedrag, en dat is precies wat we bij de "van"-prijs ook niet doen.
+
+**Wat er wél ontbrak was de aankondiging.** De regel hierboven ("komt niet in
+de carrousel") klopte technisch, maar het gevolg was dat een actie op de
+grootste productgroep van de winkel nergens te zien was. Daarom is een dia
+voortaan een artikel **óf** een aankondiging: foto uit `public/categorieen/`,
+de kortingsvlag, "Nu tot 2% korting op alle onderdelen" en een knop. Zo'n
+aankondiging staat vooraan, want hij is het enige dat anders onzichtbaar
+blijft, en zijn beeld staat op onze eigen server — dat scheelt de LCP een
+verbinding met de media-servers van de leverancier.
+
+**Drie keuzes die erin zitten en een reden hebben:**
+
+- **"Nu tot 2%", niet "2%".** De marge-ondergrens kan een korting per artikel
+  kleiner maken dan de actie zegt (zie de meting van 2026-09-22 hierboven: 12%
+  werd 8). Bij twee procent gebeurt dat praktisch nooit, maar deze zin moet ook
+  kloppen als er ooit veertig procent staat.
+- **De knop hangt af van wat we van de klant weten.** Heeft hij een auto
+  gekozen, dan gaat het TecDoc-nummer mee (`/nl/onderdelen?auto=128136`) en
+  staat hij meteen in de categorieën. Zo niet, dan naar "Mijn auto", want dáár
+  staat het kentekenveld — de onderdelenpagina zonder auto zegt alleen dát je
+  er een moet kiezen. Die auto staat in localStorage, dus de dia is een
+  clientcomponent.
+- **Een soortregel zonder naam wordt géén dia.** Staat het soortnummer niet
+  (meer) in `PART_KINDS`, dan is er niets te noemen, en "korting op alle
+  onderdelen" zou meer beloven dan de regel geeft.
+
+**Wat dit níet oplost:** de doorgestreepte van-prijs. De nachtelijke
+prijsmeting loopt op dezelfde grens vast (`lib/prices/snapshot.ts`) en heeft
+van zo'n actie geen artikelen om te meten. Een actie op onderdelen houdt dus
+alleen de vlag. Wil je dat ook dichten, dan is de weg die er ligt: zoeken op
+naam werkt wél zonder auto (`searchParts`), dus een handvol veelgezochte
+termen zou een lijst opleveren. Daar hoort dan wel een prijsondergrens bij —
+zoeken zonder auto bracht hierboven een afdichtring van € 0,28 naar boven, en
+dat is geen aanbieding om mee te adverteren.
 
 ### GEBOUWD 2026-09-17: de prijsmeting, en wat hij kost
 
@@ -1906,6 +1964,151 @@ signaal 9 sneuvelt), dan is dát het volgende spoor — niet de CSS.
 
 ---
 
+## 22. Voorraad hoort bij de aanbieding, niet bij het artikel — VASTGESTELD 2026-10-01
+
+De eigenaar meldde dat de voorraad van banden niet klopte met wat hij bij de
+groothandel zag. Dat klopte, en het zat dieper dan een verkeerd getal.
+
+**De winkel toonde twee dingen uit twee bronnen.** De prijs kwam van de
+goedkoopste groothandel, de voorraad uit `item.stock` — een veld bovenin het
+artikel. Bij onderdelen ging het altijd al goed: daar komen prijs en voorraad
+uit dezelfde aanbieding.
+
+GEMETEN 2026-10-01 over 605 artikelen uit de drie areas van de Products-API:
+`item.stock` komt bij ongeveer de helft niet overeen met de groothandels in
+hetzelfde antwoord (banden 156/300, velgen 40/100, toebehoren 117/205).
+
+```
+DUNLOP BLURES 195/65 R15 91 H      item.stock = 41
+  groothandel 205345   voorraad  1   inkoop € 29,70   ← deze prijs toonden wij
+  groothandel 206616   voorraad 20   inkoop € 46,08
+                                 ──
+                        samen    21
+
+SF VW GOLF VII 6,0X15              item.stock = 2741
+  20 groothandels, samen 981 stuks, de goedkoopste heeft er 1
+```
+
+`GET /distributors` geeft dezelfde groothandels als `/items`, dus de lijst is
+niet afgekapt. Wat dat getal dan wél telt weten we niet, en dat is precies de
+reden om het niet te gebruiken.
+
+**Eén geruststelling vooraf:** het vlaggetje stond nooit verkeerd om. Over alle
+605 artikelen was er geen enkel geval waarin "op voorraad" stond terwijl er bij
+geen enkele groothandel iets lag, en ook niet andersom. Alleen het aantal op de
+productpagina was fout.
+
+### Waarom dit geld kost en niet alleen slordig is
+
+Een klant koopt banden per vier. Van 300 banden:
+
+| Voorraad bij de goedkoopste groothandel | Aantal |
+|---|---|
+| 1 stuk | **154** |
+| 2 of 3 | 18 |
+| 4 of meer | 128 |
+
+Bij 172 van de 300 kan een set van vier dus niet bij de groothandel wiens prijs
+op de pagina staat, en bij 155 is zo'n set zelfs bij alle groothandels samen
+niet bij elkaar te krijgen. Waar het wél kan kost die set gemiddeld **€ 60,36**
+meer dan vier keer de getoonde prijs — en dat verschil betaalt de winkel, want
+de klant heeft de lage prijs al afgerekend. De winkelwagen liet er 99 toe.
+
+### Wat er nu staat
+
+**Eén aanbieding bepaalt alles.** `sellableOffer()` kiest de goedkoopste
+inkoopprijs **met voorraad**; prijs, vlaggetje en aantal komen daar allemaal
+vandaan. Een lege groothandel is geen aanbieding: zijn prijs tonen belooft iets
+dat niet te koop is. Heeft niemand voorraad, dan blijft de goedkoopste staan en
+klopt "uitverkocht" wél. Dezelfde regel is in de onderdelen-adapter gezet, waar
+de goedkoopste aanbieding tot nu toe werd gekozen zonder naar voorraad te
+kijken.
+
+**Het aantal is begrensd op wat er bij die groothandel ligt**
+(`lib/cart/stock.ts`). De plusknop stopt daar, met een regel erbij die zegt
+waarom — "er is er nog één tegen deze prijs" is ook gewoon een koopargument.
+
+In de winkelwagen is die knop bewust **niet** `disabled` (opmerking van de
+eigenaar, 2026-10-01: "lijkt me handig om te melden wanneer de gebruiker op de
+plus klikt"). Een knop die niets doet én niets zegt leest als een storing, en
+met `disabled` krijgt hij ook geen klik meer om op te antwoorden — ook niet van
+het toetsenbord. Hij blijft dus bereikbaar, meldt zich met `aria-disabled` aan
+hulpsoftware als uitgeschakeld, en zegt bij een klik waarom het niet gaat
+(`role="status"`, dus een schermlezer leest het voor zonder de focus te
+verplaatsen). Op de productpagina staat die zin er al zodra het aantal de grens
+raakt; daar is geen klik voor nodig.
+Draagt een artikel geen voorraadgetal (de mock-catalogus bijvoorbeeld), dan
+geldt de oude bovengrens: niets weten is geen reden om de verkoop te blokkeren.
+
+**Het afrekenen weigert een wagen die eroverheen gaat.** Niet stilletjes
+verlagen: de klant zag een andere bestelling, net als bij een kortingscode die
+tussen invullen en betalen vervalt (#14). De winkelwagen zegt per regel wat er
+aan de hand is en biedt één knop om het recht te zetten.
+
+GEMETEN 2026-10-01 in de browser, op de GISLAVED SPEED2 (`item.stock` 2,
+groothandel 1): de pagina zegt nu "1 stuk", de plusknop stopt op één en een
+wagen met vijf stuks toont "Hier is er nog maar één van. Zet op 1" en zet hem
+daarmee op één. Een band met veertig stuks bij de goedkoopste groothandel
+gedraagt zich ongewijzigd.
+
+### Wat er niet in zit
+
+- **Bijkopen bij de tweede groothandel.** Vier banden verkopen waar de
+  goedkoopste er één heeft kán, maar dan moet de prijs over die vier worden
+  uitgerekend in plaats van per stuk. Dat is een prijsbeslissing van de
+  eigenaar, geen fout, en hij hoort bij #17.
+- **Voorraad reserveren.** Tussen afrekenen en inkopen zit handwerk (#4); een
+  band kan in die tijd weg zijn. Dat is niet op te lossen zonder de API van de
+  leverancier te laten reserveren, en dat kan niet.
+- **De voorraad van de aanbieding is vijf minuten gecacht**, net als de prijs.
+  Dat is bewust: de leverancier staat 100 verzoeken per minuut toe voor de hele
+  winkel.
+
+---
+
+## 23. Zeventien kwetsbaarheden uit de scan van Hostinger — OPGELOST 2026-10-01
+
+De scan van de hostingpartij meldde zeventien kwetsbaarheden, drie ervan
+kritiek. `pnpm audit` gaf exact dezelfde zeventien, dus die is voortaan de
+maat: hij draait hier en niet pas op de server.
+
+Ze kwamen uit vier pakketten, en de helft van het werk zat in de vraag of we
+ze wel zélf kozen.
+
+| Pakket | Wat | Hoe opgelost |
+|---|---|---|
+| `next` 16.3.0 → **16.3.8** | 3× kritiek: code-uitvoering via `next/og`, via AVIF-optimalisatie en een padfout op Windows-hosting | gewone opwaardering, zelfde hoofdnummer |
+| `nodemailer` → **10.0.13** | parser die op een geprepareerd mailadres seconden lang de hele server blokkeert | gewone opwaardering |
+| `sharp` | code-uitvoering bij het omzetten van AVIF (libheif) | kwam mee met Next; `sharp` is een optionele afhankelijkheid van Next, niet van ons |
+| `brace-expansion`, `js-yaml`, `nanoid` | stapeloverloop en voorspelbare id's | **overrides**, want ze zitten onder `eslint` en onder `next` |
+
+Die laatste drie zijn het punt. Ze staan nergens in onze `package.json`: ze
+hangen vier tot acht lagen diep onder pakketten die wij wél kiezen. `pnpm add`
+helpt daar niet — dan zou je een afhankelijkheid van iemand anders bovenin je
+eigen lijst zetten. Een override in `pnpm-workspace.yaml` dwingt de
+gerepareerde versie af binnen hetzelfde hoofdnummer, dus zonder breuk.
+
+**Een override is schuld, geen oplossing.** Hij zegt: wij weten het beter dan
+de maker van het tussenliggende pakket. Dat klopt zolang de reparatie een
+patch is, en niet langer. Bij het bijwerken van `eslint` of `next` hoort dus de
+vraag of die regels nog nodig zijn; de uitleg staat erbij in het bestand zelf.
+
+**Hoe het nagekeken is.** `pnpm audit` gaf na afloop nul meldingen op alle
+niveaus. Typecheck en lint zijn groen, en de bundelstap is apart gedraaid met
+`next build --webpack --experimental-build-mode compile` — die bouwt wél maar
+haalt geen pagina's op, dus hij belt de leverancier niet. "Compiled
+successfully in 41s" op Next 16.3.8. Daarna de winkel zelf nagelopen in de
+browser: homepage met de carrousel, een productpagina met voorraad en knop.
+
+**Wat de scan níet zei en wij wel moeten weten:** van de drie kritieke fouten
+in Next raakte er precies één ons echt. `next/og` gebruiken we voor de
+deelplaatjes, maar zonder tekst uit de URL. De AVIF-fout zat wél op onze weg:
+`next.config.ts` zet AVIF als eerste formaat voor productfoto's van de
+leverancier. De Windows-padfout raakt alleen wie op Windows host; Hostinger
+draait Linux.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -2021,4 +2224,7 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-19 | Prijs bij onderdelen hangt aan het soortnummer, niet aan de categorie | De categorie ontbreekt bij een zoekresultaat, en dan zou het afrekenen een ander bedrag uitrekenen dan de klant zag (#17) |
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
+| 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
+| 2026-10-01 | Voorraad én prijs komen van dezelfde groothandel, en het aantal is erop begrensd | `item.stock` klopt bij de helft van de artikelen niet met de groothandels eronder; vier banden kopen waar er één ligt kostte gemiddeld € 60,36 per set (#22) |
+| 2026-10-01 | Een actie op onderdelen wordt een aankondiging in de carrousel | Die catalogus is niet als lijst op te vragen zonder gekozen auto, dus zonder dia stond de grootste productgroep van de winkel nergens aangekondigd (#14) |
 | 2026-09-19 | Beoordelingen verschijnen meteen, verbergen alleen met reden | Selectief publiceren is een oneerlijke handelspraktijk; antwoorden werkt beter dan weghalen (#18) |

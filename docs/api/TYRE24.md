@@ -395,8 +395,41 @@ helft schriftelijk bevestigd.
 | `oeNumber` | `identifications.OEN[0]`, anders `manufacturerItemNumber` | |
 | `categorySlug` | eerste `categories[]` → `slugify(name)-{categoryId}` | |
 | `priceCents` | goedkoopste `distributors[].prices[].prices[areaId].base` → **inkoopprijs** → verkoopprijs via `src/lib/pricing.ts` | prijsstring → centen met stringrekenwerk, nooit floats |
-| `availability` | `stock > 0` → `in-stock`; anders `out-of-stock` | `isExpressAvailable` later voor levertijd |
+| `availability` | voorraad van de gekozen groothandel > 0 → `in-stock`; anders `out-of-stock` | **niet** `item.stock`, zie hieronder |
+| `stock` | `distributors[].stock` van diezelfde groothandel | het getal dat de klant op de productpagina leest |
 | `imageUrl` | `media[]` met `isDefault`, veld `imageLink` | |
+
+
+### `item.stock` is geen voorraad — GEMETEN 2026-10-01
+
+Bovenin elk artikel staat een `stock`. Dat getal hoort bij niemand. Gemeten
+over 605 artikelen uit de drie areas (6 banden, 7 velgen, 1 toebehoren): het
+komt bij ongeveer de helft niet overeen met de groothandels in hetzelfde
+antwoord, en soms is het een veelvoud daarvan.
+
+```
+DUNLOP BLURES 195/65 R15 91 H      item.stock = 41
+  groothandel 205345   voorraad  1   inkoop EUR 29,70
+  groothandel 206616   voorraad 20   inkoop EUR 46,08   -> samen 21
+
+SF VW GOLF VII 6,0X15              item.stock = 2741
+  20 groothandels, samen 981 stuks, de goedkoopste heeft er 1
+```
+
+`GET /distributors?itemId=` geeft dezelfde groothandels als de
+`distributors[]` in `/items`, dus de lijst is niet afgekapt — het verschil zit
+in `item.stock` zelf.
+
+**Gebruik dus `distributors[].stock` van de groothandel wiens prijs je toont.**
+Dat is wat `sellableOffer()` in de adapter doet: de goedkoopste `ek` met
+voorraad, en als niemand voorraad heeft de goedkoopste zonder.
+
+Waar het om gaat is niet het getal op de pagina maar de inkoop erachter. Van
+300 banden heeft de goedkoopste groothandel er bij 154 precies één. Wie vier
+banden bestelt, kan er dan één tegen de getoonde prijs kopen en moet de rest
+duurder halen: gemiddeld EUR 60,36 verschil op een set van vier, te betalen
+door de winkel. Bij 155 van de 300 is een set van vier zelfs bij alle
+groothandels samen niet te krijgen.
 
 ## Belangrijke aandachtspunten
 

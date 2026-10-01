@@ -308,6 +308,11 @@
     "title": "The right part, no hassle",
     "intro": "Search by part or OE number. All prices include 21% VAT and shipping costs are shown before checkout.",
     "offersEyebrow": "Now on offer",
+    "promoTitleFamily": "Now up to {percent}% off all {family}",
+    "promoTitleKind": "Now up to {percent}% off {subject}",
+    "promoBody": "Which part fits depends on your car. Enter your licence plate and you only see what fits yours — discount included.",
+    "promoCta": "Enter your licence plate",
+    "promoCtaCar": "Browse the parts",
     "offersCta": "View this item",
     "offersAll": "All offers",
     "offersPause": "Pause the slideshow",
@@ -361,6 +366,7 @@
     "categoryLabel": "Category",
     "stockLabel": "In stock",
     "stockValue": "{count, plural, =1 {1 item} other {# items}}",
+    "stockLimit": "{count, plural, =1 {There is one left at this price.} other {There are # left at this price.}}",
     "specs": {
       "size": "Size",
       "season": "Season",
@@ -396,6 +402,8 @@
     "decrease": "Decrease quantity of {name}",
     "increase": "Increase quantity of {name}",
     "remove": "Remove",
+    "stockDropped": "{count, plural, =0 {This item just sold out.} =1 {Only one is left.} other {Only # are left.}}",
+    "stockFix": "{count, plural, =0 {Remove from cart} other {Change to #}}",
     "summaryTitle": "Summary",
     "subtotal": "Subtotal",
     "inclVat": "Including 21% VAT",
@@ -468,7 +476,8 @@
       "emptyCart": "Your cart is empty — there is nothing to pay for.",
       "notConfigured": "Payment is unavailable right now. Please try again later or contact us.",
       "failed": "We could not start the payment. Please try again.",
-      "code": "The discount code is no longer valid. Check your order and try again."
+      "code": "The discount code is no longer valid. Check your order and try again.",
+      "stock": "One or more items are available in smaller numbers than your cart holds. Please adjust your cart and try again."
     },
     "addressLookup": {
       "busy": "Looking up address…",

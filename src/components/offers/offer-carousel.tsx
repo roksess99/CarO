@@ -4,11 +4,13 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { DiscountBadge } from "@/components/discount-badge";
+import { OfferPromo } from "@/components/offers/offer-promo";
 import { OldPrice } from "@/components/old-price";
 import { ProductImagePlaceholder } from "@/components/product-image-placeholder";
 import { Link } from "@/i18n/navigation";
 import { familySlug } from "@/lib/catalog/families";
 import type { Part } from "@/lib/catalog/types";
+import type { OfferSlide } from "@/lib/discounts/offers";
 import { formatPriceCents } from "@/lib/format";
 
 /**
@@ -29,18 +31,22 @@ import { formatPriceCents } from "@/lib/format";
  * - **De doorgestreepte prijs verschijnt vanzelf**, zodra een artikel dertig
  *   dagen prijsgeschiedenis heeft. Tot dan staat er alleen het percentage —
  *   dat is geen tekortkoming maar de wet (docs/DECISIONS.md #14).
+ *
+ * Een dia is een artikel óf een aankondiging: een actie op alle onderdelen
+ * levert geen artikelen op om te tonen en wordt een uitnodiging om een auto te
+ * kiezen (lib/discounts/offers.ts).
  */
 
 const INTERVAL_MS = 6000;
 
-export function OfferCarousel({ parts }: { parts: Part[] }) {
+export function OfferCarousel({ slides }: { slides: OfferSlide[] }) {
   const t = useTranslations("home");
   const locale = useLocale();
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [held, setHeld] = useState(false);
 
-  const total = parts.length;
+  const total = slides.length;
 
   useEffect(() => {
     if (total < 2 || !playing || held) return;
@@ -69,14 +75,14 @@ export function OfferCarousel({ parts }: { parts: Part[] }) {
       aria-label={t("offersEyebrow")}
     >
       <div className="relative">
-        {parts.map((part, slide) => (
+        {slides.map((slide, position) => (
           <Slide
-            key={part.id}
-            part={part}
+            key={slide.key}
+            slide={slide}
             locale={locale}
-            active={slide === index}
-            first={slide === 0}
-            position={slide + 1}
+            active={position === index}
+            first={position === 0}
+            position={position + 1}
             total={total}
           />
         ))}
@@ -120,18 +126,18 @@ export function OfferCarousel({ parts }: { parts: Part[] }) {
           </button>
 
           <div className="flex flex-wrap gap-2">
-            {parts.map((part, slide) => (
+            {slides.map((slide, position) => (
               <button
-                key={part.id}
+                key={slide.key}
                 type="button"
-                onClick={() => setIndex(slide)}
-                aria-current={slide === index}
+                onClick={() => setIndex(position)}
+                aria-current={position === index}
                 className={`size-3 rounded-full border border-border ${
-                  slide === index ? "bg-caro-orange" : "bg-surface"
+                  position === index ? "bg-caro-orange" : "bg-surface"
                 }`}
               >
                 <span className="sr-only">
-                  {t("offersGoTo", { number: slide + 1 })}
+                  {t("offersGoTo", { number: position + 1 })}
                 </span>
               </button>
             ))}
@@ -143,14 +149,14 @@ export function OfferCarousel({ parts }: { parts: Part[] }) {
 }
 
 function Slide({
-  part,
+  slide,
   locale,
   active,
   first,
   position,
   total,
 }: {
-  part: Part;
+  slide: OfferSlide;
   locale: string;
   active: boolean;
   first: boolean;
@@ -158,15 +164,6 @@ function Slide({
   total: number;
 }) {
   const t = useTranslations("home");
-  const tProduct = useTranslations("product");
-  const href = {
-    pathname: "/[family]/[category]/[part]",
-    params: {
-      family: familySlug(part.family, locale),
-      category: part.categorySlug,
-      part: part.slug,
-    },
-  } as const;
 
   // De eerste dia bepaalt de hoogte van het vak en blijft in de stroom staan;
   // de rest ligt eroverheen. Zo hoeft er geen hoogte geraden te worden voor
@@ -185,59 +182,94 @@ function Slide({
       aria-roledescription="slide"
       aria-label={t("offersCount", { number: position, total })}
     >
-      <div className="grid gap-4 p-5 sm:grid-cols-[minmax(0,14rem)_1fr] sm:items-center md:p-6">
-        <div className="relative">
-          {part.imageUrl ? (
-            <Image
-              src={part.imageUrl}
-              alt=""
-              width={400}
-              height={400}
-              // Het grootste beeld boven de vouw: de eerste dia laadt met
-              // voorrang, de rest pas als de klant doorschuift.
-              priority={first}
-              sizes="(min-width: 1024px) 14rem, (min-width: 640px) 40vw, 90vw"
-              className="aspect-4/3 w-full rounded-lg bg-surface object-contain sm:aspect-square"
-            />
-          ) : (
-            <ProductImagePlaceholder
-              label={tProduct("noImage")}
-              className="aspect-4/3 rounded-lg opacity-60 sm:aspect-square"
-            />
-          )}
-          <DiscountBadge
-            percent={part.discountPercent}
-            className="absolute start-2 top-2 shadow-sm"
+      {slide.kind === "promo" ? (
+        <OfferPromo
+          family={slide.family}
+          percent={slide.percent}
+          subject={slide.subject}
+          priority={first}
+        />
+      ) : (
+        <PartSlide part={slide.part} locale={locale} first={first} />
+      )}
+    </div>
+  );
+}
+
+/** Een artikel dat in de aanbieding is: foto, prijs en de weg ernaartoe. */
+function PartSlide({
+  part,
+  locale,
+  first,
+}: {
+  part: Part;
+  locale: string;
+  first: boolean;
+}) {
+  const t = useTranslations("home");
+  const tProduct = useTranslations("product");
+  const href = {
+    pathname: "/[family]/[category]/[part]",
+    params: {
+      family: familySlug(part.family, locale),
+      category: part.categorySlug,
+      part: part.slug,
+    },
+  } as const;
+
+  return (
+    <div className="grid gap-4 p-5 sm:grid-cols-[minmax(0,14rem)_1fr] sm:items-center md:p-6">
+      <div className="relative">
+        {part.imageUrl ? (
+          <Image
+            src={part.imageUrl}
+            alt=""
+            width={400}
+            height={400}
+            // Het grootste beeld boven de vouw: de eerste dia laadt met
+            // voorrang, de rest pas als de klant doorschuift.
+            priority={first}
+            sizes="(min-width: 1024px) 14rem, (min-width: 640px) 40vw, 90vw"
+            className="aspect-4/3 w-full rounded-lg bg-surface object-contain sm:aspect-square"
           />
-        </div>
+        ) : (
+          <ProductImagePlaceholder
+            label={tProduct("noImage")}
+            className="aspect-4/3 rounded-lg opacity-60 sm:aspect-square"
+          />
+        )}
+        <DiscountBadge
+          percent={part.discountPercent}
+          className="absolute start-2 top-2 shadow-sm"
+        />
+      </div>
 
-        <div className="min-w-0">
-          <p className="eyebrow text-xs">{t("offersEyebrow")}</p>
-          <p className="mt-2 line-clamp-2 text-lg font-semibold md:text-xl">
-            {part.name}
-          </p>
-          <p className="mt-3 flex flex-wrap items-baseline gap-x-3">
-            <span className="text-3xl font-bold tabular-nums">
-              {formatPriceCents(part.priceCents)}
-            </span>
-            <OldPrice cents={part.listPriceCents} />
-          </p>
-          <p className="text-xs text-muted">{tProduct("inclVat")}</p>
+      <div className="min-w-0">
+        <p className="eyebrow text-xs">{t("offersEyebrow")}</p>
+        <p className="mt-2 line-clamp-2 text-lg font-semibold md:text-xl">
+          {part.name}
+        </p>
+        <p className="mt-3 flex flex-wrap items-baseline gap-x-3">
+          <span className="text-3xl font-bold tabular-nums">
+            {formatPriceCents(part.priceCents)}
+          </span>
+          <OldPrice cents={part.listPriceCents} />
+        </p>
+        <p className="text-xs text-muted">{tProduct("inclVat")}</p>
 
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href={href}
-              className="inline-flex rounded-md bg-caro-orange px-5 py-2.5 font-semibold text-caro-ink"
-            >
-              {t("offersCta")}
-            </Link>
-            <Link
-              href="/offers"
-              className="inline-flex rounded-md border border-border px-5 py-2.5 font-semibold hover:bg-surface"
-            >
-              {t("offersAll")}
-            </Link>
-          </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href={href}
+            className="inline-flex rounded-md bg-caro-orange px-5 py-2.5 font-semibold text-caro-ink"
+          >
+            {t("offersCta")}
+          </Link>
+          <Link
+            href="/offers"
+            className="inline-flex rounded-md border border-border px-5 py-2.5 font-semibold hover:bg-surface"
+          >
+            {t("offersAll")}
+          </Link>
         </div>
       </div>
     </div>

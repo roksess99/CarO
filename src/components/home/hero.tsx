@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { familySlug } from "@/lib/catalog/families";
 import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/shipping";
 import { formatPriceCents } from "@/lib/format";
-import { offerParts } from "@/lib/discounts/offers";
+import { offerSlides } from "@/lib/discounts/offers";
 import { vehicleMakeNames } from "@/lib/vehicle/makes";
 
 /**
@@ -26,7 +26,7 @@ export async function Hero() {
   const [makes, offers] = await Promise.all([
     vehicleMakeNames(),
     // Vijf tot acht is genoeg; niemand ziet dia negen
-    offerParts(6),
+    offerSlides(6),
   ]);
 
   const usps = [
@@ -60,7 +60,7 @@ export async function Hero() {
               staan die verkoopt wat wél waar is. Bewust geen lege carrousel en
               geen "binnenkort aanbiedingen" (docs/DECISIONS.md #14). */}
           {offers.length > 0 ? (
-            <OfferCarousel parts={offers} />
+            <OfferCarousel slides={offers} />
           ) : (
           <div className="relative overflow-hidden rounded-xl border border-border bg-background p-6 md:p-10">
             <HeroBackdrop id="banner" />

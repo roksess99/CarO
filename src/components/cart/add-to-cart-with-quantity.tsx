@@ -3,7 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { addToCart } from "@/components/cart/use-cart";
-import { MAX_QUANTITY, MIN_QUANTITY } from "@/lib/cart/types";
+import { maxOrderable } from "@/lib/cart/stock";
+import { MIN_QUANTITY } from "@/lib/cart/types";
 import type { Part } from "@/lib/catalog/types";
 
 // Winkelwagenknop met aantal, voor de productdetailpagina. De kaart in het
@@ -15,6 +16,9 @@ export function AddToCartWithQuantity({ part }: { part: Part }) {
   const [announced, setAnnounced] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const disabled = part.availability === "out-of-stock";
+  // Niet meer dan er bij deze groothandel ligt: de rest zou duurder ingekocht
+  // moeten worden dan de prijs die de klant hier ziet (lib/cart/stock.ts).
+  const most = maxOrderable(part);
 
   function handleAdd() {
     addToCart(part, quantity);
@@ -80,14 +84,22 @@ export function AddToCartWithQuantity({ part }: { part: Part }) {
           <button
             type="button"
             aria-label={t("increase", { name: part.name })}
-            disabled={disabled || quantity >= MAX_QUANTITY}
-            onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
+            disabled={disabled || quantity >= most}
+            onClick={() => setQuantity((q) => Math.min(most, q + 1))}
             className="size-11 text-foreground hover:bg-surface disabled:cursor-not-allowed disabled:text-muted"
           >
             +
           </button>
         </div>
       </div>
+
+      {/* Zeggen waaróm de knop stopt. Zonder deze regel lijkt hij stuk, en
+          "nog twee tegen deze prijs" is ook gewoon een koopargument. */}
+      {!disabled && quantity >= most && (
+        <p className="mt-2 text-sm text-muted">
+          {tProduct("stockLimit", { count: most })}
+        </p>
+      )}
 
       {/* Feedback ook voor screenreaders, niet alleen visueel */}
       <p className="sr-only" role="status" aria-live="polite">

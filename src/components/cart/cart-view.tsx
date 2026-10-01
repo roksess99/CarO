@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 import { OrderTotals } from "@/components/cart/order-totals";
 import { removeFromCart, setCartQuantity } from "@/components/cart/use-cart";
 import { useCartParts } from "@/components/cart/use-cart-parts";
@@ -12,7 +13,7 @@ import { OldPrice } from "@/components/old-price";
 import { codeBaseCents, codeDiscountCents } from "@/lib/discounts/code-base";
 import { ProductImagePlaceholder } from "@/components/product-image-placeholder";
 import { subtotalCents } from "@/lib/cart/cart";
-import { MAX_QUANTITY } from "@/lib/cart/types";
+import { maxOrderable } from "@/lib/cart/stock";
 import { familySlug } from "@/lib/catalog/families";
 import type { Part } from "@/lib/catalog/types";
 import { formatPriceCents } from "@/lib/format";
@@ -38,6 +39,9 @@ export function CartView() {
   const locale = useLocale();
   const { entries, loading } = useCartParts();
   const applied = useAppliedCode();
+  // Welke regel net tegen zijn voorraadgrens aan tikte. Eén tegelijk is genoeg:
+  // de klant klikt op één plusknop.
+  const [limitHit, setLimitHit] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -151,12 +155,29 @@ export function CartView() {
                   <span className="w-8 text-center text-sm font-medium tabular-nums">
                     {quantity}
                   </span>
+                  {/* Bewust niet `disabled`: een knop die niets doet én niets
+                      zegt leest als een storing, en met `disabled` krijgt hij
+                      ook geen klik meer om op te antwoorden. Hij blijft dus
+                      bereikbaar met muis en toetsenbord, meldt zich aan
+                      hulpsoftware als uitgeschakeld (`aria-disabled`) en zegt
+                      bij een klik waaróm het niet gaat. */}
                   <button
                     type="button"
                     aria-label={t("increase", { name: part.name })}
-                    disabled={quantity >= MAX_QUANTITY}
-                    onClick={() => setCartQuantity(part.id, quantity + 1)}
-                    className="size-8 text-foreground hover:bg-surface disabled:cursor-not-allowed disabled:text-muted"
+                    aria-disabled={quantity >= maxOrderable(part)}
+                    onClick={() => {
+                      if (quantity >= maxOrderable(part)) {
+                        setLimitHit(part.id);
+                        return;
+                      }
+                      setLimitHit(null);
+                      setCartQuantity(part.id, quantity + 1);
+                    }}
+                    className={`size-8 text-foreground hover:bg-surface ${
+                      quantity >= maxOrderable(part)
+                        ? "cursor-not-allowed text-muted"
+                        : ""
+                    }`}
                   >
                     +
                   </button>
@@ -170,6 +191,36 @@ export function CartView() {
                   <span className="sr-only"> — {part.name}</span>
                 </button>
               </div>
+
+              {/* Antwoord op de plusknop. `role="status"` zodat een
+                  schermlezer het voorleest zonder de focus te verplaatsen. */}
+              {limitHit === part.id && quantity <= maxOrderable(part) && (
+                <p
+                  role="status"
+                  className="mt-2 text-sm text-muted"
+                >
+                  {tProduct("stockLimit", { count: maxOrderable(part) })}
+                </p>
+              )}
+
+              {/* De voorraad kan gezakt zijn tussen toevoegen en afrekenen.
+                  Het aantal zelf verlagen we niet: dat is de bestelling van de
+                  klant. Wél zeggen wat er aan de hand is, met de knop ernaast,
+                  want het afrekenen weigert dit straks (checkout/actions.ts). */}
+              {quantity > maxOrderable(part) && (
+                <p className="mt-2 text-sm text-danger">
+                  {t("stockDropped", { count: maxOrderable(part) })}{" "}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCartQuantity(part.id, maxOrderable(part))
+                    }
+                    className="underline underline-offset-4"
+                  >
+                    {t("stockFix", { count: maxOrderable(part) })}
+                  </button>
+                </p>
+              )}
             </div>
             {/* De actieprijs zit al in priceCents — de wagen rekent nergens
                 zelf. De vlag erbij, anders ziet de klant het bedrag wel maar

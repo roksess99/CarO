@@ -103,6 +103,8 @@ const tyrePriceSchema = z.object({
 
 const tyreDistributorSchema = z.object({
   prices: z.array(tyrePriceSchema).optional(),
+  /** Voorraad bij déze groothandel; dit is het enige voorraadgetal dat klopt */
+  stock: z.coerce.number().optional(),
 });
 
 const tyreMediaSchema = z.object({
@@ -128,6 +130,13 @@ const tyreItemSchema = z.object({
   name: z.string(),
   manufacturerName: z.string().optional(),
   manufacturerItemNumber: z.string().optional(),
+  /**
+   * **Niet gebruiken voor de voorraad die de klant ziet.** GEMETEN 2026-10-01
+   * over 605 artikelen: dit getal komt bij ongeveer de helft niet overeen met
+   * de groothandels in hetzelfde antwoord, en soms is het een veelvoud ervan
+   * (een staalvelg met 2741 hier en 981 bij alle twintig groothandels samen).
+   * Wat wij verkopen komt van één groothandel; zie `sellableOffer`.
+   */
   stock: z.coerce.number().optional(),
   identifications: z
     .object({ OEN: z.array(z.string()).optional() })
@@ -455,6 +464,47 @@ async function apiGet(
 
 // ---------- mapping naar het datacontract ----------
 
+/**
+ * De aanbieding waarop wij verkopen: één groothandel, met zijn prijs én zijn
+ * voorraad.
+ *
+ * **Die twee hoorden niet bij elkaar en dat kostte geld.** De prijs kwam van de
+ * goedkoopste groothandel, de voorraad uit `item.stock` — een getal bovenin het
+ * artikel dat bij niemand hoort. GEMETEN 2026-10-01 op 300 banden: bij 154
+ * ervan heeft de goedkoopste groothandel er precies één, terwijl de
+ * productpagina er veertig toonde. Wie vier banden bestelt koopt er dan één
+ * tegen de getoonde prijs en drie duurder — gemiddeld € 60,36 verschil op een
+ * set, en dat verschil betaalt de winkel.
+ *
+ * **De goedkoopste mét voorraad wint.** Een lege groothandel is geen
+ * aanbieding: zijn prijs tonen zou de klant iets beloven dat niet te koop is.
+ * Heeft niemand voorraad, dan blijft de goedkoopste staan en zegt de pagina
+ * "uitverkocht" — met een prijs, zodat de klant ziet waar het om ging.
+ *
+ * Dit is dezelfde regel als bij onderdelen (`wearparts-provider.ts`), waar
+ * prijs en voorraad altijd al uit dezelfde aanbieding kwamen.
+ */
+function sellableOffer(
+  item: z.infer<typeof tyreItemSchema>,
+): { purchaseCents: number; stock: number } | null {
+  const offers: { cents: number; stock: number }[] = [];
+  for (const distributor of item.distributors ?? []) {
+    const stock = distributor.stock ?? 0;
+    for (const price of distributor.prices ?? []) {
+      if (price.type !== PURCHASE_PRICE_TYPE) continue;
+      for (const entry of Object.values(price.prices ?? {})) {
+        const cents = entry.base ? euroStringToCents(entry.base) : null;
+        if (cents !== null) offers.push({ cents, stock });
+      }
+    }
+  }
+  if (offers.length === 0) return null;
+
+  offers.sort((a, b) => a.cents - b.cents);
+  const chosen = offers.find((offer) => offer.stock > 0) ?? offers[0];
+  return { purchaseCents: chosen.cents, stock: chosen.stock };
+}
+
 /** Laagste bedrag over alle distributeurs voor prijsblokken die `match` accepteert */
 function lowestPriceCents(
   item: z.infer<typeof tyreItemSchema>,
@@ -503,11 +553,9 @@ function toPart(
   const item = parsed.data;
 
   // Zonder inkoopprijs kunnen we niet verkopen → item overslaan
-  const purchaseCents = lowestPriceCents(
-    item,
-    (type) => type === PURCHASE_PRICE_TYPE,
-  );
-  if (purchaseCents === null) return null;
+  const offer = sellableOffer(item);
+  if (offer === null) return null;
+  const purchaseCents = offer.purchaseCents;
 
   // Adviesverkoopprijs van de leverancier, als die er is
   const recommendedCents = lowestPriceCents(item, (type) =>
@@ -580,10 +628,12 @@ function toPart(
     priceCents: priced.priceCents,
     discountPercent: priced.discountPercent,
     ...(listPriceCents === undefined ? {} : { listPriceCents }),
-    availability: (item.stock ?? 0) > 0 ? "in-stock" : "out-of-stock",
+    // Voorraad én vlaggetje komen van de groothandel wiens prijs hierboven
+    // gekozen is, niet van `item.stock` — zie sellableOffer.
+    availability: offer.stock > 0 ? "in-stock" : "out-of-stock",
     imageUrl: image?.imageLink ? imageUrl(image.imageLink) : undefined,
     specs,
-    stock: item.stock,
+    stock: offer.stock,
   };
 }
 
