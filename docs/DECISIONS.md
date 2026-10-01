@@ -2066,6 +2066,49 @@ gedraagt zich ongewijzigd.
 
 ---
 
+## 23. Zeventien kwetsbaarheden uit de scan van Hostinger — OPGELOST 2026-10-01
+
+De scan van de hostingpartij meldde zeventien kwetsbaarheden, drie ervan
+kritiek. `pnpm audit` gaf exact dezelfde zeventien, dus die is voortaan de
+maat: hij draait hier en niet pas op de server.
+
+Ze kwamen uit vier pakketten, en de helft van het werk zat in de vraag of we
+ze wel zélf kozen.
+
+| Pakket | Wat | Hoe opgelost |
+|---|---|---|
+| `next` 16.3.0 → **16.3.8** | 3× kritiek: code-uitvoering via `next/og`, via AVIF-optimalisatie en een padfout op Windows-hosting | gewone opwaardering, zelfde hoofdnummer |
+| `nodemailer` → **10.0.13** | parser die op een geprepareerd mailadres seconden lang de hele server blokkeert | gewone opwaardering |
+| `sharp` | code-uitvoering bij het omzetten van AVIF (libheif) | kwam mee met Next; `sharp` is een optionele afhankelijkheid van Next, niet van ons |
+| `brace-expansion`, `js-yaml`, `nanoid` | stapeloverloop en voorspelbare id's | **overrides**, want ze zitten onder `eslint` en onder `next` |
+
+Die laatste drie zijn het punt. Ze staan nergens in onze `package.json`: ze
+hangen vier tot acht lagen diep onder pakketten die wij wél kiezen. `pnpm add`
+helpt daar niet — dan zou je een afhankelijkheid van iemand anders bovenin je
+eigen lijst zetten. Een override in `pnpm-workspace.yaml` dwingt de
+gerepareerde versie af binnen hetzelfde hoofdnummer, dus zonder breuk.
+
+**Een override is schuld, geen oplossing.** Hij zegt: wij weten het beter dan
+de maker van het tussenliggende pakket. Dat klopt zolang de reparatie een
+patch is, en niet langer. Bij het bijwerken van `eslint` of `next` hoort dus de
+vraag of die regels nog nodig zijn; de uitleg staat erbij in het bestand zelf.
+
+**Hoe het nagekeken is.** `pnpm audit` gaf na afloop nul meldingen op alle
+niveaus. Typecheck en lint zijn groen, en de bundelstap is apart gedraaid met
+`next build --webpack --experimental-build-mode compile` — die bouwt wél maar
+haalt geen pagina's op, dus hij belt de leverancier niet. "Compiled
+successfully in 41s" op Next 16.3.8. Daarna de winkel zelf nagelopen in de
+browser: homepage met de carrousel, een productpagina met voorraad en knop.
+
+**Wat de scan níet zei en wij wel moeten weten:** van de drie kritieke fouten
+in Next raakte er precies één ons echt. `next/og` gebruiken we voor de
+deelplaatjes, maar zonder tekst uit de URL. De AVIF-fout zat wél op onze weg:
+`next.config.ts` zet AVIF als eerste formaat voor productfoto's van de
+leverancier. De Windows-padfout raakt alleen wie op Windows host; Hostinger
+draait Linux.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -2181,6 +2224,7 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-19 | Prijs bij onderdelen hangt aan het soortnummer, niet aan de categorie | De categorie ontbreekt bij een zoekresultaat, en dan zou het afrekenen een ander bedrag uitrekenen dan de klant zag (#17) |
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
+| 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
 | 2026-10-01 | Voorraad én prijs komen van dezelfde groothandel, en het aantal is erop begrensd | `item.stock` klopt bij de helft van de artikelen niet met de groothandels eronder; vier banden kopen waar er één ligt kostte gemiddeld € 60,36 per set (#22) |
 | 2026-10-01 | Een actie op onderdelen wordt een aankondiging in de carrousel | Die catalogus is niet als lijst op te vragen zonder gekozen auto, dus zonder dia stond de grootste productgroep van de winkel nergens aangekondigd (#14) |
 | 2026-09-19 | Beoordelingen verschijnen meteen, verbergen alleen met reden | Selectief publiceren is een oneerlijke handelspraktijk; antwoorden werkt beter dan weghalen (#18) |

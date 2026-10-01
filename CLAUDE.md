@@ -141,6 +141,7 @@ pnpm build        # moet slagen voor elke commit; bouwt met **webpack**,
                   # niet met Turbopack (@docs/DECISIONS.md #21)
 pnpm lint
 pnpm typecheck    # tsc --noEmit
+pnpm audit        # kwetsbaarheden; moet nul zijn (@docs/DECISIONS.md #23)
 pnpm mail:check   # SMTP los van de site testen (--send stuurt een bericht)
 pnpm mollie:check # test- of live-sleutel, en welke betaalmethodes aanstaan
 pnpm db:check     # verbinding en schema nakijken
@@ -155,7 +156,9 @@ pnpm orders:migrate # JSON-bestellingen naar de database (--write om te doen)
 Er is nog geen testrunner. Staat er `pnpm test` in een instructie: die bestaat
 niet, gebruik de twee controlescripts hierboven plus de browser.
 
-Draai `pnpm typecheck && pnpm lint` voordat je zegt dat werk af is.
+Draai `pnpm typecheck && pnpm lint` voordat je zegt dat werk af is. Raak je
+`package.json` aan, dan ook `pnpm audit`: de hostingpartij scant mee en meldt
+wat daar blijft staan (@docs/DECISIONS.md #23).
 
 ## Structuur
 
