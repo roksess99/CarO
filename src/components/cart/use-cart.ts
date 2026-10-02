@@ -10,6 +10,7 @@ import {
 } from "@/lib/cart/storage";
 import { type Cart, EMPTY_CART } from "@/lib/cart/types";
 import type { Part } from "@/lib/catalog/types";
+import { countStat } from "@/lib/stats/send";
 
 // localStorage ís de store; React abonneert zich er alleen op. Server-
 // snapshot is de lege wagen — na hydration verschijnt de echte inhoud.
@@ -21,6 +22,8 @@ export function useCart(): Cart {
 // zodat twee snelle kliks elkaar niet overschrijven.
 export function addToCart(part: Part, quantity = 1): void {
   saveCart(addItem(loadCart(), part.id, part.family, quantity));
+  // Eén plek voor de telling, want elke knop in de winkel komt hier langs.
+  countStat("cart_add", part.family);
 }
 
 export function removeFromCart(partId: string): void {

@@ -2109,6 +2109,154 @@ draait Linux.
 
 ---
 
+## 24. Eigen bezoekcijfers, geen analysedienst — VASTGESTELD 2026-10-02
+
+De eigenaar wil op zijn dashboard zien hoeveel mensen er komen en waar ze
+afhaken. De voor de hand liggende weg is Google Analytics. Die is bewust niet
+genomen.
+
+**Wat Analytics zou kosten.** Een script van een derde partij op de site maakt
+een toestemmingsbanner verplicht — mét voorafgaande blokkering, en weigeren
+moet net zo makkelijk zijn als accepteren. Daarmee verdwijnt de positie die
+deze winkel nu heeft: geen enkele derde in de browser, geen banner, en een
+privacyverklaring van één scherm (#16). En het meet dan nog maar de helft van
+de bezoekers, want wie weigert wordt niet geteld — en dat is geen willekeurige
+groep.
+
+Wat de winkel nodig had was bovendien iets anders dan Analytics goed doet:
+niet "hoeveel bezoekers", maar **waar in het afrekenen het misgaat**. Dat is
+met vijf tellers te beantwoorden.
+
+### Wat er geteld wordt
+
+```
+bezoek → paginaweergave → in winkelwagen → afrekenen → betaling → betaald
+```
+
+De laatste komt uit `orders` en niet uit een eigen teller: dat is de waarheid,
+en twee tellingen naast elkaar lopen vroeg of laat uit de pas.
+
+Daarnaast per paginaweergave het **soort** pagina (home, familie, categorie,
+product) en per bezoek de **herkomst** (google, bing, direct, overig). Niet het
+hele pad: dan zou de tabel meegroeien met de catalogus, en het soort pagina is
+wat de eigenaar wil weten.
+
+### Wat een "bezoek" is, en wat het niet is
+
+**Een paginaweergave zonder verwijzer van onze eigen site.** Dus de eerste
+pagina van iemand die binnenkomt.
+
+Dat is een keuze, en de eigenaar heeft hem bewust gemaakt (optie A tegenover
+een dagelijks wisselende vingerafdruk van IP en browser). De prijs:
+
+- wie 's ochtends en 's avonds terugkomt telt twee keer;
+- twee tabbladen tellen twee keer;
+- wie een uur op één pagina blijft en dan doorklikt telt één keer.
+
+Wat het oplevert: **er wordt niets over een persoon vastgelegd.** Geen cookie,
+geen localStorage, geen IP-adres, geen afdruk — niets op het apparaat van de
+bezoeker en niets in de database dat naar iemand wijst. Daarom is er geen
+toestemmingsbanner nodig, en daarom telt dit élke bezoeker.
+
+Voor de vraag waar het om gaat — de verhóuding tussen de stappen — maakt de
+onnauwkeurigheid niets uit. Het dashboard zegt er bovendien bij wat een bezoek
+is, zodat niemand het getal voor iets anders aanziet.
+
+### Drie dingen in de bouw die een reden hebben
+
+**Tellen mag nooit een verzoek laten mislukken.** `bump()` vangt zijn eigen
+fout af en logt hem — de enige plek in deze winkel waar dat zo is. Een
+bezoeker die een pagina opent heeft niets te maken met onze boekhouding.
+GEMETEN 2026-10-02 door de tabel nog niet aan te maken: de drie tellingen gaan
+de deur uit, het antwoord is 204, de serverlog zegt `ER_NO_SUCH_TABLE`, en de
+winkel merkt er niets van. Hetzelfde geldt aan de leeskant: valt de database
+weg, dan verdwijnt het blok van het dashboard en blijven de bestellingen
+staan.
+
+**Per dag opgeteld, niet per gebeurtenis een rij.** Ophogen gaat met
+`ON DUPLICATE KEY UPDATE`, dus zonder eerst te lezen — twee bezoekers tegelijk
+kunnen elkaars telling niet overschrijven. Een jaar winkel is een paar duizend
+rijen.
+
+**De betaalstap wordt op de server geteld**, in `startPayment`, en niet in de
+browser. Dat is het moment dat er werkelijk een betaling wordt aangemaakt, en
+het is niet te spammen. De rest komt wel uit de browser, met de snelheidsrem
+van `lib/rate-limit.ts` eroverheen en een vaste lijst toegestane namen; het
+antwoord is altijd 204, ook op onzin, zodat de telader niet vertelt wat hij
+accepteert.
+
+### Wat er niet in zit
+
+- **Geen uurverdeling.** Bij deze aantallen zegt dat niets en het
+  verdrievoudigt de rijen.
+- **Geen losse pagina's**, alleen soorten.
+- **Geen terugkerende bezoekers, geen sessieduur, geen bouncepercentage.** Dat
+  kan niet zonder iets op het apparaat te zetten, en dat is precies wat we niet
+  doen.
+- **Nog geen koppeling met Search Console.** Die kan erbij (klikken,
+  vertoningen en zoekwoorden via een serviceaccount, ook server-side en zonder
+  banner) en is een eigen beslissing. De twee vullen elkaar aan: Search Console
+  zegt hóe mensen de winkel vinden, deze tellers zeggen wat ze er daarna doen.
+
+---
+
+## 25. Migraties draaien met een commando, niet met de hand — VASTGESTELD 2026-10-02
+
+De eerste negen migraties zijn met de hand toegepast, in phpMyAdmin. Dat ging
+negen keer goed en leverde precies het probleem op dat je ervan verwacht: op
+2026-10-01 stonden 0005 tot en met 0009 wél op de productiedatabase terwijl de
+drááiende code ze niet kende, en nergens stond welke er nu wel en niet in zat.
+De database en de code konden alleen uit elkaar lopen, niet naar elkaar toe.
+
+**`pnpm db:migrate` lost dat op.** Hij leest `db/migrations/`, kijkt in de
+tabel `schema_migrations` wat er al gedraaid is, en voert alleen de rest uit.
+
+```bash
+pnpm db:migrate                      # laat zien wat er zou gebeuren
+pnpm db:migrate --write              # voert de openstaande migraties uit
+pnpm db:migrate --baseline <bestand> # tekent af zonder te draaien
+```
+
+### Vier keuzes die erin zitten
+
+**Niets draaien tenzij je `--write` zegt.** Zelfde afspraak als
+`orders:migrate`. Een script dat zomaar DDL op de productiedatabase loslaat is
+een script dat je een keer per ongeluk aanroept.
+
+**De boekhouding staat in de database, niet in een bestand hier.** Alleen de
+database weet wat er écht in zit; een lijstje in Git is een kopie die achter
+kan lopen.
+
+**`--baseline` voor wat er al stond.** De negen bestaande migraties opnieuw
+draaien zou stuklopen op de eerste `ALTER` die al gedaan was. Met
+`--baseline 0009_returns.sql --write` zijn ze afgetekend zonder uitvoeren. Die
+schakelaar blijft bestaan voor het volgende geval waarin iemand toch met de
+hand iets heeft gedaan — en niet om er gewoonte van te maken.
+
+**Geen transactie eromheen, en dat kan ook niet.** MySQL en MariaDB sluiten een
+lopende transactie stilletjes af bij elke `CREATE` of `ALTER`; terugdraaien
+bestaat hier niet. Daarom één migratie per keer, pas aftekenen als hij geslaagd
+is, en stoppen bij de eerste fout. **Schrijf migraties dus zo dat ze alleen
+toevoegen** (`IF NOT EXISTS`), want een half gedraaide migratie moet je met de
+hand kunnen afmaken.
+
+GEMETEN 2026-10-02 op de productiedatabase: eerst de negen bestaande afgetekend
+(`9 al afgetekend`), daarna gaf een droge aanroep één openstaande migratie, en
+`--write` zette `stats_daily` erin. `pnpm db:check` daarna: "Database in orde".
+
+### Wat er niet in zit
+
+- **Geen terugdraaien.** Zie hierboven: dat kan niet met DDL. Een vergissing
+  herstel je met een nieuwe migratie.
+- **Geen automatisch draaien bij de deploy.** De hostingpartij kopieert bij
+  elke deploy naar een nieuwe map; een migratie die daar vanzelf meeloopt zou
+  draaien op een moment dat niemand kijkt. Eerst de migratie, dan de deploy —
+  in die volgorde, en met de hand aangezet.
+- **`schema_migrations` hoort niet bij een migratiebestand.** Het script maakt
+  hem zelf aan; `scripts/check-db.mjs` kent hem daarom apart.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -2225,6 +2373,8 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
+| 2026-10-02 | Migraties via `pnpm db:migrate`, met de boekhouding in de database | Negen migraties met de hand gaf een productiedatabase die vóór de code liep zonder dat iemand kon zien wat erin zat (#25) |
+| 2026-10-02 | Eigen bezoekcijfers in het dashboard, geen analysedienst | Een script van een derde maakt een toestemmingsbanner verplicht en meet dan nog maar de helft van de bezoekers; vijf eigen tellers beantwoorden de vraag wáár het afrekenen stukloopt (#24) |
 | 2026-10-01 | Voorraad én prijs komen van dezelfde groothandel, en het aantal is erop begrensd | `item.stock` klopt bij de helft van de artikelen niet met de groothandels eronder; vier banden kopen waar er één ligt kostte gemiddeld € 60,36 per set (#22) |
 | 2026-10-01 | Een actie op onderdelen wordt een aankondiging in de carrousel | Die catalogus is niet als lijst op te vragen zonder gekozen auto, dus zonder dia stond de grootste productgroep van de winkel nergens aangekondigd (#14) |
 | 2026-09-19 | Beoordelingen verschijnen meteen, verbergen alleen met reden | Selectief publiceren is een oneerlijke handelspraktijk; antwoorden werkt beter dan weghalen (#18) |

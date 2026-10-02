@@ -50,8 +50,14 @@ hetzelfde doel — maar er kwam één ding bij dat er eerder niet was.
 
 `return_lines` draagt geen persoonsgegeven: artikelnummers en aantallen.
 
-`price_history` en `job_runs` bevatten geen persoonsgegevens: artikel-ids,
-datums en bedragen.
+`price_history`, `job_runs` en `stats_daily` bevatten geen persoonsgegevens:
+artikel-ids, datums, bedragen en aantallen.
+
+**`stats_daily` is de bezoekteller** (@docs/DECISIONS.md #24). Daar staat per
+dag een getal per soort gebeurtenis in — bezoeken, paginaweergaven, stappen in
+het afrekenen. Geen IP-adres, geen vingerafdruk, niets dat naar een persoon
+wijst, en er wordt ook niets op het apparaat van de bezoeker gezet. Daarom
+verandert deze teller niets aan de banner-vraag hieronder.
 
 **`discount_code_uses.email_key` is het nieuwe stuk.** Het staat daar los van
 de bestelling, dus het blijft ook staan als een bestelling ooit verwijderd
@@ -105,6 +111,9 @@ plaatsen van of toegang krijgen tot gegevens **op de randapparatuur van de
 gebruiker** — cookies, localStorage, sessionStorage, fingerprinting. Wat een
 server in zijn eigen database zet valt er niet onder; dat is een AVG-vraag, en
 het antwoord daarop is de tabel hierboven plus de privacyverklaring.
+
+Dat geldt ook na de eigen bezoekteller van 2026-10-02: die schrijft niets op
+het apparaat van de bezoeker, dus hij valt buiten art. 11.7a Tw.
 
 De lijst met browseropslag is sinds 2026-09-12 niet veranderd: nog steeds
 dezelfde vijf, en alle vijf zijn óf noodzakelijk om de winkel te laten werken

@@ -16,6 +16,7 @@ import {
 import { mailIsConfigured } from "@/lib/mail";
 import { createPayment, mollieIsConfigured } from "@/lib/mollie/client";
 import { saveOrder } from "@/lib/orders/store";
+import { bump } from "@/lib/stats/store";
 import type { StoredOrder } from "@/lib/orders/types";
 import { SITE_URL } from "@/lib/site";
 
@@ -185,6 +186,10 @@ export async function startPayment(
     const token = accessToken();
     const returnPath = getPathname({ locale, href: "/checkout/status" });
     const redirectUrl = `${SITE_URL}${returnPath}?ref=${encodeURIComponent(document.reference)}&t=${token}`;
+
+    // Geteld op de server: dit is het moment dat er werkelijk een betaling
+    // wordt aangemaakt. In de browser zou deze telling te spammen zijn.
+    await bump("payment_start");
 
     const payment = await createPayment({
       amountCents: document.totalGrossCents,
