@@ -8,6 +8,7 @@ import { BackToTop } from "@/components/back-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { BottomNav } from "@/components/bottom-nav";
 import { SiteHeader } from "@/components/site-header";
+import { PageBeacon } from "@/components/stats/page-beacon";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
 import { vehicleMakeNames } from "@/lib/vehicle/makes";
@@ -95,6 +96,10 @@ export default async function LocaleLayout({
           <SiteFooter />
           <BackToTop />
           <BottomNav makes={makes} />
+          {/* Telt paginaweergaven en bezoeken op onze eigen server. Geen
+              cookie, geen vingerafdruk, geen derde partij — en dus geen
+              toestemmingsbanner (@docs/DECISIONS.md #24). */}
+          <PageBeacon />
         </NextIntlClientProvider>
       </body>
     </html>

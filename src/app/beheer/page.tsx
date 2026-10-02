@@ -10,6 +10,7 @@ import {
 import { requireAdmin } from "@/lib/admin/session";
 import { listOrders, orderTotals } from "@/lib/orders/store";
 import { returnTotals } from "@/lib/returns/store";
+import { statsOverview, type StatPeriod } from "@/lib/stats/store";
 import { signOut } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +62,7 @@ const GEWEIGERD: Record<Permission, string> = {
   beoordelingen: "de beoordelingen",
   retouren: "de retouren",
   beheerders: "het beheer van gebruikers",
+  statistieken: "de bezoekcijfers",
 };
 
 export default async function BeheerPage({
@@ -78,13 +80,15 @@ export default async function BeheerPage({
   // trekken voor iemand die ze toch niet te zien krijgt is geen detail: het
   // is het verschil tussen "afgeschermd" en "niet opgehaald".
   const magRetouren = can(admin.role, "retouren");
+  const magStats = can(admin.role, "statistieken");
   // De retourcijfers zijn optellingen zonder klantgegevens en horen bij de
   // omzet: wie de omzet mag zien, hoort te zien wat er weer af ging. De
   // aanvragen zelf (met naam en artikel) blijven achter `retouren` zitten.
-  const [totals, recent, returns] = await Promise.all([
+  const [totals, recent, returns, stats] = await Promise.all([
     magOmzet || magBestellingen ? orderTotals() : null,
     magBestellingen ? listOrders({ limit: 10 }) : null,
     magOmzet || magBestellingen ? returnTotals() : null,
+    magStats ? statsOverview() : null,
   ]);
 
   const nav = NAV.filter((item) => can(admin.role, item.needs));
@@ -193,6 +197,71 @@ export default async function BeheerPage({
         </div>
       )}
 
+
+      {/* Eigen tellers, geen analysedienst van buiten: dat scheelt een
+          toestemmingsbanner en meet daardoor élke bezoeker in plaats van
+          alleen wie toestemming gaf (@docs/DECISIONS.md #24). */}
+      {stats && (
+        <section className="mt-10">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-lg font-semibold">Bezoek</h2>
+            <p className="text-sm text-muted">
+              Een bezoek is iemand die binnenkomt. Wie later terugkomt telt
+              opnieuw.
+            </p>
+          </div>
+
+          <div className="mt-4 overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-sm">
+              <thead className="bg-surface text-start">
+                <tr>
+                  <th className="px-4 py-2 text-start font-medium">Stap</th>
+                  <th className="px-4 py-2 text-end font-medium">7 dagen</th>
+                  <th className="px-4 py-2 text-end font-medium">28 dagen</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                <Row label="Bezoeken" pick={(p) => p.visits} stats={stats} />
+                <Row
+                  label="Paginaweergaven"
+                  pick={(p) => p.pageviews}
+                  stats={stats}
+                />
+                <Row
+                  label="In winkelwagen"
+                  pick={(p) => p.cartAdds}
+                  stats={stats}
+                />
+                <Row
+                  label="Afrekenen geopend"
+                  pick={(p) => p.checkoutStarts}
+                  stats={stats}
+                />
+                <Row
+                  label="Betaling gestart"
+                  pick={(p) => p.paymentStarts}
+                  stats={stats}
+                />
+                <Row label="Betaald" pick={(p) => p.paid} stats={stats} sterk />
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-2 text-sm text-muted">
+            Van bezoek naar bestelling:{" "}
+            <span className="font-semibold tabular-nums">
+              {share(stats.month.paid, stats.month.visits)}
+            </span>{" "}
+            over 28 dagen.
+          </p>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <Lijst titel="Soort pagina" items={stats.pages} />
+            <Lijst titel="Herkomst" items={stats.sources} />
+          </div>
+        </section>
+      )}
+
       {recent && (
         <section className="mt-10">
           <h2 className="text-lg font-semibold">Laatste bestellingen</h2>
@@ -290,6 +359,60 @@ function Tile({
       <p className="text-sm text-muted">{label}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
       {note && <p className="mt-1 text-xs text-muted">{note}</p>}
+    </div>
+  );
+}
+
+/** Eén regel van de trechter, met beide periodes naast elkaar. */
+function Row({
+  label,
+  pick,
+  stats,
+  sterk = false,
+}: {
+  label: string;
+  pick: (period: StatPeriod) => number;
+  stats: { week: StatPeriod; month: StatPeriod };
+  sterk?: boolean;
+}) {
+  return (
+    <tr className={sterk ? "font-semibold" : undefined}>
+      <td className="px-4 py-2">{label}</td>
+      <td className="px-4 py-2 text-end tabular-nums">{pick(stats.week)}</td>
+      <td className="px-4 py-2 text-end tabular-nums">{pick(stats.month)}</td>
+    </tr>
+  );
+}
+
+/** Percentage met één decimaal; zonder noemer valt er niets te zeggen. */
+function share(part: number, whole: number): string {
+  if (whole <= 0) return "—";
+  return `${((part / whole) * 100).toFixed(1).replace(".", ",")}%`;
+}
+
+/** Een kort lijstje met aantallen, voor paginasoorten en herkomst. */
+function Lijst({
+  titel,
+  items,
+}: {
+  titel: string;
+  items: ReadonlyArray<{ label: string; total: number }>;
+}) {
+  return (
+    <div className="rounded-lg border border-border p-4">
+      <h3 className="text-sm font-semibold">{titel}</h3>
+      {items.length === 0 ? (
+        <p className="mt-2 text-sm text-muted">Nog niets gemeten.</p>
+      ) : (
+        <ul className="mt-2 space-y-1 text-sm">
+          {items.map((item) => (
+            <li key={item.label} className="flex justify-between gap-4">
+              <span>{item.label}</span>
+              <span className="tabular-nums text-muted">{item.total}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

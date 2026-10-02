@@ -37,6 +37,12 @@ const EXPECTED = [
   "discount_codes",
   "discount_code_uses",
   "price_history",
+  // 0010_stats.sql
+  "stats_daily",
+  // Geen migratie maar de boekhouding van scripts/migrate-db.mjs: welke
+  // migraties er gedraaid zijn. Hoort er wel te staan, anders meldt dit
+  // script hem als een vreemde tabel.
+  "schema_migrations",
   // 0004_job_runs.sql
   "job_runs",
   // 0005_price_rules.sql

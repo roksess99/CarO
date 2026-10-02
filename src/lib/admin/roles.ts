@@ -35,7 +35,9 @@ export type Permission =
   /** Retouren afhandelen en geld terugboeken */
   | "retouren"
   /** Mensen uitnodigen, rollen wijzigen, toegang intrekken */
-  | "beheerders";
+  | "beheerders"
+  /** De bezoekcijfers op het dashboard */
+  | "statistieken";
 
 const ALL: ReadonlyArray<Permission> = [
   "bestellingen",
@@ -45,6 +47,7 @@ const ALL: ReadonlyArray<Permission> = [
   "beoordelingen",
   "retouren",
   "beheerders",
+  "statistieken",
 ];
 
 /**
@@ -72,7 +75,9 @@ const ALL: ReadonlyArray<Permission> = [
 const MATRIX: Record<Role, ReadonlyArray<Permission>> = {
   eigenaar: ALL,
   boekhouder: ["facturen"],
-  marketing: ["kortingen", "beoordelingen"],
+  // Marketing mag de bezoekcijfers zien: dat is het enige scherm waarop af te
+  // lezen is of een actie iets heeft gedaan, en er staat geen klantgegeven in.
+  marketing: ["kortingen", "beoordelingen", "statistieken"],
 };
 
 export function can(role: Role, permission: Permission): boolean {

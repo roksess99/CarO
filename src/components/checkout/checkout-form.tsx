@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useCart } from "@/components/cart/use-cart";
 import { startPayment } from "@/components/checkout/actions";
 import { lookupAddressAction } from "@/components/checkout/address-actions";
@@ -18,6 +18,7 @@ import {
   loadCheckoutDetails,
   saveCheckoutDetails,
 } from "@/lib/checkout/storage";
+import { countStat } from "@/lib/stats/send";
 
 type FieldErrors = Partial<Record<CheckoutField, string>>;
 
@@ -46,6 +47,14 @@ export function CheckoutForm() {
   const [failure, setFailure] = useState<string | null>(null);
   const [codeFailure, setCodeFailure] = useState<string | null>(null);
   const applied = useAppliedCode();
+  // Eén telling per keer dat iemand het afrekenscherm opent, zodat het
+  // dashboard kan laten zien hoeveel winkelwagens hier blijven staan.
+  const geteld = useRef(false);
+  useEffect(() => {
+    if (geteld.current) return;
+    geteld.current = true;
+    countStat("checkout_start");
+  }, []);
   // Blijft `true` tot de browser weg navigeert: tussen het antwoord van de
   // server en de sprong naar Mollie zit een moment waarin de knop anders weer
   // aanklikbaar zou zijn, en dat levert een tweede betaling op.
