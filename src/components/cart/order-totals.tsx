@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { formatPriceCents } from "@/lib/format";
+import { formatDeliveryDay, formatPriceCents } from "@/lib/format";
 import { vatPortionCents } from "@/lib/pricing";
 import { calculateShipping } from "@/lib/shipping";
 
@@ -92,11 +92,7 @@ export function OrderTotals({
       {deliveryDate && (
         <p className="mt-3 text-sm text-muted">
           {t("deliveryExpected", {
-            date: new Intl.DateTimeFormat(locale, {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            }).format(new Date(`${deliveryDate}T12:00:00`)),
+            date: formatDeliveryDay(deliveryDate, locale),
           })}
         </p>
       )}

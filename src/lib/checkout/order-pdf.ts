@@ -230,6 +230,14 @@ function drawParties(ctx: Ctx, order: OrderDocument): void {
       customer.country === "NL" ? "Nederland" : customer.country,
       customer.email,
       customer.phone || "",
+      // De schatting zoals hij gold bij het bestellen. Staat in dit blok en
+      // niet bij de totalen: het gaat over de bezorging, niet over geld. Met
+      // "rond" ervoor, want het blijft de datum van de groothandel.
+      order.deliveryExpected
+        ? `Verwachte levering: rond ${dateFormatter.format(
+            new Date(`${order.deliveryExpected}T12:00:00`),
+          )}`
+        : "",
     ],
   );
 

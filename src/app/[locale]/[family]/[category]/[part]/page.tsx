@@ -27,7 +27,11 @@ import { productDescription } from "@/lib/catalog/product-description";
 import { groupNameFromSlug } from "@/lib/catalog/wearparts-provider";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
-import { formatPriceCents, priceCentsToDecimalString } from "@/lib/format";
+import {
+  formatDeliveryDay,
+  formatPriceCents,
+  priceCentsToDecimalString,
+} from "@/lib/format";
 import {
   FREE_SHIPPING_THRESHOLD_CENTS,
   STANDARD_SHIPPING_CENTS,
@@ -372,11 +376,7 @@ export default async function ProductPage({ params }: Props) {
             {leverdatum && (
               <p className="mt-2 text-sm">
                 {t("deliveryExpected", {
-                  date: new Intl.DateTimeFormat(locale, {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                  }).format(new Date(`${leverdatum}T12:00:00`)),
+                  date: formatDeliveryDay(leverdatum, locale),
                 })}
               </p>
             )}

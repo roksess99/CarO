@@ -18,6 +18,29 @@ import type { Cart } from "@/lib/cart/types";
  * schuift door naar de volgende met een latere datum (GEMETEN 2026-10-03,
  * @docs/api/WEARPARTS.md).
  */
+/**
+ * Eén vlucht per winkelwagen, gedeeld door elke component die de datum toont.
+ * Op het afrekenscherm staan dat er twee — de regel bij het bezorgadres en
+ * het besteloverzicht ernaast — en dat zou anders twee keer dezelfde Server
+ * Action zijn. Alleen de lópende aanvraag wordt gedeeld, niet het antwoord:
+ * dat hoort bij de wagen van dat moment, en de server cachet zelf al een uur.
+ */
+const openAanvragen = new Map<string, Promise<string | null>>();
+
+function leverdatumVoor(
+  key: string,
+  items: Cart["items"],
+): Promise<string | null> {
+  const open = openAanvragen.get(key);
+  if (open) return open;
+  const aanvraag = cartDelivery(items).catch(() => null);
+  openAanvragen.set(key, aanvraag);
+  void aanvraag.finally(() => {
+    if (openAanvragen.get(key) === aanvraag) openAanvragen.delete(key);
+  });
+  return aanvraag;
+}
+
 export function useCartDelivery(): string | null {
   const cart: Cart = useCart();
   const [resolved, setResolved] = useState<{ key: string; date: string | null }>(
@@ -33,13 +56,9 @@ export function useCartDelivery(): string | null {
     if (items.length === 0) return;
 
     let cancelled = false;
-    cartDelivery(items)
-      .then((date) => {
-        if (!cancelled) setResolved({ key: itemsKey, date });
-      })
-      .catch(() => {
-        if (!cancelled) setResolved({ key: itemsKey, date: null });
-      });
+    void leverdatumVoor(itemsKey, items).then((date) => {
+      if (!cancelled) setResolved({ key: itemsKey, date });
+    });
     return () => {
       cancelled = true;
     };

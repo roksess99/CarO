@@ -88,6 +88,14 @@ kleuren van het select-element niet automatisch over in het popupvenster.
 - Moet een route een echte 404 kunnen geven, keur de URL dan in een `layout.tsx`
   van datzelfde segment: die staat bóven de Suspense-grens. Alleen synchrone
   keuringen — een API-call daar kost elke geldige pagina zijn snelle start.
+- **Een `<script>` dat moet drááien hoort in de `<head>` van de layout, niet in
+  de React-boom.** React voert een scripttag die hijzelf aanmaakt niet uit en
+  zegt dat ook: *"Encountered a script tag while rendering React component."*
+  Dat gold voor het geïnjecteerde script van next-themes en net zo goed voor
+  `next/script` met `strategy="beforeInteractive"` — dat is een
+  clientcomponent. Een gewoon `<script dangerouslySetInnerHTML>` in de `<head>`
+  staat in de HTML die de server stuurt en draait tijdens het parsen, vóór de
+  eerste schilderbeurt. Zo zet het thema-script zijn class (`[locale]/layout.tsx`).
 - Lege staat is een uitnodiging tot actie, niet alleen "geen resultaten".
 - Artikelnummers en prijzen: `font-variant-numeric: tabular-nums` zodat kolommen uitlijnen.
 

@@ -6,6 +6,8 @@ import { routing, type Locale } from "@/i18n/routing";
 import { isValidCartItem } from "@/lib/cart/cart";
 import { maxOrderable } from "@/lib/cart/stock";
 import type { CartItem } from "@/lib/cart/types";
+import { expectedDeliveryForAll } from "@/lib/catalog/delivery";
+import type { Part } from "@/lib/catalog/types";
 import { buildOrderDocument } from "@/lib/checkout/order-document";
 import { validateCheckoutDetails } from "@/lib/checkout/schema";
 import {
@@ -44,6 +46,18 @@ export type StartPaymentResult =
       /** Alleen bij `code`: waarom de kortingscode het niet deed */
       codeReason?: CodeRejection;
     };
+
+/**
+ * Hoe lang de leverdatum de betaalknop mag ophouden.
+ *
+ * De datum komt van de groothandel en die aanroep kan traag zijn. Hij is
+ * prettig om op de factuur te hebben, maar niemand hoort op een betaalknop te
+ * wachten voor een schatting: duurt het langer, dan gaat de bestelling door
+ * zónder datum. In de praktijk kost het niets — de winkelwagen en het
+ * afrekenscherm hebben dezelfde vraag al gesteld en het antwoord staat een
+ * uur in het geheugen van de server (lib/catalog/delivery.ts).
+ */
+const DELIVERY_BUDGET_MS = 2500;
 
 /** Willekeurig teken voor de terugkeer-URL, zie StoredOrder.accessToken */
 function accessToken(): string {
@@ -131,10 +145,14 @@ export async function startPayment(
     });
     if (tooMany) return { ok: false, error: "stock" };
 
+    // Waar de leverdatum over gaat: hetzelfde artikel en hetzelfde aantal als
+    // de klant zag, dus met de prijs uit dezelfde aanbieding.
+    const deliveryLines: { part: Part; quantity: number }[] = [];
     const entries = items.flatMap((item) => {
       const part = partById.get(item.partId);
       if (!part) return [];
       available.push(item);
+      deliveryLines.push({ part, quantity: item.quantity });
       codeLines.push({
         priceCents: part.priceCents,
         quantity: item.quantity,
@@ -178,10 +196,21 @@ export async function startPayment(
       discountCodeId = check.code.id;
     }
 
+    // De laatste datum over alle regels, met een tijdslimiet eromheen. De
+    // aanroep gaat door nadat de limiet verstrijkt — dan vult hij de cache
+    // alsnog — maar het document wacht er niet op.
+    const deliveryExpected = await Promise.race([
+      expectedDeliveryForAll(deliveryLines),
+      new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), DELIVERY_BUDGET_MS);
+      }),
+    ]);
+
     const document = buildOrderDocument({
       details: details.data,
       entries,
       discount,
+      deliveryExpected,
     });
     const token = accessToken();
     const returnPath = getPathname({ locale, href: "/checkout/status" });

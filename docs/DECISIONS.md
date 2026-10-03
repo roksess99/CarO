@@ -2378,8 +2378,84 @@ GEMETEN 2026-10-03 in de browser: productpagina van een band (voorraad 1)
 "rond donderdag 8 oktober", winkelwagen met datzelfde artikel hetzelfde, en een
 onderdeel met twee stuks "rond vrijdag 9 oktober".
 
+### UITGEBREID 2026-10-03: de datum gaat mee met de bestelling
+
+De eigenaar miste hem op het afrekenscherm en vroeg hem ook op de factuur en
+in de mail aan de klant. Dat laatste is geen tweede weergave van hetzelfde: de
+factuur en de mail worden **later** getekend dan de bestelling, en als ze de
+datum opnieuw zouden ophalen staat er iets anders in de mail dan wat de klant
+bij het afrekenen las.
+
+**Daarom wordt de datum bevroren**, net als de bedragen (#10). `startPayment`
+rekent hem één keer uit en zet hem als `deliveryExpected` op het
+orderdocument; de factuur, de mail en de statuspagina lezen alleen dat veld en
+bellen de leverancier niet meer.
+
+Waar hij nu staat:
+
+| Waar | Wat |
+|---|---|
+| Productpagina | "Besteld vandaag, bij je rond donderdag 8 oktober." |
+| Winkelwagen | "Verwachte levering: rond donderdag 8 oktober." |
+| Afrekenen, **onder het bezorgadres** | zelfde regel, vlak boven de betaalknop |
+| Statuspagina na betalen | regel in het bestelblok, zie hieronder |
+| Factuur en orderbevestiging (PDF) | onder BEZORGADRES |
+| Bevestigingsmail | eigen blok onder het ordernummer, en in de tekstversie |
+
+**Op het afrekenscherm staat hij nu bij het bezorgadres** en niet alleen
+onderaan het besteloverzicht ernaast. Daar is het de laatste regel onder de
+btw-vermelding, en dat is precies waar niemand kijkt — vandaar de melding dat
+hij er "niet" stond. Hij hangt níet aan het ingevulde adres (de postcode doet
+niets, zie hierboven) maar wél aan het aantal, en dat staat vast zodra de
+klant daar is.
+
+**De statuspagina toont sindsdien de hele bestelling.** De knop "Bekijk je
+bestelling" leidde naar een scherm met alleen een ordernummer en een bedrag;
+daar staan nu ook het **factuurnummer**, de verwachte leverdatum en de
+**bestelde artikelen** met aantal en regelbedrag. Drie dingen die daarbij
+horen:
+
+- **Alles komt uit de bevroren momentopname**, niet uit de winkelwagen (die is
+  op dat moment net geleegd) en niet uit de catalogus van vandaag. Dezelfde
+  bron als de factuur en de mail, en met hetzelfde label (`productLabel`), dus
+  de klant leest tweemaal exact hetzelfde.
+- **Het factuurnummer staat niet op de bestelling** maar in de factuurreeks, en
+  ontstaat pas bij betaling (#12). Het kenmerk `CARO-…` erboven blijft dus wat
+  het is: een kenmerk, geen factuurnummer.
+- **Valt de database weg, dan vervalt alleen die ene regel.** Een lezer op het
+  scherm dat de klant direct na zijn betaling opent mag de pagina nooit laten
+  vallen (#13).
+
+In de bevestigingsmail stonden de artikelen al — met naam, aantal en bedrag,
+onder "Je bestelling". Daar hoefde niets bij.
+
+**De betaalknop wacht hoogstens 2,5 seconde.** Een schatting van een derde
+partij mag een betaling niet ophouden; duurt het langer, dan gaat de
+bestelling door zonder datum en staat er nergens een. In de praktijk kost het
+niets: de winkelwagen en het afrekenscherm hebben dezelfde vraag al gesteld en
+het antwoord staat een uur in het geheugen van de server.
+
+Twee kleinigheden die erbij horen:
+
+- **Eén vlucht per winkelwagen.** Op het afrekenscherm staan nu twee
+  componenten die de datum tonen; `use-cart-delivery.ts` deelt de lopende
+  aanvraag, zodat het één Server Action blijft.
+- **De voorvertoning kan hem tonen.** `/api/dev/order-mail?ref=…&levering=2026-10-09`
+  zet een datum op de kopie die getekend wordt, en `&view=pdf` geeft de
+  bijlage. Alleen in ontwikkeling, en het raakt de database niet — zonder dat
+  is de regel alleen te zien door een echte bestelling te plaatsen.
+
+GEMETEN 2026-10-03: mail en PDF getekend met `levering=2026-10-09` →
+"Verwachte levering: rond vrijdag 9 oktober" in de mail en
+"Verwachte levering: rond 9 oktober 2026" op de factuur, en het afrekenscherm
+toont de regel boven de knop.
+
 ### Wat er niet in zit
 
+- **Niet op de beheerdersmail.** Het inkoopbriefje zegt nog niet welke datum
+  aan de klant beloofd is, terwijl de beheerder degene is die hem waarmaakt.
+  Eén regel werk, maar het raakt een mail die hij elke bestelling leest — dus
+  apart te beslissen.
 - **Beweegbare feestdagen.** Pasen, Hemelvaart en Pinksteren zitten niet in de
   werkdagberekening; vaste feestdagen en weekenden wel. Dat scheelt een
   paasberekening voor één dag verschil op een datum die "rond" heet.
