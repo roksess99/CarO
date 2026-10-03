@@ -367,6 +367,7 @@
     "stockLabel": "Voorraad",
     "stockValue": "{count, plural, =1 {1 stuk} other {# stuks}}",
     "stockLimit": "{count, plural, =1 {Er is er nog één tegen deze prijs.} other {Er zijn er nog # tegen deze prijs.}}",
+    "deliveryExpected": "Besteld vandaag, bij je rond {date}.",
     "specs": {
       "size": "Maat",
       "season": "Seizoen",
@@ -433,7 +434,8 @@
       "alreadyUsed": "Je hebt deze code al een keer gebruikt.",
       "minSpend": "Je bestelling haalt het minimumbedrag van deze code niet.",
       "onlyDiscounted": "Deze code geldt niet op artikelen die al in de aanbieding zijn."
-    }
+    },
+    "deliveryExpected": "Verwachte levering: rond {date}."
   },
   "checkout": {
     "metaTitle": "Afrekenen — CarO",

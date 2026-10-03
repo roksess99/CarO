@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatPriceCents } from "@/lib/format";
 import { vatPortionCents } from "@/lib/pricing";
 import { calculateShipping } from "@/lib/shipping";
@@ -12,12 +12,16 @@ import { calculateShipping } from "@/lib/shipping";
 export function OrderTotals({
   subtotalCents,
   discount,
+  deliveryDate,
 }: {
   subtotalCents: number;
   /** Een gekeurde kortingscode; het bedrag is hier al uitgerekend */
   discount?: { code: string; percent: number; cents: number };
+  /** ISO-dag waarop het pakket er volgens de groothandel is; leeg = niets tonen */
+  deliveryDate?: string | null;
 }) {
   const t = useTranslations("totals");
+  const locale = useLocale();
   // De verzendgrens kijkt naar het bedrag ná de korting — precies zoals de
   // server het straks uitrekent (docs/DECISIONS.md #14). Zou dit hier anders
   // staan, dan belooft het overzicht gratis verzending die de betaalpagina
@@ -74,12 +78,28 @@ export function OrderTotals({
         </div>
       </dl>
 
+
       {/* Btw expliciet benoemen: verplicht bij consumentenprijzen */}
       <p className="mt-1 text-xs text-muted">
         {t("vatIncluded", {
           amount: formatPriceCents(vatPortionCents(totalCents)),
         })}
       </p>
+
+      {/* De datum van de groothandel die wij inkopen, plus één werkdag voor het
+          inkopen zelf. Staat hier en niet bij de artikelen: het pakket is pas
+          compleet als de laatste regel er is (lib/catalog/delivery.ts). */}
+      {deliveryDate && (
+        <p className="mt-3 text-sm text-muted">
+          {t("deliveryExpected", {
+            date: new Intl.DateTimeFormat(locale, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            }).format(new Date(`${deliveryDate}T12:00:00`)),
+          })}
+        </p>
+      )}
 
       {!shipping.isFree && shipping.remainingForFreeCents > 0 && (
         <p className="mt-3 rounded-md bg-surface p-3 text-sm">

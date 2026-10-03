@@ -367,6 +367,7 @@
     "stockLabel": "In stock",
     "stockValue": "{count, plural, =1 {1 item} other {# items}}",
     "stockLimit": "{count, plural, =1 {There is one left at this price.} other {There are # left at this price.}}",
+    "deliveryExpected": "Order today, with you around {date}.",
     "specs": {
       "size": "Size",
       "season": "Season",
@@ -433,7 +434,8 @@
       "alreadyUsed": "You have already used this code once.",
       "minSpend": "Your order does not reach the minimum for this code.",
       "onlyDiscounted": "This code does not apply to items that are already on sale."
-    }
+    },
+    "deliveryExpected": "Expected delivery: around {date}."
   },
   "checkout": {
     "metaTitle": "Checkout — CarO",

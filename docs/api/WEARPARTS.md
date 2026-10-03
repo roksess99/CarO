@@ -142,9 +142,19 @@ want met `articleId` geeft hij geen fout maar **status 200 met een lege lijst**
   Wimmer Autoteile GmbH     voorraad   9   standaardverzending € 0   levering 2026-10-08
 ```
 
-Dat opent twee dingen die we nu niet hebben: een **echte leverdatum** op de
-productpagina in plaats van een algemene belofte, en bij het inkopen zien
-wáár het ligt en wat de verzending kost.
+GEBOUWD 2026-10-03: die leverdatum staat nu op de productpagina en in de
+winkelwagen (@docs/DECISIONS.md #27). Twee parameters bleken daarbij niet te
+doen wat ze beloven:
+
+- **`postcode` wordt genegeerd.** Vier postcodes door heel Nederland gaven
+  dezelfde groothandels, datums en verzendkosten — bij beide API's.
+- **`quantity` filtert hier niet.** Tien groothandels, ook als je er vijftig
+  vraagt terwijl er vier op voorraad liggen. Op de Products-API filtert hij
+  wél: bij twee banden valt de groothandel met één stuk weg en schuift de
+  leverdatum twee dagen op.
+
+Wat het inkopen betreft blijft staan: deze lijst laat zien wáár het ligt en wat
+de verzending kost, en dat is nog niet in het beheerpaneel verwerkt.
 
 ---
 

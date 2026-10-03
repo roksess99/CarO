@@ -2315,6 +2315,82 @@ zijn dus geen incident maar iets dat terugkomt.
 
 ---
 
+## 27. Verwachte leverdatum op de productpagina — VASTGESTELD 2026-10-03
+
+De leverancier geeft per groothandel een `estimatedDelivery`. Omdat de
+groothandel **rechtstreeks bij de klant bezorgt** (#4) is dat de datum van de
+klant, en niet die van een magazijn dat we niet hebben.
+
+```
+leverdatum van de groothandel waar wij inkopen
++ 1 werkdag   (de beheerder koopt met de hand in, één keer per werkdag)
+= wat de klant leest
+```
+
+Die ene werkdag is een keuze van de eigenaar. Zonder die dag beloven we een
+levering die pas begint zodra hij besteld heeft.
+
+### Drie metingen die de vorm bepaalden
+
+**De datum hoort bij één groothandel, en dat moet dezelfde zijn als waar de
+prijs vandaan komt.** Daarvoor draagt `Part` nu een `sellerId`. Het `sellerId`
+uit de aanbieding blijkt hetzelfde nummer als het `distributorId` in de
+leverancierslijst (GEMETEN 2026-10-03). Mengen van twee verkopers levert een
+belofte op die bij niemand hoort — dezelfde fout als bij de voorraad (#22).
+
+**De postcode doet niets.** Vier postcodes verspreid over Nederland
+(Amsterdam, Heerlen, Groningen, Breda), bij beide API's: identieke
+groothandels, identieke datums, identieke verzendkosten. De parameter bestaat
+en wordt genegeerd. Het oorspronkelijke plan was de datum bij het afrekenen te
+hercontroleren op het adres van de klant; dat heeft dus geen zin en is
+geschrapt.
+
+**Het aantal doet alles.** Bij één band: twee groothandels, snelste 7 oktober.
+Bij twee: de goedkoopste heeft er maar één, valt weg, en het wordt 9 oktober
+bij de volgende. Daar hoort de hercontrole dus wel — en die zit in de
+winkelwagen, niet pas op het afrekenscherm, zodat de klant het ziet voordat hij
+zijn adres invult.
+
+Bij onderdelen filtert dat aantal overigens niet: tien groothandels, ook bij
+vijftig stuks terwijl er vier op voorraad liggen. Nog een parameter die
+geaccepteerd en genegeerd wordt.
+
+### Wat er gebeurt als er niets te zeggen valt
+
+**Dan staat er niets.** Geen "levertijd onbekend", geen foutmelding. Een
+levertijd is een toezegging; een die je niet kunt onderbouwen doe je niet. Dat
+geldt ook als de gekozen groothandel het gevraagde aantal niet heeft — dan
+klopt onze príjs al niet meer voor dat aantal, en begrenst de winkelwagen het
+sowieso (#22).
+
+Bij meerdere artikelen telt **de laatste datum**: het pakket is pas compleet
+als de laatste regel er is. Ontbreekt de datum van één regel, dan is er over
+het geheel niets te beloven en verdwijnt de regel.
+
+### Wat het kost
+
+Eén extra aanroep bij de leverancier per productpagina en per regel in de
+winkelwagen, een uur gecacht per artikel-en-aantal. Bewust **niet** in de
+productrasters: daar zou het tientallen aanroepen per bezoeker worden, en de
+limiet is honderd per minuut voor de hele winkel.
+
+GEMETEN 2026-10-03 in de browser: productpagina van een band (voorraad 1)
+"rond donderdag 8 oktober", winkelwagen met datzelfde artikel hetzelfde, en een
+onderdeel met twee stuks "rond vrijdag 9 oktober".
+
+### Wat er niet in zit
+
+- **Beweegbare feestdagen.** Pasen, Hemelvaart en Pinksteren zitten niet in de
+  werkdagberekening; vaste feestdagen en weekenden wel. Dat scheelt een
+  paasberekening voor één dag verschil op een datum die "rond" heet.
+- **Expreslevering.** De API geeft prijzen voor pakket- en vrachtexpres
+  (`price_package_tomorrow` en vier andere). Dat is een eigen beslissing: het
+  kost geld en het vraagt een keuze in het afrekenscherm.
+- **Een harde datum.** Er staat "rond", en dat blijft zo zolang het de
+  schatting van een derde is.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -2431,6 +2507,7 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
+| 2026-10-03 | Verwachte leverdatum op de productpagina en in de winkelwagen | De groothandel bezorgt rechtstreeks bij de klant, dus zijn datum is de datum van de klant; er komt één werkdag bij voor het inkopen. De postcode doet niets, het aantal alles (#27) |
 | 2026-10-03 | Een geweigerde sleutel bij de leverancier is een melding in het paneel | De adapter maakt van een fout een lege lijst; daardoor zag een verlopen token er precies zo uit als een categorie zonder aanbod, en verdween de grootste productgroep stil uit de winkel (#26) |
 | 2026-10-02 | Migraties via `pnpm db:migrate`, met de boekhouding in de database | Negen migraties met de hand gaf een productiedatabase die vóór de code liep zonder dat iemand kon zien wat erin zat (#25) |
 | 2026-10-02 | Eigen bezoekcijfers in het dashboard, geen analysedienst | Een script van een derde maakt een toestemmingsbanner verplicht en meet dan nog maar de helft van de bezoekers; vijf eigen tellers beantwoorden de vraag wáár het afrekenen stukloopt (#24) |

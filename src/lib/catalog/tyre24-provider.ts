@@ -102,6 +102,8 @@ const tyrePriceSchema = z.object({
 });
 
 const tyreDistributorSchema = z.object({
+  /** Nodig om de leverdatum bij dezelfde groothandel op te halen */
+  distributorId: z.coerce.number().optional(),
   prices: z.array(tyrePriceSchema).optional(),
   /** Voorraad bij déze groothandel; dit is het enige voorraadgetal dat klopt */
   stock: z.coerce.number().optional(),
@@ -486,15 +488,16 @@ async function apiGet(
  */
 function sellableOffer(
   item: z.infer<typeof tyreItemSchema>,
-): { purchaseCents: number; stock: number } | null {
-  const offers: { cents: number; stock: number }[] = [];
+): { purchaseCents: number; stock: number; sellerId?: number } | null {
+  const offers: { cents: number; stock: number; sellerId?: number }[] = [];
   for (const distributor of item.distributors ?? []) {
     const stock = distributor.stock ?? 0;
+    const sellerId = distributor.distributorId;
     for (const price of distributor.prices ?? []) {
       if (price.type !== PURCHASE_PRICE_TYPE) continue;
       for (const entry of Object.values(price.prices ?? {})) {
         const cents = entry.base ? euroStringToCents(entry.base) : null;
-        if (cents !== null) offers.push({ cents, stock });
+        if (cents !== null) offers.push({ cents, stock, sellerId });
       }
     }
   }
@@ -502,7 +505,11 @@ function sellableOffer(
 
   offers.sort((a, b) => a.cents - b.cents);
   const chosen = offers.find((offer) => offer.stock > 0) ?? offers[0];
-  return { purchaseCents: chosen.cents, stock: chosen.stock };
+  return {
+    purchaseCents: chosen.cents,
+    stock: chosen.stock,
+    sellerId: chosen.sellerId,
+  };
 }
 
 /** Laagste bedrag over alle distributeurs voor prijsblokken die `match` accepteert */
@@ -634,6 +641,7 @@ function toPart(
     imageUrl: image?.imageLink ? imageUrl(image.imageLink) : undefined,
     specs,
     stock: offer.stock,
+    ...(offer.sellerId === undefined ? {} : { sellerId: offer.sellerId }),
   };
 }
 

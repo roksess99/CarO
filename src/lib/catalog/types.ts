@@ -58,6 +58,15 @@ export interface Part {
   specs?: ReadonlyArray<{ key: string; value: string; label?: string }>;
   /** Aantal op voorraad bij de groothandel, als de bron dat meegeeft */
   stock?: number;
+  /**
+   * De groothandel waar prijs én voorraad vandaan komen.
+   *
+   * Niet om te tonen — de klant hoeft niet te weten bij wie wij inkopen — maar
+   * om de **leverdatum** bij dezelfde partij op te halen. Zonder dit veld zou
+   * de levertijd van een andere verkoper kunnen komen dan de prijs, en dat is
+   * precies de fout die bij de voorraad geld kostte (@docs/DECISIONS.md #22).
+   */
+  sellerId?: number;
 }
 
 /** Eén keuzemogelijkheid binnen een filtergroep */

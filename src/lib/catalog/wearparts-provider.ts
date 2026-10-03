@@ -206,17 +206,26 @@ export function toPart(
   categoryName: string,
   pricing: PricingContext = PLAIN_PRICING,
 ): Part | null {
-  const offers = article.offerList ?? [];
-  const priced = offers
-    .map((offer) => ({
-      purchase: toCents(offer.price),
+  // Aanbiedingen zonder inkoopprijs vallen af; die kunnen we niet verkopen.
+  // Opgebouwd met een lus en niet met filter+typepredicaat: dat laatste botst
+  // op `exactOptionalPropertyTypes` zodra er een optioneel veld bij komt.
+  const priced: {
+    purchase: number;
+    recommended: number | null;
+    stock: number;
+    sellerId?: number;
+  }[] = [];
+  for (const offer of article.offerList ?? []) {
+    const purchase = toCents(offer.price);
+    if (purchase === null || purchase <= 0) continue;
+    priced.push({
+      purchase,
       recommended: toCents(offer.retailPrice),
       stock: offer.stock ?? 0,
-    }))
-    .filter((offer): offer is { purchase: number; recommended: number | null; stock: number } =>
-      offer.purchase !== null && offer.purchase > 0,
-    )
-    .sort((a, b) => a.purchase - b.purchase);
+      ...(offer.sellerId === undefined ? {} : { sellerId: offer.sellerId }),
+    });
+  }
+  priced.sort((a, b) => a.purchase - b.purchase);
 
   // De goedkoopste mét voorraad. Een lege verkoper is geen aanbieding: zijn
   // prijs tonen belooft iets dat niet te koop is, en het artikel zou als
@@ -294,6 +303,7 @@ export function toPart(
     imageUrl: article.image,
     specs,
     stock: best.stock,
+    ...(best.sellerId === undefined ? {} : { sellerId: best.sellerId }),
   };
 }
 

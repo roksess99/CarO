@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { OrderTotals } from "@/components/cart/order-totals";
 import { removeFromCart, setCartQuantity } from "@/components/cart/use-cart";
+import { useCartDelivery } from "@/components/cart/use-cart-delivery";
 import { useCartParts } from "@/components/cart/use-cart-parts";
 import { DiscountCodeField } from "@/components/checkout/discount-code-field";
 import { useAppliedCode } from "@/components/checkout/use-discount-code";
@@ -38,6 +39,7 @@ export function CartView() {
   const tProduct = useTranslations("product");
   const locale = useLocale();
   const { entries, loading } = useCartParts();
+  const leverdatum = useCartDelivery();
   const applied = useAppliedCode();
   // Welke regel net tegen zijn voorraadgrens aan tikte. Eén tegelijk is genoeg:
   // de klant klikt op één plusknop.
@@ -248,6 +250,7 @@ export function CartView() {
 
         <div className="mt-4">
           <OrderTotals
+            deliveryDate={leverdatum}
             subtotalCents={subtotal}
             discount={
               applied && discountCents > 0
