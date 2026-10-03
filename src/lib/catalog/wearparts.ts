@@ -233,6 +233,8 @@ const offerSchema = z.object({
   retailPrice: z.coerce.number().optional(),
   stock: z.coerce.number().optional(),
   sellerName: z.string().optional(),
+  /** Nodig om de leverdatum bij dezelfde verkoper op te halen */
+  sellerId: z.coerce.number().optional(),
 });
 
 const thumbnailSchema = z.object({

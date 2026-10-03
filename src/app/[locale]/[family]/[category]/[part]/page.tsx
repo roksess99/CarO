@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { filterValueLabel } from "@/lib/catalog/filter-values";
 import { AvailabilityBadge } from "@/components/availability-badge";
+import { expectedDelivery } from "@/lib/catalog/delivery";
 import { DiscountBadge } from "@/components/discount-badge";
 import { OldPrice } from "@/components/old-price";
 import { AddToCartWithQuantity } from "@/components/cart/add-to-cart-with-quantity";
@@ -26,7 +27,11 @@ import { productDescription } from "@/lib/catalog/product-description";
 import { groupNameFromSlug } from "@/lib/catalog/wearparts-provider";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
-import { formatPriceCents, priceCentsToDecimalString } from "@/lib/format";
+import {
+  formatDeliveryDay,
+  formatPriceCents,
+  priceCentsToDecimalString,
+} from "@/lib/format";
 import {
   FREE_SHIPPING_THRESHOLD_CENTS,
   STANDARD_SHIPPING_CENTS,
@@ -147,6 +152,9 @@ export default async function ProductPage({ params }: Props) {
   if (!family) notFound();
 
   const part = await findPart(family, category, partSlug);
+  // Eén aanroep extra bij de leverancier, een uur gecacht, en alleen hier —
+  // in een productraster zou dit tientallen aanroepen per bezoeker worden.
+  const leverdatum = part ? await expectedDelivery(part, 1) : null;
   const t = await getTranslations("product");
   const tFamily = await getTranslations("family");
   const tFilters = await getTranslations("filters");
@@ -358,6 +366,20 @@ export default async function ProductPage({ params }: Props) {
                 </span>
               )}
             </div>
+
+            {/* De leverdatum van de groothandel waar wij dit inkopen, plus één
+                werkdag. Hij geldt voor één stuk: bestelt de klant er meer dan
+                die partij heeft, dan schuift hij op — dat rekent de wagen
+                opnieuw uit (lib/catalog/delivery.ts). Komt er niets terug, dan
+                staat hier niets; een levertijd die je niet kunt onderbouwen
+                beloof je niet. */}
+            {leverdatum && (
+              <p className="mt-2 text-sm">
+                {t("deliveryExpected", {
+                  date: formatDeliveryDay(leverdatum, locale),
+                })}
+              </p>
+            )}
 
             <p className="mt-3 text-sm text-muted">
               {t("shippingLine", {

@@ -3,7 +3,7 @@ import path from "node:path";
 import { getTranslations } from "next-intl/server";
 import { renderOrderPdf } from "@/lib/checkout/order-pdf";
 import { COMPANY } from "@/lib/company";
-import { formatPriceCents } from "@/lib/format";
+import { formatDeliveryDay, formatPriceCents } from "@/lib/format";
 import { sendMail, type MailAttachment } from "@/lib/mail";
 import { renderAdminMail } from "./admin-mail";
 import { LOGO_CID, renderCustomerMail } from "./customer-mail";
@@ -180,6 +180,17 @@ export async function sendOrderNotifications(
     namespace: "orderMail",
   });
 
+  // Dezelfde regel als in de HTML-versie en op de PDF, uit hetzelfde veld op
+  // de bestelling. Ontbreekt de datum, dan staat er niets — ook geen lege
+  // kop.
+  const deliveryLine = order.document.deliveryExpected
+    ? `
+${t("deliveryLine", {
+        date: formatDeliveryDay(order.document.deliveryExpected, order.locale),
+      })}
+`
+    : "";
+
   const logo = await logoAttachment();
   const html = await renderCustomerMail(
     order,
@@ -202,6 +213,7 @@ export async function sendOrderNotifications(
       total,
       lines: lineBlock(order),
       address: addressBlock(order),
+      delivery: deliveryLine,
       email: COMPANY.email,
       company: COMPANY.name,
     }),

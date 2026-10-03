@@ -367,6 +367,7 @@
     "stockLabel": "Voorraad",
     "stockValue": "{count, plural, =1 {1 stuk} other {# stuks}}",
     "stockLimit": "{count, plural, =1 {Er is er nog één tegen deze prijs.} other {Er zijn er nog # tegen deze prijs.}}",
+    "deliveryExpected": "Besteld vandaag, bij je rond {date}.",
     "specs": {
       "size": "Maat",
       "season": "Seizoen",
@@ -433,7 +434,8 @@
       "alreadyUsed": "Je hebt deze code al een keer gebruikt.",
       "minSpend": "Je bestelling haalt het minimumbedrag van deze code niet.",
       "onlyDiscounted": "Deze code geldt niet op artikelen die al in de aanbieding zijn."
-    }
+    },
+    "deliveryExpected": "Verwachte levering: rond {date}."
   },
   "checkout": {
     "metaTitle": "Afrekenen — CarO",
@@ -505,11 +507,16 @@
     "failed": {
       "title": "De betaling is niet afgerond",
       "body": "Er is niets afgeschreven. Je winkelwagen staat er nog, dus je kunt het gewoon opnieuw proberen."
-    }
+    },
+    "deliveryLabel": "Verwachte levering",
+    "deliveryValue": "rond {date}",
+    "invoiceNumber": "Factuurnummer",
+    "shipping": "Verzendkosten",
+    "freeShipping": "Gratis"
   },
   "orderMail": {
     "customerSubject": "Bevestiging van je bestelling {reference}",
-    "customerBody": "Hallo {name},\n\nBedankt voor je bestelling bij {company}. We hebben je betaling ontvangen.\n\nOrdernummer: {reference}\n\n{lines}\n\nTotaal betaald: {total}\n\nBezorgadres:\n{address}\n\nDe orderbevestiging zit als PDF bij deze mail. Je krijgt bericht zodra je pakket onderweg is.\n\nVragen? Antwoord op deze mail of stuur een bericht naar {email}.\n\n{company}",
+    "customerBody": "Hallo {name},\n\nBedankt voor je bestelling bij {company}. We hebben je betaling ontvangen.\n\nOrdernummer: {reference}\n\n{lines}\n\nTotaal betaald: {total}\n\nBezorgadres:\n{address}\n{delivery}\nDe orderbevestiging zit als PDF bij deze mail. Je krijgt bericht zodra je pakket onderweg is.\n\nVragen? Antwoord op deze mail of stuur een bericht naar {email}.\n\n{company}",
     "html": {
       "preheader": "Je betaling is ontvangen. Bestelling {reference}.",
       "eyebrow": "Orderbevestiging",
@@ -534,8 +541,11 @@
       "linkContact": "Contact",
       "coc": "KvK {value}",
       "vatNumber": "Btw {value}",
-      "returnsLink": "Retour aanmelden"
-    }
+      "returnsLink": "Retour aanmelden",
+      "deliveryHeading": "Verwachte levering",
+      "deliveryValue": "rond {date}"
+    },
+    "deliveryLine": "Verwachte levering: rond {date}."
   },
   "footer": {
     "termsTitle": "Voorwaarden",

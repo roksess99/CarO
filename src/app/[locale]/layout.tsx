@@ -3,7 +3,6 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Anton, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
-import Script from "next/script";
 import { BackToTop } from "@/components/back-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { BottomNav } from "@/components/bottom-nav";
@@ -45,9 +44,16 @@ export const metadata: Metadata = {
 };
 
 // Zet de thema-class vóór de eerste paint zodat dark mode niet flikkert.
-// Bewust een inline script in de server-layout: server-gerenderde scripts
-// draaien tijdens het parsen van de HTML en triggeren geen React 19-warning
-// (in tegenstelling tot het script dat next-themes client-side injecteerde).
+//
+// **Een gewoon `<script>` in de `<head>`, geen `next/script`.** Dat laatste
+// stond hier met `strategy="beforeInteractive"` en gaf in de console:
+// "Encountered a script tag while rendering React component. Scripts inside
+// React components are never executed when rendering on the client."
+// Terecht: `next/script` is een clientcomponent, dus het scripttag werd in de
+// browser opnieuw aangemaakt — en een scripttag die React zelf plaatst draait
+// daar niet. De waarschuwing was dus geen ruis maar precies de val die bij
+// next-themes ook toesloeg. In de `<head>` staat hij in de HTML die de server
+// stuurt en draait hij tijdens het parsen, vóór de eerste schilderbeurt.
 const themeInitScript = `(function(){try{var t=localStorage.getItem("theme");var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);var e=document.documentElement;e.classList.add(d?"dark":"light");e.style.colorScheme=d?"dark":"light"}catch(e){}})()`;
 
 export default async function LocaleLayout({
@@ -75,13 +81,12 @@ export default async function LocaleLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${anton.variable}`}
     >
+      <head>
+        {/* Moet vóór de eerste schilderbeurt draaien, anders flitst de pagina
+            wit — zie de uitleg bij themeInitScript. */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="flex min-h-screen flex-col font-sans antialiased">
-        {/* beforeInteractive: het thema moet vaststaan vóór de eerste
-            schilderbeurt, anders flitst de pagina wit. Een gewone <script> in
-            de boom geeft sinds React 19 een console-waarschuwing. */}
-        <Script id="theme-init" strategy="beforeInteractive">
-          {themeInitScript}
-        </Script>
         <NextIntlClientProvider>
           <a
             href="#main"

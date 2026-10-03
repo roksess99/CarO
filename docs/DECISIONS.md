@@ -2257,6 +2257,216 @@ GEMETEN 2026-10-02 op de productiedatabase: eerst de negen bestaande afgetekend
 
 ---
 
+## 26. Een geweigerde sleutel is een melding, geen lege categorie — VASTGESTELD 2026-10-03
+
+De adapter vangt een fout van de leverancier af met een lege lijst. Dat is
+bewust: een kapotte categorie bij de groothandel mag geen foutpagina in onze
+winkel opleveren, en de klant krijgt een eerlijke lege staat.
+
+**De keerzijde bleek 2026-10-03.** Het token voor de onderdelen-API was
+verlopen, en daardoor zag een dode sleutel er precies zo uit als een categorie
+zonder aanbod. Wat de klant zag op caroparts.nl:
+
+| Zoekterm | Resultaat |
+|---|---|
+| remblokken | "Niets gevonden voor remblokken" |
+| oliefilter | wél resultaten |
+| banden | normaal |
+
+Dat verschil verraadt hoe het werkt: "oliefilter" stond nog in de cache van de
+server en werd geserveerd terwijl het verversen stilletjes mislukte;
+"remblokken" zat er niet in en gaf dus niets. **De grootste productgroep van de
+winkel verdween zo geleidelijk**, zonder één melding, en wat er nog stond werd
+elke dag ouder.
+
+### Wat er nu staat
+
+- **`pnpm catalog:check`** doet één goedkope aanroep per API en zegt welke
+  sleutel werkt. Zelfde soort script als `db:check` en `mail:check`: los van de
+  site, zodat je binnen tien seconden weet of het aan de winkel ligt of aan de
+  koppeling. Hij eindigt met een foutcode, dus hij is ook in een cron-taak te
+  hangen.
+- **Het beheerpaneel zet er een rode melding bij** zodra een API onze sleutel
+  weigert, met de productgroepen erbij die daardoor leeg staan.
+
+Drie keuzes die erin zitten:
+
+**De controle gaat buiten de provider om.** Die cachet zijn antwoorden een uur;
+een geslaagde aanroep van vanmorgen zou een dode sleutel van nu verbergen.
+Daarom het goedkoopste endpoint per API, zonder cache, vijf minuten in het
+geheugen — kort genoeg om het te merken, ruim binnen de limiet van honderd
+verzoeken per minuut.
+
+**401 en 403 zijn iets anders dan "geen antwoord".** Een geweigerde sleutel
+lost zichzelf nooit op en vraagt om een handeling; een 500 bij de leverancier
+gaat vanzelf over. De melding zegt daarom wélk van de twee het is.
+
+**Iedereen in het paneel ziet hem, ongeacht rol.** Een catalogus die leeg staat
+is geen rechtenkwestie maar een winkel die niet verkoopt.
+
+### Wat we erbij leerden over de tokens
+
+**Elk token hoort bij één API.** GEMETEN 2026-10-03: het Products-token geeft
+401 op Wearparts, en het Alloys-token komt op zijn eigen API wél langs de
+controle. Een "algemeen" token bestaat niet; bij het aanmaken moet de juiste
+API gekozen worden. En uit de specificatie van de leverancier zelf: *"Once the
+token expires, you will need to log in again to refresh it."* Verlopen sleutels
+zijn dus geen incident maar iets dat terugkomt.
+
+---
+
+## 27. Verwachte leverdatum op de productpagina — VASTGESTELD 2026-10-03
+
+De leverancier geeft per groothandel een `estimatedDelivery`. Omdat de
+groothandel **rechtstreeks bij de klant bezorgt** (#4) is dat de datum van de
+klant, en niet die van een magazijn dat we niet hebben.
+
+```
+leverdatum van de groothandel waar wij inkopen
++ 1 werkdag   (de beheerder koopt met de hand in, één keer per werkdag)
+= wat de klant leest
+```
+
+Die ene werkdag is een keuze van de eigenaar. Zonder die dag beloven we een
+levering die pas begint zodra hij besteld heeft.
+
+### Drie metingen die de vorm bepaalden
+
+**De datum hoort bij één groothandel, en dat moet dezelfde zijn als waar de
+prijs vandaan komt.** Daarvoor draagt `Part` nu een `sellerId`. Het `sellerId`
+uit de aanbieding blijkt hetzelfde nummer als het `distributorId` in de
+leverancierslijst (GEMETEN 2026-10-03). Mengen van twee verkopers levert een
+belofte op die bij niemand hoort — dezelfde fout als bij de voorraad (#22).
+
+**De postcode doet niets.** Vier postcodes verspreid over Nederland
+(Amsterdam, Heerlen, Groningen, Breda), bij beide API's: identieke
+groothandels, identieke datums, identieke verzendkosten. De parameter bestaat
+en wordt genegeerd. Het oorspronkelijke plan was de datum bij het afrekenen te
+hercontroleren op het adres van de klant; dat heeft dus geen zin en is
+geschrapt.
+
+**Het aantal doet alles.** Bij één band: twee groothandels, snelste 7 oktober.
+Bij twee: de goedkoopste heeft er maar één, valt weg, en het wordt 9 oktober
+bij de volgende. Daar hoort de hercontrole dus wel — en die zit in de
+winkelwagen, niet pas op het afrekenscherm, zodat de klant het ziet voordat hij
+zijn adres invult.
+
+Bij onderdelen filtert dat aantal overigens niet: tien groothandels, ook bij
+vijftig stuks terwijl er vier op voorraad liggen. Nog een parameter die
+geaccepteerd en genegeerd wordt.
+
+### Wat er gebeurt als er niets te zeggen valt
+
+**Dan staat er niets.** Geen "levertijd onbekend", geen foutmelding. Een
+levertijd is een toezegging; een die je niet kunt onderbouwen doe je niet. Dat
+geldt ook als de gekozen groothandel het gevraagde aantal niet heeft — dan
+klopt onze príjs al niet meer voor dat aantal, en begrenst de winkelwagen het
+sowieso (#22).
+
+Bij meerdere artikelen telt **de laatste datum**: het pakket is pas compleet
+als de laatste regel er is. Ontbreekt de datum van één regel, dan is er over
+het geheel niets te beloven en verdwijnt de regel.
+
+### Wat het kost
+
+Eén extra aanroep bij de leverancier per productpagina en per regel in de
+winkelwagen, een uur gecacht per artikel-en-aantal. Bewust **niet** in de
+productrasters: daar zou het tientallen aanroepen per bezoeker worden, en de
+limiet is honderd per minuut voor de hele winkel.
+
+GEMETEN 2026-10-03 in de browser: productpagina van een band (voorraad 1)
+"rond donderdag 8 oktober", winkelwagen met datzelfde artikel hetzelfde, en een
+onderdeel met twee stuks "rond vrijdag 9 oktober".
+
+### UITGEBREID 2026-10-03: de datum gaat mee met de bestelling
+
+De eigenaar miste hem op het afrekenscherm en vroeg hem ook op de factuur en
+in de mail aan de klant. Dat laatste is geen tweede weergave van hetzelfde: de
+factuur en de mail worden **later** getekend dan de bestelling, en als ze de
+datum opnieuw zouden ophalen staat er iets anders in de mail dan wat de klant
+bij het afrekenen las.
+
+**Daarom wordt de datum bevroren**, net als de bedragen (#10). `startPayment`
+rekent hem één keer uit en zet hem als `deliveryExpected` op het
+orderdocument; de factuur, de mail en de statuspagina lezen alleen dat veld en
+bellen de leverancier niet meer.
+
+Waar hij nu staat:
+
+| Waar | Wat |
+|---|---|
+| Productpagina | "Besteld vandaag, bij je rond donderdag 8 oktober." |
+| Winkelwagen | "Verwachte levering: rond donderdag 8 oktober." |
+| Afrekenen, **onder het bezorgadres** | zelfde regel, vlak boven de betaalknop |
+| Statuspagina na betalen | regel in het bestelblok, zie hieronder |
+| Factuur en orderbevestiging (PDF) | onder BEZORGADRES |
+| Bevestigingsmail | eigen blok onder het ordernummer, en in de tekstversie |
+
+**Op het afrekenscherm staat hij nu bij het bezorgadres** en niet alleen
+onderaan het besteloverzicht ernaast. Daar is het de laatste regel onder de
+btw-vermelding, en dat is precies waar niemand kijkt — vandaar de melding dat
+hij er "niet" stond. Hij hangt níet aan het ingevulde adres (de postcode doet
+niets, zie hierboven) maar wél aan het aantal, en dat staat vast zodra de
+klant daar is.
+
+**De statuspagina toont sindsdien de hele bestelling.** De knop "Bekijk je
+bestelling" leidde naar een scherm met alleen een ordernummer en een bedrag;
+daar staan nu ook het **factuurnummer**, de verwachte leverdatum en de
+**bestelde artikelen** met aantal en regelbedrag. Drie dingen die daarbij
+horen:
+
+- **Alles komt uit de bevroren momentopname**, niet uit de winkelwagen (die is
+  op dat moment net geleegd) en niet uit de catalogus van vandaag. Dezelfde
+  bron als de factuur en de mail, en met hetzelfde label (`productLabel`), dus
+  de klant leest tweemaal exact hetzelfde.
+- **Het factuurnummer staat niet op de bestelling** maar in de factuurreeks, en
+  ontstaat pas bij betaling (#12). Het kenmerk `CARO-…` erboven blijft dus wat
+  het is: een kenmerk, geen factuurnummer.
+- **Valt de database weg, dan vervalt alleen die ene regel.** Een lezer op het
+  scherm dat de klant direct na zijn betaling opent mag de pagina nooit laten
+  vallen (#13).
+
+In de bevestigingsmail stonden de artikelen al — met naam, aantal en bedrag,
+onder "Je bestelling". Daar hoefde niets bij.
+
+**De betaalknop wacht hoogstens 2,5 seconde.** Een schatting van een derde
+partij mag een betaling niet ophouden; duurt het langer, dan gaat de
+bestelling door zonder datum en staat er nergens een. In de praktijk kost het
+niets: de winkelwagen en het afrekenscherm hebben dezelfde vraag al gesteld en
+het antwoord staat een uur in het geheugen van de server.
+
+Twee kleinigheden die erbij horen:
+
+- **Eén vlucht per winkelwagen.** Op het afrekenscherm staan nu twee
+  componenten die de datum tonen; `use-cart-delivery.ts` deelt de lopende
+  aanvraag, zodat het één Server Action blijft.
+- **De voorvertoning kan hem tonen.** `/api/dev/order-mail?ref=…&levering=2026-10-09`
+  zet een datum op de kopie die getekend wordt, en `&view=pdf` geeft de
+  bijlage. Alleen in ontwikkeling, en het raakt de database niet — zonder dat
+  is de regel alleen te zien door een echte bestelling te plaatsen.
+
+GEMETEN 2026-10-03: mail en PDF getekend met `levering=2026-10-09` →
+"Verwachte levering: rond vrijdag 9 oktober" in de mail en
+"Verwachte levering: rond 9 oktober 2026" op de factuur, en het afrekenscherm
+toont de regel boven de knop.
+
+### Wat er niet in zit
+
+- **Niet op de beheerdersmail.** Het inkoopbriefje zegt nog niet welke datum
+  aan de klant beloofd is, terwijl de beheerder degene is die hem waarmaakt.
+  Eén regel werk, maar het raakt een mail die hij elke bestelling leest — dus
+  apart te beslissen.
+- **Beweegbare feestdagen.** Pasen, Hemelvaart en Pinksteren zitten niet in de
+  werkdagberekening; vaste feestdagen en weekenden wel. Dat scheelt een
+  paasberekening voor één dag verschil op een datum die "rond" heet.
+- **Expreslevering.** De API geeft prijzen voor pakket- en vrachtexpres
+  (`price_package_tomorrow` en vier andere). Dat is een eigen beslissing: het
+  kost geld en het vraagt een keuze in het afrekenscherm.
+- **Een harde datum.** Er staat "rond", en dat blijft zo zolang het de
+  schatting van een derde is.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -2373,6 +2583,8 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
+| 2026-10-03 | Verwachte leverdatum op de productpagina en in de winkelwagen | De groothandel bezorgt rechtstreeks bij de klant, dus zijn datum is de datum van de klant; er komt één werkdag bij voor het inkopen. De postcode doet niets, het aantal alles (#27) |
+| 2026-10-03 | Een geweigerde sleutel bij de leverancier is een melding in het paneel | De adapter maakt van een fout een lege lijst; daardoor zag een verlopen token er precies zo uit als een categorie zonder aanbod, en verdween de grootste productgroep stil uit de winkel (#26) |
 | 2026-10-02 | Migraties via `pnpm db:migrate`, met de boekhouding in de database | Negen migraties met de hand gaf een productiedatabase die vóór de code liep zonder dat iemand kon zien wat erin zat (#25) |
 | 2026-10-02 | Eigen bezoekcijfers in het dashboard, geen analysedienst | Een script van een derde maakt een toestemmingsbanner verplicht en meet dan nog maar de helft van de bezoekers; vijf eigen tellers beantwoorden de vraag wáár het afrekenen stukloopt (#24) |
 | 2026-10-01 | Voorraad én prijs komen van dezelfde groothandel, en het aantal is erop begrensd | `item.stock` klopt bij de helft van de artikelen niet met de groothandels eronder; vier banden kopen waar er één ligt kostte gemiddeld € 60,36 per set (#22) |

@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { COMPANY, companyValue } from "@/lib/company";
-import { formatPriceCents } from "@/lib/format";
+import { formatDeliveryDay, formatPriceCents } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import { escapeHtml, FONT, INK, LINE, MUTED, ORANGE, WHITE, ZINC } from "./mail-style";
 import type { StoredOrder } from "./types";
@@ -83,6 +83,27 @@ export async function renderCustomerMail(
     `${customer.postcode} ${customer.city}`,
     customer.country === "NL" ? "Nederland" : customer.country,
   ];
+
+  // De leverdatum staat op de bestelling en wordt hier niet opnieuw opgehaald:
+  // dit is wat de klant bij het afrekenen las (@docs/DECISIONS.md #27).
+  const delivery = doc.deliveryExpected
+    ? `<tr>
+    <td style="padding:14px 24px 0 24px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${ZINC};border-radius:8px;">
+        <tr>
+          <td style="padding:14px 16px;font-family:${FONT};font-size:13px;line-height:1.6;color:${MUTED};">
+            ${escapeHtml(t("deliveryHeading"))}<br>
+            <span style="font-size:15px;font-weight:700;color:${INK};">${escapeHtml(
+              t("deliveryValue", {
+                date: formatDeliveryDay(doc.deliveryExpected, locale),
+              }),
+            )}</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>`
+    : "";
 
   const itemRows = lines
     .map(
@@ -207,6 +228,8 @@ export async function renderCustomerMail(
       </table>
     </td>
   </tr>
+
+  ${delivery}
 
   <tr>
     <td style="padding:28px 24px 0 24px;">

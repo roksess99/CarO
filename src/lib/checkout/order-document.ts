@@ -48,6 +48,17 @@ export interface OrderDocument {
   shippingNetCents: number;
   shippingGrossCents: number;
   shippingIsFree: boolean;
+  /**
+   * De verwachte leverdag (`2026-10-09`) zoals hij gold bij het bestellen —
+   * de datum van de groothandel plus onze werkdag (@docs/DECISIONS.md #27).
+   *
+   * **Bevroren, net als de bedragen.** De factuur en de bevestigingsmail
+   * worden later getekend dan de bestelling; zouden ze de datum opnieuw
+   * ophalen, dan staat er iets anders in de mail dan wat de klant bij het
+   * afrekenen las. Ontbreekt hij, dan valt de regel weg — een levertijd die
+   * je niet kunt onderbouwen beloof je niet.
+   */
+  deliveryExpected?: string;
   totalNetCents: number;
   totalVatCents: number;
   totalGrossCents: number;
@@ -71,6 +82,8 @@ export interface OrderDocumentInput {
   /** Meegeven in tests; anders "nu" */
   now?: Date;
   reference?: string;
+  /** Zie OrderDocument.deliveryExpected; `null` of weglaten = niets beloven */
+  deliveryExpected?: string | null;
 }
 
 const VAT_PERCENT = 21;
@@ -100,6 +113,7 @@ export function buildOrderDocument({
   discount,
   now = new Date(),
   reference,
+  deliveryExpected,
 }: OrderDocumentInput): OrderDocument {
   const lines: OrderDocumentLine[] = entries.map((entry) => {
     const lineGrossCents = entry.priceCents * entry.quantity;
@@ -169,6 +183,7 @@ export function buildOrderDocument({
     shippingNetCents,
     shippingGrossCents: shipping.costCents,
     shippingIsFree: shipping.isFree,
+    ...(deliveryExpected ? { deliveryExpected } : {}),
     totalNetCents,
     totalVatCents: totalGrossCents - totalNetCents,
     totalGrossCents,

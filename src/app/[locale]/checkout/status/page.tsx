@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ClearCart } from "@/components/checkout/clear-cart";
 import { Link } from "@/i18n/navigation";
-import { formatPriceCents } from "@/lib/format";
+import { formatDeliveryDay, formatPriceCents } from "@/lib/format";
+import { invoiceForOrder } from "@/lib/invoices/store";
+import { productLabel } from "@/lib/orders/product-label";
 import { settleOrder } from "@/lib/orders/settle";
 import { readOrder } from "@/lib/orders/store";
 import type { StoredOrder } from "@/lib/orders/types";
@@ -63,6 +65,20 @@ export default async function OrderStatusPage({ params, searchParams }: Props) {
   const failed = order.status === "failed";
   const state = paid ? "paid" : failed ? "failed" : "pending";
 
+  // Het factuurnummer staat niet op de bestelling maar in de factuurreeks; het
+  // ontstaat pas bij betaling (@docs/DECISIONS.md #12). Valt de database weg,
+  // dan vervalt die ene regel en blijft de rest van de pagina staan — een
+  // lezer op een pagina die de klant na zijn betaling opent hoort nooit de
+  // hele pagina te laten vallen.
+  let invoiceNumber: string | null = null;
+  if (paid) {
+    try {
+      invoiceNumber = (await invoiceForOrder(order.reference))?.number ?? null;
+    } catch {
+      invoiceNumber = null;
+    }
+  }
+
   return (
     <div className="site-container py-12 md:py-16">
       {paid && <ClearCart />}
@@ -77,18 +93,78 @@ export default async function OrderStatusPage({ params, searchParams }: Props) {
             : t(`${state}.body`)}
         </p>
 
-        <dl className="mt-8 rounded-lg border border-border bg-surface p-6 text-sm">
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted">{t("reference")}</dt>
-            <dd className="font-semibold tabular-nums">{order.reference}</dd>
+        <div className="mt-8 rounded-lg border border-border bg-surface p-6 text-sm">
+          <dl>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">{t("reference")}</dt>
+              <dd className="font-semibold tabular-nums">{order.reference}</dd>
+            </div>
+            {/* Pas ná de betaling, en alleen als de reeks hem al heeft
+                toegekend: het kenmerk hierboven is géén factuurnummer. */}
+            {invoiceNumber && (
+              <div className="mt-3 flex justify-between gap-4">
+                <dt className="text-muted">{t("invoiceNumber")}</dt>
+                <dd className="font-semibold tabular-nums">{invoiceNumber}</dd>
+              </div>
+            )}
+            {/* Uit de bestelling, niet opnieuw opgehaald: wat hier staat is
+                wat de klant bij het afrekenen las en wat in zijn mail staat.
+                Alleen bij een geslaagde betaling — zonder bestelling valt er
+                niets te bezorgen. */}
+            {paid && order.document.deliveryExpected && (
+              <div className="mt-3 flex justify-between gap-4">
+                <dt className="text-muted">{t("deliveryLabel")}</dt>
+                <dd className="font-semibold">
+                  {t("deliveryValue", {
+                    date: formatDeliveryDay(
+                      order.document.deliveryExpected,
+                      locale,
+                    ),
+                  })}
+                </dd>
+              </div>
+            )}
+          </dl>
+
+          {/* Wat er besteld is, uit dezelfde bevroren momentopname als de
+              factuur en de bevestigingsmail — niet uit de winkelwagen, die is
+              hierboven net geleegd, en niet uit de catalogus van vandaag.
+              Zelfde label als in de mail (`productLabel`), zodat de klant
+              tweemaal hetzelfde leest. */}
+          <ul className="mt-5 divide-y divide-border border-t border-border">
+            {order.document.lines.map((line, index) => (
+              <li
+                key={`${line.oeNumber || line.name}-${index}`}
+                className="flex items-baseline justify-between gap-4 py-3"
+              >
+                <span>
+                  {productLabel(line)}{" "}
+                  <span className="text-muted tabular-nums">
+                    × {line.quantity}
+                  </span>
+                </span>
+                <span className="font-medium tabular-nums">
+                  {formatPriceCents(line.lineGrossCents)}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex justify-between gap-4 border-t border-border pt-3">
+            <span className="text-muted">{t("shipping")}</span>
+            <span className="tabular-nums">
+              {order.document.shippingIsFree
+                ? t("freeShipping")
+                : formatPriceCents(order.document.shippingGrossCents)}
+            </span>
           </div>
-          <div className="mt-3 flex justify-between gap-4">
-            <dt className="text-muted">{t("total")}</dt>
-            <dd className="font-semibold tabular-nums">
+          <div className="mt-3 flex justify-between gap-4 text-base">
+            <span className="font-bold">{t("total")}</span>
+            <span className="font-bold tabular-nums">
               {formatPriceCents(order.document.totalGrossCents)}
-            </dd>
+            </span>
           </div>
-        </dl>
+        </div>
 
         {paid && <p className="mt-6 text-sm text-muted">{t("paid.delivery")}</p>}
 

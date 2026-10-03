@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { OrderTotals } from "@/components/cart/order-totals";
+import { useCartDelivery } from "@/components/cart/use-cart-delivery";
 import { useCartParts } from "@/components/cart/use-cart-parts";
 import { DiscountCodeField } from "@/components/checkout/discount-code-field";
 import { useAppliedCode } from "@/components/checkout/use-discount-code";
@@ -16,6 +17,7 @@ import { Link } from "@/i18n/navigation";
 export function OrderSummary() {
   const t = useTranslations("checkout");
   const { entries, loading } = useCartParts();
+  const leverdatum = useCartDelivery();
   const applied = useAppliedCode();
 
   if (loading) {
@@ -91,6 +93,7 @@ export function OrderSummary() {
 
       <div className="mt-4">
         <OrderTotals
+          deliveryDate={leverdatum}
           subtotalCents={subtotal}
           discount={
             applied && discountCents > 0

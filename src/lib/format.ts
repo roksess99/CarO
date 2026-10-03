@@ -17,6 +17,25 @@ export function priceCentsToDecimalString(priceCents: number): string {
 }
 
 /**
+ * Een ISO-dag (`2026-10-09`) als "vrijdag 9 oktober".
+ *
+ * Staat hier en niet in de componenten die hem tonen, want de productpagina,
+ * de winkelwagen, het afrekenscherm, de bevestigingsmail en de PDF moeten
+ * dezelfde dag schrijven. Zodra dat op vijf plekken apart gebeurt, wijkt er
+ * een keer één af.
+ *
+ * **Het middaguur is geen detail.** `new Date("2026-10-09")` is middernacht
+ * UTC, en dat valt in de Nederlandse zomertijd op de dag ervóór.
+ */
+export function formatDeliveryDay(iso: string, locale = "nl"): string {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date(`${iso}T12:00:00`));
+}
+
+/**
  * Een bedrag dat middenin een zin komt te staan.
  *
  * In het Arabisch loopt de tekst van rechts naar links, en dan is het

@@ -367,6 +367,7 @@
     "stockLabel": "In stock",
     "stockValue": "{count, plural, =1 {1 item} other {# items}}",
     "stockLimit": "{count, plural, =1 {There is one left at this price.} other {There are # left at this price.}}",
+    "deliveryExpected": "Order today, with you around {date}.",
     "specs": {
       "size": "Size",
       "season": "Season",
@@ -433,7 +434,8 @@
       "alreadyUsed": "You have already used this code once.",
       "minSpend": "Your order does not reach the minimum for this code.",
       "onlyDiscounted": "This code does not apply to items that are already on sale."
-    }
+    },
+    "deliveryExpected": "Expected delivery: around {date}."
   },
   "checkout": {
     "metaTitle": "Checkout — CarO",
@@ -505,11 +507,16 @@
     "failed": {
       "title": "The payment was not completed",
       "body": "Nothing has been charged. Your cart is still there, so you can simply try again."
-    }
+    },
+    "deliveryLabel": "Expected delivery",
+    "deliveryValue": "around {date}",
+    "invoiceNumber": "Invoice number",
+    "shipping": "Shipping",
+    "freeShipping": "Free"
   },
   "orderMail": {
     "customerSubject": "Confirmation of your order {reference}",
-    "customerBody": "Hello {name},\n\nThank you for your order at {company}. We have received your payment.\n\nOrder number: {reference}\n\n{lines}\n\nTotal paid: {total}\n\nDelivery address:\n{address}\n\nThe order confirmation is attached to this email as a PDF. We will let you know as soon as your parcel is on its way.\n\nQuestions? Reply to this email or write to {email}.\n\n{company}",
+    "customerBody": "Hello {name},\n\nThank you for your order at {company}. We have received your payment.\n\nOrder number: {reference}\n\n{lines}\n\nTotal paid: {total}\n\nDelivery address:\n{address}\n{delivery}\nThe order confirmation is attached to this email as a PDF. We will let you know as soon as your parcel is on its way.\n\nQuestions? Reply to this email or write to {email}.\n\n{company}",
     "html": {
       "preheader": "We received your payment. Order {reference}.",
       "eyebrow": "Order confirmation",
@@ -534,8 +541,11 @@
       "linkContact": "Contact",
       "coc": "Chamber of Commerce {value}",
       "vatNumber": "VAT {value}",
-      "returnsLink": "Start a return"
-    }
+      "returnsLink": "Start a return",
+      "deliveryHeading": "Expected delivery",
+      "deliveryValue": "around {date}"
+    },
+    "deliveryLine": "Expected delivery: around {date}."
   },
   "footer": {
     "termsTitle": "Terms",

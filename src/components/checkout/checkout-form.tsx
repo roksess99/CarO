@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useCart } from "@/components/cart/use-cart";
+import { useCartDelivery } from "@/components/cart/use-cart-delivery";
 import { startPayment } from "@/components/checkout/actions";
 import { lookupAddressAction } from "@/components/checkout/address-actions";
 import {
@@ -18,6 +19,7 @@ import {
   loadCheckoutDetails,
   saveCheckoutDetails,
 } from "@/lib/checkout/storage";
+import { formatDeliveryDay } from "@/lib/format";
 import { countStat } from "@/lib/stats/send";
 
 type FieldErrors = Partial<Record<CheckoutField, string>>;
@@ -43,6 +45,7 @@ export function CheckoutForm() {
   const tTotals = useTranslations("totals");
   const locale = useLocale();
   const cart = useCart();
+  const leverdatum = useCartDelivery();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [codeFailure, setCodeFailure] = useState<string | null>(null);
@@ -290,6 +293,21 @@ export function CheckoutForm() {
             <option value="NL">{t("countryNl")}</option>
           </select>
         </div>
+
+        {/* De verwachte levering hoort hier, bij het bezorgadres, en niet
+            alleen onderaan het besteloverzicht ernaast: dit is de plek waar de
+            klant naar bezorging kijkt.
+            Let op wat hij wél en niet volgt: níet het adres — de postcode
+            wordt door beide API's van de groothandel genegeerd (GEMETEN,
+            @docs/DECISIONS.md #27) — maar wél het aantal, en dat staat vast
+            zodra de klant hier is. */}
+        {leverdatum && (
+          <p className="text-sm text-muted">
+            {tTotals("deliveryExpected", {
+              date: formatDeliveryDay(leverdatum, locale),
+            })}
+          </p>
+        )}
       </div>
 
       <button
