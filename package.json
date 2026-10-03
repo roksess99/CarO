@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "brand:build": "node scripts/make-brand-assets.mjs",
+    "catalog:check": "node scripts/check-catalog.mjs",
     "db:check": "node scripts/check-db.mjs",
     "db:migrate": "node scripts/migrate-db.mjs",
     "mail:check": "node scripts/check-mail.mjs",

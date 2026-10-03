@@ -8,6 +8,7 @@ import {
   ROLE_LABELS,
 } from "@/lib/admin/roles";
 import { requireAdmin } from "@/lib/admin/session";
+import { catalogHealth } from "@/lib/catalog/health";
 import { listOrders, orderTotals } from "@/lib/orders/store";
 import { returnTotals } from "@/lib/returns/store";
 import { statsOverview, type StatPeriod } from "@/lib/stats/store";
@@ -84,11 +85,14 @@ export default async function BeheerPage({
   // De retourcijfers zijn optellingen zonder klantgegevens en horen bij de
   // omzet: wie de omzet mag zien, hoort te zien wat er weer af ging. De
   // aanvragen zelf (met naam en artikel) blijven achter `retouren` zitten.
-  const [totals, recent, returns, stats] = await Promise.all([
+  const [totals, recent, returns, stats, catalogus] = await Promise.all([
     magOmzet || magBestellingen ? orderTotals() : null,
     magBestellingen ? listOrders({ limit: 10 }) : null,
     magOmzet || magBestellingen ? returnTotals() : null,
     magStats ? statsOverview() : null,
+    // Voor iedereen die hier binnenkomt, ongeacht rol: een catalogus die leeg
+    // staat is geen rechtenkwestie maar een winkel die niet verkoopt.
+    catalogHealth(),
   ]);
 
   const nav = NAV.filter((item) => can(admin.role, item.needs));
@@ -137,6 +141,38 @@ export default async function BeheerPage({
           toegang tot {GEWEIGERD[geweigerd as Permission]}. Vraag de eigenaar
           om die rechten als je ze nodig hebt.
         </p>
+      )}
+
+
+      {/* Bovenaan en in het rood: valt een catalogus weg, dan staat die
+          productgroep leeg in de winkel en ziet de klant "niets gevonden".
+          De adapter vangt zo'n fout bewust af zodat er geen foutpagina komt
+          (@docs/api/WEARPARTS.md), en juist daarom moet het hier luid zijn. */}
+      {catalogus.some((api) => !api.ok) && (
+        <div className="mt-6 rounded-lg border border-danger bg-background p-4">
+          <h2 className="font-semibold text-danger">
+            De catalogus van de leverancier is niet bereikbaar
+          </h2>
+          <ul className="mt-2 space-y-1 text-sm">
+            {catalogus
+              .filter((api) => !api.ok)
+              .map((api) => (
+                <li key={api.api}>
+                  <span className="font-medium">{api.families.join(", ")}</span>{" "}
+                  {api.rejected
+                    ? "— onze sleutel wordt geweigerd"
+                    : "— geen antwoord"}
+                  {api.detail ? ` (${api.detail})` : ""}
+                </li>
+              ))}
+          </ul>
+          <p className="mt-2 text-sm text-muted">
+            Die productgroepen zijn nu leeg in de winkel. Een sleutel bij de
+            leverancier verloopt vanzelf; maak een nieuwe aan en zet hem in de
+            omgevingsvariabelen. Controleren kan met{" "}
+            <code className="font-mono">pnpm catalog:check</code>.
+          </p>
+        </div>
       )}
 
       {/* Een retour heeft een wettelijke termijn van veertien dagen; dat is

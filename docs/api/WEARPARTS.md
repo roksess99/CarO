@@ -1,6 +1,7 @@
 # Tyre24 / ALZURA Wearparts REST API v1.6 — integratienotities
 
-Bron: `REST API Version 1.6 Wearparts` (swagger 2.0), aangeleverd 2026-09-06.
+Bron: `docs/api/wearparts-v16.yaml` (Swagger 2.0), aangeleverd 2026-10-03.
+Daarvóór stond alles op eigen metingen; zie de volgende paragraaf.
 **Aparte API en apart token** naast de Products-API v1.3 (docs/api/TYRE24.md).
 
 | Wat | Waarde |
@@ -9,6 +10,143 @@ Bron: `REST API Version 1.6 Wearparts` (swagger 2.0), aangeleverd 2026-09-06.
 | Base path | `/nl/nl/rest/V16/wearparts` — **NL-platform werkt en geeft Nederlandse categorienamen** |
 | Auth | Header `X-AUTH-TOKEN`, eigen token → `TYRE24_WEARPARTS_TOKEN` |
 | Rate limit | 100 requests/minuut (`ERR_TOO_MANY_REQUESTS`), net als de Products-API |
+
+## De specificatie — AANGELEVERD 2026-10-03
+
+Tot nu toe stond alles hieronder op metingen, want er was geen specificatie.
+Die is er nu: `docs/api/wearparts-v16.yaml` (Swagger 2.0, "Tyre24.com REST API
+Version 1.6 Wearparts").
+
+**Er is niets veranderd aan de API.** V1.6 is de versie waar wij vanaf het
+begin op draaien; wat de eigenaar als "update naar v1.6" doorkreeg is deze
+documentatie, niet een nieuwe versie. Gecontroleerd 2026-10-03: alle velden
+die `wearparts.ts` uitleest staan er met dezelfde namen in
+(`offerList[].price`, `retailPrice`, `stock`, `sellerId`, `sellerName`).
+
+Twee dingen om te weten bij het lezen:
+
+- **Het `basePath` in het bestand is `/de/de/rest/V16/wearparts`.** Wij
+  gebruiken `/nl/nl/…`; het platform bepaalt de taal, niet de specificatie.
+- **De metingen hieronder blijven leidend waar ze afwijken.** Een specificatie
+  beschrijft wat er bedoeld is, een meting wat er gebeurt — en dat liep hier al
+  eerder uiteen (het `limit`-maximum van 300, de HTTP 500 bij twee
+  gelijktijdige verzoeken).
+
+### Bevestigd door de specificatie
+
+| Wat wij gemeten hadden | Staat er zo in |
+|---|---|
+| `keySystemType=1` is het Nederlandse kenteken | ja, met een tabel van 24 landen erbij |
+| Paginering begint bij 0 | `page`, default 0 |
+| Standaard 30 artikelen per pagina | `limit`, default 30 |
+| Zoekprefixen EAN, OEN, TNS, AID, ID | ja, met voorbeelden |
+| 100 verzoeken per minuut | `ERR_TOO_MANY_REQUESTS` — "Over 100 requests per minute" |
+| Categorie: naam, id, `hasChilds`, icoon, `defaultGenericArticleId` | ja, allemaal |
+| Bestellen is offerte ophalen en die terugsturen | `GET /order` → body van `POST /order` |
+
+### Wat erin staat en wij niet gebruiken
+
+Drie velden in `offerList` die we nooit gezien hebben omdat we er niet naar
+keken. **Twee ervan raken geld:**
+
+| Veld | Wat het is | Waarom het telt |
+|---|---|---|
+| `deposit_price` | borg op de aanbieding | `GET /order` heeft `depositPrice` als **verplicht** veld. Zit er borg op een artikel en rekenen wij die niet mee, dan is de inkoop hoger dan het bedrag waarop de marge is berekend |
+| `superdeal_price` | een lagere prijs dan `price` | Nemen we die niet, dan laten we marge liggen of tonen we een te hoge prijs |
+| `summaries.offer_summary.stockSum` | voorraad **opgeteld** over alle verkopers | Precies de val die bij banden geld kostte (@docs/DECISIONS.md #22). Wij nemen de voorraad per aanbieding, dus we lopen er niet in — en dat moet zo blijven |
+
+Verder `ownStock`, `originalPrice`, `rawPrice`, `basicPrice`, en vijf
+expresprijzen (`price_pickup`, `price_package_today`, `price_package_tomorrow`,
+`price_truck_today`, `price_truck_tomorrow`). Die laatste zijn de ingang naar
+een echte levertijd op de productpagina.
+
+### Twee endpoints die werk kunnen besparen
+
+**`/attributeNames`** geeft alle attribuut-id's met hun naam in één keer. Dat
+is precies het gat dat hierboven onder "Filteren op eigenschap" beschreven
+staat: de facetten geven alleen waarden, niet de namen, en daarom lopen wij nu
+álle opgehaalde artikelen langs om een naam te vinden. Dit endpoint maakt die
+omweg overbodig.
+
+**`/distributorList`** geeft per groothandel de voorraad, de prijslijst én de
+verzendkosten met een geschatte leverdatum (`shippingCosts.*.estimatedDelivery`).
+Voor de inkoopkant van het beheerpaneel is dat het verschil tussen "ergens is
+voorraad" en "hier, voor dit bedrag, overmorgen".
+
+### Het token verloopt — dat staat er zwart op wit
+
+> *"A token determines how long you remain logged in to an external service.
+> Once the token expires, you will need to log in again to refresh it."*
+
+Tokens maak je aan op `https://tyre24.alzura.com/de/de/tokenmanagement`.
+GEMETEN 2026-10-03: het token in de lokale `.env` gaf op élk endpoint
+`401 invalid or expired token`, terwijl de live winkel verse prijzen bleef
+leveren — daar staat een nieuwer token. **Een verlopen token is dus geen
+storing die je ziet aankomen**; de onderdelen verdwijnen stil uit de winkel,
+want de adapter vangt een fout af met een lege lijst.
+
+**GEDICHT 2026-10-03.** Een geweigerde sleutel is nu een melding voor de
+beheerder: `pnpm catalog:check` controleert beide API's in één keer, en het
+dashboard zet er een rode melding bij zodra de leverancier onze sleutel
+weigert (@docs/DECISIONS.md #26).
+
+**En let op bij het vernieuwen: elk token hoort bij één API.** GEMETEN
+2026-10-03: het Products-token geeft 401 op Wearparts, en het Alloys-token
+komt op de Alloys-API wél langs de controle (daar struikelt het alleen over een
+verkeerde endpointnaam). Een algemeen token bestaat dus niet — bij het
+aanmaken moet de juiste API erbij gekozen worden. Blijft hij ook dan geweigerd,
+dan gaat het niet om de sleutel maar om de toegang tot die API.
+
+### De vier open punten — GEMETEN 2026-10-03
+
+Over 740 aanbiedingen uit elf zoektermen, inclusief de categorieën waar in de
+handel meestal statiegeld op zit (dynamo, remklauw, stuurhuis, roetfilter).
+
+**`deposit_price` is overal 0.** Geen enkele aanbieding draagt borg. Dat is
+goed nieuws voor de marge: er zit geen verborgen inkoopkost in. Het veld
+bestáát wel en `GET /order` heeft `depositPrice` als verplicht veld, dus als
+het assortiment ooit ruilonderdelen krijgt waar het wél op staat, moet het
+alsnog in de prijsberekening. Nu niet.
+
+**`superdeal_price` is geen lagere prijs — hij is altijd 0.** Hij staat op
+élke aanbieding (500 van 500), en overal op nul. Dat leek in de specificatie
+een actieprijs en het is een ongebruikt veld.
+
+> **Daarom wordt hij niet gebruikt.** Hadden we "de laagste van `price` en
+> `superdeal_price`" genomen, zoals een redelijke lezing van de specificatie
+> suggereert, dan had de winkel alles voor € 0,00 verkocht. Dit is precies
+> waarom een veld pas gebruikt wordt nadat het gemeten is.
+
+**`/attributeNames` werkt en klopt met onze metingen.** 5410 namen in één
+aanroep, en de vier id's die wij uit de artikelen vissen komen exact overeen:
+
+| id | naam volgens het endpoint |
+|---|---|
+| 100 | Inbouwplaats |
+| 423 | Inhoud [liter] |
+| 1054 | Viscositeit klasse SAE |
+| 2467 | SAE viscositeitsklasse |
+
+Daarmee kan de omweg onder "Filteren op eigenschap" weg: nu lopen we álle
+opgehaalde artikelen langs om een naam te vinden, terwijl één gecachte aanroep
+ze allemaal geeft.
+
+**`/distributorList` wil het veld `id`, niet `articleId`.** Dat is een val,
+want met `articleId` geeft hij geen fout maar **status 200 met een lege lijst**
+— niet te onderscheiden van "geen groothandel heeft dit". Met `id`
+(bijvoorbeeld `101-3033303831`) komt het goed:
+
+```
+24 groothandels
+  Auto-Kfz-Teile            voorraad 100   standaardverzending € 0   levering 2026-10-08
+  Wimmer Autoteile GmbH     voorraad   9   standaardverzending € 0   levering 2026-10-08
+```
+
+Dat opent twee dingen die we nu niet hebben: een **echte leverdatum** op de
+productpagina in plaats van een algemene belofte, en bij het inkopen zien
+wáár het ligt en wat de verzending kost.
+
+---
 
 ## Wat dit oplost
 

@@ -2257,6 +2257,64 @@ GEMETEN 2026-10-02 op de productiedatabase: eerst de negen bestaande afgetekend
 
 ---
 
+## 26. Een geweigerde sleutel is een melding, geen lege categorie — VASTGESTELD 2026-10-03
+
+De adapter vangt een fout van de leverancier af met een lege lijst. Dat is
+bewust: een kapotte categorie bij de groothandel mag geen foutpagina in onze
+winkel opleveren, en de klant krijgt een eerlijke lege staat.
+
+**De keerzijde bleek 2026-10-03.** Het token voor de onderdelen-API was
+verlopen, en daardoor zag een dode sleutel er precies zo uit als een categorie
+zonder aanbod. Wat de klant zag op caroparts.nl:
+
+| Zoekterm | Resultaat |
+|---|---|
+| remblokken | "Niets gevonden voor remblokken" |
+| oliefilter | wél resultaten |
+| banden | normaal |
+
+Dat verschil verraadt hoe het werkt: "oliefilter" stond nog in de cache van de
+server en werd geserveerd terwijl het verversen stilletjes mislukte;
+"remblokken" zat er niet in en gaf dus niets. **De grootste productgroep van de
+winkel verdween zo geleidelijk**, zonder één melding, en wat er nog stond werd
+elke dag ouder.
+
+### Wat er nu staat
+
+- **`pnpm catalog:check`** doet één goedkope aanroep per API en zegt welke
+  sleutel werkt. Zelfde soort script als `db:check` en `mail:check`: los van de
+  site, zodat je binnen tien seconden weet of het aan de winkel ligt of aan de
+  koppeling. Hij eindigt met een foutcode, dus hij is ook in een cron-taak te
+  hangen.
+- **Het beheerpaneel zet er een rode melding bij** zodra een API onze sleutel
+  weigert, met de productgroepen erbij die daardoor leeg staan.
+
+Drie keuzes die erin zitten:
+
+**De controle gaat buiten de provider om.** Die cachet zijn antwoorden een uur;
+een geslaagde aanroep van vanmorgen zou een dode sleutel van nu verbergen.
+Daarom het goedkoopste endpoint per API, zonder cache, vijf minuten in het
+geheugen — kort genoeg om het te merken, ruim binnen de limiet van honderd
+verzoeken per minuut.
+
+**401 en 403 zijn iets anders dan "geen antwoord".** Een geweigerde sleutel
+lost zichzelf nooit op en vraagt om een handeling; een 500 bij de leverancier
+gaat vanzelf over. De melding zegt daarom wélk van de twee het is.
+
+**Iedereen in het paneel ziet hem, ongeacht rol.** Een catalogus die leeg staat
+is geen rechtenkwestie maar een winkel die niet verkoopt.
+
+### Wat we erbij leerden over de tokens
+
+**Elk token hoort bij één API.** GEMETEN 2026-10-03: het Products-token geeft
+401 op Wearparts, en het Alloys-token komt op zijn eigen API wél langs de
+controle. Een "algemeen" token bestaat niet; bij het aanmaken moet de juiste
+API gekozen worden. En uit de specificatie van de leverancier zelf: *"Once the
+token expires, you will need to log in again to refresh it."* Verlopen sleutels
+zijn dus geen incident maar iets dat terugkomt.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -2373,6 +2431,7 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
+| 2026-10-03 | Een geweigerde sleutel bij de leverancier is een melding in het paneel | De adapter maakt van een fout een lege lijst; daardoor zag een verlopen token er precies zo uit als een categorie zonder aanbod, en verdween de grootste productgroep stil uit de winkel (#26) |
 | 2026-10-02 | Migraties via `pnpm db:migrate`, met de boekhouding in de database | Negen migraties met de hand gaf een productiedatabase die vóór de code liep zonder dat iemand kon zien wat erin zat (#25) |
 | 2026-10-02 | Eigen bezoekcijfers in het dashboard, geen analysedienst | Een script van een derde maakt een toestemmingsbanner verplicht en meet dan nog maar de helft van de bezoekers; vijf eigen tellers beantwoorden de vraag wáár het afrekenen stukloopt (#24) |
 | 2026-10-01 | Voorraad én prijs komen van dezelfde groothandel, en het aantal is erop begrensd | `item.stock` klopt bij de helft van de artikelen niet met de groothandels eronder; vier banden kopen waar er één ligt kostte gemiddeld € 60,36 per set (#22) |

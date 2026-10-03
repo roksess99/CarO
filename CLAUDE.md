@@ -153,6 +153,7 @@ pnpm typecheck    # tsc --noEmit
 pnpm audit        # kwetsbaarheden; moet nul zijn (@docs/DECISIONS.md #23)
 pnpm mail:check   # SMTP los van de site testen (--send stuurt een bericht)
 pnpm mollie:check # test- of live-sleutel, en welke betaalmethodes aanstaan
+pnpm catalog:check # werken de sleutels bij de leverancier nog? (@docs/DECISIONS.md #26)
 pnpm db:check     # verbinding en schema nakijken
 pnpm db:migrate   # openstaande migraties tonen; --write voert ze uit (#25)
 pnpm orders:migrate # JSON-bestellingen naar de database (--write om te doen)
