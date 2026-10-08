@@ -5,7 +5,6 @@ import {
   randomBytes,
   timingSafeEqual,
 } from "node:crypto";
-import { COMPANY } from "@/lib/company";
 
 /**
  * Tweestapsverificatie met een code uit een app (TOTP, RFC 6238).
@@ -136,10 +135,10 @@ export function verifyCode(
  * maar handmatig invoeren kan ook — daarvoor is `toBase32(secret)` genoeg.
  */
 export function otpauthUri(secret: Buffer, email: string): string {
-  const label = encodeURIComponent(`${COMPANY.name}:${email}`);
+  const label = encodeURIComponent(`CarO:${email}`);
   const params = new URLSearchParams({
     secret: toBase32(secret),
-    issuer: COMPANY.name,
+    issuer: "CarO",
     algorithm: "SHA1",
     digits: String(DIGITS),
     period: String(STEP_SECONDS),

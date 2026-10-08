@@ -89,8 +89,8 @@ export function renderInviteMail(input: InviteMailInput): string {
   const link = escapeHtml(input.path);
 
   const logo = input.withLogo
-    ? `<img src="cid:${LOGO_CID}" alt="${escapeHtml(COMPANY.name)}" width="120" style="display:block;border:0;">`
-    : `<span style="font:700 24px ${FONT};color:${INK};letter-spacing:-0.02em;">${escapeHtml(COMPANY.name)}</span>`;
+    ? `<img src="cid:${LOGO_CID}" alt="CarO" width="120" style="display:block;border:0;">`
+    : `<span style="font:700 24px ${FONT};color:${INK};letter-spacing:-0.02em;">CarO</span>`;
 
   return `<!doctype html>
 <html lang="nl"><head><meta charset="utf-8"><title>Hoe ging het?</title></head>

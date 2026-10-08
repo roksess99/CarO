@@ -1,4 +1,4 @@
-// Welke categorieën CaroParts verkoopt. Bewuste winkelkeuze: alleen auto's en
+// Welke categorieën CarO verkoopt. Bewuste winkelkeuze: alleen auto's en
 // tweewielers — geen vrachtwagens, landbouw, grondverzet of industrie.
 // Zie docs/DECISIONS.md #7.
 //

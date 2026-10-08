@@ -5,7 +5,7 @@ import { ProductGrid } from "@/components/product-grid";
 import { getPathname, Link } from "@/i18n/navigation";
 import { familySlug } from "@/lib/catalog/families";
 import { offerSlides } from "@/lib/discounts/offers";
-import { SITE_NAME, localizedMetadata, socialMetadata } from "@/lib/site";
+import { localizedMetadata, socialMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -32,7 +32,7 @@ export const revalidate = 300;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "offers" });
-  const title = `${t("title")} — ${SITE_NAME}`;
+  const title = `${t("title")} — CarO`;
   const description = t("metaDescription");
   const path = getPathname({ locale, href: HREF });
 
