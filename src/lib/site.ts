@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { routing, type Locale } from "@/i18n/routing";
+import { COMPANY } from "@/lib/company";
 import { priceCentsToDecimalString } from "@/lib/format";
 import { STANDARD_SHIPPING_CENTS } from "@/lib/shipping";
 
@@ -19,6 +20,16 @@ import { STANDARD_SHIPPING_CENTS } from "@/lib/shipping";
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://caroparts.nl"
 ).replace(/\/+$/, "");
+
+/**
+ * De naam van de winkel, zoals hij in paginatitels, Open Graph en de
+ * gestructureerde data staat.
+ *
+ * Komt uit `COMPANY` zodat er één bron is: de naam in de bevestigingsmail, op
+ * de factuur en in de titel van een categoriepagina horen niet uit elkaar te
+ * kunnen lopen.
+ */
+export const SITE_NAME = COMPANY.name;
 
 /**
  * `metadataBase` + canonical + hreflang voor één pagina.
@@ -91,14 +102,14 @@ export function socialMetadata({
           url: `/${locale}/opengraph-image`,
           width: 1200,
           height: 630,
-          alt: "CarO — onderdelen, banden, velgen en toebehoren",
+          alt: `${SITE_NAME} — onderdelen, banden, velgen en toebehoren`,
         },
       ];
 
   return {
     openGraph: {
       type: "website",
-      siteName: "CarO",
+      siteName: SITE_NAME,
       title,
       description,
       url: path,
@@ -121,7 +132,7 @@ export function socialMetadata({
  * `BreadcrumbList` voor Google's kruimelpad in de zoekresultaten.
  *
  * Zonder dit toont Google de kale URL onder de titel; mét dit staat er
- * "CarO › Banden › Auto/SUV". De paden zijn dezelfde die de zichtbare
+ * "CaroParts › Banden › Auto/SUV". De paden zijn dezelfde die de zichtbare
  * `<nav>` gebruikt — één bron, zodat de twee niet uit elkaar lopen.
  */
 export function breadcrumbJsonLd(

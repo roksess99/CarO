@@ -6,7 +6,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { COMPANY } from "@/lib/company";
 import { publishedReviews, reviewSummary } from "@/lib/reviews/store";
-import { localizedMetadata, SITE_URL, socialMetadata } from "@/lib/site";
+import { SITE_NAME, localizedMetadata, SITE_URL, socialMetadata } from "@/lib/site";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: "reviews" });
   const href = "/reviews" as const;
   const path = (l: Locale) => getPathname({ locale: l, href });
-  const title = `${t("title")} — CarO`;
+  const title = `${t("title")} — ${SITE_NAME}`;
 
   return {
     title,

@@ -40,7 +40,12 @@ const inputClass =
 const inputErrorClass = `${inputClass} border-danger`;
 const labelClass = "mb-1 block text-sm font-medium";
 
-export function CheckoutForm() {
+export function CheckoutForm({
+  paymentsDown = false,
+}: {
+  /** Mollie neemt geen betalingen aan; de pagina zegt er bovenaan bij waarom */
+  paymentsDown?: boolean;
+} = {}) {
   const t = useTranslations("checkout");
   const tTotals = useTranslations("totals");
   const locale = useLocale();
@@ -310,9 +315,14 @@ export function CheckoutForm() {
         )}
       </div>
 
+      {/* Echt `disabled`, bij uitzondering op de regel in
+          .claude/rules/frontend.md: de reden staat als melding bovenaan deze
+          pagina en de knop wijst er met `aria-describedby` naar. Er valt hier
+          dus niets uit te leggen dat de klant niet al leest. */}
       <button
         type="submit"
-        disabled={busy}
+        disabled={busy || paymentsDown}
+        aria-describedby={paymentsDown ? "betalen-uit" : undefined}
         className="mt-8 w-full rounded-md bg-caro-orange px-6 py-3 font-semibold text-caro-ink disabled:opacity-60"
       >
         {busy ? t("payBusy") : t("pay")}

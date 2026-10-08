@@ -12,7 +12,7 @@ import {
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
 import { searchParts } from "@/lib/catalog/wearparts-provider";
-import { socialMetadata } from "@/lib/site";
+import { SITE_NAME, socialMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -25,7 +25,7 @@ const RESULTS_PER_FAMILY = 8;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "search" });
-  const title = `${t("title")} — CarO`;
+  const title = `${t("title")} — ${SITE_NAME}`;
   const description = t("metaDescription");
 
   return {

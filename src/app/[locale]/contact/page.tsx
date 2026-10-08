@@ -4,7 +4,7 @@ import { CompanyDetails } from "@/components/company-details";
 import { ContactForm } from "@/components/contact/contact-form";
 import { getPathname, Link } from "@/i18n/navigation";
 import { COMPANY } from "@/lib/company";
-import { localizedMetadata, socialMetadata } from "@/lib/site";
+import { SITE_NAME, localizedMetadata, socialMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -15,7 +15,7 @@ const HREF = "/contact" as const;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "contact" });
-  const title = `${t("metaTitle")} — CarO`;
+  const title = `${t("metaTitle")} — ${SITE_NAME}`;
   const description = t("metaDescription");
 
   return {

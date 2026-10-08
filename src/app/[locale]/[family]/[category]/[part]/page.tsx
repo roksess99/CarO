@@ -37,7 +37,7 @@ import {
   STANDARD_SHIPPING_CENTS,
 } from "@/lib/shipping";
 import {
-  breadcrumbJsonLd,
+  SITE_NAME,  breadcrumbJsonLd,
   localizedMetadata,
   offerPolicies,
   SITE_URL,
@@ -108,7 +108,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Niet elk artikel heeft een bruikbaar merk — bij velgen staat daar een
   // omschrijving die we wegfilteren. Dan geen lege streepjes in de titel.
-  const title = [part.name, part.brand, "CarO"].filter(Boolean).join(" — ");
+  const title = [part.name, part.brand, SITE_NAME].filter(Boolean).join(" — ");
   const description = t("metaDescription", {
     name: part.name,
     brand: part.brand,
@@ -217,7 +217,7 @@ export default async function ProductPage({ params }: Props) {
       price: priceCentsToDecimalString(part.priceCents),
       availability: SCHEMA_AVAILABILITY[part.availability],
       itemCondition: "https://schema.org/NewCondition",
-      seller: { "@type": "Organization", name: "CarO" },
+      seller: { "@type": "Organization", name: SITE_NAME },
       ...offerPolicies(),
     },
   };
