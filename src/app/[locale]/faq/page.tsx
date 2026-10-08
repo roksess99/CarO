@@ -9,7 +9,7 @@ import {
   FREE_SHIPPING_THRESHOLD_CENTS,
   STANDARD_SHIPPING_CENTS,
 } from "@/lib/shipping";
-import { faqJsonLd, localizedMetadata, socialMetadata } from "@/lib/site";
+import { SITE_NAME, faqJsonLd, localizedMetadata, socialMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -36,7 +36,7 @@ const HREF = "/faq" as const;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "faq" });
-  const title = `${t("metaTitle")} — CarO`;
+  const title = `${t("metaTitle")} — ${SITE_NAME}`;
   const description = t("metaDescription");
   const path = getPathname({ locale, href: HREF });
 

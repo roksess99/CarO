@@ -130,11 +130,16 @@ function drawHeader(
   issuedAt?: string,
 ): void {
   // Woordmerk links. Oranje mag als vlak, niet als tekst (docs/BRAND.md).
-  text(ctx, "CarO", { size: 26, bold: true, y: ctx.y - 20 });
+  // De naam van het bedrijf zoals hij op het document staat — niet apart
+  // ingetypt, want dan loopt de factuur uit de pas met de mail.
+  text(ctx, order.company.name, { size: 22, bold: true, y: ctx.y - 20 });
+  // Het oranje streepje loopt onder het woordmerk door en is dus even breed
+  // als die tekst: met een vaste breedte stak het eronderuit zodra de naam
+  // langer werd.
   ctx.page.drawRectangle({
     x: MARGIN,
     y: ctx.y - 30,
-    width: 62,
+    width: ctx.bold.widthOfTextAtSize(sanitize(order.company.name), 22),
     height: 4,
     color: ORANGE,
   });

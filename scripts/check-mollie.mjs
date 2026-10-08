@@ -92,10 +92,19 @@ async function main() {
   console.log(`Methodes ${names.length > 0 ? names.join(", ") : "geen enkele actief"}`);
   if (names.length === 0) {
     console.log("         Zet betaalmethodes aan in het dashboard, anders kan de klant niets kiezen.");
+    // Een foutcode, net als bij catalog:check: een winkel waar niemand kan
+    // betalen is kapot, ook al antwoordt de sleutel netjes. Zonder dit loopt
+    // een cron-taak hier tevreden overheen — GEMETEN 2026-10-08, toen elke
+    // methode op `pending-boarding` stond en niets het meldde.
+    process.exitCode = 1;
   }
 
   if (!process.argv.includes("--create")) {
-    console.log("\nSleutel werkt. `pnpm mollie:check --create` maakt een testbetaling aan.");
+    console.log(
+      names.length > 0
+        ? "\nSleutel werkt. `pnpm mollie:check --create` maakt een testbetaling aan."
+        : "\nDe sleutel werkt, maar er kan niet betaald worden.",
+    );
     return;
   }
 

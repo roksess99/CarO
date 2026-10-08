@@ -7,7 +7,7 @@
     "loading": "Loading…"
   },
   "header": {
-    "homeAria": "CarO — go to homepage"
+    "homeAria": "CaroParts — go to homepage"
   },
   "bottomNav": {
     "label": "Main navigation",
@@ -52,7 +52,7 @@
       "title": "Parts",
       "intro": "New original spare parts. Search by name or number, or pick your car and browse by category.",
       "empty": "No parts are available yet.",
-      "about": "CarO sells new parts for passenger cars and two-wheelers: brake discs and pads, filters, suspension, cooling, lighting and electrics. Enter your registration or pick make, model and version — the catalogue then shows only the articles that fit your car. Searching by name or OE number works without a car too. All prices include 21% Dutch VAT and you have fourteen days to change your mind.",
+      "about": "CaroParts sells new parts for passenger cars and two-wheelers: brake discs and pads, filters, suspension, cooling, lighting and electrics. Enter your registration or pick make, model and version — the catalogue then shows only the articles that fit your car. Searching by name or OE number works without a car too. All prices include 21% Dutch VAT and you have fourteen days to change your mind.",
       "faq": {
         "q1": {
           "question": "Will these parts fit my car?",
@@ -64,7 +64,7 @@
         },
         "q3": {
           "question": "Are the parts new?",
-          "answer": "Yes, all new and from the manufacturers our wholesaler carries. CarO sells no used parts, and nothing for trucks, agriculture or industry."
+          "answer": "Yes, all new and from the manufacturers our wholesaler carries. CaroParts sells no used parts, and nothing for trucks, agriculture or industry."
         }
       }
     },
@@ -132,7 +132,7 @@
     "groupsTitle": "Categories for your car",
     "chooseCarToBrowse": "Pick your car first to browse the categories. Searching by name or number always works.",
     "viewAllOf": "View all {family}",
-    "aboutTitle": "About {family} at CarO",
+    "aboutTitle": "About {family} at CaroParts",
     "faqTitle": "Frequently asked questions about {family}",
     "faqMore": "All frequently asked questions",
     "quick": {
@@ -283,7 +283,9 @@
     "loadMore": "Load {count} more products",
     "loadMoreBusy": "Loading…",
     "noResults": "No items match this combination of filters.",
-    "missingValue": "{count, plural, one {# item has no value here and drops out if you filter on it} other {# items have no value here and drop out if you filter on it}}"
+    "missingValue": "{count, plural, one {# item has no value here and drops out if you filter on it} other {# items have no value here and drop out if you filter on it}}",
+    "allBrands": "All brands",
+    "moreBrandsToggle": "Show {count} more brands"
   },
   "localeSwitcher": {
     "label": "Language",
@@ -297,7 +299,7 @@
     "system": "Follow your device setting"
   },
   "home": {
-    "metaTitle": "CarO — Car parts",
+    "metaTitle": "CaroParts — Car parts",
     "metaDescription": "Car parts for the Dutch market. Search by part or OE number. All prices include 21% VAT.",
     "eyebrow": "Car parts",
     "bannerTitle": "Find the part, we handle the rest",
@@ -325,7 +327,7 @@
     "intro": "Items that are on sale right now. Prices include 21% VAT.",
     "empty": "There is no sale running at the moment. Browse the range to see everything we sell.",
     "toAssortment": "Go to parts",
-    "metaDescription": "Car parts, tyres, wheels and accessories that are on sale at CarO right now."
+    "metaDescription": "Car parts, tyres, wheels and accessories that are on sale at CaroParts right now."
   },
   "product": {
     "empty": "No parts found. Try a different category.",
@@ -389,8 +391,8 @@
     "shippingLine": "Shipping {shipping} — free from {freeFrom}"
   },
   "cart": {
-    "metaTitle": "Shopping cart — CarO",
-    "metaDescription": "Your shopping cart at CarO. All prices include 21% VAT.",
+    "metaTitle": "Shopping cart — CaroParts",
+    "metaDescription": "Your shopping cart at CaroParts. All prices include 21% VAT.",
     "title": "Shopping cart",
     "buttonAria": "Shopping cart, {count, plural, =0 {empty} =1 {1 item} other {# items}}",
     "addToCart": "Add to cart",
@@ -438,7 +440,7 @@
     "deliveryExpected": "Expected delivery: around {date}."
   },
   "checkout": {
-    "metaTitle": "Checkout — CarO",
+    "metaTitle": "Checkout — CaroParts",
     "metaDescription": "Enter your details to complete your order. All prices include 21% VAT.",
     "title": "Checkout",
     "contactTitle": "Contact details",
@@ -485,10 +487,12 @@
       "busy": "Looking up address…",
       "found": "Street and town have been filled in. Not right? Feel free to change them.",
       "notFound": "We could not find this address. Please enter the street and town yourself."
-    }
+    },
+    "paymentsDownTitle": "Checkout is unavailable",
+    "paymentsDownBody": "Our payment provider is not accepting payments right now, so your order cannot be completed. Your cart stays as it is — try again later, or email us if it is urgent."
   },
   "orderStatus": {
-    "metaTitle": "Your order status — CarO",
+    "metaTitle": "Your order status — CaroParts",
     "eyebrow": "Order",
     "reference": "Order number",
     "total": "Total paid",
@@ -555,7 +559,7 @@
     "vat": "All prices include 21% VAT.",
     "shipping": "Shipping costs are shown before checkout.",
     "withdrawal": "14-day right of withdrawal on every order.",
-    "copyright": "© {year} CarO Onderdelen",
+    "copyright": "© {year} CaroParts",
     "privacyLink": "Privacy and cookies",
     "termsLink": "Terms and conditions",
     "faqLink": "FAQ",
@@ -580,10 +584,10 @@
   "terms": {
     "title": "Terms and conditions",
     "lastUpdated": "Last updated: 16 August 2026",
-    "intro": "These terms apply to every order placed with CarO. They are written for consumers and follow Dutch consumer law (Books 6 and 7 of the Civil Code) and the European rules on distance selling.",
+    "intro": "These terms apply to every order placed with CaroParts. They are written for consumers and follow Dutch consumer law (Books 6 and 7 of the Civil Code) and the European rules on distance selling.",
     "identity": {
       "title": "Who we are",
-      "body": "CarO sells car parts, tyres, wheels and accessories to consumers in the Netherlands. Our contact details and registration numbers appear at the bottom of every page."
+      "body": "CaroParts sells car parts, tyres, wheels and accessories to consumers in the Netherlands. Our contact details and registration numbers appear at the bottom of every page."
     },
     "scope": {
       "title": "What these terms cover",
@@ -795,7 +799,7 @@
       },
       "condition": {
         "question": "Are the parts new?",
-        "answer": "Yes. CarO sells new parts, tyres, wheels and accessories only, and only for passenger cars and two-wheelers. No used parts, and nothing for trucks, agriculture or industry."
+        "answer": "Yes. CaroParts sells new parts, tyres, wheels and accessories only, and only for passenger cars and two-wheelers. No used parts, and nothing for trucks, agriculture or industry."
       },
       "fits": {
         "question": "How do I know a part fits my car?",
@@ -986,7 +990,7 @@
     "shopAverage": "Shop",
     "orderAverage": "Order",
     "verified": "Every review belongs to a paid order: the invitation is emailed to the customer and the link works once. We remove nothing to polish the score; only abuse or personal data is hidden, and we record why.",
-    "replyFrom": "Reply from CarO",
+    "replyFrom": "Reply from CaroParts",
     "howToGet": "Want to leave a review yourself? You will be invited automatically after your order."
   }
 }

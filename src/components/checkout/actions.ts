@@ -4,6 +4,7 @@ import { lookupCartParts } from "@/components/cart/actions";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { isValidCartItem } from "@/lib/cart/cart";
+import { COMPANY } from "@/lib/company";
 import { maxOrderable } from "@/lib/cart/stock";
 import type { CartItem } from "@/lib/cart/types";
 import { expectedDeliveryForAll } from "@/lib/catalog/delivery";
@@ -222,7 +223,7 @@ export async function startPayment(
 
     const payment = await createPayment({
       amountCents: document.totalGrossCents,
-      description: `CarO bestelling ${document.reference}`,
+      description: `${COMPANY.name} bestelling ${document.reference}`,
       redirectUrl,
       webhookUrl: webhookUrl(),
       // Alleen wat nodig is om de bestelling terug te vinden. Naam, adres en
