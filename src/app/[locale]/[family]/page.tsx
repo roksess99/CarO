@@ -32,7 +32,7 @@ import {
   popularPartGroups,
   searchParts,
 } from "@/lib/catalog/wearparts-provider";
-import { SITE_NAME, localizedMetadata, socialMetadata } from "@/lib/site";
+import { localizedMetadata, socialMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string; family: string }>;
@@ -83,7 +83,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         params: { family: familySlug(family, targetLocale) },
       },
     });
-  const title = `${t(`${family}.title`)} — ${SITE_NAME}`;
+  const title = `${t(`${family}.title`)} — CarO`;
 
   return {
     title,

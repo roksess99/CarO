@@ -8,7 +8,7 @@ import {
   verifyOrder,
   type LookupResult,
 } from "@/lib/returns/lookup";
-import { SITE_NAME, localizedMetadata, socialMetadata } from "@/lib/site";
+import { localizedMetadata, socialMetadata } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -20,7 +20,7 @@ const HREF = "/returns" as const;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "returns" });
-  const title = `${t("metaTitle")} — ${SITE_NAME}`;
+  const title = `${t("metaTitle")} — CarO`;
   const description = t("metaDescription");
 
   return {

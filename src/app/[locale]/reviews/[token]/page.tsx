@@ -5,7 +5,6 @@ import { ReviewForm } from "@/components/reviews/review-form";
 import { Link } from "@/i18n/navigation";
 import { readOrder, orderProducts } from "@/lib/orders/store";
 import { reviewByToken } from "@/lib/reviews/store";
-import { SITE_NAME } from "@/lib/site";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -20,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "review" });
   return {
-    title: `${t("title")} — ${SITE_NAME}`,
+    title: `${t("title")} — CarO`,
     robots: { index: false, follow: false },
   };
 }

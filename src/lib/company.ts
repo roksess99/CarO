@@ -1,4 +1,4 @@
-// Bedrijfsgegevens van CaroParts. Eén bron voor de orderbevestiging, en straks
+// Bedrijfsgegevens van CarO. Eén bron voor de orderbevestiging, en straks
 // voor de factuur, de mailhandtekening en de algemene voorwaarden.
 //
 // Nog één onbekende: de zakelijke rekening. Die is geen blokkade voor de
@@ -23,15 +23,8 @@ export interface CompanyDetails {
 }
 
 export const COMPANY: CompanyDetails = {
-  // De naam waaronder de winkel naar buiten treedt. **Dit is de enige plek:**
-  // `SITE_NAME` in lib/site.ts leest hem hier en de pagina's lezen die weer.
-  // Stond hij ook in de titels van elf pagina's, dan is een naamswijziging een
-  // zoek-en-vervangactie die je ergens vergeet (2026-10-08).
-  name: "CaroParts",
-  // De naam op de factuur: de handelsnaam zoals hij bij de KvK staat. Tot
-  // 2026-10-08 was dat "Car Parts A-Z"; de eigenaar meldde die dag dat
-  // CaroParts als handelsnaam is ingeschreven (@docs/DECISIONS.md #3).
-  legalName: "CaroParts",
+  name: "CarO",
+  legalName: "Car Parts A-Z",
   street: "Gildebongerd 2",
   postcode: "7038 DE",
   city: "Zeddam",

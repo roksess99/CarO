@@ -1,6 +1,5 @@
 import { ImageResponse } from "next/og";
 import { routing } from "@/i18n/routing";
-import { SITE_NAME } from "@/lib/site";
 
 /**
  * Deelkaart voor WhatsApp, Facebook en X.
@@ -28,7 +27,7 @@ export function generateStaticParams() {
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = `${SITE_NAME} — onderdelen, banden, velgen en toebehoren`;
+export const alt = "CarO — onderdelen, banden, velgen en toebehoren";
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -55,7 +54,7 @@ export default function OpengraphImage() {
               d="M62 32 47 58H17L2 32 17 6h30l15 26ZM45 32a13 13 0 1 1-26 0 13 13 0 0 1 26 0Z"
             />
           </svg>
-          <div style={{ fontSize: "104px", letterSpacing: "-4px" }}>{SITE_NAME}</div>
+          <div style={{ fontSize: "132px", letterSpacing: "-6px" }}>CarO</div>
         </div>
         <div style={{ marginTop: "56px", fontSize: "46px", color: "#C9CDD3" }}>
           Onderdelen, banden, velgen en toebehoren

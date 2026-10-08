@@ -657,7 +657,7 @@ de orderbevestiging, de factuur en de footer.
 | Gegeven | Waarde |
 |---|---|
 | Rechtsvorm | Eenmanszaak |
-| Handelsnaam | **CaroParts** (was Car Parts A-Z, zie hieronder) |
+| Handelsnaam | Car Parts A-Z |
 | KvK-nummer | 93396252 |
 | Vestigingsnummer | 000058945644 |
 | Btw-nummer | NL005015784B71 |
@@ -685,32 +685,11 @@ enige ontbrekende veld staat nergens in de winkel. Ontbreekt een waarde toch,
 dan valt die regel gewoon weg (`companyValue()`) in plaats van dat er
 "volgt nog" komt te staan.
 
-### De shop heet CaroParts — VASTGESTELD 2026-10-08
-
-Hier stond: *"de shop heet anders dan het bedrijf. Bij de KvK staat Car Parts
-A-Z; de webshop heet overal CarO. Een factuur moet de geregistreerde
-handelsnaam dragen (…) Wil je onder CarO factureren, dan moet die naam als
-(extra) handelsnaam ingeschreven worden."*
-
-Dat verschil is weg. De eigenaar koos **CaroParts** als naam van de winkel en
-meldde dat die handelsnaam bij de KvK is ingeschreven; daarmee mag hij ook op
-de factuur. `COMPANY.name` én `COMPANY.legalName` staan er nu allebei op.
-
-Drie dingen die erbij horen:
-
-- **De naam staat op één plek**: `COMPANY.name` in `src/lib/company.ts`.
-  `SITE_NAME` (lib/site.ts) leest hem, en de elf paginatitels die hem apart
-  ingetypt hadden lezen nu die constante. Zo kan een volgende naamswijziging
-  geen half doorgevoerde boel opleveren.
-- **Oude facturen houden de oude naam**, en dat hoort zo. De PDF wordt
-  getekend uit de bevroren momentopname van de bestelling (#12), dus een
-  factuur van september blijft "Car Parts A-Z" dragen. Een document achteraf
-  omschrijven zou de administratie laten afwijken van wat de klant ontving.
-- **Het beeldmerk blijft CarO** — de moer als O (keuze van de eigenaar,
-  2026-10-08). Alleen de geschreven naam is om. In de code blijft het
-  voorvoegsel `caro` staan: CSS-variabelen, de sleutels in localStorage en de
-  bestandsnamen van het logo. Dat zijn geen namen maar sleutels, en
-  `caro-cart` hernoemen zou elke openstaande winkelwagen legen.
+**Let op — de shop heet anders dan het bedrijf.** Bij de KvK staat
+"Car Parts A-Z"; de webshop heet overal CarO. Een factuur moet de
+geregistreerde handelsnaam dragen, dus die staat nu op het document. Wil je
+onder CarO factureren, dan moet CarO als (extra) handelsnaam ingeschreven
+worden bij de KvK. Dat is een formaliteit, maar wel een die vóór livegang moet.
 
 Bouw de checkout eerst tegen Mollie test mode.
 
@@ -2488,129 +2467,6 @@ toont de regel boven de knop.
 
 ---
 
-## 28. Merkfilter en de maat op de flank — VASTGESTELD 2026-10-08
-
-Twee dingen die de eigenaar op dezelfde pagina meldde.
-
-### De tekening van de band toonde iets anders dan de velden
-
-Op de maatkiezer staat een tekening van een bandflank met "205/55 R16" erin.
-Die stond er **vast**: de eigenaar had 265/80/24 gekozen en las er nog steeds
-205/55 R16. Een voorbeeld dat iets anders aanwijst dan de keuze eronder is
-erger dan geen voorbeeld.
-
-De tekening volgt nu de keuzelijsten, met twee toestanden en het verschil zit
-in de kleur:
-
-| Toestand | Wat er staat |
-|---|---|
-| Niets gekozen | grijs **205/55 R16** — het voorbeeld, want dáár is de tekening voor |
-| Iets gekozen | het gekozen getal wit, de andere vakken grijs `––` |
-
-Zo staat er nooit een getal dat de klant niet zelf heeft ingevuld. Daarvoor is
-`tyre-size-form.tsx` een clientcomponent geworden; het blijft een gewoon
-GET-formulier dat **zonder JavaScript werkt** — de maat hoort in de URL
-(deelbaar en bookmarkbaar), en dat verandert niet.
-
-### Zoeken op maat gaf 200 banden zonder filter
-
-De filters van de leverancier horen bij een **categorie**, en bij een
-zoekopdracht op maat komt de lijst juist niet uit een categorie: `/items`
-accepteert `search` óf `parentNodeId`, nooit allebei (#7). Daarom vielen merk
-en laadindex weg zodra er een maat stond — technisch juist, maar het gevolg
-was eindeloos scrollen.
-
-**De merken worden nu geteld over de treffers zelf**
-(`lib/catalog/brand-facets.ts`). Dat is geen omweg maar een betere bron:
-
-- de aantallen achter de merknamen zijn **echt**. Het `count`-veld van Tyre24
-  staat bij élk merk op 1 (GEMETEN 2026-08-16), dus daarmee valt niet te
-  sorteren en niets te tonen;
-- er verschijnt alleen wat er in deze maat échte te koop is. Een merkknop die
-  nul treffers geeft kan hier niet bestaan.
-
-GEMETEN 2026-10-08 op 205/55 R16 in Auto/SUV: 76 merken over de treffers,
-twaalf als tegel (ROTALLA 4, WINDFORCE 4, BRIDGESTONE 3 …) en de rest achter
-"Nog 64 merken tonen" — bereikbaar, niet alleen geteld. Klikken op BRIDGESTONE
-geeft "3 banden in maat 205/55 R16".
-
-Drie keuzes die erin zitten:
-
-- **De maat blijft in elke link staan.** Zonder dat valt de zoekopdracht weg
-  en staat de klant terug in de ongefilterde categorie.
-- **`?merk=` staat in `robots.txt` op disallow**, net als de andere filters:
-  het zijn varianten van een pagina die al in de index staat.
-- **Sorteren op aantal, niet op de lijst met bekende merken.** Die lijst
-  (`PROMINENT_BRANDS`) stuurt de tegels op de categoriepagina’s, waar er geen
-  aantallen zijn. Hier wél, en dan is het grootste aanbod de eerlijkste
-  volgorde.
-
----
-
-## 29. Een werkende sleutel is geen werkende kassa — VASTGESTELD 2026-10-08
-
-De eigenaar meldde dat betalen niet werkte en vroeg of dat aan de
-naamswijziging bij de KvK kon liggen. GEMETEN met `pnpm mollie:check` en twee
-leesaanroepen bij Mollie:
-
-| Wat | Uitkomst |
-|---|---|
-| De live sleutel | werkt, Mollie antwoordt netjes |
-| iDEAL/Wero, kaart, Klarna, Riverty, paybybank | allemaal **`pending-boarding`** |
-| Actieve methodes | **nul** |
-| Laatste betaling bij Mollie | 24 september, `paid`, iDEAL |
-| Mislukte pogingen sindsdien | **geen enkele** |
-
-Die laatste twee regels zijn het bewijs dat het niet aan de winkel ligt: als
-een klant afhaakt of een betaling weigert, staat er een `expired` of `failed`
-bij Mollie. Er komt helemaal geen betaling meer tot stand — zonder actieve
-methode weigert Mollie het aanmaken al.
-
-`pending-boarding` betekent dat Mollie de gegevens (opnieuw) wil verifiëren.
-Hij toetst die tegen het KvK-register, dus een gewijzigde handelsnaam (#3) is
-een plausibele aanleiding. Zeker weten doet alleen het Mollie-dashboard; de
-winkel kan dat niet uitlezen (`/onboarding/me` en `/profiles` geven 403 op een
-profielsleutel).
-
-### Wat de winkel verkeerd deed: alleen kijken of er een sleutel is
-
-`mollieIsConfigured()` toetst of `MOLLIE_API_KEY` gevuld is, en daarmee was de
-betaalknop er. **Twee weken lang** stond er dus een knop die niets kon, en de
-klant liep er pas tegenaan nádat hij zijn naam en adres had ingevuld — met een
-algemene "er ging iets mis". Niemand kreeg een melding.
-
-Dit is exact hetzelfde gat als bij de catalogus (#26): een afgevangen fout ziet
-eruit als een lege toestand. Daarom dezelfde oplossing.
-
-- **`lib/mollie/health.ts`** doet één goedkope aanroep (`GET /methods`), buiten
-  de gewone betaalcode om, vijf minuten in het geheugen, en gooit nooit. Hij
-  onderscheidt vier gevallen: geen sleutel, sleutel geweigerd, Mollie
-  onbereikbaar, en — het geval dat we hadden — **sleutel in orde maar geen
-  methode actief**.
-- **Het beheerpaneel zet er een rode melding bij**, voor iedereen ongeacht
-  rol, net als bij de catalogus: een winkel waar niemand kan betalen is geen
-  rechtenkwestie.
-- **Het afrekenscherm zegt het vóóraf.** Boven het formulier, met de
-  betaalknop op `disabled` en een `aria-describedby` die naar die melding
-  wijst. Dat is de uitzondering op de regel in `.claude/rules/frontend.md`
-  ("een knop die niet kan, zegt waarom"): de reden staat hier al op het scherm,
-  dus er valt bij de klik niets uit te leggen.
-- **`pnpm mollie:check` eindigt nu met een foutcode** als er geen methode
-  aanstaat. Hij meldde het al wel, maar eindigde met 0 — een cron-taak liep er
-  tevreden overheen.
-
-### Wat het niet doet
-
-- **Het zegt niet wáárom Mollie wil verifiëren.** Dat staat in hun dashboard;
-  wij lezen alleen of er iets te kiezen valt.
-- **Het kijkt niet per bedrag.** Mollie kan een methode weigeren voor een
-  specifiek bedrag (iDEAL heeft een maximum); dit is de vraag "staat er
-  überhaupt iets aan", niet "mag deze bestelling".
-- **Het blokkeert de winkelwagen niet.** De klant kan gewoon verder winkelen en
-  zijn wagen blijft staan; alleen het afrekenen is dicht.
-
----
-
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -2727,9 +2583,6 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
-| 2026-10-08 | Een melding zodra er niet betaald kan worden, in het paneel én op het afrekenscherm | Elke betaalmethode stond twee weken op `pending-boarding` na de naamswijziging bij de KvK, en de winkel toonde gewoon een betaalknop; de klant merkte het pas na het invullen van zijn adres (#29) |
-| 2026-10-08 | De winkel heet CaroParts, ook op de factuur | De eigenaar koos de naam en liet hem bij de KvK inschrijven; hij staat nu op één plek in de code (`COMPANY.name`) in plaats van in elf paginatitels. Het beeldmerk blijft CarO (#3) |
-| 2026-10-08 | Merkfilter bij een zoekopdracht op bandenmaat, geteld over de treffers | De filters van de leverancier horen bij een categorie en vervallen bij een maatzoekopdracht; zonder merkfilter was 200 banden eindeloos scrollen, en de eigen telling geeft bovendien echte aantallen (#28) |
 | 2026-10-03 | Verwachte leverdatum op de productpagina en in de winkelwagen | De groothandel bezorgt rechtstreeks bij de klant, dus zijn datum is de datum van de klant; er komt één werkdag bij voor het inkopen. De postcode doet niets, het aantal alles (#27) |
 | 2026-10-03 | Een geweigerde sleutel bij de leverancier is een melding in het paneel | De adapter maakt van een fout een lege lijst; daardoor zag een verlopen token er precies zo uit als een categorie zonder aanbod, en verdween de grootste productgroep stil uit de winkel (#26) |
 | 2026-10-02 | Migraties via `pnpm db:migrate`, met de boekhouding in de database | Negen migraties met de hand gaf een productiedatabase die vóór de code liep zonder dat iemand kon zien wat erin zat (#25) |
