@@ -14,7 +14,7 @@ import {
   matchesYear,
   vehicleSearchTerms,
 } from "@/lib/catalog/vehicle-match";
-import { localizedMetadata } from "@/lib/site";
+import { SITE_NAME, localizedMetadata } from "@/lib/site";
 import { vehicleMakeNames } from "@/lib/vehicle/makes";
 
 type Props = {
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "myCar" });
   return {
-    title: `${t("metaTitle")} — CarO`,
+    title: `${t("metaTitle")} — ${SITE_NAME}`,
     description: t("metaDescription"),
     // Resultaten hangen aan een querystring en verschillen per auto; die
     // horen niet in de index.

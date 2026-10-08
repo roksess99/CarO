@@ -1,6 +1,12 @@
-# CarO — Huisstijl
+# CaroParts — Huisstijl
 
 Bron: `CarO_logo_brand.pdf` (Concept 02 — De Moer). Dit document is leidend voor alle UI.
+
+**De naam in tekst is sinds 2026-10-08 CaroParts; het beeldmerk blijft CarO.**
+Keuze van de eigenaar (@docs/DECISIONS.md #3): de moer met het woordmerk
+eromheen blijft zoals hij is, en alleen de geschreven bedrijfsnaam verandert —
+in paginatitels, in de mail aan de klant en op de factuur. Zet de nieuwe naam
+dus **niet** in het logo en herteken de lockup niet.
 
 ## Kleuren
 

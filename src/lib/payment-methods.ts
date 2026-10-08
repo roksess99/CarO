@@ -28,10 +28,23 @@
  * kan kiezen is een loze belofte, dus hij is eruit. Meet dit opnieuw met de
  * live sleutel zodra je in het dashboard iets aan- of uitzet.
  */
+/**
+ * GEMETEN 2026-10-08 op de live sleutel, nadat de eigenaar in het dashboard
+ * zijn keuze had gemaakt: `ideal`, `creditcard`, `applepay`, `googlepay` en
+ * `paybybank` staan op **`pending-review`** — aangevraagd en in behandeling.
+ * Klarna en Riverty zijn niet aangevraagd en staan daarom niet meer in deze
+ * lijst; Klarna stond er wél in en was daarmee een belofte die de klant op het
+ * betaalscherm niet kon waarmaken.
+ *
+ * Zolang de beoordeling loopt kan er niets gekozen worden — dat meldt de
+ * winkel zelf (@docs/DECISIONS.md #29). Meet opnieuw met `pnpm mollie:check`
+ * zodra ze op `activated` staan.
+ */
 export const PAYMENT_METHODS = [
   "iDEAL",
   "Wero",
   "Creditcard",
-  "Klarna",
+  "Apple Pay",
+  "Google Pay",
   "Betaal via je bank",
 ] as const;

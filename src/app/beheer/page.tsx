@@ -9,6 +9,7 @@ import {
 } from "@/lib/admin/roles";
 import { requireAdmin } from "@/lib/admin/session";
 import { catalogHealth } from "@/lib/catalog/health";
+import { mollieHealth, paymentsPossible } from "@/lib/mollie/health";
 import { listOrders, orderTotals } from "@/lib/orders/store";
 import { returnTotals } from "@/lib/returns/store";
 import { statsOverview, type StatPeriod } from "@/lib/stats/store";
@@ -85,7 +86,7 @@ export default async function BeheerPage({
   // De retourcijfers zijn optellingen zonder klantgegevens en horen bij de
   // omzet: wie de omzet mag zien, hoort te zien wat er weer af ging. De
   // aanvragen zelf (met naam en artikel) blijven achter `retouren` zitten.
-  const [totals, recent, returns, stats, catalogus] = await Promise.all([
+  const [totals, recent, returns, stats, catalogus, betalen] = await Promise.all([
     magOmzet || magBestellingen ? orderTotals() : null,
     magBestellingen ? listOrders({ limit: 10 }) : null,
     magOmzet || magBestellingen ? returnTotals() : null,
@@ -93,6 +94,9 @@ export default async function BeheerPage({
     // Voor iedereen die hier binnenkomt, ongeacht rol: een catalogus die leeg
     // staat is geen rechtenkwestie maar een winkel die niet verkoopt.
     catalogHealth(),
+    // Zelfde reden: zonder actieve betaalmethode komt er geen bestelling
+    // binnen, en dat merk je anders pas als een klant het meldt.
+    mollieHealth(),
   ]);
 
   const nav = NAV.filter((item) => can(admin.role, item.needs));
@@ -171,6 +175,34 @@ export default async function BeheerPage({
             leverancier verloopt vanzelf; maak een nieuwe aan en zet hem in de
             omgevingsvariabelen. Controleren kan met{" "}
             <code className="font-mono">pnpm catalog:check</code>.
+          </p>
+        </div>
+      )}
+
+      {/* Een sleutel die werkt is niet hetzelfde als een account dat
+          betalingen aanneemt: op 2026-10-08 stond élke methode op
+          `pending-boarding` nadat de handelsnaam bij de KvK was gewijzigd, en
+          de winkel toonde gewoon een betaalknop (@docs/DECISIONS.md #29). */}
+      {!paymentsPossible(betalen) && (
+        <div className="mt-6 rounded-lg border border-danger bg-background p-4">
+          <h2 className="font-semibold text-danger">
+            Klanten kunnen niet betalen
+          </h2>
+          <p className="mt-2 text-sm">
+            {!betalen.configured
+              ? "Er staat geen betaalsleutel in de omgeving."
+              : betalen.rejected
+                ? "Mollie weigert onze sleutel."
+                : !betalen.reachable
+                  ? "Mollie is niet bereikbaar."
+                  : "Mollie accepteert onze sleutel, maar er staat geen enkele betaalmethode aan."}
+            {betalen.detail ? ` (${betalen.detail})` : ""}
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            {betalen.configured && betalen.reachable && !betalen.rejected
+              ? "Methodes staan uit zolang Mollie je gegevens wil verifiëren — bijvoorbeeld na een wijziging bij de KvK. Log in op het Mollie-dashboard en rond af wat hij vraagt."
+              : "Kijk de sleutel na in de omgevingsvariabelen; na een wijziging moet de site opnieuw gebouwd en herstart worden."}{" "}
+            Controleren kan met <code className="font-mono">pnpm mollie:check</code>.
           </p>
         </div>
       )}

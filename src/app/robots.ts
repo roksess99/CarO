@@ -43,6 +43,8 @@ export default function robots(): MetadataRoute.Robots {
           // De persoonlijke retourlink uit de bevestigingsmail
           "/*?*ref=",
           "/*?*alles=",
+          // Merk + bandenmaat: dezelfde soort variant als een filter.
+          "/*?*merk=",
           `/*?*${FILTER_PARAM}=`,
         ],
       },
