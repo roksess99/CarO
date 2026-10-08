@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { COMPANY } from "@/lib/company";
 import { execute, queryOne } from "@/lib/db/client";
 import { sendMail } from "@/lib/mail";
 import { SITE_URL } from "@/lib/site";
@@ -63,7 +64,7 @@ export async function inviteAdmin(options: {
       to: emailKey(options.email),
       subject: "Je bent uitgenodigd voor het beheer van caroparts.nl",
       text: [
-        "Je kunt een beheerdersaccount aanmaken voor de webshop van CarO.",
+        `Je kunt een beheerdersaccount aanmaken voor de webshop van ${COMPANY.name}.`,
         "",
         `Je rol wordt: ${ROLE_LABELS[options.role].naam.toLowerCase()} — ${ROLE_LABELS[options.role].uitleg}`,
         "",

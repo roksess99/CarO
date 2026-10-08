@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CompanyDetails } from "@/components/company-details";
 import { getPathname } from "@/i18n/navigation";
-import { localizedMetadata } from "@/lib/site";
+import { SITE_NAME, localizedMetadata } from "@/lib/site";
 import { FREE_SHIPPING_THRESHOLD_CENTS, STANDARD_SHIPPING_CENTS } from "@/lib/shipping";
 import { priceInSentence } from "@/lib/format";
 
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const href = "/terms" as const;
 
   return {
-    title: `${t("title")} — CarO`,
+    title: `${t("title")} — ${SITE_NAME}`,
     description: t("intro"),
     ...localizedMetadata(locale, (l) => getPathname({ locale: l, href })),
   };

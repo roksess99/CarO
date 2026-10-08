@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { OrderSummary } from "@/components/checkout/order-summary";
 import { getPathname } from "@/i18n/navigation";
+import { mollieHealth, paymentsPossible } from "@/lib/mollie/health";
 import { localizedMetadata } from "@/lib/site";
 
 type Props = {
@@ -26,12 +27,27 @@ export default async function CheckoutPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("checkout");
+  // Kan er überhaupt betaald worden? Dat hoort de klant te weten vóórdat hij
+  // zijn naam en adres invult, niet erna (@docs/DECISIONS.md #29). De uitkomst
+  // staat vijf minuten in het geheugen, dus dit kost geen aanroep per bezoeker.
+  const kanBetalen = paymentsPossible(await mollieHealth());
   return (
     <div className="site-container py-12 md:py-16">
       <h1 className="text-3xl md:text-4xl">{t("title")}</h1>
+
+      {!kanBetalen && (
+        <div
+          id="betalen-uit"
+          role="status"
+          className="mt-6 rounded-lg border border-danger bg-background p-4"
+        >
+          <p className="font-semibold text-danger">{t("paymentsDownTitle")}</p>
+          <p className="mt-1 text-sm text-muted">{t("paymentsDownBody")}</p>
+        </div>
+      )}
       <div className="mt-8 flex flex-col-reverse gap-8 lg:flex-row lg:items-start lg:gap-12">
         <div className="flex-1 lg:max-w-xl">
-          <CheckoutForm />
+          <CheckoutForm paymentsDown={!kanBetalen} />
         </div>
         <aside className="w-full lg:max-w-sm">
           <OrderSummary />

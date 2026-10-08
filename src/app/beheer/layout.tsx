@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
+import { SITE_NAME } from "@/lib/site";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
@@ -17,7 +18,7 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
  */
 
 export const metadata: Metadata = {
-  title: "Beheer — CarO",
+  title: `Beheer — ${SITE_NAME}`,
   // Dit mag nergens in een zoekmachine belanden. Staat ook in app/robots.ts.
   robots: { index: false, follow: false, nocache: true },
 };
