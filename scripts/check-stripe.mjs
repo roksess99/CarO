@@ -63,12 +63,16 @@ async function main() {
     );
   }
 
-  const test = key.startsWith("sk_test_");
-  const live = key.startsWith("sk_live_");
+  // sk_ is de volledige geheime sleutel, rk_ een beperkte — allebei goed, en
+  // een beperkte is zelfs veiliger. Hij moet dan wél deze rechten hebben:
+  // Checkout Sessions schrijven, PaymentIntents lezen, Refunds schrijven en
+  // Account lezen.
+  const test = /^(sk|rk)_test_/.test(key);
+  const live = /^(sk|rk)_live_/.test(key);
 
   if (!test && !live) {
     return fail(
-      "De sleutel begint niet met sk_test_ of sk_live_.",
+      "De sleutel begint niet met sk_test_, sk_live_, rk_test_ of rk_live_.",
       "Let op: pk_… is de publieke sleutel en hoort hier niet.",
     );
   }
