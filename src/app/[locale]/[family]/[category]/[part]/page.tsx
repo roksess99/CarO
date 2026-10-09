@@ -367,8 +367,9 @@ export default async function ProductPage({ params }: Props) {
               )}
             </div>
 
-            {/* De leverdatum van de groothandel waar wij dit inkopen, plus één
-                werkdag. Hij geldt voor één stuk: bestelt de klant er meer dan
+            {/* De leverdatum van de groothandel waar wij dit inkopen,
+                onveranderd overgenomen (2026-10-09). Hij geldt voor één stuk:
+                bestelt de klant er meer dan
                 die partij heeft, dan schuift hij op — dat rekent de wagen
                 opnieuw uit (lib/catalog/delivery.ts). Komt er niets terug, dan
                 staat hier niets; een levertijd die je niet kunt onderbouwen

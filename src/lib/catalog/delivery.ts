@@ -12,9 +12,11 @@ import type { Part } from "./types";
  * (@docs/DECISIONS.md #4). De datum die de leverancier teruggeeft is dus de
  * datum van de klant en niet die van ons magazijn — er is geen magazijn.
  *
- * Er komt één dag bij: de beheerder koopt met de hand in, één keer per
- * werkdag. Zonder die dag beloven we een levering die pas begint zodra hij
- * besteld heeft.
+ * **De datum van de groothandel wordt onveranderd overgenomen** (winkelkeuze
+ * van de eigenaar, 2026-10-09). Hier kwam tot die dag één werkdag bij, omdat
+ * hij met de hand inkoopt; dat is eraf. Wat dat betekent staat in
+ * @docs/DECISIONS.md #27: koopt hij in nadat de groothandel zijn dag heeft
+ * afgesloten, dan is de datum die de klant las een dag te vroeg.
  *
  * **De datum komt van dezelfde groothandel als de prijs** (`part.sellerId`).
  * Mengen van twee verkopers levert een belofte op die bij niemand hoort —
@@ -42,33 +44,6 @@ interface Distributor {
   distributorId?: number;
   shippingCosts?: Record<string, { estimatedDelivery?: string } | undefined>;
 }
-
-/** Vaste Nederlandse feestdagen. Beweegbare dagen (Pasen, Hemelvaart,
- *  Pinksteren) zitten er bewust niet in: die vragen een paasberekening voor
- *  één dag verschil op een datum die toch "rond" is. */
-const FEESTDAGEN = new Set(["01-01", "04-27", "12-25", "12-26"]);
-
-function isWerkdag(date: Date): boolean {
-  const dag = date.getDay();
-  if (dag === 0 || dag === 6) return false;
-  const maand = String(date.getMonth() + 1).padStart(2, "0");
-  const dagvanmaand = String(date.getDate()).padStart(2, "0");
-  return !FEESTDAGEN.has(`${maand}-${dagvanmaand}`);
-}
-
-/** `days` werkdagen erbij; weekenden en vaste feestdagen tellen niet mee */
-function plusWerkdagen(from: Date, days: number): Date {
-  const date = new Date(from);
-  let over = days;
-  while (over > 0) {
-    date.setDate(date.getDate() + 1);
-    if (isWerkdag(date)) over -= 1;
-  }
-  return date;
-}
-
-/** De dag die de beheerder nodig heeft om in te kopen */
-const EIGEN_WERKDAGEN = 1;
 
 async function fetchDistributors(
   family: ProductFamily,
@@ -133,14 +108,17 @@ export async function expectedDelivery(
       .filter((value): value is string => typeof value === "string")
       .sort()[0];
 
-    if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-      const basis = new Date(`${raw}T12:00:00`);
-      if (!Number.isNaN(basis.getTime())) {
-        const met = plusWerkdagen(basis, EIGEN_WERKDAGEN);
-        const maand = String(met.getMonth() + 1).padStart(2, "0");
-        const dag = String(met.getDate()).padStart(2, "0");
-        date = `${met.getFullYear()}-${maand}-${dag}`;
-      }
+    // Onveranderd overnemen — maar niet ongekeurd. De vorm staat vast met de
+    // regex; dat `2026-02-31` daar doorheen komt en geen bestaande dag is,
+    // vangt de datumcontrole eronder op. Een onzindatum doorgeven zou in de
+    // mail en op de factuur belanden, want hij wordt bij het afrekenen
+    // bevroren (@docs/DECISIONS.md #27).
+    if (
+      raw &&
+      /^\d{4}-\d{2}-\d{2}$/.test(raw) &&
+      !Number.isNaN(new Date(`${raw}T12:00:00`).getTime())
+    ) {
+      date = raw;
     }
   } catch (error) {
     // Een levertijd is prettig om te weten, geen reden om een productpagina

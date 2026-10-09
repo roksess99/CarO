@@ -50,7 +50,11 @@ export interface OrderDocument {
   shippingIsFree: boolean;
   /**
    * De verwachte leverdag (`2026-10-09`) zoals hij gold bij het bestellen —
-   * de datum van de groothandel plus onze werkdag (@docs/DECISIONS.md #27).
+   * de datum van de groothandel, onveranderd (@docs/DECISIONS.md #27).
+   *
+   * **Bestellingen van vóór 2026-10-09 dragen er nog een werkdag bij in**, en
+   * dat hoort zo: het veld is bevroren en een bevroren waarde herschrijf je
+   * niet omdat de regel erna veranderde.
    *
    * **Bevroren, net als de bedragen.** De factuur en de bevestigingsmail
    * worden later getekend dan de bestelling; zouden ze de datum opnieuw
