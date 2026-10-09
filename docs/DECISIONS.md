@@ -2599,6 +2599,45 @@ eruit als een lege toestand. Daarom dezelfde oplossing.
   aanstaat. Hij meldde het al wel, maar eindigde met 0 — een cron-taak liep er
   tevreden overheen.
 
+### De melding stond een dag vast in de cache — GEMETEN 2026-10-09
+
+Na de overstap naar Stripe meldde de eigenaar dat caroparts.nl nog steeds
+"Checkout is unavailable" toonde. Nagemeten, tien keer per taal:
+
+| Pagina | Dicht |
+|---|---|
+| `/nl/afrekenen` | 0 van de 10 |
+| `/en/checkout` | **10 van de 10** |
+
+Zelfde code, zelfde sleutel, zelfde account. Het verschil zat in de
+antwoordkoppen:
+
+```
+x-nextjs-cache: HIT
+x-nextjs-prerender: 1
+cache-control: s-maxage=86400, stale-while-revalidate=31449600
+```
+
+De afrekenpagina werd **bewaard**. De Engelse versie was één keer gerenderd op
+een moment dat er niet betaald kon worden, en dat antwoord werd een etmaal lang
+uitgeserveerd — met een jaar verouderd-antwoord erachteraan. De twee talen
+liepen uiteen omdat hun cache-regels op verschillende momenten zijn gevuld. Een
+`?x=`-cachebuster hielp niet: de regel hangt aan het pad.
+
+De bouwuitvoer zei `ƒ (Dynamic)`, en dat was precies de val — dynamisch
+gerenderd is niet hetzelfde als niet bewaard.
+
+**Het gevaar zit in de andere richting.** Een verouderde melding is hinderlijk;
+een verouderde áfwezigheid van die melding is erger. Een pagina die gerenderd is
+terwijl betalen kón, blijft een werkende betaalknop tonen nádat de betaaldienst
+eruit ligt — exact de stille storing waarvoor dit hoofdstuk bestaat.
+
+`export const dynamic = "force-dynamic"` op `app/[locale]/checkout/page.tsx`,
+met de meting als comment erboven zodat niemand hem later "voor de snelheid"
+terugzet. Nagemeten op een volledige productiebuild: beide talen
+`private, no-store, must-revalidate`, geen `x-nextjs-prerender`, en nul van de
+zes keer dicht.
+
 ### Wat het niet doet
 
 - **Het zegt niet wáárom Mollie wil verifiëren.** Dat staat in hun dashboard;
