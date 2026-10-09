@@ -6,64 +6,54 @@ Beeldmateriaal van derden voor het blok "Betaalmethoden" in de footer
 | Bestand | Wat |
 |---|---|
 | `ideal-wero.svg` | iDEAL | Wero-lockup, geel, horizontaal |
-| `mollie-nl.svg` | "Veilige betalingen mogelijk gemaakt door mollie" + Mastercard, Visa, Amex, "+ meer" |
-| `mollie-en.svg` | Idem, Engels |
 
-Beide beelden staan **zonder tegel of rand** in de footer: ze dragen hun eigen
-achtergrond, en een witte kaart erachter maakte er een sticker in een lijstje
-van.
+Het beeld staat **zonder tegel of rand** in de footer: het draagt zijn eigen
+gele achtergrond, en een witte kaart erachter maakte er een sticker in een
+lijstje van. iDEAL en Wero leveren maar één versie — geel, en dat is verplicht.
 
-## Eén uitvoering voor beide thema's
+## Het Mollie-blok is weg — 2026-10-09
 
-Mollie levert het blok in een witte en een zwarte pil. Wij gebruiken overal de
-**witte**, en dat pakt in allebei de thema's goed uit:
+Hier stonden ook `mollie-nl.svg` en `mollie-en.svg`: de pil met "Veilige
+betalingen mogelijk gemaakt door mollie" en de kaartlogo's. Die bestanden zijn
+verwijderd toen Mollie uit de winkel ging (@docs/DECISIONS.md #30).
 
-| Thema | Hoe het staat |
-|---|---|
-| Licht | De pil lost op in de witte pagina; alleen het slotje, de tekst en de kaartlogo's blijven zichtbaar |
-| Donker | Een strak wit vlak op het merk-antraciet |
+**Het logo van een betaaldienst die je niet gebruikt mag niet in je footer
+staan.** Niet omdat het lelijk is, maar omdat het een onwaarheid is tegenover
+de klant: het blok zei dat Mollie de betaling afhandelt, en dat is niet meer zo.
 
-De zwarte pil is er daarom niet meer. Die zat in donkere modus net náást de
-achtergrondkleur (`#0F0B08` tegen `#0E1013`) en gaf een vaag warm
-rechthoekje — en omkleuren mag niet van de merkkit.
+Wat daar nu niet staat en er wel zou kunnen komen: de **"Powered by
+Stripe"-badge**. Die is er pas als het officiële bestand uit Stripe's merkkit in
+deze map staat. Zelf natekenen of uit een screenshot halen mag van geen enkele
+merkkit — en van deze ook niet.
 
-Dat scheelt meteen een halve download: een tweede afbeelding achter
-`dark:hidden` wordt door de browser evengoed opgehaald, en deze badges zijn
-35–45 kB per stuk.
+## Welke beelden er horen te staan
 
-iDEAL en Wero leveren sowieso maar één versie: geel, en dat is verplicht.
+De methodes die de winkel noemt staan in `src/lib/payment-methods.ts`. Dat is op
+dit moment een **voornemen en geen meting**: het Stripe-account wordt nog
+geverifieerd.
 
-## Waarom precies deze beelden
+Zodra dat rond is, meet je het zo:
 
-`pnpm mollie:check` gaf op de **live** sleutel (2026-09-12):
+```bash
+pnpm stripe:check --create
+```
 
-> iDEAL | Wero, Card, Pay with Klarna, Pay By Bank
+Dat drukt `payment_method_types` van een echte Checkout-sessie af. Dát is wat de
+klant werkelijk kan kiezen, en daar hoort het beeld bij te kloppen.
 
-De lockup dekt de eerste methode één op één — Mollie levert iDEAL en Wero als
-één methode, en dat is precies wat de lockup toont. Het Mollie-blok dekt `Card`
-en vangt Klarna en Pay By Bank op met "+ meer". Zo staat er geen methode in
-beeld die de klant niet kan kiezen.
-
-De meting van 2026-09-10 noemde ook Riverty, maar die liep op de testsleutel.
-Test en live hebben bij Mollie elk hun eigen methodes; op het echte account
-staat Riverty niet aan. **Meet dit dus altijd met de sleutel die de winkel
-werkelijk gebruikt.**
-
-De varianten met PayPal uit dezelfde kit zijn daarom **niet** overgenomen:
-PayPal staat niet op het account en zou een keuze beloven die er niet is.
+**Meet altijd met de sleutel die de winkel werkelijk gebruikt.** Bij Mollie
+ging dat een keer mis: de meting van 2026-09-10 noemde Riverty, maar die liep op
+de testsleutel en op het live account stond Riverty niet aan. Test en live zijn
+bij elke betaaldienst gescheiden werelden.
 
 ## Regels bij het vervangen
 
-- **Onbewerkt gebruiken.** Beide merkkits verbieden herkleuren, uitrekken en
+- **Onbewerkt gebruiken.** Merkkits verbieden herkleuren, uitrekken en
   losknippen van onderdelen. Een eigen samenstelling van losse kaartlogo's mag
-  dus niet; dit blok wél, want zo levert Mollie het aan. Staat een beeld slecht
-  op de achtergrond, pak dan de andere uitvoering uit de kit — kleur nooit
-  zelf om, en knip de pil er ook niet af.
-- **Verandert het aanbod?** Draai `pnpm mollie:check`, werk
-  `src/lib/payment-methods.ts` bij en controleer of dit beeld nog klopt.
-  Komt er een methode bij die de klant hier niet ziet staan, haal dan de
-  bijbehorende variant uit de Mollie-kit.
-- **Amex is niet apart gemeten.** `GET /methods` geeft alleen `Card` terug,
-  zonder kaartmerken. Het blok toont Mastercard, Visa én American Express;
-  controleer in het Mollie-dashboard of dat laatste echt aanstaat. Zo niet,
-  dan heeft de kit een uitvoering zonder.
+  dus niet. Staat een beeld slecht op de achtergrond, pak dan een andere
+  uitvoering uit de kit — kleur nooit zelf om.
+- **Verandert het aanbod?** Meet opnieuw, werk `src/lib/payment-methods.ts` bij
+  en controleer of het beeld nog klopt. Komt er een methode bij die de klant
+  hier niet ziet staan, haal dan de bijbehorende variant uit de kit.
+- **Beloof niets wat er niet is.** Een kaartmerk of een methode in beeld die de
+  klant op het betaalscherm niet kan kiezen, is een loze belofte.

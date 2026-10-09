@@ -19,7 +19,7 @@ Draait live op [caroparts.nl](https://caroparts.nl). Handelsnaam bij de KvK is
 - **Live zoeken** met suggesties over alle families.
 - **Winkelwagen** in localStorage; bedragen worden bij het afrekenen opnieuw
   uit de catalogus gehaald, nooit uit de browser overgenomen.
-- **Betalen via Mollie** (iDEAL). Na een bevestigde betaling gaan er twee mails
+- **Betalen via Stripe** (iDEAL). Na een bevestigde betaling gaan er twee mails
   uit met dezelfde PDF: een opgemaakte bevestiging naar de klant en een
   werkbriefje met artikelnummers naar de beheerder, die met de hand inkoopt.
 - **Adres automatisch invullen** uit postcode en huisnummer.
@@ -39,7 +39,7 @@ Draait live op [caroparts.nl](https://caroparts.nl). Handelsnaam bij de KvK is
   | Tyre24/ALZURA Products v1.3 | banden, velgen, toebehoren | `docs/api/TYRE24.md` |
   | Tyre24/ALZURA Wearparts v1.6 | onderdelen, kenteken → auto | `docs/api/WEARPARTS.md` |
   | overheid.io | RDW-voertuiggegevens | `docs/api/OVERHEID-IO.md` |
-  | Mollie | betalingen | `docs/DECISIONS.md` #10 |
+  | Stripe | betalingen | `docs/STRIPE.md`, `docs/DECISIONS.md` #30 |
   | gratis-postcodedata.nl | straat en plaats bij een postcode | `docs/api/POSTCODE.md` |
   | SMTP (Hostinger) | contactformulier en orderbevestiging | `src/lib/mail.ts` |
 
@@ -67,7 +67,7 @@ terwijl er geen enkel echt product in staat. Kopieer daarom `.env.example` naar
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm lint` | ESLint |
 | `pnpm mail:check` | Test de SMTP-instellingen los van de site (`--send` stuurt een testbericht) |
-| `pnpm mollie:check` | Toont of de sleutel test of live is, en welke betaalmethodes aanstaan |
+| `pnpm stripe:check` | Toont of de sleutel test of live is, of het account betalingen aanneemt en wat de verificatie nog vraagt |
 
 Voor een commit: `pnpm typecheck && pnpm lint && pnpm build`.
 
@@ -94,21 +94,21 @@ Twee valkuilen: zet ze in **élke** omgeving die je draait (ook preview), en
 ```
 src/
   app/[locale]/          # routes; [family]/[category]/[product]
-  app/api/               # Mollie-webhook
+  app/api/               # Stripe-webhook
   components/            # UI, per domein gegroepeerd
   lib/
     address/             # postcode → straat en plaats
     cart/                # winkelwagenlogica, framework-onafhankelijk
     catalog/             # types.ts is het contract; providers erachter
     checkout/            # validatie, opslag, order-PDF
-    mollie/              # betaling aanmaken en status ophalen
+    payments/            # de naad: betaling aanmaken, status, terugbetaling
     orders/              # opslaan, afhandelen, mailen
     vehicle/             # kenteken en autokiezer
   i18n/                  # routing en request-configuratie
 messages/                # nl.json en en.json — zelfde sleutels, anders faalt de build
 docs/                    # beslissingen, huisstijl, API-notities
 public/                  # logo's, categoriefoto's, betaalmerken
-scripts/                 # controlescripts (mail, Mollie)
+scripts/                 # controlescripts (mail, catalogus, Stripe)
 ```
 
 Domeinlogica hoort in `src/lib/`, nooit in een component. Productdata komt
@@ -133,7 +133,7 @@ uitsluitend uit `src/lib/catalog/`.
 | 3 | Tyre24-catalogus (Products + Wearparts) | ✅ klaar |
 | 3b | Voertuigidentificatie en fitment | ✅ klaar |
 | 4 | Database (PostgreSQL + Prisma) en inkoop via de API | ⏳ orders als JSON, inkoop met de hand |
-| 5 | Betaling (Mollie, iDEAL) | ✅ klaar |
+| 5 | Betaling (Stripe Checkout, iDEAL) | ⚠️ gebouwd, wacht op goedkeuring van het account |
 | 6 | Velgen via de Alloys-API (3D-beelden, carID-matching) | ⏳ gepland |
 
 ## Juridisch (NL)

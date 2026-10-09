@@ -17,19 +17,20 @@ import {
   type CodeRejection,
 } from "@/lib/discounts/codes";
 import { mailIsConfigured } from "@/lib/mail";
-import { createPayment, mollieIsConfigured } from "@/lib/mollie/client";
+import { paymentProvider } from "@/lib/payments";
 import { saveOrder } from "@/lib/orders/store";
 import { bump } from "@/lib/stats/store";
 import type { StoredOrder } from "@/lib/orders/types";
 import { SITE_URL } from "@/lib/site";
 
 /**
- * De bestelling aanmaken en de klant naar Mollie sturen.
+ * De bestelling aanmaken en de klant naar het betaalscherm sturen.
  *
  * **Alle bedragen worden hier opnieuw uitgerekend.** De winkelwagen leeft in
  * `localStorage` en is dus door de klant aan te passen; wat de browser
  * meestuurt zijn alleen artikel-id's en aantallen. Prijs en naam komen vers uit
- * de catalogus, en het bedrag dat naar Mollie gaat komt uit dat verse document.
+ * de catalogus, en het bedrag dat naar de betaaldienst gaat komt uit dat verse
+ * document.
  */
 
 export type StartPaymentResult =
@@ -66,24 +67,26 @@ function accessToken(): string {
 }
 
 /**
- * Mollie eist een publiek bereikbare webhook-URL en weigert het aanmaken van de
- * betaling als hij naar localhost wijst. Op een ontwikkelmachine sturen we hem
- * dus niet mee; de terugkeerpagina handelt de betaling daar af.
+ * **Stripe neemt geen webhook-URL per betaling aan**: het adres staat in zijn
+ * dashboard. Deze waarde wordt dus genegeerd, en lokaal testen gaat met
+ * `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
  *
- * De keuze hangt aan de **hostnaam**, niet aan het protocol. Stond hier eerder
- * "alleen bij https", dan leverde een `NEXT_PUBLIC_SITE_URL` die per ongeluk op
- * `http://` staat een winkel op waar nooit een webhook wordt geregistreerd —
- * zonder één foutmelding. Nu gaat de URL gewoon mee en zegt Mollie het als hij
- * hem niet accepteert.
+ * Hij staat er nog omdat de naad hem draagt (`CreatePaymentInput.webhookUrl`):
+ * Mollie eiste een publiek bereikbare URL en weigerde het aanmaken van de
+ * betaling als hij naar localhost wees. Komt er ooit weer zo'n dienst, dan is
+ * dit de plek — inclusief de les die erin zit: de keuze hangt aan de
+ * **hostnaam**, niet aan het protocol. Stond hier "alleen bij https", dan gaf
+ * een `NEXT_PUBLIC_SITE_URL` die per ongeluk op `http://` staat een winkel waar
+ * nooit een webhook werd geregistreerd — zonder één foutmelding.
  */
-function webhookUrl(): string | undefined {
+function webhookUrl(provider: string): string | undefined {
   const { hostname } = new URL(SITE_URL);
   const local =
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
     hostname === "[::1]" ||
     hostname.endsWith(".local");
-  return local ? undefined : `${SITE_URL}/api/mollie/webhook`;
+  return local ? undefined : `${SITE_URL}/api/${provider}/webhook`;
 }
 
 function resolveLocale(value: unknown): Locale {
@@ -101,7 +104,8 @@ export async function startPayment(
   // Zonder betaalsleutel of zonder mail is bestellen niet af te maken. Dat nu
   // zeggen is eerlijker dan de klant laten betalen en daarna geen bevestiging
   // kunnen sturen.
-  if (!mollieIsConfigured() || !mailIsConfigured()) {
+  const payments = paymentProvider();
+  if (!payments.isConfigured() || !mailIsConfigured()) {
     return { ok: false, error: "notConfigured" };
   }
 
@@ -221,15 +225,16 @@ export async function startPayment(
     // wordt aangemaakt. In de browser zou deze telling te spammen zijn.
     await bump("payment_start");
 
-    const payment = await createPayment({
+    const hook = webhookUrl(payments.name);
+    const payment = await payments.createPayment({
       amountCents: document.totalGrossCents,
       description: `${COMPANY.name} bestelling ${document.reference}`,
       redirectUrl,
-      webhookUrl: webhookUrl(),
+      ...(hook ? { webhookUrl: hook } : {}),
       // Alleen wat nodig is om de bestelling terug te vinden. Naam, adres en
-      // artikelen horen niet in het Mollie-dashboard.
+      // artikelen horen niet in het dashboard van de betaaldienst.
       metadata: { reference: document.reference, token },
-      locale: locale === "nl" ? "nl_NL" : "en_US",
+      locale,
     });
 
     if (!payment.checkoutUrl) return { ok: false, error: "failed" };

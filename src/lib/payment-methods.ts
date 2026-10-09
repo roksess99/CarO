@@ -1,50 +1,41 @@
 /**
  * Betaalmethodes die de winkel accepteert.
  *
- * GEMETEN 2026-09-10 met `pnpm mollie:check` op het echte account: dit is wat
- * `GET /methods` teruggaf. Zet je in het Mollie-dashboard een methode aan of
- * uit, werk dan deze lijst bij — `pnpm mollie:check` toont de actuele stand.
- *
  * Waarom een vaste lijst en niet elke keer de API bevragen: de footer staat op
  * élke pagina, en dit verandert hooguit een paar keer per jaar. Een call per
  * paginaweergave zou de limiet van de betaaldienst opeten voor een rijtje dat
  * bijna nooit verandert.
  *
- * **De footer toont deze lijst niet meer als tekst**, maar als de officiële
- * merkbeelden van iDEAL/Wero en Mollie — zie `public/betaalmethodes/LEESMIJ.md`
- * voor welk beeld welke methode dekt en waarom juist die. Deze lijst blijft
- * de gemeten waarheid waar dat beeld aan getoetst wordt, en levert de naam
- * voor het vertrouwensblok bij de bestelknop (`components/trust-badges.tsx`).
+ * De footer toont dit niet als tekst maar als het officiële merkbeeld van
+ * iDEAL/Wero — zie `public/betaalmethodes/LEESMIJ.md`. Deze lijst levert de
+ * namen voor het vertrouwensblok bij de bestelknop
+ * (`components/trust-badges.tsx`).
  *
- * GEMETEN 2026-09-12 op de **live** sleutel gaf `GET /methods` letterlijk:
- * `iDEAL | Wero, Card, Pay with Klarna, Pay By Bank`. iDEAL en Wero zijn bij
- * Mollie dus **één** methode; hieronder staan ze los omdat de klant ze als
- * twee keuzes kent.
+ * **NIET GEMETEN — stand 2026-10-09.** Hier stond de uitkomst van
+ * `pnpm mollie:check` op het live Mollie-account. Mollie is weg
+ * (@docs/DECISIONS.md #30) en het Stripe-account wordt nog geverifieerd, dus
+ * dit is op dit moment een **voornemen en geen meting**: het is wat er in het
+ * Stripe-dashboard aangezet moet worden, niet wat de klant aantoonbaar kan
+ * kiezen.
  *
- * **Riverty stond hier tot 2026-09-12 wél in.** Die kwam uit de meting van
- * 2026-09-10, en die liep nog op de testsleutel. Test en live zijn bij Mollie
- * gescheiden werelden met elk hun eigen methodes: op het echte account staat
- * Riverty niet aan. Een methode noemen die de klant op het betaalscherm niet
- * kan kiezen is een loze belofte, dus hij is eruit. Meet dit opnieuw met de
- * live sleutel zodra je in het dashboard iets aan- of uitzet.
- */
-/**
- * GEMETEN 2026-10-08 op de live sleutel, nadat de eigenaar in het dashboard
- * zijn keuze had gemaakt: `ideal`, `creditcard`, `applepay`, `googlepay` en
- * `paybybank` staan op **`pending-review`** — aangevraagd en in behandeling.
- * Klarna en Riverty zijn niet aangevraagd en staan daarom niet meer in deze
- * lijst; Klarna stond er wél in en was daarmee een belofte die de klant op het
- * betaalscherm niet kon waarmaken.
+ * Dat onderscheid is eerder misgegaan. Klarna stond hier maandenlang in omdat
+ * een meting op de testsleutel hem meegaf, terwijl hij op het live account
+ * niet aanstond — een belofte die de klant op het betaalscherm niet kon
+ * waarmaken.
  *
- * Zolang de beoordeling loopt kan er niets gekozen worden — dat meldt de
- * winkel zelf (@docs/DECISIONS.md #29). Meet opnieuw met `pnpm mollie:check`
- * zodra ze op `activated` staan.
+ * GEMETEN 2026-10-09 met de testsleutel gaf `pnpm stripe:check --create`:
+ * `card, bancontact, eps, klarna, link, mb_way, amazon_pay, satispay`.
+ * **iDEAL zat daar niet bij** — die moet in het Stripe-dashboard aangezet
+ * worden (Settings → Payment methods). Die meting is daarom géén reden om deze
+ * lijst te wijzigen: hij beschrijft wat er per ongeluk aanstaat, niet wat de
+ * winkel aanbiedt. Meet opnieuw zodra iDEAL aanstaat en de verificatie rond is.
+ *
+ * Wero valt op: Mollie leverde dat samen met iDEAL als één methode, en of Stripe
+ * het apart aanbiedt is nog niet vastgesteld — daarom staat hij hieronder niet.
  */
 export const PAYMENT_METHODS = [
   "iDEAL",
-  "Wero",
   "Creditcard",
   "Apple Pay",
   "Google Pay",
-  "Betaal via je bank",
 ] as const;

@@ -363,7 +363,7 @@ export async function markReturnReceived(
 }
 
 /**
- * Terugbetaald. Wordt pas aangeroepen als Mollie het bedrag heeft aangenomen;
+ * Terugbetaald. Wordt pas aangeroepen als de betaaldienst het bedrag heeft aangenomen;
  * het `re_…`-kenmerk is het bewijs.
  *
  * De voorwaarde in de WHERE is wat dubbel terugbetalen tegenhoudt: twee

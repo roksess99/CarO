@@ -138,9 +138,13 @@ De browser van de bezoeker praat met niemand anders dan met ons.
 
 Twee uitzonderingen die de bezoeker zelf in gang zet:
 
-- **Mollie** — de klant gaat naar het betaalscherm van Mollie en is dan op hun
+- **Stripe** — de klant gaat naar het betaalscherm van Stripe en is dan op hun
   domein. Wat hij daar invult (rekening- of kaartnummer) komt nooit in onze
   winkel; wij sturen alleen het bedrag en ons ordernummer mee.
+
+  **Dit was tot 2026-10-09 Mollie** (@docs/DECISIONS.md #30). Bestellingen van
+  vóór die datum zijn bij Mollie afgehandeld en hun betaalgegevens staan daar;
+  dat verandert niet doordat wij van dienst wisselen.
 - **Het adres opzoeken** en **het kenteken opzoeken** gaan via onze server, niet
   vanuit de browser. Zie docs/api/POSTCODE.md en docs/api/OVERHEID-IO.md.
 
@@ -166,3 +170,9 @@ Komt er een partij bij die gegevens van ons ontvangt, dan hoort die ook in de
 lijst "Partijen die gegevens van ons ontvangen" op de pagina. Mollie stond daar
 een maand lang niet in omdat de verklaring van vóór de betaalkoppeling dateerde;
 dat is 2026-09-12 rechtgezet.
+
+**En gaat een partij erúf, dan ook.** Mollie is 2026-10-09 vervangen door
+Stripe; `privacy.thirdMollie` heet nu `privacy.thirdStripe` en
+`privacy.lastUpdated` staat in beide talen op 9 oktober 2026. Een
+privacyverklaring die een dienst noemt die je niet meer gebruikt is net zo
+onjuist als een die er één verzwijgt.

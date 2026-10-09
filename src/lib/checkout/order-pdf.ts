@@ -411,7 +411,7 @@ function drawFooter(
 ): void {
   // "nog niet betaald" stond hier tot 2026-09-11, en dat klopte niet: deze PDF
   // wordt alleen aangemaakt door lib/orders/notify.ts, en die draait pas nadat
-  // Mollie de betaling heeft bevestigd. De klant las dus "we hebben je betaling
+  // de betaaldienst de betaling heeft bevestigd. De klant las dus "we hebben je betaling
   // ontvangen" in de mail en "nog niet betaald" in de bijlage.
   //
   // Met een factuurnummer ís dit een factuur: dat nummer komt uit een

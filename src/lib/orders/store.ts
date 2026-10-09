@@ -7,7 +7,7 @@ import type { OrderStatus, StoredOrder } from "./types";
  * Opslag van bestellingen in MySQL (docs/DECISIONS.md #13).
  *
  * Tot 2026-09-16 was dit één JSON-bestand per bestelling. Dat was genoeg voor
- * wat de opslag toen moest kunnen — een bestelling terugvinden als Mollie zich
+ * wat de opslag toen moest kunnen — een bestelling terugvinden als de betaaldienst zich
  * meldt, en onthouden dat de mails eruit zijn. Het beheerpaneel vraagt meer:
  * een aaneengesloten factuurreeks en een teller op kortingscodes, en die
  * hebben een transactie nodig die een bestand niet kan geven.

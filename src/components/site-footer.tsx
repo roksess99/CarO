@@ -45,10 +45,6 @@ export function SiteFooter() {
   const t = useTranslations("footer");
   const tFamily = useTranslations("family");
   const locale = useLocale();
-  // Mollie levert de badge in vijf talen; wij gebruiken er twee. Elke andere
-  // locale valt terug op Engels in plaats van op een leeg beeld.
-  const mollieLocale = locale === "nl" ? "nl" : "en";
-
   return (
     <footer className="mt-16 border-t border-border">
       {/* pb-28 op mobiel: de zwevende tabbalk hangt over de onderkant van
@@ -177,14 +173,16 @@ export function SiteFooter() {
             <h2 className="eyebrow text-xs text-foreground">
               {t("paymentTitle")}
             </h2>
-            {/* Geen tegel eromheen: beide merkbeelden dragen hun eigen
-                achtergrond, een gele en een witte pil. Een witte kaart met
-                rand erachter maakte er een sticker-in-een-lijstje van.
+            {/* Geen tegel eromheen: het merkbeeld draagt zijn eigen gele
+                achtergrond. Een witte kaart met rand erachter maakte er een
+                sticker-in-een-lijstje van.
 
-                Onder elkaar en niet naast elkaar: het Mollie-blok is ruim
-                vier keer zo breed als hoog, dus naast de lockup bleef er zo
-                weinig breedte over dat de regel "Veilige betalingen mogelijk
-                gemaakt door mollie" onleesbaar klein werd. */}
+                **Hier stond ook het Mollie-blok.** Dat is 2026-10-09 weg: we
+                betalen niet meer via Mollie, en het logo van een dienst die je
+                niet gebruikt is een onwaarheid in je voettekst
+                (@docs/DECISIONS.md #30). Een "Powered by Stripe"-badge komt
+                er pas als het officiële bestand er is — zelf natekenen mag van
+                geen enkele merkkit. */}
             <ul className="mt-4 space-y-3">
               <li>
                 {/* iDEAL en Wero leveren maar één versie: geel. Die staat
@@ -196,29 +194,6 @@ export function SiteFooter() {
                   width={480}
                   height={182}
                   className="h-12 w-auto"
-                />
-              </li>
-              <li>
-                {/* Mollie levert het blok in een witte en een zwarte pil. Wij
-                    gebruiken in béide thema's de witte, en dat pakt in allebei
-                    goed uit: in lichte modus lost de pil op in de pagina en
-                    blijft alleen de regel met de kaartlogo's over, in donkere
-                    modus is het een strak wit vlak.
-
-                    De zwarte pil is daarmee vervallen. Die stond in donkere
-                    modus namelijk net níet gelijk aan de achtergrond
-                    (#0F0B08 tegen #0E1013): een vaag warm rechthoekje, en
-                    omkleuren mag niet van de merkkit.
-
-                    Eén bestand per taal scheelt bovendien een halve download:
-                    een tweede <img> achter `dark:hidden` wordt evengoed
-                    opgehaald, en deze badges zijn 35–45 kB per stuk. */}
-                <Image
-                  src={`/betaalmethodes/mollie-${mollieLocale}.svg`}
-                  alt={t("mollieAlt")}
-                  width={593}
-                  height={139}
-                  className="h-auto w-full max-w-xs"
                 />
               </li>
             </ul>

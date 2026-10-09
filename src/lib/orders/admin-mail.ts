@@ -59,7 +59,7 @@ interface PurchaseRow {
  * familie die daar niet meer in staat — en er zijn er al twee verdwenen
  * (gereedschap en gebruikte onderdelen, 2026-09-05). Deze mail wordt verstuurd
  * vanuit `settle.ts`, dat een fout hier **bewust niet afvangt**: dan blijft
- * `notifiedAt` leeg en probeert Mollie het een dag lang opnieuw — met elke
+ * `notifiedAt` leeg en probeert de betaaldienst het dagenlang opnieuw — met elke
  * keer een nieuwe bevestigingsmail naar de klant, want die gaat als eerste de
  * deur uit. Eén onbekende familie mag dat niet veroorzaken.
  */

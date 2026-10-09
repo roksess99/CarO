@@ -474,7 +474,7 @@
     "backToCart": "Back to cart",
     "pay": "Order and pay",
     "payBusy": "Redirecting…",
-    "payNote": "You complete the payment at Mollie. 14 days to change your mind.",
+    "payNote": "You complete the payment at Stripe. 14 days to change your mind.",
     "payErrors": {
       "invalidDetails": "Please check the fields marked in red.",
       "emptyCart": "Your cart is empty — there is nothing to pay for.",
@@ -576,9 +576,8 @@
     "myCarLink": "My car",
     "moreMakes": "More makes",
     "paymentTitle": "Payment methods",
-    "paymentNote": "Payments run through Mollie. Your bank and card details never reach us.",
+    "paymentNote": "Payments run through Stripe. Your bank and card details never reach us.",
     "idealWeroAlt": "iDEAL and Wero",
-    "mollieAlt": "Secure payments powered by Mollie — Mastercard, Visa, American Express and more",
     "reviewsLink": "Reviews"
   },
   "terms": {
@@ -625,7 +624,7 @@
   "privacy": {
     "title": "Privacy and cookies",
     "intro": "This shop stores as little as possible. Below is exactly what is kept on your device, what goes into our database when you order, why, and for how long.",
-    "lastUpdated": "Last updated: 19 September 2026",
+    "lastUpdated": "Last updated: 9 October 2026",
     "storageTitle": "What we store on your device",
     "storageIntro": "The law makes no distinction between cookies and other browser storage: the same rules apply to localStorage. That is why everything is listed together here.",
     "tableName": "Name",
@@ -669,7 +668,7 @@
     "thirdPartiesTitle": "Parties that receive data from us",
     "thirdPartiesBody": "We do not sell your data and share it only where needed to fulfil your order:",
     "thirdSupplier": "Our wholesaler — receives the details needed to deliver your parcel when you place an order.",
-    "thirdMollie": "Mollie — handles your payment. We pass on only the amount and our order number, not your name, address or what you ordered. What you enter on the payment screen, such as your account or card number, goes straight to Mollie and your bank; it never reaches our shop.",
+    "thirdStripe": "Stripe — handles your payment. We pass on only the amount and our order number, not your name, address or what you ordered. What you enter on the payment screen, such as your account or card number, goes straight to Stripe and your bank; it never reaches our shop.",
     "thirdRdw": "overheid.io — provides the RDW vehicle data. Receives the licence plate you enter, and nothing else about you.",
     "thirdPostcode": "gratis-postcodedata.nl — looks up the street and town for your postcode. Receives only your postcode and house number and nothing else about you: the request goes through our server, so your IP address is not shared either.",
     "thirdHosting": "Our hosting provider — processes technical data such as your IP address in order to serve the site.",

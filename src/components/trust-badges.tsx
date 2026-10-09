@@ -9,7 +9,7 @@ import { PAYMENT_METHODS } from "@/lib/payment-methods";
  * leest niemand het meer.
  *
  * Elke regel is een bestaande afspraak van de winkel — btw en herroepingsrecht
- * staan in CLAUDE.md, de betaalmethodes zijn gemeten met `pnpm mollie:check`
+ * staan in CLAUDE.md, de betaalmethodes komen uit `lib/payment-methods.ts`
  * (lib/payment-methods.ts). Geen keurmerken die we niet hebben, geen
  * "30 dagen" waar er veertien geldt.
  */

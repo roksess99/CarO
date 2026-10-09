@@ -474,7 +474,7 @@
     "backToCart": "Terug naar winkelwagen",
     "pay": "Bestellen en betalen",
     "payBusy": "Je wordt doorgestuurd…",
-    "payNote": "Je rondt de betaling af bij Mollie. 14 dagen bedenktijd.",
+    "payNote": "Je rondt de betaling af bij Stripe. 14 dagen bedenktijd.",
     "payErrors": {
       "invalidDetails": "Controleer de rood gemarkeerde velden.",
       "emptyCart": "Je winkelwagen is leeg — er valt niets af te rekenen.",
@@ -576,9 +576,8 @@
     "myCarLink": "Mijn auto",
     "moreMakes": "Meer merken",
     "paymentTitle": "Betaalmethoden",
-    "paymentNote": "Betalen gaat via Mollie. Je bank- en kaartgegevens komen nooit bij ons binnen.",
+    "paymentNote": "Betalen gaat via Stripe. Je bank- en kaartgegevens komen nooit bij ons binnen.",
     "idealWeroAlt": "iDEAL en Wero",
-    "mollieAlt": "Veilige betalingen mogelijk gemaakt door Mollie — Mastercard, Visa, American Express en meer",
     "reviewsLink": "Beoordelingen"
   },
   "terms": {
@@ -625,7 +624,7 @@
   "privacy": {
     "title": "Privacy en cookies",
     "intro": "Deze webshop slaat zo min mogelijk op. Hieronder staat precies wat er op je apparaat wordt bewaard, wat er bij een bestelling in onze database komt, waarom, en hoe lang.",
-    "lastUpdated": "Laatst bijgewerkt: 19 september 2026",
+    "lastUpdated": "Laatst bijgewerkt: 9 oktober 2026",
     "storageTitle": "Wat we op je apparaat opslaan",
     "storageIntro": "De wet maakt geen onderscheid tussen cookies en andere opslag in je browser: voor localStorage gelden dezelfde regels. Daarom staat alles hier in één overzicht.",
     "tableName": "Naam",
@@ -669,7 +668,7 @@
     "thirdPartiesTitle": "Partijen die gegevens van ons ontvangen",
     "thirdPartiesBody": "We verkopen je gegevens niet en delen ze alleen waar dat nodig is om je bestelling uit te voeren:",
     "thirdSupplier": "Onze groothandel — ontvangt bij een bestelling de gegevens die nodig zijn om het pakket bij jou te bezorgen.",
-    "thirdMollie": "Mollie — handelt je betaling af. Wij geven alleen het bedrag en ons ordernummer door, niet je naam, adres of wat je besteld hebt. Wat je op het betaalscherm invult, zoals je rekening- of kaartnummer, geef je rechtstreeks aan Mollie en je bank; dat komt nooit in onze winkel.",
+    "thirdStripe": "Stripe — handelt je betaling af. Wij geven alleen het bedrag en ons ordernummer door, niet je naam, adres of wat je besteld hebt. Wat je op het betaalscherm invult, zoals je rekening- of kaartnummer, geef je rechtstreeks aan Stripe en je bank; dat komt nooit in onze winkel.",
     "thirdRdw": "overheid.io — levert de RDW-voertuiggegevens. Ontvangt het kenteken dat je invult, en verder niets over jou.",
     "thirdPostcode": "gratis-postcodedata.nl — zoekt straat en woonplaats op bij je postcode. Ontvangt alleen je postcode en huisnummer en verder niets over jou: de vraag gaat via onze server, dus ook je IP-adres komt er niet.",
     "thirdHosting": "Onze hostingpartij — verwerkt technische gegevens zoals je IP-adres om de site te kunnen serveren.",

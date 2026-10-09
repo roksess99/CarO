@@ -2611,6 +2611,166 @@ eruit als een lege toestand. Daarom dezelfde oplossing.
 
 ---
 
+## 30. Een tweede kassa, en een naad ertussen — VASTGESTELD 2026-10-09
+
+Mollie wees de aanvraag af met "product of dienst niet geaccepteerd", en na een
+tweede aanvraag definitief. De winkel moest dus naar een andere betaaldienst, en
+toen bleek hoe duur de koppeling eigenlijk vastzat: **acht aanroepen in vier
+bestanden**, allemaal rechtstreeks op `lib/mollie/client.ts`.
+
+Daarom eerst een naad en pas daarna Stripe. `lib/payments/` kent precies vijf
+bewerkingen — `isConfigured`, `createPayment`, `getPayment`, `createRefund`,
+`health` — en dat is niet toevallig het aantal: het is wat de winkel gébruikt.
+Een naad die alles van beide diensten doorlaat is geen naad.
+
+| Keuze | Waarom |
+|---|---|
+| De naad blijft, ook nu er één dienst is | Dat is de hele les van deze dag. Een naad met één aanbieder kost niets; die er niet is kost een dag |
+| Geen `PAYMENT_PROVIDER`-schakelaar | Een keuzeschakelaar met één keuze is geen keuze — hij suggereert dat de andere kant nog werkt |
+| Geen `stripe`-pakket | Vier endpoints, form-encoded HTTP, en de webhookhandtekening is HMAC-SHA256 uit `node:crypto`. Zelfde afweging als destijds bij Mollie |
+
+### Mollie is er diezelfde dag helemaal uit — op verzoek van de eigenaar
+
+De eerste opzet liet Mollie als standaard staan, met Stripe ernaast. De eigenaar
+koos ervoor hem meteen te verwijderen: definitief afgewezen is definitief, en
+code voor een dienst die je niet meer kunt gebruiken is alleen maar iets om
+langs te lezen.
+
+Weg zijn: `lib/mollie/`, `app/api/mollie/webhook/`, `scripts/check-mollie.mjs`,
+`lib/payments/mollie-provider.ts`, de twee `mollie-*.svg` uit
+`public/betaalmethodes/` en `MOLLIE_API_KEY` uit `.env.example`.
+
+**Vier dingen die daarbij geen comment maar een handeling vroegen:**
+
+1. **De footer.** Daar stond het blok "Veilige betalingen mogelijk gemaakt door
+   mollie". Het logo van een betaaldienst die je niet gebruikt is een onwaarheid
+   tegenover de klant, niet alleen een verouderd plaatje. Er is **niets** voor
+   in de plaats gekomen: een "Powered by Stripe"-badge mag pas als het
+   officiële bestand er is, en natekenen mag van geen enkele merkkit.
+2. **De privacyverklaring.** Mollie stond in de lijst "Partijen die gegevens van
+   ons ontvangen". Daar hoort nu Stripe te staan, en `privacy.lastUpdated` is in
+   beide talen bijgewerkt. Een verklaring die een verwerker noemt die je niet
+   meer gebruikt is net zo onjuist als een die er één verzwijgt.
+3. **`lib/payment-methods.ts` is van meting naar voornemen gegaan**, en dat
+   staat er nu ook zo boven. De lijst kwam uit `pnpm mollie:check` op het live
+   account; voor Stripe is er nog niets gemeten omdat het account nog
+   geverifieerd wordt. Zodra dat rond is geeft `pnpm stripe:check --create` het
+   echte rijtje (`payment_method_types`). Klarna stond hier ooit maandenlang in
+   na een meting op een testsleutel — precies de fout die dit label voorkomt.
+4. **Oude bestellingen kunnen niet meer terugbetaald worden vanuit het paneel.**
+   Hun `payment_id` is een `tr_…` en dat kenmerk bestaat alleen bij Mollie.
+   `isLegacyMolliePayment()` vangt dat af en `/beheer/retouren` zegt het met
+   zoveel woorden: terugboeken kan voor die bestellingen alleen nog in het
+   Mollie-dashboard. Zonder die controle was het "No such payment_intent"
+   geweest — een melding waar de beheerder niets aan heeft op het moment dat
+   een klant zijn geld terug wil.
+
+**De migraties zijn niet aangepast.** In `0001`, `0002` en `0009` staat Mollie
+in commentaar. Die bestanden zijn al uitgevoerd en vormen het verslag van wat er
+toen gold; een verslag herschrijf je niet omdat de werkelijkheid erna veranderde.
+
+### Wat er onderweg stuk zou zijn gegaan
+
+**`orders.payment_id` stond op `VARCHAR(32)`.** Een Mollie-kenmerk (`tr_…`) past
+daar ruim in; een Stripe Checkout Session (`cs_test_…`) is ruim zestig tekens.
+Gevonden door de kolom op te zoeken vóór de eerste betaling, niet erna —
+migratie `0011`. Zonder die verbreding was de eerste echte betaling niet aan de
+bestelling te koppelen geweest, ook niet bij een terugbetaling.
+
+**Een sessie met `status: "complete"` is niet hetzelfde als betaald.** Bij een
+methode die na de terugkeer nog verwerkt wordt staat er
+`payment_status: "unpaid"`. Twee velden samen bepalen de status; één ervan lezen
+zou een onbetaalde bestelling als betaald wegzetten.
+
+### Wat de generator van Stripe voorschreef en niet is overgenomen
+
+Checkout Studio levert een kant-en-klare opdracht aan. Drie dingen daaruit zijn
+bewust anders gedaan; de redenen staan in @docs/STRIPE.md.
+
+1. **Geen `Price`-objecten maar het bevroren totaalbedrag in één regel.** De
+   prijs van een artikel is hier een berekening (opslag, korting,
+   marge-ondergrens), geen vast object in een dashboard.
+2. **Geen apart `/api/create-checkout-session`.** Dat eindpunt zou regels en
+   bedragen aannemen, en een bedrag dat naar een betaaldienst gaat komt nooit
+   uit de browser. De bestaande Server Action blijft de enige ingang.
+3. **`ui_mode`, `integration_identifier` en `origin_context` gaan niet mee.**
+   Niet te controleren zonder sleutel, en Stripe wijst een onbekende parameter
+   met een harde fout af — dan werkt de kassa helemaal niet. Na te kijken met
+   `pnpm stripe:check --create` zodra er een sandbox-sleutel is.
+
+### De eerste meting — GEMETEN 2026-10-09 met de testsleutel
+
+De eigenaar zette de testsleutel en het webhookgeheim in `.env`. Daarmee is het
+geen doordenking meer:
+
+| Wat | Uitkomst |
+|---|---|
+| De sleutel | werkt, testmodus |
+| `charges_enabled` | **false** — de verificatie loopt nog |
+| Checkout-sessie aanmaken | **lukt gewoon** |
+| Lengte van het sessiekenmerk | **66 tekens** |
+| Methodes op die sessie | `card, bancontact, eps, klarna, link, mb_way, amazon_pay, satispay` |
+
+**Twee dingen die alleen een meting kon opleveren.**
+
+**1. `charges_enabled: false` blokkeert een testbetaling niet.** De
+gezondheidscontrole zette `ready` gelijk aan die vlag — overgenomen uit de
+Mollie-situatie, waar een account zonder actieve methode het aanmaken van een
+betaling wél weigert. Bij Stripe in testmodus gaat er geen geld om, dus zegt die
+vlag daar niets. Had dit zo gestaan, dan had het afrekenscherm precies dichtgezeten
+op het moment dat de eigenaar het wilde uitproberen — een melding die klopt
+("het account neemt geen betalingen aan") met een gevolg dat niet klopt.
+
+`ready` is nu `live ? charges_enabled : true`, en `pnpm stripe:check` geeft om
+dezelfde reden alleen op een live sleutel een foutcode. De bewaking op de live
+kant blijft dus volledig overeind; dat is waar hij voor bedoeld is.
+
+**2. iDEAL staat er niet bij.** Acht methodes, en de enige die er voor een
+Nederlandse webshop toe doet ontbreekt — terwijl `bancontact`, `eps`, `mb_way`
+en `satispay` er ongevraagd in zitten. Dat is geen code maar een instelling in
+het dashboard (Settings → Payment methods), mogelijk pas beschikbaar na de
+verificatie. **Zolang dit zo is, is de winkel niet open te doen**, hoe goed de
+koppeling verder ook werkt.
+
+En het bewijs voor migratie `0011`: 66 tekens tegen een kolom van 32.
+
+### De afkapping is geen theorie gebleken — GEMETEN 2026-10-09
+
+Bij het nakijken van de database stonden er twee Stripe-bestellingen die er niet
+hoorden te zijn:
+
+| Bestelling | Status bij ons | Status bij Stripe | Kenmerk in de database |
+|---|---|---|---|
+| `CARO-20261009-VSD1` | `awaiting_payment` | **`complete` / `paid`**, € 112,27 | `cs_…`, **32 tekens** |
+| `CARO-20261009-B9XJ` | `awaiting_payment` | **`complete` / `paid`**, € 112,27 | `cs_…`, **32 tekens** |
+
+Ze zijn aangemaakt vóórdat de migratie draaide. **En daarmee staat vast wat
+hierboven nog een aanname was: deze server weigert de rij niet, hij kapt hem
+stil af.** In `0011` stond letterlijk dat de strikte modus de rij zou weigeren
+— dat is onjuist en is daar gecorrigeerd.
+
+Het gevolg is het ergste soort fout: er komt geen foutmelding. De klant betaalt,
+Stripe zegt `paid`, en bij ons blijft de bestelling op "wacht op betaling" staan
+omdat `getPayment` een afgekapt kenmerk nooit terugvindt. Geen afhandeling, geen
+factuurnummer, geen mail — en niemand die het merkt behalve de klant.
+
+Dat dit in testmodus gebeurde is geluk, geen ontwerp. Met een live sleutel waren
+dit twee klanten geweest die betaald hadden en niets hoorden.
+
+**Wat eruit te leren valt:** een kolombreedte is geen opmaak maar een
+aanname over de buitenwereld. De vorige leverancier gebruikte 24 tekens, de
+nieuwe 66, en niets in de code sprak dat tegen — de database deed dat ook niet,
+hij paste de werkelijkheid gewoon aan het veld aan.
+
+### Nog steeds niet aan
+
+De winkel kan niet betalen zolang `charges_enabled` false is op de live sleutel,
+en dat zegt hij ook: rood in het beheerpaneel, en op het afrekenscherm vóórdat de
+klant zijn gegevens invult (#29). Wat nog niet gemeten is: een betaling die
+werkelijk tot `paid` komt, en de webhook die ondertekend binnenkomt.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -2727,6 +2887,8 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
+| 2026-10-09 | Mollie volledig uit de code, Stripe is de enige betaaldienst | Definitief afgewezen is definitief; het logo stond ook nog in de footer en de naam in de privacyverklaring. Oude bestellingen (`tr_…`) zijn daarmee niet meer vanuit het paneel terug te betalen (#30) |
+| 2026-10-09 | Betaaldienst achter een naad (`lib/payments/`), Stripe erachter | Mollie wees de aanvraag definitief af; de koppeling zat met acht aanroepen in vier bestanden vast, en een volgende wissel mag niet opnieuw een dag kosten (#30) |
 | 2026-10-08 | Een melding zodra er niet betaald kan worden, in het paneel én op het afrekenscherm | Elke betaalmethode stond twee weken op `pending-boarding` na de naamswijziging bij de KvK, en de winkel toonde gewoon een betaalknop; de klant merkte het pas na het invullen van zijn adres (#29) |
 | 2026-10-08 | De winkel heet CaroParts, ook op de factuur | De eigenaar koos de naam en liet hem bij de KvK inschrijven; hij staat nu op één plek in de code (`COMPANY.name`) in plaats van in elf paginatitels. Het beeldmerk blijft CarO (#3) |
 | 2026-10-08 | Merkfilter bij een zoekopdracht op bandenmaat, geteld over de treffers | De filters van de leverancier horen bij een categorie en vervallen bij een maatzoekopdracht; zonder merkfilter was 200 banden eindeloos scrollen, en de eigen telling geeft bovendien echte aantallen (#28) |

@@ -41,7 +41,7 @@ const SHIPPING_COST: Record<ReturnReason, string> = {
  * De knop "terugbetalen" staat er ook al vóór "ontvangen": bij een verkeerd
  * geleverd artikel wil je soms eerst het geld terugboeken en dan pas het
  * pakket afwachten. Wat níet kan is twee keer terugbetalen; dat houdt de
- * database tegen, en Mollie via de idempotentiesleutel.
+ * database tegen, en de betaaldienst via de idempotentiesleutel.
  */
 export default async function RetourenPage() {
   await requirePermission("retouren");

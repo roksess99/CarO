@@ -8,7 +8,7 @@
     "db:check": "node scripts/check-db.mjs",
     "db:migrate": "node scripts/migrate-db.mjs",
     "mail:check": "node scripts/check-mail.mjs",
-    "mollie:check": "node scripts/check-mollie.mjs",
+    "stripe:check": "node scripts/check-stripe.mjs",
     "orders:migrate": "node scripts/migrate-orders.mjs",
     "dev": "next dev",
     "build": "next build --webpack",
