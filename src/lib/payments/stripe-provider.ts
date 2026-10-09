@@ -24,6 +24,20 @@ import {
 
 const API = "https://api.stripe.com/v1";
 
+/**
+ * Een live sleutel heet `sk_live_…` of — als je hem in het dashboard beperkt
+ * hebt tot alleen wat deze winkel nodig heeft — `rk_live_…`.
+ *
+ * **Dat tweede voorvoegsel stond hier eerst niet in**, en dat was stil gevaarlijk:
+ * een beperkte live sleutel gold dan als testsleutel, en daarmee viel de controle
+ * op `charges_enabled` weg die het afrekenen dichthoudt zolang Stripe het account
+ * niet heeft goedgekeurd (@docs/DECISIONS.md #30). Gevonden 2026-10-09 toen de
+ * eigenaar een `rk_live_`-sleutel instelde.
+ */
+export function isLiveKey(key: string): boolean {
+  return /^(sk|rk)_live_/.test(key);
+}
+
 function secretKey(): string {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error("STRIPE_SECRET_KEY ontbreekt");
@@ -301,7 +315,7 @@ export const stripeProvider: PaymentProvider = {
    */
   async health(): Promise<PaymentHealth> {
     const key = process.env.STRIPE_SECRET_KEY ?? "";
-    const live = key.startsWith("sk_live_");
+    const live = isLiveKey(key);
     const base = { provider: "stripe" as const, live, methods: [] };
 
     if (key.length === 0) {

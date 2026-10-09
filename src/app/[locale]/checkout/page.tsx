@@ -10,6 +10,31 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
+/**
+ * Nooit uit de cache. Deze pagina draagt één gegeven dat van dít moment is:
+ * kan er betaald worden (@docs/DECISIONS.md #29)?
+ *
+ * GEMETEN 2026-10-09 op caroparts.nl, en het was geen theorie. De Engelse
+ * afrekenpagina stond tien van de tien keer op "Checkout is unavailable"
+ * terwijl de Nederlandse gewoon open was — zelfde code, zelfde sleutel. De
+ * antwoordkoppen verklaarden het:
+ *
+ *     x-nextjs-cache: HIT
+ *     x-nextjs-prerender: 1
+ *     cache-control: s-maxage=86400, stale-while-revalidate=31449600
+ *
+ * De pagina was één keer gerenderd toen er niet betaald kon worden, en dat
+ * antwoord werd een etmaal lang uitgeserveerd — en daarna nog een jaar als
+ * verouderd antwoord. Een `?x=`-cachebuster hielp niet. De twee talen liepen
+ * uiteen omdat hun cache-regels op verschillende momenten zijn gevuld.
+ *
+ * Dit is erger dan een verouderde melding: hij werkt ook de andere kant op.
+ * Een pagina die gerenderd is terwijl betalen kón, blijft een werkende
+ * betaalknop tonen nadat de betaaldienst eruit ligt — precies de stille
+ * storing waarvoor die melding is gebouwd.
+ */
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "checkout" });
