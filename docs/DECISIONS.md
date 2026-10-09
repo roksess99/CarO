@@ -619,20 +619,32 @@ op **mockdata** — de site ziet er dan compleet uit terwijl er geen enkel echt
 product in staat. Dat kostte een dag zoeken naar een verkeerd vermoeden
 ("mijn deploy is niet doorgekomen"), dus hier de checklist.
 
+**Bijgewerkt 2026-10-09**, en niet uit het hoofd: de lijst hieronder is
+afgezet tegen `grep -r process.env` over `src/`, `scripts/` en
+`instrumentation.ts`. Er stond nog `MOLLIE_API_KEY` in (die bestaat niet meer,
+#30), de vijf `DATABASE_*` ontbraken volledig terwijl de winkel zonder database
+geen bestelling kan opslaan, en `ORDER_DATA_DIR` stond erin als vereiste terwijl
+alleen het eenmalige migratiescript hem nog leest.
+
 | Variabele | Waarvoor | Zonder |
 |---|---|---|
 | `TYRE24_API_TOKEN` | Products v1.3: banden, velgen, toebehoren | Hele catalogus valt terug op de mock |
 | `TYRE24_WEARPARTS_TOKEN` | Wearparts v1.6: onderdelen, kenteken → auto | Onderdelen leeg, geen fitment |
+| `DATABASE_HOST`, `_PORT`, `_NAME`, `_USER`, `_PASSWORD` | Bestellingen, facturen, kortingen, beheerders (#13) | Geen bestelling op te slaan, geen paneel, geen factuurnummer |
+| `STRIPE_SECRET_KEY` | Betalingen (@docs/STRIPE.md) | Afrekenscherm meldt dat betalen niet kan |
+| `STRIPE_WEBHOOK_SECRET` | De webhook die betalingen bevestigt | De webhook weigert élk bericht; afhandeling hangt dan aan de terugkeerpagina |
 | `OVERHEID_IO_API_KEY` | RDW-gegevens bij het kenteken | "Tijdelijk niet beschikbaar" |
-| `NEXT_PUBLIC_SITE_URL` | Canonical en hreflang | Verkeerde URL's in de SEO-tags |
+| `NEXT_PUBLIC_SITE_URL` | Canonical, hreflang én de terugkeer-URL na betalen | Verkeerde URL's in de SEO-tags, en de klant keert terug op het verkeerde domein |
 | `SMTP_*` (vier) | Contactformulier en orderbevestiging | Geen mail, en bestellen wordt geweigerd |
-| `MOLLIE_API_KEY` | Betalingen (#10) | Checkout meldt dat betalen niet kan |
+| `ADMIN_TOTP_KEY` | Versleutelt het 2FA-geheim van beheerders (#12) | Inloggen op het paneel werkt niet |
 | `ORDER_ADMIN_EMAIL` | Waar de inkoopmail heen gaat | Valt terug op het adres in `src/lib/company.ts` |
-| `ORDER_DATA_DIR` | Waar bestellingen bewaard worden | Komt in `<project>/.data/orders` — een nieuwe deploy neemt ze mee in de opruiming (#10) |
+| `CARO_JOB_TOKEN` | De dagelijkse taak via `/api/jobs/prices` (#14, #18) | De cron-taak krijgt 401; prijsmeting en beoordelingsuitnodigingen blijven liggen |
 
 Optioneel: `CARO_MIN_MARGIN_PERCENT` en `CARO_USE_RECOMMENDED_PRICE` (#5),
-`TYRE24_BASE_URL_NL`/`_DE` als noodknop. `TYRE24_ALLOYS_TOKEN` wordt nog
-nergens gelezen (fase 6).
+`TYRE24_BASE_URL_NL`/`_DE` als noodknop, `ADMIN_SETUP_TOKEN` voor de allereerste
+beheerder. `TYRE24_ALLOYS_TOKEN` wordt nog nergens gelezen (fase 6), en
+`ORDER_DATA_DIR` alleen door `scripts/migrate-orders.mjs` — de bestellingen
+staan sinds #13 in de database.
 
 Het automatisch invullen van het adres (#11) heeft **geen** variabele: die
 dienst vraagt geen sleutel. Valt hij weg, dan vult de klant straat en plaats
@@ -712,7 +724,9 @@ Drie dingen die erbij horen:
   bestandsnamen van het logo. Dat zijn geen namen maar sleutels, en
   `caro-cart` hernoemen zou elke openstaande winkelwagen legen.
 
-Bouw de checkout eerst tegen Mollie test mode.
+**Deze regel stond hier tot 2026-10-09:** *"Bouw de checkout eerst tegen
+Mollie test mode."* Mollie bestaat niet meer in deze winkel (#30); wat ervoor
+in de plaats komt staat in @docs/STRIPE.md.
 
 ## 4. Voorraadbeheer — OPEN, richting bekend
 
@@ -2344,12 +2358,53 @@ klant, en niet die van een magazijn dat we niet hebben.
 
 ```
 leverdatum van de groothandel waar wij inkopen
-+ 1 werkdag   (de beheerder koopt met de hand in, één keer per werkdag)
 = wat de klant leest
 ```
 
-Die ene werkdag is een keuze van de eigenaar. Zonder die dag beloven we een
-levering die pas begint zodra hij besteld heeft.
+### De extra werkdag is eraf — TERUGGEDRAAID 2026-10-09
+
+Hier stond tot die dag een opslag van één werkdag, met als reden: *"de beheerder
+koopt met de hand in, één keer per werkdag. Zonder die dag beloven we een
+levering die pas begint zodra hij besteld heeft."*
+
+De eigenaar heeft dat teruggedraaid: *"wij doen +1 dag erbij voor bezorgen, je
+mag de leverdatum van de api gewoon overnemen."* De datum van de groothandel
+gaat nu onveranderd naar de klant.
+
+**Wat daarmee verdwijnt, zodat niemand het opnieuw hoeft te ontdekken:** de
+rekenaar voor werkdagen is weg, en daarmee ook de lijst vaste Nederlandse
+feestdagen (`01-01`, `04-27`, `12-25`, `12-26`; beweegbare dagen zaten er
+bewust niet in). Komt de opslag ooit terug, dan is dat tien regels in
+`lib/catalog/delivery.ts` — niet iets om voor te bewaren.
+
+**Het risico dat ermee terugkomt is het risico dat er altijd al was**, alleen
+nu zonder marge: koopt de beheerder in nadat de groothandel zijn dag heeft
+afgesloten, dan is de datum die de klant las een dag te vroeg. Dat is een
+afweging tussen een scherpere belofte en de kans hem niet te halen, en die
+afweging is aan de eigenaar.
+
+**Bestellingen van vóór deze wijziging houden hun oude datum.** Die staat
+bevroren op het orderdocument (`deliveryExpected`), en een bevroren waarde
+herschrijf je niet omdat de regel erna veranderde — dezelfde reden waarom een
+factuur van september nog "Car Parts A-Z" draagt (#3).
+
+De datum wordt nog wel **gekeurd** voordat hij doorgaat: de vorm met een regex,
+en of het een bestaande dag is met een datumcontrole. Een onzindatum zou
+anders in de mail en op de factuur belanden, want hij wordt bij het afrekenen
+bevroren.
+
+**GEMETEN 2026-10-09 na de wijziging**, met een lege fetch-cache zodat het
+leveranciersantwoord vers was:
+
+| Bron | Datum |
+|---|---|
+| `/distributors` voor artikel 697011, groothandel 205345 | `2026-10-14` |
+| De productpagina van datzelfde artikel | “rond **woensdag 14 oktober**” |
+
+Gelijk, dus er komt niets meer bij. De eerste poging gaf nog 13 oktober — dat
+was Next die het antwoord van gisteren uit zijn cache serveerde, en het is
+meteen het bewijs dat de pagina de leveranciersdatum onbewerkt doorgeeft in
+plaats van er iets bij te rekenen.
 
 ### Drie metingen die de vorm bepaalden
 
@@ -2810,6 +2865,146 @@ werkelijk tot `paid` komt, en de webhook die ondertekend binnenkomt.
 
 ---
 
+## 31. Facturen zoeken en splitsen per jaar en maand — VASTGESTELD 2026-10-09
+
+De eigenaar vroeg om een zoekfunctie in het paneel ("naam klant, email of
+bedrag") en om een duidelijke splitsing per jaar en per maand, op de
+facturenpagina én op het dashboard.
+
+### Zoeken gaat over de orderrij, niet over de momentopname
+
+Naam en mailadres staan ook in `invoices.snapshot_json`. Daar zoeken kan geen
+index gebruiken en levert bij een afwijking in het document stil niets op. De
+orderrij is de bron waar die gegevens vandaan komen en staat er met een `JOIN`
+toch al naast.
+
+Gezocht wordt op factuurnummer, ordernummer, naam, mailadres **en bedrag**. Dat
+laatste is de reden dat `centsFromSearch()` bestaat: de beheerder typt wat hij
+op zijn bankafschrift ziet (`37,71`, `37.71`, `€ 37,71` of `37`), en dat is
+altijd in euro's. Een getal zonder scheidingsteken is dus hele euro's — niemand
+zoekt op "3771" als hij € 37,71 bedoelt.
+
+**Het mailadres is doorzoekbaar terwijl het niet in de lijst staat**, en dat is
+geen inconsistentie: wie deze pagina mag openen, mag de factuur zelf ook openen,
+en daar staat het adres op (#19).
+
+### De filters staan in de URL
+
+Zelfde keuze als bij de bandenmaatkiezer in de winkel: deelbaar, bookmarkbaar,
+de terugknop werkt, en zonder JavaScript doet een GET-formulier het gewoon.
+
+**Dat zet een zoekterm in het serverlog, en die kan een naam of mailadres zijn.**
+Afgewogen en geaccepteerd om één verifieerbare reden: het paneel laadt geen
+enkele bron van derden (@docs/PRIVACY.md), dus de URL kan niet via een
+`Referer` naar buiten lekken. Hij staat in ons eigen log en in de browser van de
+beheerder — die de klantnaam op datzelfde scherm toch al leest. Moet dat ooit
+anders, dan wordt het een POST en vervalt de deelbare link.
+
+Een jaar dat niet bestaat valt terug op het nieuwste jaar met facturen, een
+maand buiten 1–12 wordt genegeerd. Niet met een foutmelding: een URL die iemand
+heeft bijgewerkt hoort een bruikbare pagina te geven, geen scherm met een klacht.
+
+### Eén query voor jaren én maanden
+
+De eerste opzet had er twee: `invoiceTotalsByYear()` en
+`invoiceTotalsByMonth(year)`. Dat is een heenreis naar de database te veel voor
+een uitkomst van hooguit twaalf rijen per jaar. `invoiceBreakdown()` haalt ze in
+één `GROUP BY` op; `totalsByYear()` telt ze op in geheugen. De facturenpagina
+doet daarmee twee queries in plaats van drie, en het dashboard één extra in
+plaats van twee.
+
+Op het dashboard staat alleen het nieuwste jaar uitgeklapt. Oudere jaren zijn
+één regel met een link naar het facturenscherm; dat scherm is er voor de
+volledige lijst.
+
+### Hoe het getoetst is
+
+**De SQL tegen de echte database**, los van de pagina: de telling per maand, en
+acht zoekopdrachten — niets, jaar, jaar+maand, achternaam, deel van het
+mailadres, factuurnummer, bedrag met komma, en twee die niets mogen vinden.
+
+**De schermen met een tijdelijke sessie**, dezelfde methode als bij de
+rollentest (#19): tien URL's opgevraagd, alle tien 200 en geen fout in de HTML,
+daarna de sessierij weer verwijderd. Inclusief `maand=13` en `jaar=1999` (vallen
+terug) en `?zoek='; DROP TABLE invoices; --` (nul treffers, want de query draait
+op parameters).
+
+---
+
+## 32. Waar de tijd en de API-verzoeken heen gaan — GEMETEN 2026-10-09
+
+De eigenaar vroeg of de winkel sneller kan en of er op API-verzoeken te
+bezuinigen valt. Eerst gemeten, daarna pas iets veranderd.
+
+### De server is snel; het wachten zit bij de leverancier
+
+Op caroparts.nl, twee keer per pagina:
+
+| Pagina | TTFB | Totaal koud | Totaal warm | HTML (brotli) |
+|---|---|---|---|---|
+| `/nl` | 0,13 s | 0,19 s | 0,17 s | 107 kB |
+| `/nl/banden` | 0,18 s | **7,6 s** | 0,22 s | — |
+| `/nl/banden/auto-suv-1` | 0,12 s | **6,4 s** | 0,42 s | 143 kB |
+| `/nl/onderdelen` | 0,12 s | 0,18 s | 0,18 s | 72 kB |
+
+**De eerste byte is er binnen twee tienden**, overal. Wat erna komt is de
+leverancier: de kop, het formulier en de uitleg staan meteen in de HTML en de
+producten streamen na (dat was de bedoeling van de `<Suspense>`-opzet). Maar de
+eerste bezoeker na een lege cache wacht dus zes tot zeven seconden op de
+producten, en dat is de echte traagheid.
+
+Brotli staat aan. 143 kB voor een categoriepagina is aan de ruime kant maar
+niet het probleem; de zes seconden wel.
+
+### Een paginaweergave kost vijf tot tien verzoeken, en er zaten dubbele bij
+
+GEMETEN met `logging.fetches` tijdelijk aan, per verzoek geteld:
+
+| Pagina | Calls vóór | Dubbel | Calls ná |
+|---|---|---|---|
+| `/nl` | 10 | `categories` area 6 ×2, area 1 ×2, `manufacturers` ×2 | **9** |
+| `/nl/banden/auto-suv-1` | 6 | `categories` area 6 **×3**, `items` ×2 | **5** |
+| `/nl/banden` | 5 | — | 5 |
+| `/nl/onderdelen` | 1 | — | 1 |
+
+Op een categoriepagina was dus de **helft** van de verzoeken dubbel werk.
+
+De oorzaak is geen fout maar een eigenschap van de opzet: `generateMetadata`,
+de pagina zelf en het kruimelpad stellen alledrie dezelfde vraag, en Next voegt
+die niet samen. De TTL-cache in de provider werkt over verzoeken héén en zegt
+niets over dubbel werk binnen één render.
+
+`cache()` van React doet dat wél. Hij zit nu om de categorieboom
+(`lib/catalog/provider.ts`) en om `vehicleMakes()` (`lib/catalog/wearparts.ts`).
+
+**Waarom dit telt terwijl de log "cache hit" meldde:** op een warme cache gaat
+er niets de deur uit, maar op een koude zíjn het echte verzoeken — en de
+leverancier staat er honderd per minuut toe voor de héle winkel. Tien per
+homepageweergave is dan tien bezoekers per minuut.
+
+### Wat er bewust blíjft staan
+
+- **De categorieboom gaat nog steeds twee keer.** `cache()` haalde er één weg;
+  de laatste zit tussen `generateMetadata` en de pagina, en die twee deelt Next
+  niet. Dichten vraagt dat de metadata de boom niet meer nodig heeft, en dat is
+  een verbouwing van de titelopbouw — geen opruimactie.
+- **`getFilters()` en `getParts()` halen op een categoriepagina dezelfde URL op**
+  (`items?parentNodeId=1&limit=20`). Ze zijn twee methodes met twee
+  verschillende antwoordvormen; één call laten delen vraagt een gezamenlijke
+  laag in de provider. Dat is te doen, maar het raakt de adapter die élke
+  pagina gebruikt, en dat hoort een eigen wijziging te zijn.
+- **De vier `items?limit=4`-verzoeken op de homepage** vullen de familietegels.
+  Die zijn echt nodig; ze staan los van elkaar en zijn niet te bundelen (de API
+  accepteert één `parentNodeId` per verzoek).
+
+### Wat dit niet is
+
+Geen micro-optimalisatie aan rendertijd: de server doet er 120 ms over. Alles
+wat hier te winnen valt zit in het aantal en de duur van de verzoeken aan de
+leverancier, en die duur is niet van ons.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -2926,6 +3121,9 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
+| 2026-10-09 | De extra werkdag op de leverdatum is eraf | Winkelkeuze van de eigenaar: de datum van de groothandel gaat onveranderd naar de klant. Scherpere belofte, kleinere marge als hij laat op de dag inkoopt (#27) |
+| 2026-10-09 | Categorieboom en merkenlijst per verzoek memoïseren met `cache()` | GEMETEN: de helft van de leverancier-calls op een categoriepagina was dubbel werk tussen `generateMetadata`, de pagina en het kruimelpad; op een koude cache zijn dat echte verzoeken tegen een limiet van honderd per minuut (#32) |
+| 2026-10-09 | Facturen zoeken op naam, mail of bedrag; jaar- en maandsplitsing op beide schermen | De beheerder zocht een factuur bij een klantvraag en kon alleen scrollen. De filters staan in de URL, en jaren én maanden komen uit één query in plaats van twee (#31) |
 | 2026-10-09 | Mollie volledig uit de code, Stripe is de enige betaaldienst | Definitief afgewezen is definitief; het logo stond ook nog in de footer en de naam in de privacyverklaring. Oude bestellingen (`tr_…`) zijn daarmee niet meer vanuit het paneel terug te betalen (#30) |
 | 2026-10-09 | Betaaldienst achter een naad (`lib/payments/`), Stripe erachter | Mollie wees de aanvraag definitief af; de koppeling zat met acht aanroepen in vier bestanden vast, en een volgende wissel mag niet opnieuw een dag kosten (#30) |
 | 2026-10-08 | Een melding zodra er niet betaald kan worden, in het paneel én op het afrekenscherm | Elke betaalmethode stond twee weken op `pending-boarding` na de naamswijziging bij de KvK, en de winkel toonde gewoon een betaalknop; de klant merkte het pas na het invullen van zijn adres (#29) |
