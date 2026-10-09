@@ -83,7 +83,7 @@ export async function findInvoice(number: string): Promise<
 
 /**
  * De factuur voor een betaalde bestelling. Bestaat hij al, dan komt die terug —
- * de webhook van Mollie meldt zich vaker dan één keer.
+ * een webhook meldt zich vaker dan één keer.
  */
 export async function issueInvoice(order: StoredOrder): Promise<Invoice> {
   const existing = await invoiceForOrder(order.reference);

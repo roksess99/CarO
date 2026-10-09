@@ -33,7 +33,7 @@ export type AuditAction =
   | "bestelling.ingekocht"
   | "retour.ontvangen"
   // Geld dat de deur uit gaat, en de enige regel hier die dat doet. Het
-  // `re_…`-kenmerk van Mollie staat in `detail`, ook als de rij daarna niet
+  // `re_…`-kenmerk van de betaaldienst staat in `detail`, ook als de rij daarna niet
   // bijgewerkt kon worden — dan is dit logboek de enige plek waar het staat.
   | "retour.terugbetaald"
   | "retour.terugbetaling-mislukt"

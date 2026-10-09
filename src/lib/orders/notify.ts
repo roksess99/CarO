@@ -166,7 +166,7 @@ async function logoAttachment(): Promise<MailAttachment | null> {
  * het opnieuw probeert.
  *
  * De klantmail gaat als eerste: die is het belangrijkst voor het vertrouwen
- * van de klant, en de beheerder ziet de betaling anders ook in Mollie.
+ * van de klant, en de beheerder ziet de betaling anders ook in het dashboard.
  */
 export async function sendOrderNotifications(
   order: StoredOrder,
@@ -229,7 +229,7 @@ ${t("deliveryLine", {
     replyTo: order.document.customer.email,
     subject: `Nieuwe bestelling ${order.reference} — ${total}`,
     text: [
-      `Betaling bevestigd (${order.paymentMethod ?? "onbekend"}, Mollie ${order.paymentId}).`,
+      `Betaling bevestigd (${order.paymentMethod ?? "onbekend"}, betaling ${order.paymentId}).`,
       "",
       "IN TE KOPEN BIJ DE GROOTHANDEL",
       purchaseBlock(order),

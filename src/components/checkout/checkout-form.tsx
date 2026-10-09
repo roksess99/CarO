@@ -43,7 +43,7 @@ const labelClass = "mb-1 block text-sm font-medium";
 export function CheckoutForm({
   paymentsDown = false,
 }: {
-  /** Mollie neemt geen betalingen aan; de pagina zegt er bovenaan bij waarom */
+  /** De betaaldienst neemt niets aan; de pagina zegt er bovenaan bij waarom */
   paymentsDown?: boolean;
 } = {}) {
   const t = useTranslations("checkout");
@@ -64,7 +64,7 @@ export function CheckoutForm({
     countStat("checkout_start");
   }, []);
   // Blijft `true` tot de browser weg navigeert: tussen het antwoord van de
-  // server en de sprong naar Mollie zit een moment waarin de knop anders weer
+  // server en de sprong naar het betaalscherm zit een moment waarin de knop anders weer
   // aanklikbaar zou zijn, en dat levert een tweede betaling op.
   const [busy, setBusy] = useState(false);
   // Prefill kan pas na hydration (localStorage bestaat niet op de server);
@@ -175,7 +175,7 @@ export function CheckoutForm({
       return;
     }
 
-    // Naar het betaalscherm van Mollie. Bewust geen router.push: dat is een
+    // Naar het betaalscherm van Stripe. Bewust geen router.push: dat is een
     // ander domein, dus een gewone navigatie van de browser.
     window.location.href = response.checkoutUrl;
   }

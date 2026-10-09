@@ -8,7 +8,7 @@
  * |---|---|
  * | `requested` | de klant heeft hem aangemeld, het pakket is onderweg |
  * | `received` | de beheerder heeft het pakket terug |
- * | `refunded` | het geld is teruggeboekt via Mollie |
+ * | `refunded` | het geld is teruggeboekt via de betaaldienst |
  * | `rejected` | afgewezen, met reden |
  *
  * Van `refunded` gaat het nooit meer terug: dat is geld dat de deur uit is.
@@ -67,7 +67,7 @@ export interface StoredReturn {
   requestedAt: Date;
   receivedAt: Date | null;
   refundedAt: Date | null;
-  /** `re_…` bij Mollie */
+  /** `re_…` — bij Stripe én bij Mollie hetzelfde voorvoegsel */
   refundId: string | null;
   refundedCents: number | null;
   rejectedAt: Date | null;

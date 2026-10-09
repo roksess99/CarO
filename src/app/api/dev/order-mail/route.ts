@@ -21,7 +21,7 @@ import { readOrder } from "@/lib/orders/store";
  * een echte bestelling te plaatsen. **Het verandert niets in de database.**
  *
  * Zonder dit is de enige manier om een tekstwijziging te zien: afrekenen,
- * betalen bij Mollie, wachten op de mail. Dat is drie minuten per komma.
+ * betalen bij de betaaldienst, wachten op de mail. Dat is drie minuten per komma.
  *
  * **Alleen in ontwikkeling.** In productie geeft dit een 404, want een
  * bestelling bevat NAW-gegevens en het ordernummer is te raden.

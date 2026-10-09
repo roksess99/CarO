@@ -1,7 +1,7 @@
 import { transaction } from "@/lib/db/client";
 import { recordCodeUse } from "@/lib/discounts/codes";
 import { issueInvoice } from "@/lib/invoices/store";
-import { getPayment, type MolliePayment } from "@/lib/mollie/client";
+import { paymentProvider, type Payment } from "@/lib/payments";
 import { sendOrderNotifications } from "./notify";
 import { readOrder, saveOrder } from "./store";
 import type { StoredOrder } from "./types";
@@ -11,13 +11,13 @@ import type { StoredOrder } from "./types";
  *
  * Twee routes komen hier binnen en ze kunnen tegelijk aankomen:
  *
- * 1. de **webhook** van Mollie — dat is het bewijs van betaling;
+ * 1. de **webhook** van de betaaldienst — dat is het bewijs van betaling;
  * 2. de **terugkeerpagina** waar de klant op landt.
  *
  * De terugkeer zelf zegt niets: een klant die het betaalscherm afbreekt komt op
  * dezelfde URL uit, en de URL is te typen. Daarom vraagt ook die pagina de
- * status op bij Mollie in plaats van hem te geloven. Bijkomend voordeel: op een
- * ontwikkelmachine kan Mollie geen webhook bezorgen (localhost is niet publiek
+ * status zelf op in plaats van hem te geloven. Bijkomend voordeel: op een
+ * ontwikkelmachine komt er geen webhook aan (localhost is niet publiek
  * bereikbaar), en dan is dit de enige route die de afhandeling nog doet.
  */
 
@@ -34,7 +34,7 @@ const inFlight = new Map<string, Promise<StoredOrder | null>>();
 
 export async function settleOrder(
   reference: string,
-  known?: MolliePayment,
+  known?: Payment,
 ): Promise<StoredOrder | null> {
   const running = inFlight.get(reference);
   if (running) return running;
@@ -48,15 +48,15 @@ export async function settleOrder(
 
 async function settle(
   reference: string,
-  known?: MolliePayment,
+  known?: Payment,
 ): Promise<StoredOrder | null> {
   const order = await readOrder(reference);
   if (!order) return null;
 
-  // Al afgehandeld én gemeld: niets meer te doen, ook geen call naar Mollie
+  // Al afgehandeld én gemeld: niets meer te doen, ook geen call naar buiten
   if (order.status === "paid" && order.notifiedAt) return order;
 
-  const payment = known ?? (await getPayment(order.paymentId));
+  const payment = known ?? (await paymentProvider().getPayment(order.paymentId));
   // Een webhook draagt alleen een betaal-id; het kenmerk komt uit de metadata
   // en die kan naar een andere bestelling wijzen als er iets is misgegaan
   if (payment.id !== order.paymentId) return order;
@@ -96,14 +96,14 @@ async function settle(
 
   // Pas hier krijgt de bestelling een factuurnummer: bij het aanmaken zou een
   // afgebroken betaling een gat in de reeks slaan, en die moet aaneengesloten
-  // zijn. Idempotent, want Mollie meldt zich vaker dan één keer.
+  // zijn. Idempotent, want een webhook meldt zich vaker dan één keer.
   const invoice = await issueInvoice(paid);
 
   if (paid.notifiedAt) return paid;
 
   // Bewust niet afgevangen: mislukt de mail, dan mag `notifiedAt` niet gezet
-  // worden. De aanroeper geeft Mollie een foutstatus terug en die probeert het
-  // opnieuw — tot ruim een dag lang.
+  // worden. De aanroeper geeft de betaaldienst een foutstatus terug en die
+  // probeert het opnieuw — tot ruim een dag lang.
   await sendOrderNotifications(paid, invoice.number);
 
   const notified: StoredOrder = { ...paid, notifiedAt: new Date().toISOString() };

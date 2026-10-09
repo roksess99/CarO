@@ -30,13 +30,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * De terugkeerpagina van Mollie.
+ * De terugkeerpagina van het betaalscherm.
  *
  * **Landen op deze URL is geen bewijs van betaling.** De klant komt hier ook
  * na afbreken, en de URL is te typen. De status wordt daarom opgehaald bij
- * Mollie (`settleOrder`) en niet uit de querystring afgeleid. Diezelfde
+ * Stripe (`settleOrder`) en niet uit de querystring afgeleid. Diezelfde
  * functie handelt de bestelling af als de webhook nog niet binnen was — op een
- * ontwikkelmachine kan Mollie er sowieso geen bezorgen.
+ * ontwikkelmachine komt er sowieso geen binnen.
  */
 export default async function OrderStatusPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -56,7 +56,7 @@ export default async function OrderStatusPage({ params, searchParams }: Props) {
     try {
       order = (await settleOrder(order.reference)) ?? order;
     } catch {
-      // Mollie onbereikbaar of de mail mislukt: de klant ziet dan nog even de
+      // Stripe onbereikbaar of de mail mislukt: de klant ziet dan nog even de
       // "we controleren je betaling"-tekst. De webhook probeert het opnieuw.
     }
   }

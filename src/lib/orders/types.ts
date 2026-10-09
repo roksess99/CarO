@@ -5,12 +5,12 @@ import type { CartItem } from "@/lib/cart/types";
 // Next, geen React, geen opslaglaag. `store.ts` schrijft precies dit weg.
 
 /**
- * De toestand van een bestelling bij ons — níet de Mollie-status.
+ * De toestand van een bestelling bij ons — níet de status bij de betaaldienst.
  *
  * | Status | Betekenis |
  * |---|---|
- * | `awaiting_payment` | aangemaakt, klant is naar Mollie gestuurd |
- * | `paid` | betaling bevestigd door Mollie |
+ * | `awaiting_payment` | aangemaakt, klant is naar het betaalscherm gestuurd |
+ * | `paid` | betaling bevestigd door de betaaldienst |
  * | `failed` | mislukt, geannuleerd of verlopen |
  *
  * Van `paid` gaat het nooit meer terug: een geslaagde betaling die later een
@@ -32,13 +32,16 @@ export interface StoredOrder {
   status: OrderStatus;
   /** Taal waarin de klant bestelde; bepaalt de taal van de bevestiging */
   locale: string;
-  /** `tr_…` bij Mollie */
+  /**
+   * `cs_…` bij Stripe. Bestellingen van vóór 2026-10-09 dragen nog een `tr_…`
+   * van Mollie; die zijn niet meer op te zoeken (@docs/DECISIONS.md #30).
+   */
   paymentId: string;
-  /** Betaalmethode zoals Mollie hem teruggeeft, bv. "ideal" */
+  /** Betaalmethode zoals de betaaldienst hem teruggeeft, bv. "ideal" */
   paymentMethod: string | null;
   paidAt: string | null;
   /**
-   * Wanneer de bevestigingsmails eruit zijn. Mollie stuurt een webhook vaker
+   * Wanneer de bevestigingsmails eruit zijn. Een webhook komt vaker
    * dan één keer, en de terugkeerpagina controleert óók. Dit veld is wat
    * voorkomt dat de klant drie keer dezelfde bevestiging krijgt.
    */

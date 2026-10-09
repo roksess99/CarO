@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { OrderSummary } from "@/components/checkout/order-summary";
 import { getPathname } from "@/i18n/navigation";
-import { mollieHealth, paymentsPossible } from "@/lib/mollie/health";
+import { paymentsHealth, paymentsPossible } from "@/lib/payments";
 import { localizedMetadata } from "@/lib/site";
 
 type Props = {
@@ -30,7 +30,7 @@ export default async function CheckoutPage({ params }: Props) {
   // Kan er überhaupt betaald worden? Dat hoort de klant te weten vóórdat hij
   // zijn naam en adres invult, niet erna (@docs/DECISIONS.md #29). De uitkomst
   // staat vijf minuten in het geheugen, dus dit kost geen aanroep per bezoeker.
-  const kanBetalen = paymentsPossible(await mollieHealth());
+  const kanBetalen = paymentsPossible(await paymentsHealth());
   return (
     <div className="site-container py-12 md:py-16">
       <h1 className="text-3xl md:text-4xl">{t("title")}</h1>

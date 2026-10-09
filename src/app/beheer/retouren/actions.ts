@@ -6,7 +6,11 @@ import { requirePermission } from "@/lib/admin/session";
 import { formatPriceCents } from "@/lib/format";
 import { sendMail } from "@/lib/mail";
 import { COMPANY } from "@/lib/company";
-import { createRefund, MollieError, mollieIsConfigured } from "@/lib/mollie/client";
+import {
+  isLegacyMolliePayment,
+  paymentProvider,
+  PaymentError,
+} from "@/lib/payments";
 import { readOrder } from "@/lib/orders/store";
 import {
   markReturnReceived,
@@ -47,12 +51,12 @@ export async function receiveReturn(
  * 1. Het bedrag komt uit de database, niet uit het formulier. Wat de browser
  *    mag meesturen is hoogstens een lágere waarde (bijvoorbeeld als een
  *    artikel beschadigd terugkomt), nooit een hogere.
- * 2. Mollie eerst, de database daarna. Andersom zou een mislukte terugboeking
+ * 2. De betaaldienst eerst, de database daarna. Andersom zou een mislukte terugboeking
  *    als "terugbetaald" in de administratie staan — en dan wacht de klant op
  *    geld dat nooit komt.
  * 3. Het retournummer gaat als idempotentiesleutel mee, zodat twee tabbladen
  *    samen één terugboeking opleveren.
- * 4. Lukt Mollie wél maar de database niet, dan is dat een fout die je moet
+ * 4. Lukt de terugboeking wél maar de database niet, dan is dat een fout die je moet
  *    kunnen zien: het `re_…`-kenmerk komt in het logboek, ook als de rij niet
  *    bijgewerkt kon worden.
  */
@@ -63,8 +67,9 @@ export async function refundReturn(
   const admin = await requirePermission("retouren");
   const reference = String(formData.get("reference") ?? "");
 
-  if (!mollieIsConfigured()) {
-    return { error: "Er is geen Mollie-sleutel ingesteld, dus terugbetalen kan niet." };
+  const payments = paymentProvider();
+  if (!payments.isConfigured()) {
+    return { error: "Er is geen betaalsleutel ingesteld, dus terugbetalen kan niet." };
   }
 
   const entry = await readReturn(reference);
@@ -103,14 +108,25 @@ export async function refundReturn(
     return { error: "Bij deze bestelling staat geen betaling; terugboeken kan niet." };
   }
 
+  // Bestellingen van vóór 2026-10-09 zijn met Mollie betaald en dragen een
+  // `tr_…`. Dat kenmerk bestaat bij Stripe niet, dus de aanroep zou stranden op
+  // "No such payment_intent" — een melding waar niemand iets aan heeft. Zeg
+  // liever wat er aan de hand is en waar het wél kan (@docs/DECISIONS.md #30).
+  if (isLegacyMolliePayment(order.paymentId)) {
+    return {
+      error:
+        "Deze bestelling is nog met Mollie betaald. Terugboeken kan alleen in het Mollie-dashboard; werk de status hier daarna met de hand bij.",
+    };
+  }
+
   let refundId: string;
-  // Wat er werkelijk is teruggeboekt, volgens Mollie. Dat hoeft niet te zijn
+  // Wat er werkelijk is teruggeboekt, volgens de betaaldienst. Dat hoeft niet te zijn
   // wat we vroegen: het retournummer gaat als idempotentiesleutel mee, dus een
   // tweede poging met een ánder bedrag krijgt de éérste terugboeking terug.
   // De administratie moet het bankafschrift volgen, niet het formulier.
   let refunded: number;
   try {
-    const refund = await createRefund({
+    const refund = await payments.createRefund({
       paymentId: order.paymentId,
       amountCents: cents,
       description: `Retour ${entry.reference} bij bestelling ${entry.orderReference}`,
@@ -120,7 +136,7 @@ export async function refundReturn(
     refunded = refund.amountCents;
   } catch (error) {
     const detail =
-      error instanceof MollieError ? error.message : "onbekende fout";
+      error instanceof PaymentError ? error.message : "onbekende fout";
     console.error("Terugbetaling mislukt:", detail);
     await logAction({
       adminId: admin.id,
@@ -128,7 +144,7 @@ export async function refundReturn(
       subject: reference,
       detail: { cents },
     });
-    return { error: `Mollie weigerde de terugbetaling (${detail}).` };
+    return { error: `De betaaldienst weigerde de terugbetaling (${detail}).` };
   }
 
   const written = await markReturnRefunded(
@@ -147,7 +163,7 @@ export async function refundReturn(
   if (!written) {
     // Het geld is weg, de rij niet bijgewerkt. Dat moet luid zijn.
     return {
-      error: `Let op: Mollie heeft ${formatPriceCents(refunded)} teruggeboekt (${refundId}), maar de status kon niet worden bijgewerkt. Werk hem met de hand bij.`,
+      error: `Let op: er is ${formatPriceCents(refunded)} teruggeboekt (${refundId}), maar de status kon niet worden bijgewerkt. Werk hem met de hand bij.`,
     };
   }
 
@@ -158,7 +174,7 @@ export async function refundReturn(
     ok:
       refunded === cents
         ? `${formatPriceCents(refunded)} teruggeboekt.`
-        : `${formatPriceCents(refunded)} teruggeboekt — Mollie had deze terugbetaling al staan, dus dat bedrag geldt en niet de ${formatPriceCents(cents)} die je invulde.`,
+        : `${formatPriceCents(refunded)} teruggeboekt — de betaaldienst had deze terugbetaling al staan, dus dat bedrag geldt en niet de ${formatPriceCents(cents)} die je invulde.`,
   };
 }
 

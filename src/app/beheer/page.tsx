@@ -9,7 +9,7 @@ import {
 } from "@/lib/admin/roles";
 import { requireAdmin } from "@/lib/admin/session";
 import { catalogHealth } from "@/lib/catalog/health";
-import { mollieHealth, paymentsPossible } from "@/lib/mollie/health";
+import { paymentsHealth, paymentsPossible } from "@/lib/payments";
 import { listOrders, orderTotals } from "@/lib/orders/store";
 import { returnTotals } from "@/lib/returns/store";
 import { statsOverview, type StatPeriod } from "@/lib/stats/store";
@@ -96,7 +96,7 @@ export default async function BeheerPage({
     catalogHealth(),
     // Zelfde reden: zonder actieve betaalmethode komt er geen bestelling
     // binnen, en dat merk je anders pas als een klant het meldt.
-    mollieHealth(),
+    paymentsHealth(),
   ]);
 
   const nav = NAV.filter((item) => can(admin.role, item.needs));
@@ -180,9 +180,11 @@ export default async function BeheerPage({
       )}
 
       {/* Een sleutel die werkt is niet hetzelfde als een account dat
-          betalingen aanneemt: op 2026-10-08 stond élke methode op
-          `pending-boarding` nadat de handelsnaam bij de KvK was gewijzigd, en
-          de winkel toonde gewoon een betaalknop (@docs/DECISIONS.md #29). */}
+          betalingen aanneemt: bij Mollie stond op 2026-10-08 élke methode op
+          `pending-boarding` en toonde de winkel gewoon een betaalknop
+          (@docs/DECISIONS.md #29). Bij Stripe heet datzelfde
+          `charges_enabled: false`, en tijdens de verificatie is dat de
+          normale toestand — dus deze melding staat er niet voor niets. */}
       {!paymentsPossible(betalen) && (
         <div className="mt-6 rounded-lg border border-danger bg-background p-4">
           <h2 className="font-semibold text-danger">
@@ -190,19 +192,19 @@ export default async function BeheerPage({
           </h2>
           <p className="mt-2 text-sm">
             {!betalen.configured
-              ? "Er staat geen betaalsleutel in de omgeving."
+              ? "Er staat geen Stripe-sleutel in de omgeving."
               : betalen.rejected
-                ? "Mollie weigert onze sleutel."
+                ? "Stripe weigert onze sleutel."
                 : !betalen.reachable
-                  ? "Mollie is niet bereikbaar."
-                  : "Mollie accepteert onze sleutel, maar er staat geen enkele betaalmethode aan."}
+                  ? "Stripe is niet bereikbaar."
+                  : "Stripe accepteert onze sleutel, maar het account neemt geen betalingen aan."}
             {betalen.detail ? ` (${betalen.detail})` : ""}
           </p>
           <p className="mt-2 text-sm text-muted">
             {betalen.configured && betalen.reachable && !betalen.rejected
-              ? "Methodes staan uit zolang Mollie je gegevens wil verifiëren — bijvoorbeeld na een wijziging bij de KvK. Log in op het Mollie-dashboard en rond af wat hij vraagt."
+              ? "Dat blijft zo zolang Stripe je gegevens wil verifiëren. Log in op het Stripe-dashboard en rond af wat hij vraagt."
               : "Kijk de sleutel na in de omgevingsvariabelen; na een wijziging moet de site opnieuw gebouwd en herstart worden."}{" "}
-            Controleren kan met <code className="font-mono">pnpm mollie:check</code>.
+            Controleren kan met <code className="font-mono">pnpm stripe:check</code>.
           </p>
         </div>
       )}

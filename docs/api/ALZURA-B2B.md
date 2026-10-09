@@ -77,4 +77,4 @@ DECISIONS.md #4.
 **Wij betalen de groothandel per incasso.** De offerte van `GET /order` geeft
 `paymentMethodId: 1`, en dat is in deze documentatie SEPA-incasso. Het geld voor
 de inkoop wordt dus van onze rekening afgeschreven, los van wat de klant via
-Mollie betaalt.
+de betaaldienst betaalt.
