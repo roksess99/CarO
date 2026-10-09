@@ -6,6 +6,7 @@
 // een TecDoc-voertuig, een categorieboom per auto leveren, en onderdelen op
 // naam doorzoeken. Daarmee vervalt product area 3 voor de familie onderdelen.
 
+import { cache } from "react";
 import { z } from "zod";
 
 const BASE = "https://tyre24.alzura.com/nl/nl/rest/V16/wearparts";
@@ -556,13 +557,20 @@ export interface VehicleModel {
   until?: number;
 }
 
-/** Alle voertuigmerken die TecDoc kent (469 op het NL-platform) */
-export async function vehicleMakes(): Promise<VehicleMake[]> {
+/**
+ * Alle voertuigmerken die TecDoc kent (469 op het NL-platform).
+ *
+ * `cache()` eromheen om dezelfde reden als bij de categorieboom
+ * (`lib/catalog/provider.ts`): GEMETEN 2026-10-09 ging `/manufacturers` er op
+ * de homepage **twee keer** uit, want zowel de merkenlijst als de autokiezer
+ * vraagt ernaar. Binnen één verzoek is dat nu één aanroep.
+ */
+export const vehicleMakes = cache(async (): Promise<VehicleMake[]> => {
   const data = await get("/manufacturers", {}, CACHE.vehicle);
   const parsed = z.array(manufacturerSchema).safeParse(data);
   if (!parsed.success) return [];
   return parsed.data.map((make) => ({ id: make.manuId, name: make.manuName }));
-}
+});
 
 export async function vehicleModels(manuId: number): Promise<VehicleModel[]> {
   const data = await get(

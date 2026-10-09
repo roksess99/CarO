@@ -66,7 +66,7 @@ export async function paymentsHealth(): Promise<PaymentHealth> {
   return result;
 }
 
-/** Na een wijziging in het dashboard hoeft niemand vijf minuten te wachten */
-export function forgetPaymentsHealth(): void {
-  cache = null;
-}
+// Bewust géén functie om deze cache te wissen. Die stond er wel, en niets
+// riep hem aan — ook niet in de Mollie-tijd. Er is ook geen knop die hem zou
+// kunnen aanroepen: wat de gezondheid bepaalt staat in het dashboard van de
+// betaaldienst, niet in het onze. Vijf minuten wachten is het antwoord.

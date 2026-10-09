@@ -162,13 +162,107 @@ export interface InvoiceListItem extends Invoice {
   customerName: string;
 }
 
-export async function listInvoices(limit = 50): Promise<InvoiceListItem[]> {
+/**
+ * Een bedrag uit een zoekterm halen, in centen.
+ *
+ * De beheerder typt wat hij op het scherm ziet: `37,71`, `37.71`, `€ 37,71`
+ * of gewoon `37`. Allemaal euro's — niemand typt centen én niemand zoekt op
+ * "3771" als hij € 37,71 bedoelt. Een getal zonder scheiding is dus hele
+ * euro's: `37` wordt 3700.
+ *
+ * **Een punt is een duizendtalscheiding zodra er ook een komma staat.** Dat
+ * moest erbij: `1.234,56` is hoe een Nederlander een bedrag boven de duizend
+ * opschrijft, en de eerste opzet gaf daar `null` op — dus "niet gevonden" voor
+ * een factuur die er gewoon was. Zonder komma blijft de punt de decimaal
+ * (`37.71`), want zo kopieert hij hem uit een export.
+ *
+ * Geeft `null` als er geen bedrag in zit; dan zoekt de query alleen op tekst.
+ */
+function centsFromSearch(term: string): number | null {
+  let cleaned = term.replace(/[\s\u20ac]/g, "");
+  if (cleaned.includes(",")) cleaned = cleaned.replace(/\./g, "");
+  cleaned = cleaned.replace(",", ".");
+  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null;
+  return Math.round(Number(cleaned) * 100);
+}
+
+/**
+ * `%` en `_` zijn jokertekens in een `LIKE`. Zonder dit geeft een zoekterm van
+ * één procentteken álle facturen terug — geen lek, want de waarde gaat als
+ * parameter mee, maar wel een antwoord dat nergens op slaat.
+ */
+function escapeLike(term: string): string {
+  return term.replace(/[\\%_]/g, (teken) => `\\${teken}`);
+}
+
+export interface InvoiceSearch {
+  /** Naam, mailadres, factuurnummer, ordernummer of bedrag */
+  term?: string;
+  /** Alleen facturen uit dit jaar */
+  year?: number;
+  /** 1–12, alleen samen met `year` */
+  month?: number;
+  limit?: number;
+}
+
+/**
+ * Facturen zoeken en filteren — één query, niet filteren in geheugen.
+ *
+ * **Waarom het zoeken over `orders` loopt en niet over de momentopname.** Naam
+ * en mailadres staan in `invoices.snapshot_json` ook, maar JSON doorzoeken kan
+ * geen index gebruiken en levert bij een typefout in het document stil niets
+ * op. De orderrij is de bron waar die gegevens vandaan komen en staat er met
+ * een `JOIN` toch al naast.
+ *
+ * Het mailadres is daarmee doorzoekbaar terwijl het niet in de lijst staat;
+ * dat is met opzet (@docs/DECISIONS.md #19). Wie deze pagina mag openen mag de
+ * factuur zelf ook openen, en daar staat het adres op.
+ */
+export async function searchInvoices(
+  search: InvoiceSearch = {},
+): Promise<InvoiceListItem[]> {
+  const where: string[] = [];
+  const params: Array<string | number> = [];
+
+  if (search.year !== undefined) {
+    where.push("YEAR(i.issued_at) = ?");
+    params.push(search.year);
+    if (search.month !== undefined) {
+      where.push("MONTH(i.issued_at) = ?");
+      params.push(search.month);
+    }
+  }
+
+  const term = (search.term ?? "").trim();
+  if (term.length > 0) {
+    const like = `%${escapeLike(term)}%`;
+    const parts = [
+      "i.number LIKE ?",
+      "i.order_reference LIKE ?",
+      "CONCAT(o.first_name, ' ', o.last_name) LIKE ?",
+      "o.email LIKE ?",
+    ];
+    params.push(like, like, like, like);
+
+    // Een bedrag zoekt op het totaal inclusief btw — dat is wat er op de
+    // factuur staat en wat de beheerder op zijn bankafschrift terugziet.
+    const cents = centsFromSearch(term);
+    if (cents !== null) {
+      parts.push("i.total_gross_cents = ?");
+      params.push(cents);
+    }
+    where.push(`(${parts.join(" OR ")})`);
+  }
+
+  const limit = Math.min(Math.max(Math.trunc(search.limit ?? 50), 1), 200);
   const rows = await query<InvoiceRow & { first_name: string; last_name: string }>(
     `SELECT i.*, o.first_name, o.last_name
        FROM invoices i
        JOIN orders o ON o.reference = i.order_reference
+      ${where.length > 0 ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY i.number DESC
-      LIMIT ${Math.min(Math.max(Math.trunc(limit), 1), 200)}`,
+      LIMIT ${limit}`,
+    params,
   );
 
   return rows.map((row) => ({
@@ -177,16 +271,29 @@ export async function listInvoices(limit = 50): Promise<InvoiceListItem[]> {
   }));
 }
 
-/** Omzet per maand, uit de facturen — dat is wat de boekhouding telt */
+/**
+ * De omzet per maand, uit de facturen — dat is wat de boekhouding telt.
+ *
+ * **Eén query voor alle jaren en maanden samen.** Het waren er twee (jaren
+ * apart, maanden van één jaar apart) en dat is een heenreis naar de database
+ * te veel voor een uitkomst die hooguit twaalf rijen per jaar telt. Groeperen
+ * doet de aanroeper; dat kost niets en scheelt een `GROUP BY` extra.
+ *
+ * Nieuwste eerst, zodat het jaar waar de beheerder in werkt bovenaan staat.
+ */
 export interface MonthTotal {
+  /** `2026-10` */
   month: string;
+  year: number;
+  /** 1–12 */
+  index: number;
   count: number;
   netCents: number;
   vatCents: number;
   grossCents: number;
 }
 
-export async function invoiceTotalsByMonth(year: number): Promise<MonthTotal[]> {
+export async function invoiceBreakdown(): Promise<MonthTotal[]> {
   const rows = await query<{
     month: string;
     n: number;
@@ -200,17 +307,49 @@ export async function invoiceTotalsByMonth(year: number): Promise<MonthTotal[]> 
             SUM(total_vat_cents) AS vat,
             SUM(total_gross_cents) AS gross
        FROM invoices
-      WHERE YEAR(issued_at) = ?
       GROUP BY month
       ORDER BY month DESC`,
-    [year],
   );
 
-  return rows.map((row) => ({
-    month: row.month,
-    count: Number(row.n),
-    netCents: Number(row.net),
-    vatCents: Number(row.vat),
-    grossCents: Number(row.gross),
-  }));
+  return rows.map((row) => {
+    const [year, index] = row.month.split("-").map(Number);
+    return {
+      month: row.month,
+      year: year as number,
+      index: index as number,
+      count: Number(row.n),
+      netCents: Number(row.net),
+      vatCents: Number(row.vat),
+      grossCents: Number(row.gross),
+    };
+  });
+}
+
+/** Eén regel per jaar waarin er gefactureerd is, nieuwste eerst */
+export interface YearTotal {
+  year: number;
+  count: number;
+  netCents: number;
+  vatCents: number;
+  grossCents: number;
+}
+
+/** Telt de maanden op per jaar — geen tweede query, zie `invoiceBreakdown` */
+export function totalsByYear(months: MonthTotal[]): YearTotal[] {
+  const perYear = new Map<number, YearTotal>();
+  for (const month of months) {
+    const row = perYear.get(month.year) ?? {
+      year: month.year,
+      count: 0,
+      netCents: 0,
+      vatCents: 0,
+      grossCents: 0,
+    };
+    row.count += month.count;
+    row.netCents += month.netCents;
+    row.vatCents += month.vatCents;
+    row.grossCents += month.grossCents;
+    perYear.set(month.year, row);
+  }
+  return [...perYear.values()].sort((a, b) => b.year - a.year);
 }

@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { CaroMark } from "@/components/brand/caro-mark";
 import { formatPriceCents } from "@/lib/format";
@@ -9,6 +10,7 @@ import {
 } from "@/lib/admin/roles";
 import { requireAdmin } from "@/lib/admin/session";
 import { catalogHealth } from "@/lib/catalog/health";
+import { invoiceBreakdown, totalsByYear } from "@/lib/invoices/store";
 import { paymentsHealth, paymentsPossible } from "@/lib/payments";
 import { listOrders, orderTotals } from "@/lib/orders/store";
 import { returnTotals } from "@/lib/returns/store";
@@ -38,6 +40,22 @@ const STATUS_LABEL: Record<string, string> = {
  * en in elke Server Action erachter (`requirePermission`). Een knop verbergen
  * houdt niemand tegen die de URL intikt.
  */
+/** Voluit, want ze staan in een tabelkolom en niet in een smalle badge */
+const MAANDEN = [
+  "januari",
+  "februari",
+  "maart",
+  "april",
+  "mei",
+  "juni",
+  "juli",
+  "augustus",
+  "september",
+  "oktober",
+  "november",
+  "december",
+] as const;
+
 const NAV: ReadonlyArray<{ href: string; label: string; needs: Permission }> = [
   { href: "/beheer/prijzen", label: "Prijzen", needs: "prijzen" },
   { href: "/beheer/kortingen", label: "Kortingen", needs: "kortingen" },
@@ -86,18 +104,22 @@ export default async function BeheerPage({
   // De retourcijfers zijn optellingen zonder klantgegevens en horen bij de
   // omzet: wie de omzet mag zien, hoort te zien wat er weer af ging. De
   // aanvragen zelf (met naam en artikel) blijven achter `retouren` zitten.
-  const [totals, recent, returns, stats, catalogus, betalen] = await Promise.all([
-    magOmzet || magBestellingen ? orderTotals() : null,
-    magBestellingen ? listOrders({ limit: 10 }) : null,
-    magOmzet || magBestellingen ? returnTotals() : null,
-    magStats ? statsOverview() : null,
-    // Voor iedereen die hier binnenkomt, ongeacht rol: een catalogus die leeg
-    // staat is geen rechtenkwestie maar een winkel die niet verkoopt.
-    catalogHealth(),
-    // Zelfde reden: zonder actieve betaalmethode komt er geen bestelling
-    // binnen, en dat merk je anders pas als een klant het meldt.
-    paymentsHealth(),
-  ]);
+  const [totals, recent, returns, stats, catalogus, betalen, facturen] =
+    await Promise.all([
+      magOmzet || magBestellingen ? orderTotals() : null,
+      magBestellingen ? listOrders({ limit: 10 }) : null,
+      magOmzet || magBestellingen ? returnTotals() : null,
+      magStats ? statsOverview() : null,
+      // Voor iedereen die hier binnenkomt, ongeacht rol: een catalogus die leeg
+      // staat is geen rechtenkwestie maar een winkel die niet verkoopt.
+      catalogHealth(),
+      // Zelfde reden: zonder actieve betaalmethode komt er geen bestelling
+      // binnen, en dat merk je anders pas als een klant het meldt.
+      paymentsHealth(),
+      // Facturen per jaar en maand: één query, en alleen voor wie de omzet mag
+      // zien. Niet ophalen is iets anders dan verbergen (@docs/DECISIONS.md #19).
+      magOmzet ? invoiceBreakdown() : null,
+    ]);
 
   const nav = NAV.filter((item) => can(admin.role, item.needs));
 
@@ -267,6 +289,91 @@ export default async function BeheerPage({
         </div>
       )}
 
+
+      {/* De omzettegel hierboven is één getal over alles; de boekhouding
+          werkt per maand en sluit per jaar af. Daarom hier de splitsing, met
+          het lopende jaar uitgeklapt en oudere jaren als één regel — die
+          staan voluit op het facturenscherm. */}
+      {facturen && facturen.length > 0 && (
+        <section className="mt-10">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-lg font-semibold">Facturen</h2>
+            <Link
+              href="/beheer/facturen"
+              className="text-sm underline underline-offset-4 hover:text-caro-orange"
+            >
+              Alle facturen en zoeken
+            </Link>
+          </div>
+
+          <div className="mt-4 overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-sm">
+              <thead className="bg-surface text-start">
+                <tr>
+                  <th className="px-4 py-2 text-start font-medium">Periode</th>
+                  <th className="px-4 py-2 text-end font-medium">Facturen</th>
+                  <th className="px-4 py-2 text-end font-medium">Excl. btw</th>
+                  <th className="px-4 py-2 text-end font-medium">Btw</th>
+                  <th className="px-4 py-2 text-end font-medium">Incl. btw</th>
+                </tr>
+              </thead>
+              <tbody>
+                {totalsByYear(facturen).map((jaar, positie) => (
+                  <Fragment key={jaar.year}>
+                    <tr className="border-t border-border bg-surface/50">
+                      <th scope="row" className="px-4 py-2 text-start font-semibold tabular-nums">
+                        <Link
+                          href={`/beheer/facturen?jaar=${jaar.year}`}
+                          className="underline underline-offset-4 hover:text-caro-orange"
+                        >
+                          {jaar.year}
+                        </Link>
+                      </th>
+                      <td className="px-4 py-2 text-end font-semibold tabular-nums">
+                        {jaar.count}
+                      </td>
+                      <td className="px-4 py-2 text-end font-semibold tabular-nums">
+                        {formatPriceCents(jaar.netCents)}
+                      </td>
+                      <td className="px-4 py-2 text-end tabular-nums text-muted">
+                        {formatPriceCents(jaar.vatCents)}
+                      </td>
+                      <td className="px-4 py-2 text-end font-semibold tabular-nums">
+                        {formatPriceCents(jaar.grossCents)}
+                      </td>
+                    </tr>
+                    {positie === 0 &&
+                      facturen
+                        .filter((maand) => maand.year === jaar.year)
+                        .map((maand) => (
+                          <tr key={maand.month} className="border-t border-border">
+                            <td className="px-4 py-2 ps-8">
+                              <Link
+                                href={`/beheer/facturen?jaar=${maand.year}&maand=${maand.index}`}
+                                className="underline underline-offset-4 hover:text-caro-orange"
+                              >
+                                {MAANDEN[maand.index - 1]}
+                              </Link>
+                            </td>
+                            <td className="px-4 py-2 text-end tabular-nums">{maand.count}</td>
+                            <td className="px-4 py-2 text-end tabular-nums">
+                              {formatPriceCents(maand.netCents)}
+                            </td>
+                            <td className="px-4 py-2 text-end tabular-nums text-muted">
+                              {formatPriceCents(maand.vatCents)}
+                            </td>
+                            <td className="px-4 py-2 text-end tabular-nums">
+                              {formatPriceCents(maand.grossCents)}
+                            </td>
+                          </tr>
+                        ))}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Eigen tellers, geen analysedienst van buiten: dat scheelt een
           toestemmingsbanner en meet daardoor élke bezoeker in plaats van

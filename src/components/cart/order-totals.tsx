@@ -86,8 +86,8 @@ export function OrderTotals({
         })}
       </p>
 
-      {/* De datum van de groothandel die wij inkopen, plus één werkdag voor het
-          inkopen zelf. Staat hier en niet bij de artikelen: het pakket is pas
+      {/* De datum van de groothandel die wij inkopen, onveranderd. Staat hier
+          en niet bij de artikelen: het pakket is pas
           compleet als de laatste regel er is (lib/catalog/delivery.ts). */}
       {deliveryDate && (
         <p className="mt-3 text-sm text-muted">
