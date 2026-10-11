@@ -90,6 +90,17 @@ const MANUFACTURER_KEY = "manufacturer";
  */
 const FILTER_SAMPLE_SIZE = 20;
 
+/**
+ * Hoe lang een /items-antwoord goed blijft.
+ *
+ * Eén getal, gedeeld door `fetchParts` en `fetchFilterBlock`, en dat is geen
+ * netheid maar een voorwaarde: Next dedupliceert twee identieke fetches
+ * alleen als ook de opties gelijk zijn (@docs/DECISIONS.md #32).
+ *
+ * Vijf minuten omdat hier prijzen en voorraad in zitten.
+ */
+const PARTS_REVALIDATE = 300;
+
 const PURCHASE_PRICE_TYPE = "ek";
 const RETAIL_PRICE_PREFIX = "evp";
 
@@ -689,7 +700,7 @@ async function fetchParts(
   // Eén kapotte categorie mag geen foutpagina opleveren.
   let data: unknown;
   try {
-    data = await apiGet(source, "/items", params, 300);
+    data = await apiGet(source, "/items", params, PARTS_REVALIDATE);
   } catch (error) {
     console.error("Tyre24 /items faalde:", error instanceof Error ? error.message : error);
     return [];
@@ -749,11 +760,32 @@ async function fetchFilterBlock(
   try {
     // De artikelen die hier meekomen gebruiken we niet; het gaat om het
     // `filter`-blok. Zie FILTER_SAMPLE_SIZE waarom dat er maar twintig zijn.
+    //
+    // **De revalidate hieronder moet gelijk blijven aan die in
+    // `fetchParts`.** Hier stond 3600 tegen 300 daar, terwijl het om exact
+    // dezelfde URL gaat: op een categoriepagina lopen deze twee parallel en
+    // draagt één antwoord allebei de stukken — `fetchParts` houdt de
+    // artikelen en gooit het filterblok weg, hier gebeurt het omgekeerde.
+    //
+    // De gedachte: Next dedupliceert een `fetch` binnen één render op URL
+    // **plus opties**, dus met twee verschillende waarden ziet hij er twee.
+    // @docs/DECISIONS.md #32 telde daar inderdaad `items ×2` op een
+    // categoriepagina.
+    //
+    // **NIET GEMETEN of dit die tweede aanroep werkelijk wegneemt.** De
+    // fetch-cache op schijf schrijft in beide gevallen één bestand voor deze
+    // URL, dus daarmee is het verschil niet zichtbaar, en het meetgereedschap
+    // dat #32 gebruikte (`logging.fetches`) werkt alleen in `next dev` — er
+    // draaide er al een op deze map. Gelijktrekken is hoe dan ook juist; of
+    // het een call per weergave scheelt staat nog open.
+    //
+    // Aan versheid kost het niets: dit antwoord komt mee met de artikelen,
+    // die toch al elke vijf minuten verversen.
     data = await apiGet(
       source,
       "/items",
       { parentNodeId, limit: FILTER_SAMPLE_SIZE, page: FIRST_PAGE },
-      3600,
+      PARTS_REVALIDATE,
     );
   } catch {
     return {};
