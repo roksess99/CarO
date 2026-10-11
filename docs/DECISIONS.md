@@ -595,6 +595,58 @@ merkteken, zodat de rijen uitgelijnd blijven.
 Wil de eigenaar er alsnog foto's in, dan is dat één map met bestanden en één
 component; de keuze hierboven over beeldrechten geldt dan onverkort.
 
+#### TERUGGEDRAAID 2026-10-11: er staan nu wél foto's
+
+De eigenaar vroeg er opnieuw om, en de reden om het niet te doen bleek te
+vervallen. **"Elf licenties" kost namelijk niets**: het zijn de productfoto's
+van de groothandel, dezelfde die al op elke productkaart in deze winkel staan.
+Ze komen niet uit het `icon`-veld van de categorie (dat bestaat bij eindgroepen
+nog steeds niet) maar uit de artikelen zelf.
+
+Alle veertien groepen hebben er een, in `public/onderdelen/` met de
+koppeling in `lib/catalog/group-photos.ts`; de herkomst per bestand staat in
+`public/onderdelen/BRONNEN.md`. De lijntekeningen blijven als terugval voor
+een groep die er geen heeft.
+
+**De schokdemper was de lastigste en leverde de bruikbaarste les op.** Vijf
+wegen door de API gaven niets — zoeken geeft alleen beschermkappen,
+`filter[genericArticleId]=854` geeft HTTP 500, en een directe vraag om knoop
+775 gaf nul artikelen terwijl de tegel er 86 toonde. De categoriepagina van
+diezelfde knoop toonde ze wél. **De adapter van de winkel krijgt uit deze API
+dus iets wat een rechtstreekse vraag met dezelfde parameters niet krijgt**;
+dat verschil staat open, maar de werkwijze die eruit volgt niet: bevraag bij
+twijfel de winkel, niet de leverancier.
+
+**En één ding dat wél de winkel in had gekund.** De eigenaar leverde zelf een
+foto aan voor deze groep; dat bleek een preview van Alamy, met hun logo en
+"Image ID: E9FC17" zichtbaar in beeld. Niet gebruikt. Dat is exact dezelfde
+fout als de vier iStock-previews hieronder, en hij zou er deze keer letterlijk
+op staan.
+
+**Vrije stockfoto's waren de eerste gedachte en die weg is dood.** GEMETEN
+2026-10-11: Openverse (CC0 en publiek domein) geeft **nul** treffers voor
+interieurfilter, remblok, koelvloeistof en wisserblad; "motorolie" geeft er
+240 die allemaal reclameplaten uit 1934-1953 zijn. Pexels geeft bij "brake
+pads" motorfietsremklauwen en monteurs in garages. Deze categorieën zijn te
+specifiek voor stockfotografie — zoek daar niet opnieuw.
+
+**Twee dingen die het beeld pas bruikbaar maakten**, allebei gevonden door te
+kijken in plaats van te vertrouwen:
+
+- **Een gevuld `image`-veld is geen foto.** De YUASA-accu levert een plaatje
+  met de tekst "NO IMAGE"; DELPHI en TEXTAR leveren bij remschijf een
+  technische maattekening. Een script dat op "veld gevuld" toetst, laat die
+  er alledrie door.
+- **Het witte vlak moest een rand krijgen.** In lichte modus valt een witte
+  beeldtegel samen met de witte kaart eromheen, en dan verdwijnt een licht
+  onderwerp volledig — de bougie was er letterlijk niet meer. Van de dertien
+  foto's beslaat het onderwerp 10% (wisserblad) tot 44% (accu) van het vlak,
+  dus dat raakt de halve rij.
+
+Wat dit **niet** verandert: de vier familietegels op de homepage zijn nog
+steeds iStock-previews van 612 px. Dat is het openstaande deel van dit
+hoofdstuk en het enige hier dat geld kan kosten.
+
 ---
 
 ## 2. Hosting — VASTGESTELD 2026-09-10: Hostinger
@@ -3003,6 +3055,107 @@ Geen micro-optimalisatie aan rendertijd: de server doet er 120 ms over. Alles
 wat hier te winnen valt zit in het aantal en de duur van de verzoeken aan de
 leverancier, en die duur is niet van ons.
 
+### VERVOLG 2026-10-11: een tweede audit, en wat eruit kwam
+
+De eigenaar vroeg om een volledige performance-audit. Die bevestigde het
+bovenstaande — koud `/nl/banden/auto-suv-1` opnieuw gemeten op **6,19 s** en
+**6,38 s** — en leverde één inzicht op dat de aanpak omdraait.
+
+#### Een verlopen cache-ingang is niet koud
+
+De aanname was dat de zes seconden elke vijf minuten terugkomen, want zo lang
+blijft een `/items`-antwoord goed. **Dat klopt niet.** GEMETEN met
+`PARTS_REVALIDATE` tijdelijk op 10 seconden, zodat het vervallen binnen een
+testronde paste:
+
+| Aanroep | Tijd |
+|---|---|
+| koud, geen ingang in de cache | **7,7 s** |
+| meteen daarna | 0,085 s |
+| **na 14 s, de ingang is dus verlopen** | **0,091 s** |
+| nog eens 14 s later | 0,096 s |
+
+Next serveert een verlopen ingang gewoon uit en ververst hem op de
+achtergrond. De zes seconden treffen dus alleen een categorie die **nog nooit**
+is opgehaald, en dat is precies één situatie: een verse `.next/cache`, dus na
+elke deploy.
+
+Dat scheelt een factor vijftien in de oplossing. Er is geen warmhoudronde
+nodig die elke paar minuten langsgaat; één rondje volstaat.
+
+#### Het warmrondje
+
+`lib/catalog/warm.ts`, aangeroepen door de klok in de server (45 seconden na
+het opstarten en daarna elk uur) én door `/api/jobs/prices`, zodat je hem na
+een handmatige deploy meteen kunt aanzetten.
+
+GEMETEN: **17 categorieën** (banden 6, velgen 1, toebehoren 10) plus drie
+homepagerijen en drie categoriebomen = **23 aanroepen, ongeveer 46 seconden**
+met twee seconden rust ertussen. Dat is 30 per minuut tegen een limiet van 100
+voor de hele winkel, dus er blijft ruimte voor bezoekers.
+
+Drie dingen die erin zitten en een reden hebben:
+
+- **Dezelfde aantallen als de pagina's zelf** (`limit: 20` voor een categorie,
+  `limit: 4` voor de homepagerij). Next sleutelt zijn cache op de volledige
+  URL, dus warmen met een ander aantal warmt niets.
+- **Onderdelen doen niet mee.** Die catalogus hangt aan een gekozen auto (#7)
+  en die kennen we niet; de familiepagina is daar ook niet traag (1 call).
+- **Een eigen, vroegere tik dan de andere taken.** De prijsmeting is
+  boekhouding en mag wachten; warmen bestaat juist voor de bezoeker die nú
+  binnenkomt.
+
+#### De drie tellers zijn er één geworden
+
+De eerste pagina van een bezoek stuurde **drie** POSTs naar `/api/stats`
+(weergave, bezoek, herkomst) en deed dus drie keer de snelheidsrem, drie keer
+een verbinding uit de pool en drie `INSERT`s. Nu is het één beacon met een
+lijst en één statement met meerdere rijen (`bumpMany`).
+
+Twee dingen die daarbij hoorden en die je makkelijk vergeet:
+
+1. **De oude vorm blijft werken.** Tijdens een deploy staat de winkel bij
+   mensen al open; hun JavaScript stuurt nog een los object. De route
+   accepteert allebei.
+2. **Bundelen maakt een gat in de snelheidsrem.** Die telt verzoeken, niet
+   gebeurtenissen — één POST met duizend elementen zou duizend regels ophogen
+   en er gewoon langs komen. Daarom een grens van vier per verzoek.
+
+GEMETEN na de bouw, met een label dat in het echt niet voorkomt: een lijst van
+tien dezelfde gebeurtenissen wordt **4**, de oude losse vorm telt als 1, en
+onbekende namen schrijven niets. Daarna end-to-end in de browser: één
+`sendBeacon` met `[{"e":"pageview","l":"familie"}]`, en bij een verse
+paginalading gingen `pageview`, `visit` en `source` alle drie precies één
+omhoog. De testrijen zijn weer verwijderd.
+
+#### Wat de audit nakeek en goed bevond
+
+Dit hoort erbij, want het zijn de plekken waar je anders tijd in steekt:
+**geen** server-only code in de browserbundel (`mysql2`, `pdf-lib` en
+`nodemailer` komen in nul chunks voor — de val van #17 is dicht), acht
+dependencies zonder UI-kit of state-manager, debouncing op de zoekbalk (350 ms,
+minimaal 3 tekens, plus een request-id tegen een laat antwoord van een oudere
+toetsaanslag), `sizes` overal waar beeld meeschaalt en `priority` op precies
+de drie LCP-kandidaten, en geen enkele derde partij in de browser.
+
+Eén aanname uit de opdracht klopte niet: de prefetch van `/nl/zoeken` kost
+géén leveranciersaanroep, want zonder zoekterm is `results = []`.
+
+#### Nog open
+
+- **De dubbele `/items`-aanroep.** `fetchFilterBlock` en `fetchParts` halen op
+  een categoriepagina exact dezelfde URL op. Het verschil zat in de
+  `revalidate` (3600 tegen 300) en die is gelijkgetrokken via één constante,
+  maar **of dat de tweede aanroep echt wegneemt is niet gemeten**: de
+  fetch-cache op schijf schrijft in beide gevallen één bestand voor die URL,
+  en `logging.fetches` werkt alleen in `next dev` — waar er al een draaide op
+  deze map. Gelijktrekken is hoe dan ook juist.
+- **De categorieboom gaat nog steeds twee keer** (`generateMetadata` en de
+  pagina), zoals hierboven beschreven.
+- **Testen schrijft in de echte cijfers.** `stats_daily` staat in de
+  productiedatabase, dus elke pagina die je lokaal opent telt mee in het
+  dashboard van de eigenaar. Dat is bekend en nog niet opgelost.
+
 ---
 
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
@@ -3121,6 +3274,8 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-28 | Retour aanmelden op ordernummer + mailadres, terugbetalen via Mollie | Een ordernummer alleen is te raden; een terugbetaling op de oorspronkelijke betaling scheelt het uitvragen van een IBAN (#20) |
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
+| 2026-10-11 | Catalogus warmen na een deploy, en de drie tellers samen in één verzoek | GEMETEN: een verlopen cache-ingang serveert in 0,09 s, dus alleen een categorie die nog nooit is opgehaald kost zeven seconden — één rondje van 23 aanroepen volstaat, geen warmhoudronde (#32) |
+| 2026-10-11 | Foto's in plaats van lijntekeningen bij "meest gezocht" | De eigenaar vroeg erom, en de reden om het niet te doen (elf licenties) vervalt: het zijn de productfoto's van de groothandel die we al op elke productkaart tonen. Vrije stock heeft deze categorieën niet — GEMETEN (#9) |
 | 2026-10-09 | De extra werkdag op de leverdatum is eraf | Winkelkeuze van de eigenaar: de datum van de groothandel gaat onveranderd naar de klant. Scherpere belofte, kleinere marge als hij laat op de dag inkoopt (#27) |
 | 2026-10-09 | Categorieboom en merkenlijst per verzoek memoïseren met `cache()` | GEMETEN: de helft van de leverancier-calls op een categoriepagina was dubbel werk tussen `generateMetadata`, de pagina en het kruimelpad; op een koude cache zijn dat echte verzoeken tegen een limiet van honderd per minuut (#32) |
 | 2026-10-09 | Facturen zoeken op naam, mail of bedrag; jaar- en maandsplitsing op beide schermen | De beheerder zocht een factuur bij een klantvraag en kon alleen scrollen. De filters staan in de URL, en jaren én maanden komen uit één query in plaats van twee (#31) |
