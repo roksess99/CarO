@@ -1,10 +1,11 @@
 import { timingSafeEqual } from "node:crypto";
+import { warmCatalog } from "@/lib/catalog/warm";
 import { runPriceSnapshot } from "@/lib/prices/snapshot";
 import { runReviewInvites } from "@/lib/reviews/job";
 
 /**
- * De dagelijkse taken aanroepen van buitenaf: de prijsmeting én de
- * beoordelingsuitnodigingen.
+ * De terugkerende taken aanroepen van buitenaf: de beoordelingsuitnodigingen,
+ * het warmen van de catalogus en de prijsmeting.
  *
  *     curl -fsS -H "Authorization: Bearer <CARO_JOB_TOKEN>" \
  *          https://caroparts.nl/api/jobs/prices
@@ -22,6 +23,11 @@ import { runReviewInvites } from "@/lib/reviews/job";
 export const dynamic = "force-dynamic";
 // Een categorie van 1.600 artikelen kost vier verzoeken van ~25 s; de
 // uitnodigingen komen daar bovenop, hooguit 25 mails.
+//
+// GEMETEN 2026-10-11: het warmrondje doet er ~46 s bij — 17 categorieën plus
+// drie homepagerijen en drie categoriebomen, met twee seconden rust ertussen
+// om de limiet van de leverancier met rust te laten. Samen met de prijsmeting
+// (110 s gemeten) zit dat ruim binnen deze 300.
 export const maxDuration = 300;
 
 function tokenMatches(given: string, expected: string): boolean {
@@ -63,15 +69,28 @@ async function handle(request: Request): Promise<Response> {
     return null;
   });
 
+  // Het warmrondje hoort hier ook, en vooral: het is de knop om ná een deploy
+  // aan te zetten. De klok in de server doet het 45 seconden na het opstarten
+  // vanzelf (lib/catalog/warm.ts), maar wie met de hand uitrolt wil niet op
+  // die klok wachten. Twee rondjes tegelijk kunnen niet — `warmCatalog` laat
+  // er één tegelijk door en meldt de tweede als overgeslagen.
+  const warm = await warmCatalog().catch((error: unknown) => {
+    console.error(
+      "Catalogus warmen mislukt:",
+      error instanceof Error ? error.message : "onbekende fout",
+    );
+    return null;
+  });
+
   try {
     const prijzen = await runPriceSnapshot();
-    return Response.json({ ok: true, prijzen, uitnodigingen });
+    return Response.json({ ok: true, prijzen, uitnodigingen, warm });
   } catch (error) {
     console.error(
       "Prijsmeting mislukt:",
       error instanceof Error ? error.message : "onbekende fout",
     );
-    return Response.json({ ok: false, uitnodigingen }, { status: 500 });
+    return Response.json({ ok: false, uitnodigingen, warm }, { status: 500 });
   }
 }
 

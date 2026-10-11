@@ -1,9 +1,10 @@
+import { warmCatalog } from "@/lib/catalog/warm";
 import { runReviewInvites } from "@/lib/reviews/job";
 import { runPriceSnapshot } from "./snapshot";
 
 /**
- * De klok achter de dagelijkse taken: de prijsmeting en de
- * beoordelingsuitnodigingen.
+ * De klok achter het terugkerende werk: de prijsmeting, de
+ * beoordelingsuitnodigingen en het warmen van de catalogus.
  *
  * Elk uur kijken of de meting van vandaag al gedaan is. Niet één keer per
  * etmaal, want dan bepaalt het toevallige moment van de laatste serverherstart
@@ -19,6 +20,23 @@ const TICK_MS = 60 * 60_000;
 
 /** Even wachten na het opstarten: eerst moet de winkel bezoekers kunnen bedienen */
 const FIRST_TICK_MS = 5 * 60_000;
+
+/**
+ * Het warmen van de catalogus heeft een **eigen, vroegere** tik, en dat is
+ * met opzet.
+ *
+ * De twee taken hierboven zijn boekhouding: ze mogen best een kwartier
+ * wachten. Warmen is het tegenovergestelde — het bestaat juist voor de
+ * bezoeker die nú binnenkomt, en na een deploy is de cache leeg (zie
+ * `lib/catalog/warm.ts`: koud 7,7 s tegen 0,09 s warm). Elke minuut die dit
+ * later begint is een minuut waarin iemand zeven seconden naar een leeg
+ * productraster kijkt.
+ *
+ * Niet op nul: de server moet eerst kunnen opstarten en antwoorden, en een
+ * rondje langs de catalogus eet van dezelfde limiet van 100 verzoeken per
+ * minuut als de bezoekers.
+ */
+const WARM_FIRST_MS = 45_000;
 
 let started = false;
 
@@ -72,6 +90,37 @@ export function startPriceClock(): void {
       }
     })();
   };
+
+  /**
+   * Het warmrondje. Eigen tik, eigen vangnet: dit mag de prijsmeting niet
+   * ophouden en andersom. Het meldt zich alleen als er iets te melden is —
+   * na de eerste keer staat alles in de cache en is dit een stille nulronde.
+   */
+  const warm = () => {
+    void (async () => {
+      try {
+        const result = await warmCatalog();
+        if (!result.skipped) {
+          console.log(
+            `Catalogus warm: ${result.categories} categorieën, ${result.calls} aanroepen, ${Math.round(result.ms / 1000)} s`,
+          );
+        }
+        for (const error of result.errors) console.error("Warmen:", error);
+      } catch (error) {
+        console.error(
+          "Catalogus warmen mislukt:",
+          error instanceof Error ? error.message : "onbekende fout",
+        );
+      }
+    })();
+  };
+
+  const firstWarm = setTimeout(() => {
+    warm();
+    const repeatWarm = setInterval(warm, TICK_MS);
+    repeatWarm.unref?.();
+  }, WARM_FIRST_MS);
+  firstWarm.unref?.();
 
   const first = setTimeout(() => {
     tick();

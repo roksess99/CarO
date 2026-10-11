@@ -10,6 +10,37 @@ import type { StatMetric } from "./types";
  * zijn eigen fout af — de enige plek in deze winkel waar dat zo is, en met
  * reden.
  */
+/**
+ * Meerdere tellingen in één keer, voor een beacon die er meer dan één draagt
+ * (de eerste pagina van een bezoek levert er drie op).
+ *
+ * **Eén statement met meerdere rijen**, niet een lus met `bump()`: dat is één
+ * reis naar de database in plaats van drie, en het blijft één transactie van
+ * de server uit gezien. `ON DUPLICATE KEY UPDATE` werkt ook per rij, dus de
+ * optelling blijft precies zoals hij was.
+ *
+ * Zelfde afspraak als `bump()`: dit gooit nooit.
+ */
+export async function bumpMany(
+  events: readonly { metric: StatMetric; label: string }[],
+  day: Date = new Date(),
+): Promise<void> {
+  if (events.length === 0) return;
+  try {
+    const dag = isoDay(day);
+    const rijen = events.map(() => "(?, ?, ?, 1)").join(", ");
+    const waarden = events.flatMap((e) => [dag, e.metric, e.label]);
+    await execute(
+      `INSERT INTO stats_daily (stat_date, metric, label, total)
+       VALUES ${rijen}
+       ON DUPLICATE KEY UPDATE total = total + 1`,
+      waarden,
+    );
+  } catch (error) {
+    console.error("Tellers konden niet bijgewerkt worden", error);
+  }
+}
+
 export async function bump(
   metric: StatMetric,
   label = "",

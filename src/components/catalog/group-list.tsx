@@ -1,5 +1,9 @@
 import Image from "next/image";
 import { GroupIcon } from "@/components/catalog/group-icon";
+import {
+  GROUP_PHOTO_SIZE,
+  groupPhoto,
+} from "@/lib/catalog/group-photos";
 import { Link } from "@/i18n/navigation";
 import type { AssemblyGroup } from "@/lib/catalog/wearparts";
 import { groupSlug } from "@/lib/catalog/wearparts-provider";
@@ -38,10 +42,17 @@ export function GroupList({
   carId,
   /**
    * De rij "meest gezocht" boven het rooster. Zelfde rijen in vier kolommen,
-   * met een eigen lijntekening in plaats van het leveranciersbeeld — dat
-   * bestaat voor eindgroepen niet (group-icon.tsx). Oranje rand en oranje
-   * tekening, zodat de rij als snelkoppeling leest en niet als een tweede
-   * categorielijst.
+   * met een oranje rand zodat hij als snelkoppeling leest en niet als een
+   * tweede categorielijst.
+   *
+   * **Sinds 2026-10-11 met een productfoto** (group-photos.ts) op verzoek van
+   * de eigenaar. Daarvóór stond hier een lijntekening van 24 pixels; die
+   * blijft als terugval voor de groepen zonder foto, maar op 64 pixels, want
+   * naast een foto leest een pictogram van 24 als een gat in de rij.
+   *
+   * Het beeldvlak is dus even groot ongeacht wat erin staat — anders springen
+   * de namen per tegel in, en dat is precies wat een rij snelkoppelingen
+   * onleesbaar maakt.
    */
   compact = false,
 }: {
@@ -55,7 +66,9 @@ export function GroupList({
   if (compact) {
     return (
       <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {groups.map((group) => (
+        {groups.map((group) => {
+          const photo = groupPhoto(group.quickKey);
+          return (
           <li key={group.id}>
             <Link
               href={{
@@ -63,15 +76,46 @@ export function GroupList({
                 params: { family: familySlugParam, category: groupSlug(group) },
                 query: { auto: String(carId) },
               }}
-              className="flex h-full min-h-12 items-center gap-2.5 rounded-lg border border-caro-orange/40 bg-background px-3 py-2.5 transition-colors hover:border-caro-orange hover:bg-surface"
+              className="flex h-full min-h-20 items-center gap-3 rounded-lg border border-caro-orange/40 bg-background p-2 transition-colors hover:border-caro-orange hover:bg-surface"
             >
-              {/* Eigen lijntekening; de leverancier levert geen beeld bij
-                  eindgroepen (group-icon.tsx). Oranje, zodat de rij ook op
-                  een telefoon in één oogopslag te scannen is. */}
-              <GroupIcon
-                iconKey={group.quickKey}
-                className="size-6 shrink-0 text-caro-orange"
-              />
+              {/* Een echte productfoto van de groothandel waar we er een
+                  hebben (group-photos.ts), anders de eigen lijntekening.
+                  Wit vlak eronder, ook in donkere modus: deze foto's stáán op
+                  wit en zweven er anders bovenop — zelfde reden als bij de
+                  leverancierspictogrammen hieronder.
+
+                  **De haarlijn eromheen is geen versiering.** GEMETEN in de
+                  browser: in lichte modus valt een wit vlak samen met de
+                  witte tegel, en dan verdwijnt een licht onderwerp volledig.
+                  De bougie was daar letterlijk niets meer — een zilveren
+                  voorwerp, op wit gefotografeerd, op een wit vlak. Van de
+                  dertien foto's beslaat het onderwerp 10% (wisserblad) tot
+                  44% (accu) van het vlak; de lichte helft heeft een rand
+                  nodig om nog een beeld te zíjn. In donkere modus valt het
+                  vlak vanzelf op.
+
+                  Het beeld is decoratief, dus `alt=""`: de naam van de groep
+                  staat er in tekst naast. */}
+              {photo ? (
+                <Image
+                  src={photo}
+                  alt=""
+                  width={GROUP_PHOTO_SIZE}
+                  height={GROUP_PHOTO_SIZE}
+                  sizes="64px"
+                  className="size-16 shrink-0 rounded-md bg-white object-contain p-1 ring-1 ring-caro-ink/10"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="flex size-16 shrink-0 items-center justify-center rounded-md bg-surface"
+                >
+                  <GroupIcon
+                    iconKey={group.quickKey}
+                    className="size-8 text-caro-orange"
+                  />
+                </span>
+              )}
               <span className="flex-1 text-sm leading-snug font-semibold">
                 {group.name}
               </span>
@@ -94,7 +138,8 @@ export function GroupList({
               </svg>
             </Link>
           </li>
-        ))}
+          );
+        })}
       </ul>
     );
   }

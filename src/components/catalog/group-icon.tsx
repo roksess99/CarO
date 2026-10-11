@@ -1,17 +1,22 @@
 /**
  * Een tekening per veelgezochte onderdeelgroep.
  *
- * Waarom eigen tekeningen en geen foto's: de leverancier heeft ze niet.
- * GEMETEN 2026-09-07 en opnieuw 2026-09-17 — alléén de 33 hoofdgroepen
- * dragen een `icon`, de eindgroepen (Oliefilter, Remblok, motorolie, Accu)
- * geen enkele. Foto's inkopen zou voor elf tegels elf licenties vragen en
- * @docs/DECISIONS.md #9 staat over beeldrechten nog open.
+ * **Dit is sinds 2026-10-11 de terugval, niet meer de hoofdweg.** De rij
+ * "meest gezocht" toont nu productfoto's (`lib/catalog/group-photos.ts`);
+ * deze tekeningen staan er nog voor een groep die er geen heeft. Dat zijn er
+ * vandaag nul — maar de volgende groep die aan die rij wordt toegevoegd
+ * begint zonder foto, en dan is dit wat de klant ziet.
  *
- * Lijntekeningen in `currentColor` hebben daarnaast twee praktische
- * voordelen boven foto's: ze werken in het lichte én het donkere thema
- * zonder tweede bestand, en ze blijven leesbaar op de 28 pixels die een rij
- * in de rij "Meest gezocht" ervoor heeft — een foto van een remblok is op
- * dat formaat een grijze vlek.
+ * Wat hieronder stond en nog steeds klopt: de leverancier levert bij
+ * eindgroepen géén beeld. GEMETEN 2026-09-07 en opnieuw 2026-09-17 — alléén
+ * de 33 hoofdgroepen dragen een `icon`, de eindgroepen (Oliefilter, Remblok,
+ * motorolie, Accu) geen enkele. De foto's komen dan ook niet uit dat veld
+ * maar uit de artikelen zelf.
+ *
+ * Wat niet meer klopt: hier stond dat een foto op dit formaat "een grijze
+ * vlek" is. Dat was waar bij 24 pixels; het beeldvlak is daarom meegegroeid
+ * naar 64. En "elf licenties" bleek geen kosten te hebben — het zijn de
+ * foto's die we toch al van de groothandel tonen.
  *
  * **De sleutel is de naam uit `lib/catalog/quick-links.ts`, niet het
  * groepsnummer.** Dat stond hier tot 2026-09-25 wél zo, en die nummers zijn
