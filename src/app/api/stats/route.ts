@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { callerKey, withinLimit } from "@/lib/rate-limit";
-import { bump } from "@/lib/stats/store";
+import { bumpMany } from "@/lib/stats/store";
 import { cleanLabel, isStatMetric } from "@/lib/stats/types";
 
 /**
@@ -41,9 +41,23 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (typeof body !== "object" || body === null) return geen();
 
-  const { e, l } = body as { e?: unknown; l?: unknown };
-  if (!isStatMetric(e)) return geen();
+  // Twee vormen, en dat is geen slordigheid maar een deploy-eis: de browser
+  // van iemand die de winkel al open had staan stuurt nog de oude losse vorm
+  // door, en die tellingen horen gewoon mee te tellen. De lijst is sinds
+  // 2026-10-11 wat de winkel zelf stuurt.
+  const raw: unknown[] = Array.isArray(body) ? body : [body];
 
-  await bump(e, cleanLabel(l));
+  // **De snelheidsrem telt verzoeken, niet gebeurtenissen.** Zonder deze
+  // grens zou één POST met duizend elementen duizend databaseregels ophogen
+  // en de rem gewoon passeren — precies het gat dat je maakt door te
+  // bundelen. Vier is ruim: de eerste pagina van een bezoek levert er drie.
+  const events = raw.slice(0, 4).flatMap((item) => {
+    if (typeof item !== "object" || item === null) return [];
+    const { e, l } = item as { e?: unknown; l?: unknown };
+    return isStatMetric(e) ? [{ metric: e, label: cleanLabel(l) }] : [];
+  });
+  if (events.length === 0) return geen();
+
+  await bumpMany(events);
   return geen();
 }

@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { pageKind } from "@/lib/stats/page-kind";
-import { countStat } from "@/lib/stats/send";
+import { countStats, type StatEvent } from "@/lib/stats/send";
 import { sourceFromReferrer } from "@/lib/stats/types";
 
 /**
@@ -38,18 +38,26 @@ export function PageBeacon() {
     if (gemeld.current === pathname) return;
     gemeld.current = pathname;
 
-    countStat("pageview", pageKind(pathname));
+    // Alles wat dit moment oplevert gaat in één verzoek de deur uit. Op de
+    // eerste pagina van een bezoek zijn dat er drie; dat waren er ook drie
+    // apart, met drie keer dezelfde reis langs de snelheidsrem en de
+    // database (lib/stats/send.ts).
+    const events: StatEvent[] = [
+      { e: "pageview", l: pageKind(pathname) },
+    ];
 
-    if (!eerste.current) return;
-    eerste.current = false;
-
-    const source = sourceFromReferrer(document.referrer, location.hostname);
-    // Lege herkomst betekent: de verwijzer is onze eigen site. Dan is dit geen
-    // nieuw bezoek maar een pagina die in een nieuw tabblad is geopend.
-    if (source) {
-      countStat("visit");
-      countStat("source", source);
+    if (eerste.current) {
+      eerste.current = false;
+      const source = sourceFromReferrer(document.referrer, location.hostname);
+      // Lege herkomst betekent: de verwijzer is onze eigen site. Dan is dit
+      // geen nieuw bezoek maar een pagina die in een nieuw tabblad is
+      // geopend.
+      if (source) {
+        events.push({ e: "visit" }, { e: "source", l: source });
+      }
     }
+
+    countStats(events);
   }, [pathname]);
 
   return null;
