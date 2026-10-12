@@ -33,7 +33,12 @@ export async function TyreBrandFilter({
   /** Het gekozen merk uit de URL, of null */
   active: string | null;
   family: string;
-  category: string;
+  /**
+   * De categorie, als dit filter op een categoriepagina staat. Zonder
+   * categorie wijzen de links naar de familiepagina zelf - daar staat sinds
+   * 2026-10-12 dezelfde maatzoekopdracht met hetzelfde merkfilter.
+   */
+  category?: string;
   /** Maat en seizoen; die moeten in elke link mee */
   query: Record<string, string>;
 }) {
@@ -41,11 +46,16 @@ export async function TyreBrandFilter({
   // Eén merk is geen keuze: dan filtert de knop niets weg.
   if (facets.length < 2) return null;
 
-  const hrefFor = (brand: string | null) => ({
-    pathname: "/[family]/[category]" as const,
-    params: { family, category },
-    query: brand ? { ...query, merk: brand } : query,
-  });
+  const hrefFor = (brand: string | null) => {
+    const next = brand ? { ...query, merk: brand } : query;
+    return category
+      ? {
+          pathname: "/[family]/[category]" as const,
+          params: { family, category },
+          query: next,
+        }
+      : { pathname: "/[family]" as const, params: { family }, query: next };
+  };
 
   const tile = (
     label: string,

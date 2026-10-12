@@ -17,9 +17,15 @@ const SCROLL_AFTER_OPTIONS = 10;
 type Props = {
   groups: FilterGroup[];
   selected: SelectedFilters;
-  /** Route-params van de categoriepagina waar de links naartoe wijzen */
+  /** Route-param van de familie waar de links naartoe wijzen */
   family: string;
-  category: string;
+  /**
+   * De categorie, als dit paneel bij één categorie hoort. **Zonder categorie
+   * wijzen de links naar de familiepagina zelf**: die toont sinds 2026-10-12
+   * dezelfde filters, want de klant die bij banden binnenkomt zag er geen
+   * tot hij eerst Auto/SUV aanklikte.
+   */
+  category?: string;
   /**
    * Querystring die op elke filterlink mee moet. Bij onderdelen staat daar de
    * gekozen auto in (`?auto=115566`); zonder dat zou een klik op een filter de
@@ -32,6 +38,13 @@ type Props = {
  * Filterpaneel. Bewust server-gerenderde links in plaats van checkboxes met
  * JavaScript: filteren werkt zo zonder JS, elke combinatie heeft een eigen
  * URL en is deelbaar, en de resultaten komen server-side uit de API.
+ *
+ * **`scroll={false}` op elke filterlink.** Een filterklik is een navigatie,
+ * dus Next springt standaard naar de bovenkant van de pagina — en dan staat
+ * de klant weer bij de kop terwijl hij in de filterlijst bezig was. Op
+ * mobiel, waar het paneel een uitklap is, raakt hij zelfs zijn eigen
+ * filterlijst kwijt. De lijst eronder ververst gewoon; dat is wat de klant
+ * wil zien. Zelfde reden als bij "meer laden" (components/load-more.tsx).
  */
 export async function ProductFilters({
   groups,
@@ -45,11 +58,16 @@ export async function ProductFilters({
 
   const activeCount = countActiveFilters(selected);
 
-  const hrefFor = (next: SelectedFilters) => ({
-    pathname: "/[family]/[category]" as const,
-    params: { family, category },
-    query: { ...extraQuery, [FILTER_PARAM]: toFilterParam(next) },
-  });
+  const hrefFor = (next: SelectedFilters) => {
+    const query = { ...extraQuery, [FILTER_PARAM]: toFilterParam(next) };
+    return category
+      ? {
+          pathname: "/[family]/[category]" as const,
+          params: { family, category },
+          query,
+        }
+      : { pathname: "/[family]" as const, params: { family }, query };
+  };
 
   return (
     <div>
@@ -58,6 +76,7 @@ export async function ProductFilters({
         {activeCount > 0 && (
           <Link
             href={hrefFor({})}
+            scroll={false}
             className="text-sm text-muted underline underline-offset-4 hover:text-foreground"
           >
             {t("clearAll")}
@@ -81,6 +100,7 @@ export async function ProductFilters({
                 <li key={`${key}:${value}`}>
                   <Link
                     href={hrefFor(toggleFilter(selected, key, value))}
+                    scroll={false}
                     className="inline-flex items-center gap-1 rounded-md border border-caro-orange px-2 py-1 text-xs font-medium text-foreground hover:bg-surface"
                     aria-label={t("removeFilter", { value: label })}
                   >
@@ -127,6 +147,7 @@ export async function ProductFilters({
                         href={hrefFor(
                           toggleFilter(selected, group.key, option.value),
                         )}
+                        scroll={false}
                         aria-current={active ? "true" : undefined}
                         // min-h-11 op mobiel: py-1.5 gaf rijen van ~30px en
                         // die zijn met een duim niet betrouwbaar te raken
