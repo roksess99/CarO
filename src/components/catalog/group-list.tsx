@@ -3,6 +3,7 @@ import { GroupIcon } from "@/components/catalog/group-icon";
 import {
   GROUP_PHOTO_SIZE,
   groupPhoto,
+  mainGroupPhoto,
 } from "@/lib/catalog/group-photos";
 import { Link } from "@/i18n/navigation";
 import type { AssemblyGroup } from "@/lib/catalog/wearparts";
@@ -61,7 +62,13 @@ export function GroupList({
   carId: number;
   compact?: boolean;
 }) {
-  const withIcons = !compact && groups.some((group) => group.iconUrl);
+  // Een beeldkolom zodra er in deze lijst íets te tonen valt: onze eigen foto
+  // bij de hoofdgroep, of anders het pictogram van de leverancier. Staat er
+  // bij niemand iets, dan valt de kolom als geheel weg — een rij lege vlakken
+  // leest slechter dan geen vlak.
+  const withIcons =
+    !compact &&
+    groups.some((group) => Boolean(mainGroupPhoto(group.name) ?? group.iconUrl));
 
   if (compact) {
     return (
@@ -146,7 +153,13 @@ export function GroupList({
 
   return (
     <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-      {groups.map((group) => (
+      {groups.map((group) => {
+        // Sinds 2026-10-12 een echte productfoto waar we er een hebben
+        // (group-photos.ts). Het pictogram van de leverancier blijft de
+        // terugval: bij vijf hoofdgroepen leverde de catalogus niets
+        // bruikbaars, en bij Wielen/Banden is zijn wiel ook gewoon beter.
+        const photo = mainGroupPhoto(group.name);
+        return (
         <li key={group.id}>
           <Link
             href={{
@@ -159,7 +172,22 @@ export function GroupList({
             }`}
           >
             {withIcons &&
-              (group.iconUrl ? (
+              (photo ? (
+                /* Haarlijn om het witte vlak, net als bij "meest gezocht":
+                   in lichte modus valt een witte beeldtegel samen met de
+                   witte kaart eromheen, en dan verdwijnt een licht onderwerp
+                   — de waterpomp en de cilinderkop zijn precies dat
+                   (@docs/DECISIONS.md #9). De pictogrammen hieronder zijn
+                   zwarte silhouetten en hebben hem niet nodig. */
+                <Image
+                  src={photo}
+                  alt=""
+                  width={GROUP_PHOTO_SIZE}
+                  height={GROUP_PHOTO_SIZE}
+                  sizes="80px"
+                  className="h-14 w-20 shrink-0 rounded-lg bg-white object-contain p-1 ring-1 ring-caro-ink/10"
+                />
+              ) : group.iconUrl ? (
                 <Image
                   src={group.iconUrl}
                   alt=""
@@ -210,7 +238,8 @@ export function GroupList({
             </svg>
           </Link>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }

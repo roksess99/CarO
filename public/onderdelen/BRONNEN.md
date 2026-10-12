@@ -125,3 +125,75 @@ watermerk zou gewoon zichtbaar zijn geweest op de tegel.
 
 Een foto van een stockbank mag hier alleen met een gekochte licentie op naam
 van het bedrijf. Zonder licentie: de leverancier, of de lijntekening.
+
+# Fotos bij "Categorieen voor jouw auto"
+
+De eigenaar vroeg 2026-10-12 om foto's bij het **rooster** eronder, waar tot nu
+toe het pictogram van de leverancier stond. Dat zijn 35 hoofdgroepen; de
+koppeling staat in `lib/catalog/group-photos.ts` onder `MAIN_PHOTOS`, **op naam
+en niet op nummer** (zie @docs/DECISIONS.md #7).
+
+Zelfde bewerking als hierboven: wit weggesneden, 400x400 op wit met 16 px
+marge, mozjpeg q82. Twintig nieuwe bestanden, samen 252 kB.
+
+**Tien groepen lenen een foto die er al stond.** Elektrische systemen krijgt de
+accu, Filter de luchtfilter, Remsysteem de remschijf, smeermiddelen de
+motorolie, Vering / Demping de schokdemper, Ontsteking / Gloeisysteem de
+bougie, Wisserbladen de wisserblad, Riemen de distributieriem,
+Brandstofmanagement het brandstoffilter en Service-/ Inspectie- /
+Onderhoudsonderdelen het oliefilter. Een tweede bestand met hetzelfde beeld
+zou alleen een tweede bestand zijn.
+
+**Zes groepen houden de lijntekening van de leverancier**, en dat is geen
+omissie maar het resultaat van kijken:
+
+| Groep | Waarom geen foto |
+|---|---|
+| Informatie / Communicatiesystemen | de catalogus geeft alleen haaienvinantennes, en die liggen onder een herhaald watermerk van de groothandel |
+| Veiligheidssystemen | een kabelboom en een stekker; een airbag zelf staat er niet in |
+| Hybride-/elektrische aandrijving | twee artikelen voor deze auto, waarvan een maattekening |
+| Persluchtsysteem | nul artikelen, langs vier eindgroepen geprobeerd |
+| Wielen/Banden | alleen wielbouten en bandenspanningsensoren. Het pictogram van de leverancier is hier zelfs beter: een wiel zegt meer dan een bout |
+| Koplampreiniging | niet gezocht; dit is de kleinste groep van het rooster |
+
+## Hoe de kandidaten gevonden zijn
+
+Per hoofdgroep een eindgroep gekozen die het onderwerp het beste toont (een
+hoofdgroep heeft zelf geen artikelen: `/articles` geeft HTTP 500 op een groep
+met subgroepen), en daarvan de eerste zes productfoto's opgehaald. **Via de
+winkel, niet via de API** - dezelfde les als bij de schokdemper hierboven.
+Daarna zes contactvellen bekeken en per groep met het oog gekozen.
+
+Dat bekijken was het werk. Wat er langskwam en waarom het afviel: maattekeningen
+met maatvoering in plaats van een foto (Uitlaatsysteem, Hybride), foto's op een
+grijze ondergrond die uit de rij vallen, verpakkingsdozen in plaats van het
+artikel, en watermerken die het halve beeld beslaan (SCHAFERBARTHOLD bij de
+antennes, VIXA bij de motoronderdelen). Bij Asaandrijving, Stuurinrichting en
+Carrosserie leverde de eerste eindgroep siliconenkit, contactringen en bumpers
+met een disclaimerregel in het beeld - daar is een tweede ronde met een andere
+eindgroep overheen gegaan.
+
+## Wat er staat
+
+| Bestand | Hoofdgroep | Grootte | Bron |
+|---|---|---|---|
+| `groep-aandrijfassen.jpg` | Aandrijfassen / toebehoren | 5 kB | https://cdn01.alzura.com/0185_PIC/5010352_a.JPG |
+| `groep-accessoires.jpg` | Accessoires | 18 kB | https://cdn01.alzura.com/6355_PIC/ezc-ww-702_1-wm.JPG |
+| `groep-airconditioning.jpg` | Airconditioning | 13 kB | https://cdn01.alzura.com/4466_PIC/KTT095004_%231.JPG |
+| `groep-asaandrijving.jpg` | Asaandrijving | 5 kB | https://cdn01.alzura.com/4975_PIC/x90003_1.JPG |
+| `groep-brandstofvoorbereiding.jpg` | Brandstofvoorbereiding | 11 kB | https://cdn01.alzura.com/0185_PIC/112094_a.JPG |
+| `groep-carrosserie.jpg` | Carrosserie | 7 kB | https://cdn01.alzura.com/4555_PIC/5402-01-2002648P_%231.JPG |
+| `groep-comfortsystemen.jpg` | Comfortsystemen | 8 kB | https://cdn01.alzura.com/0095_PIC/SDP_SDP106-WR.JPG |
+| `groep-interieuruitvoering.jpg` | Interieuruitvoering | 3 kB | https://cdn01.alzura.com/4555_PIC/6010-01-061402P_%231.JPG |
+| `groep-koelsysteem.jpg` | Koelsysteem | 11 kB | https://cdn01.alzura.com/4466_PIC/D1W063TT_%231.JPG |
+| `groep-koppeling.jpg` | Koppeling / Montage-onderdelen | 14 kB | https://cdn01.alzura.com/0032_PIC/00323000950099.JPG |
+| `groep-motor.jpg` | Motor | 21 kB | https://cdn01.alzura.com/4514_PIC/hl0144a.JPG |
+| `groep-nevenbak.jpg` | Nevenbak | 10 kB | https://cdn01.alzura.com/0151_PIC/30%2094%209236_1.JPG |
+| `groep-stuurinrichting.jpg` | Stuurinrichting | 8 kB | https://cdn01.alzura.com/6892_PIC/RH01-0025_%231.JPG |
+| `groep-transportsystemen.jpg` | Transportsystemen | 10 kB | https://cdn01.alzura.com/2214_PIC/Atera_022785_Genio%20Pro%20Advance.JPG |
+| `groep-trekhaken.jpg` | Trekhaken / Onderdelen | 7 kB | https://cdn01.alzura.com/7994_PIC/v-062.JPG |
+| `groep-uitlaatsysteem.jpg` | Uitlaatsysteem | 5 kB | https://cdn01.alzura.com/0013_PIC/28682_3028472.JPG |
+| `groep-vergrendelsystemen.jpg` | Vergrendelsystemen | 16 kB | https://cdn01.alzura.com/6355_PIC/ezc-ww-109_1-wm.JPG |
+| `groep-versnellingsbak.jpg` | Versnellingsbak | 11 kB | https://cdn01.alzura.com/0403_PIC/28-0515_1_large.JPG |
+| `groep-verwarming.jpg` | Verwarming / Ventilatie | 17 kB | https://cdn01.alzura.com/0301_PIC/122720.JPG |
+| `groep-wielophanging.jpg` | Wielophanging / wiellagers | 11 kB | https://cdn01.alzura.com/0185_PIC/5500119_a.JPG |

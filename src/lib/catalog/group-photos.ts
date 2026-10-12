@@ -54,6 +54,85 @@ const PHOTOS: Record<string, string> = {
 };
 
 /**
+ * Hoofdgroep uit het categorierooster → foto.
+ *
+ * De eigenaar vroeg 2026-10-12 ook foto's bij "Categorieën voor jouw auto",
+ * het rooster onder de rij "meest gezocht". Daar stond het pictogram van de
+ * leverancier: een lijntekening van het systeem, en alleen hoofdgroepen
+ * hebben er een.
+ *
+ * **De sleutel is de naam en niet het nummer**, en dat is geen smaak maar de
+ * les van @docs/DECISIONS.md #7: een `assemblyGroupNodeId` is een verwijzing
+ * en geen sleutel. Tien van de elf nummers die daar ooit vastlagen wezen een
+ * jaar later naar de groep ernaast, en dat ging stil mis — de tegel werkte,
+ * hij toonde alleen een ander onderdeel. Namen zijn wél stabiel; ze komen van
+ * het NL-platform.
+ *
+ * `photoKey()` haalt leestekens en hoofdletters eruit, want de leverancier is
+ * daar niet consequent in ("Service-/ Inspectie/ Onderhoudsonderdelen",
+ * "smeermiddelen" met een kleine letter).
+ *
+ * **Tien groepen lenen een foto die er al stond.** Een accu ís het beeld bij
+ * Elektrische systemen en een remschijf bij Remsysteem; er een tweede voor
+ * zoeken zou alleen een tweede bestand opleveren.
+ *
+ * **Vijf groepen hebben er bewust geen.** Bij Informatie / Communicatie,
+ * Veiligheidssystemen, Hybride-/elektrische aandrijving, Persluchtsysteem en
+ * Wielen/Banden leverde de catalogus voor de gemeten auto geen bruikbare foto
+ * — een haaienvinantenne met het watermerk van de groothandel er dwars
+ * overheen, of helemaal niets. Die houden de lijntekening van de leverancier,
+ * en bij Wielen/Banden is dat zelfs het betere beeld: een wiel zegt meer dan
+ * de wielbout die de catalogus aandraagt.
+ */
+const MAIN_PHOTOS: Record<string, string> = {
+  aandrijfassentoebehoren: "/onderdelen/groep-aandrijfassen.jpg",
+  accessoires: "/onderdelen/groep-accessoires.jpg",
+  airconditioning: "/onderdelen/groep-airconditioning.jpg",
+  asaandrijving: "/onderdelen/groep-asaandrijving.jpg",
+  brandstofmanagement: "/onderdelen/brandstoffilter.jpg",
+  brandstofvoorbereiding: "/onderdelen/groep-brandstofvoorbereiding.jpg",
+  carrosserie: "/onderdelen/groep-carrosserie.jpg",
+  comfortsystemen: "/onderdelen/groep-comfortsystemen.jpg",
+  elektrischesystemen: "/onderdelen/accu.jpg",
+  filter: "/onderdelen/luchtfilter.jpg",
+  interieuruitvoering: "/onderdelen/groep-interieuruitvoering.jpg",
+  koelsysteem: "/onderdelen/groep-koelsysteem.jpg",
+  koppelingmontageonderdelen: "/onderdelen/groep-koppeling.jpg",
+  motor: "/onderdelen/groep-motor.jpg",
+  nevenbak: "/onderdelen/groep-nevenbak.jpg",
+  ontstekinggloeisysteem: "/onderdelen/bougie.jpg",
+  remsysteem: "/onderdelen/remschijf.jpg",
+  riemenspanenlooprollen: "/onderdelen/distributieriem.jpg",
+  serviceinspectieonderhoudsonderdelen: "/onderdelen/oliefilter.jpg",
+  smeermiddelen: "/onderdelen/motorolie.jpg",
+  stuurinrichting: "/onderdelen/groep-stuurinrichting.jpg",
+  transportsystemen: "/onderdelen/groep-transportsystemen.jpg",
+  trekhakenonderdelen: "/onderdelen/groep-trekhaken.jpg",
+  uitlaatsysteem: "/onderdelen/groep-uitlaatsysteem.jpg",
+  vergrendelsystemen: "/onderdelen/groep-vergrendelsystemen.jpg",
+  veringdemping: "/onderdelen/schokdemper.jpg",
+  versnellingsbak: "/onderdelen/groep-versnellingsbak.jpg",
+  verwarmingventilatie: "/onderdelen/groep-verwarming.jpg",
+  wielophangingwiellagers: "/onderdelen/groep-wielophanging.jpg",
+  wisserbladentoebehoren: "/onderdelen/wisserblad.jpg",
+};
+
+/** Naam → sleutel: alleen letters en cijfers, in kleine letters */
+function photoKey(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * De foto bij een hoofdgroep uit het rooster, of `undefined`.
+ *
+ * Geen foto is geen fout: `group-list.tsx` valt dan terug op het pictogram van
+ * de leverancier, en dat is precies wat er vóór 2026-10-12 overal stond.
+ */
+export function mainGroupPhoto(name: string | undefined): string | undefined {
+  return name ? MAIN_PHOTOS[photoKey(name)] : undefined;
+}
+
+/**
  * Alle bestanden zijn 400×400 op wit (verkleind met sharp, mozjpeg q82).
  * Vierkant, zodat de tegel geen enkele foto hoeft bij te snijden.
  */
