@@ -539,9 +539,42 @@ opnames van individuele advertentievoertuigen, niet van het model.
 
 ---
 
-## 9. Beeldrechten categoriefoto's — OPEN — de winkel is inmiddels live
+## 9. Beeldrechten categoriefoto's — OPGELOST 2026-10-13
 
-Het categorieraster op de homepage draait op foto's in `public/categorieen/`.
+**De vier previews zijn vervangen.** Het categorieraster draait sinds
+2026-10-13 op vier CC0-foto's, met de herkomst per bestand in
+`public/categorieen/BRONNEN.md`. Daarmee is het laatste stuk van dit hoofdstuk
+dicht; de rij "meest gezocht" en het rooster eronder waren dat al.
+
+**Wat de doorbraak was: de eerdere conclusie klopte niet voor dit geval.**
+Hieronder staat, gemeten op 2026-10-11, dat vrije stockfotografie hier een dood
+spoor is. Dat gold voor **specifieke onderdelen** — Openverse geeft nul
+treffers voor interieurfilter, remblok en koelvloeistof. Deze vier tegels zijn
+**generieke** onderwerpen (banden, velgen, een motorruimte, een auto-interieur)
+en die zijn juist ruim voorzien: honderden CC0-treffers, 3000 tot 6000 px.
+Dezelfde zoekmachine, een andere vraag. Hou dat onderscheid vast voordat je de
+oude conclusie opnieuw citeert.
+
+Drie dingen die bij de keuze de doorslag gaven, en die geen van alle over
+auteursrecht gaan:
+
+- **Geen handelsmerk in beeld.** Er kwamen genoeg CC0-foto's langs met een
+  winkelpui van O'Reilly of een Hyundai-naaf. Auteursrechtelijk mag dat; een
+  merk prominent in de hero van een webshop is een eigen risico.
+- **Controleerbaarheid boven kwaliteit, tot op zekere hoogte.** Wikimedia
+  Commons geeft de licentie rechtstreeks via zijn API terug en is daarmee de
+  betere bron; het aanbod daar was voor drie van de vier onderwerpen te mager
+  en de velgen droegen allemaal een merk. Het is rawpixel geworden.
+- **Bij rawpixel kon de licentie niet bij de bron zelf nagekeken worden**: die
+  pagina's staan achter een botcontrole en daar gaan we niet omheen. De
+  licentie rust op het machineleesbare record van Openverse plus de
+  landingspagina, en die vier links staan in BRONNEN.md om in een gewone
+  browser af te tekenen. Dat is het resterende gaatje, en het is er een van
+  dertig seconden.
+
+### Wat er stond (de oorspronkelijke melding)
+
+Het categorieraster op de homepage draaide op foto's in `public/categorieen/`.
 Ze zijn aangeleverd als `istockphoto-{id}-612x612.jpg` — het **gratis
 previewformaat** van iStock, bedoeld om te bladeren, niet voor publicatie.
 Getty/iStock treedt hier actief tegen op.
@@ -643,9 +676,80 @@ kijken in plaats van te vertrouwen:
   foto's beslaat het onderwerp 10% (wisserblad) tot 44% (accu) van het vlak,
   dus dat raakt de halve rij.
 
-Wat dit **niet** verandert: de vier familietegels op de homepage zijn nog
-steeds iStock-previews van 612 px. Dat is het openstaande deel van dit
-hoofdstuk en het enige hier dat geld kan kosten.
+#### Wat de eigenaar zelf aanleverde — 2026-10-13
+
+Hij plakte twee bestanden in `public/onderdelen/` met het verzoek ze te
+gebruiken. Geen van beide staat in de winkel, en de twee redenen zijn
+verschillend genoeg om ze allebei te noteren.
+
+**De lijntekening van een wielwissel** (bus op een krik, met Krik, Wieldop,
+Wielmoeren, Reservewiel en Kruissleutel erbij geschreven) viel af op een
+meting: op tegelformaat, 80×56, is het een lichtgrijze vlek en zijn de labels
+streepjes. Er staat bovendien **Nederlandse tekst in het beeld** en de winkel
+is tweetalig.
+
+**De compressor-accessoireset** leest op dat formaat juist prima. Die is
+afgewezen op herkomst: het is een productfoto van Autojack, een merk dat deze
+winkel niet verkoopt, van een pagina waar geen leveranciersrelatie mee is.
+**Geen watermerk is geen licentie** — dat is precies het verschil met de
+Alamy-preview van de schokdemper hierboven, waar de waarschuwing wél in beeld
+stond. De foto's die er wél in staan komen uit de catalogus van onze eigen
+groothandel en staan al op elke productkaart in deze winkel.
+
+Wat de aanlevering wél opleverde: de aanwijzing dat er aanbod móést zijn voor
+die twee groepen. Dat is via een zoekopdracht op naam alsnog gevonden, en
+daarmee staat er nu een gelicentieerd beeld op allebei de plekken.
+
+Beide bestanden zijn uit `public/` gehaald. Alles daar is publiek opvraagbaar
+zodra het meegaat in een deploy.
+
+#### UITGEBREID 2026-10-12: ook het rooster eronder
+
+De eigenaar vroeg dezelfde foto's bij **"Categorieen voor jouw auto"** - het
+rooster met de 35 hoofdgroepen onder de rij "meest gezocht". Daar stond het
+pictogram van de leverancier: een lijntekening van het systeem.
+
+**Eenendertig van de 35 hebben er nu een**, waarvan tien een foto lenen die er
+al stond (de accu bij Elektrische systemen, de remschijf bij Remsysteem, de
+motorolie bij smeermiddelen). Tweeëntwintig zijn nieuw, samen 266 kB. Vier
+houden de lijntekening van de leverancier.
+
+**Twee daarvan kwamen er 2026-10-13 alsnog bij, en dat leverde een werkregel
+op.** Persluchtsysteem en Wielen/Banden stonden op "geen aanbod": de
+categorieboom gaf nul artikelen langs vier eindgroepen. Die boom hangt aan een
+`carId`. Een **zoekopdracht op naam** werkt zonder auto, en die gaf wél
+treffers — `luchtdrukpistool` 50, `wielmoersleutel` 34, terwijl `bandenpomp`,
+`kruissleutel` en `reservewiel` nul geven. Blijft een groep leeg, zoek dan op
+naam in plaats van nog een eindgroep te proberen.
+
+Dat herziet meteen iets wat hier stond. Bij Wielen/Banden was het argument dat
+de lijntekening beter was — een wiel zegt meer dan de wielbout die de catalogus
+aandroeg. Dat klopte voor wat er toen lag; met een kruissleutel erbij is het
+argument weg.
+
+**De koppeling gaat op naam, niet op nummer** (`MAIN_PHOTOS` in
+`lib/catalog/group-photos.ts`). Dat is rechtstreeks de les van #7 hierboven:
+een `assemblyGroupNodeId` is een verwijzing en geen sleutel, en toen die hier
+wel als sleutel gebruikt werd wezen tien van de elf een jaar later naar de
+groep ernaast - stil, want de tegel werkte gewoon, hij toonde een ander
+onderdeel.
+
+**Eerlijk over wat dit kost aan informatie.** Bij een eindgroep als
+"Oliefilter" is de foto beter dan de tekening: de klant ziet het ding dat hij
+zoekt. Bij een systeemgroep als Carrosserie of Comfortsystemen toont de foto
+een enkel onderdeel (een spiegel, een parkeersensor) waar de lijntekening het
+hele systeem aanduidt. Dat is een keuze van de eigenaar en hij is uitgevoerd;
+wie hem ooit terugdraait, draait een rij regels in `group-photos.ts` terug en
+verder niets - de tekening staat er nog als terugval.
+
+De werkwijze en wat er afviel staan in `public/onderdelen/BRONNEN.md`. Twee
+dingen daaruit zijn het herhalen waard: **de kandidaten komen uit de winkel en
+niet uit de API** (zelfde reden als bij de schokdemper hierboven), en elk vel
+is met het oog bekeken - een script dat op "veld is gevuld" toetst laat
+maattekeningen, verpakkingsdozen en watermerken er gewoon door.
+
+Wat dit toen niet veranderde: de vier familietegels op de homepage. Die zijn
+2026-10-13 alsnog vervangen — zie de kop van dit hoofdstuk.
 
 ---
 
@@ -2652,6 +2756,57 @@ Drie keuzes die erin zitten:
   aantallen zijn. Hier wél, en dan is het grootste aanbod de eerlijkste
   volgorde.
 
+### UITGEBREID 2026-10-12: de filters staan ook op de familiepagina
+
+De eigenaar: *"de filters bij banden verschijnen alleen als de gebruiker
+auto/suv, offroad etc. selecteert — laat de filter altijd verschijnen."*
+
+Dat klopte, en het waren twee verschillende gaten op dezelfde pagina:
+
+1. **Met een maat in de URL** stond er op `/nl/banden` niets om honderd
+   treffers mee terug te brengen, terwijl dezelfde zoekopdracht binnen
+   Auto/SUV wél het merkfilter van hierboven kreeg.
+2. **Zonder maat** stond er helemaal geen merk- of laadindexfilter, want die
+   komen uit het filterblok van een categorie.
+
+Allebei gedicht met de bestaande componenten. Het eerste met hetzelfde
+`TyreBrandFilter`, geteld over de treffers; daarvoor haalt de familiepagina er
+nu 120 op in plaats van 30 — **precies de aanroep die de categoriepagina ook
+doet**, dus de twee delen één antwoord uit de cache in plaats van er twee op te
+halen.
+
+Het tweede met `ProductFilters` en `BrandTiles` van de eerste categorie. Dat
+klinkt als een halve waarheid maar is het niet: **het rijtje onder de
+categorieknoppen kwam altijd al uit precies die ene categorie.** `getParts`
+zonder categorie valt terug op de eerste met aanbod (`tyre24-provider.ts`), dus
+de filters filteren letterlijk wat eronder staat. Wie de hele familie wil
+doorlopen heeft de categorieknoppen erboven.
+
+**Het kost geen verzoek extra**, en dat is geen geluk maar een afgestemd getal:
+`getFilters` vraagt `items?parentNodeId=<eerste>&limit=20` (FILTER_SAMPLE_SIZE)
+en de artikelen op die pagina vragen nu hetzelfde aantal. Eén URL, één
+antwoord, en het warmrondje van #32 heeft hem na een deploy al staan.
+
+### Een filterklik springt niet meer naar boven — 2026-10-12
+
+Zelfde melding, los gevonden: *"op alle pagina's op alle filters als je een
+waarde selecteert springt de pagina naar boven."*
+
+Dat is de standaard van Next: een filter is hier een `<Link>` en dus een
+navigatie, en bij een navigatie scrolt hij naar de bovenkant. Bij "meer laden"
+was dat allang opgelost (`components/load-more.tsx`) en bij het merkfilter van
+dit hoofdstuk ook; de gewone filters hadden het niet.
+
+`scroll={false}` staat nu op élke filterlink: de opties en de wis-knop in
+`product-filters.tsx`, de merktegels in `brand-tiles.tsx`, en de drie
+schakelaars in `parts-category-page.tsx` ("alles tonen", "alleen dit type",
+"alles wissen"). Op mobiel is dat het verschil tussen filteren en opnieuw
+zoeken waar je was: het paneel is daar een uitklap, en na de sprong stond de
+klant boven de kop in plaats van in zijn eigen filterlijst.
+
+**Niet overal.** De categorieknoppen en het kruimelpad houden de sprong: dat
+zijn andere pagina's, en daar hoort de bovenkant.
+
 ---
 
 ## 29. Een werkende sleutel is geen werkende kassa — VASTGESTELD 2026-10-08
@@ -3275,6 +3430,9 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
 | 2026-10-11 | Catalogus warmen na een deploy, en de drie tellers samen in één verzoek | GEMETEN: een verlopen cache-ingang serveert in 0,09 s, dus alleen een categorie die nog nooit is opgehaald kost zeven seconden — één rondje van 23 aanroepen volstaat, geen warmhoudronde (#32) |
+| 2026-10-13 | De vier iStock-previews op de homepage vervangen door CC0-beeld | Het laatste openstaande punt van #9 en het enige dat geld kon kosten. De eerdere conclusie "vrije stock dekt dit niet" gold voor spécifieke onderdelen, niet voor generieke onderwerpen als banden en velgen — daar zijn honderden CC0-treffers (#9) |
+| 2026-10-12 | Filters ook op de familiepagina, en een filterklik scrolt niet meer naar boven | De klant zag bij banden pas filters nadat hij Auto/SUV had aangeklikt, en elke filterklik zette hem terug bovenaan de pagina. Het rijtje op die pagina kwam altijd al uit één categorie, dus de filters horen er (#28) |
+| 2026-10-12 | Foto's in het rooster "Categorieën voor jouw auto" | De eigenaar vroeg erom; 29 van de 35 hoofdgroepen hebben er een, tien lenen een foto die er al stond en zes houden de lijntekening. De koppeling gaat op naam, want een groepnummer van de leverancier verschuift (#9, #7) |
 | 2026-10-11 | Foto's in plaats van lijntekeningen bij "meest gezocht" | De eigenaar vroeg erom, en de reden om het niet te doen (elf licenties) vervalt: het zijn de productfoto's van de groothandel die we al op elke productkaart tonen. Vrije stock heeft deze categorieën niet — GEMETEN (#9) |
 | 2026-10-09 | De extra werkdag op de leverdatum is eraf | Winkelkeuze van de eigenaar: de datum van de groothandel gaat onveranderd naar de klant. Scherpere belofte, kleinere marge als hij laat op de dag inkoopt (#27) |
 | 2026-10-09 | Categorieboom en merkenlijst per verzoek memoïseren met `cache()` | GEMETEN: de helft van de leverancier-calls op een categoriepagina was dubbel werk tussen `generateMetadata`, de pagina en het kruimelpad; op een koude cache zijn dat echte verzoeken tegen een limiet van honderd per minuut (#32) |

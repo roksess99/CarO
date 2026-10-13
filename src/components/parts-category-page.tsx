@@ -278,6 +278,7 @@ export async function PartsCategoryPage({
                       },
                       query: carQuery,
                     }}
+                    scroll={false}
                     className="underline underline-offset-4 hover:text-foreground"
                   >
                     {tFilters("clearAll")}
@@ -309,6 +310,7 @@ export async function PartsCategoryPage({
                         },
                         query: { ...query, alles: "1" },
                       }}
+                      scroll={false}
                       className="underline underline-offset-4 hover:text-foreground"
                     >
                       {t("showAllTypes")}
@@ -324,6 +326,7 @@ export async function PartsCategoryPage({
                         },
                         query,
                       }}
+                      scroll={false}
                       className="underline underline-offset-4 hover:text-foreground"
                     >
                       {t("onlyThisType", { type: name })}

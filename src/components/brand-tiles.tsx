@@ -92,7 +92,8 @@ export async function BrandTiles({
   groups: FilterGroup[];
   selected: SelectedFilters;
   family: string;
-  category: string;
+  /** Zonder categorie wijzen de tegels naar de familiepagina zelf */
+  category?: string;
 }) {
   const t = await getTranslations("filters");
   const group = groups.find((g) => g.key === BRAND_GROUP_KEY);
@@ -106,11 +107,16 @@ export async function BrandTiles({
     .sort((a, b) => rank(a.label) - rank(b.label))
     .slice(0, BRAND_TILES);
 
-  const hrefFor = (next: SelectedFilters) => ({
-    pathname: "/[family]/[category]" as const,
-    params: { family, category },
-    query: { [FILTER_PARAM]: toFilterParam(next) },
-  });
+  const hrefFor = (next: SelectedFilters) => {
+    const query = { [FILTER_PARAM]: toFilterParam(next) };
+    return category
+      ? {
+          pathname: "/[family]/[category]" as const,
+          params: { family, category },
+          query,
+        }
+      : { pathname: "/[family]" as const, params: { family }, query };
+  };
 
   return (
     <section className="mb-8">
@@ -125,6 +131,7 @@ export async function BrandTiles({
             <li key={option.value}>
               <Link
                 href={hrefFor(toggleFilter(selected, group.key, option.value))}
+                scroll={false}
                 aria-current={active ? "true" : undefined}
                 // Geen aantal onder de naam: Tyre24 zet `count` bij elk merk
                 // op 1, dus dat cijfer zou een artikelaantal suggereren.

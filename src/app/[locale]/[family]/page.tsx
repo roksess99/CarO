@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { BrandTiles } from "@/components/brand-tiles";
 import { GroupList } from "@/components/catalog/group-list";
 import { FaqList } from "@/components/faq-list";
+import { ProductFilters } from "@/components/product-filters";
 import { ProductGrid } from "@/components/product-grid";
+import { TyreBrandFilter } from "@/components/tyres/tyre-brand-filter";
 import { TyreSizePicker } from "@/components/tyres/tyre-size-picker";
 import { SelectedCarInUrl } from "@/components/vehicle/use-selected-car";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -16,8 +19,15 @@ import {
   type ProductFamily,
   usesVehicleCatalog,
 } from "@/lib/catalog/families";
+import { brandFacets, matchesBrand } from "@/lib/catalog/brand-facets";
+import {
+  countActiveFilters,
+  FILTER_PARAM,
+  parseFilterParam,
+} from "@/lib/catalog/filter-params";
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import type { SelectedFilters } from "@/lib/catalog/types";
 import {
   filterTyres,
   formatTyreSize,
@@ -43,6 +53,10 @@ type Props = {
     hoogte?: string;
     diameter?: string;
     seizoen?: string;
+    /** Het gekozen merk bij een zoekopdracht op bandenmaat */
+    merk?: string;
+    /** De filters van de leverancier, zie lib/catalog/filter-params.ts */
+    [FILTER_PARAM]?: string | string[];
   }>;
 };
 
@@ -53,12 +67,30 @@ const PAGE_SIZE = 20;
 const FAQ_KEYS = ["q1", "q2", "q3"] as const;
 
 /**
- * Banden halen we iets ruimer op dan we tonen. De zoekfunctie van de
- * leverancier is op de maat verrassend nauwkeurig (gemeten: 60 van de 60
- * treffers in de gevraagde maat), maar wij rekenen het na op het maatblok
- * van het artikel — die marge vangt op wat daarbij afvalt.
+ * Banden halen we ruimer op dan we tonen. De zoekfunctie van de leverancier
+ * is op de maat verrassend nauwkeurig (gemeten: 60 van de 60 treffers in de
+ * gevraagde maat), maar wij rekenen het na op het maatblok van het artikel —
+ * die marge vangt op wat daarbij afvalt.
+ *
+ * **Sinds 2026-10-12 honderdtwintig in plaats van dertig**, en om dezelfde
+ * reden als op de categoriepagina: het merkfilter eronder telt over de
+ * treffers zelf, dus met dertig zou het de merken van de eerste dertig banden
+ * tonen in plaats van die van de maat. Het kost geen extra verzoek — het is
+ * exact dezelfde aanroep als die van de categoriepagina (`search` +
+ * `limit=120`), dus de twee delen één antwoord uit de cache.
  */
-const TYRE_FETCH_SIZE = 30;
+const TYRE_FETCH_SIZE = 120;
+
+/**
+ * Artikelen op de familiepagina van banden, velgen en toebehoren.
+ *
+ * Twintig, en dat getal is geen smaak: `getParts` zonder categorie valt terug
+ * op de eerste categorie met aanbod (tyre24-provider.ts) en komt daarmee uit
+ * op precies de URL die `getFilters` en het warmrondje ook ophalen
+ * (`parentNodeId=<eerste>&limit=20`). Filters én producten op deze pagina
+ * kosten zo samen één verzoek in plaats van twee.
+ */
+const FAMILY_GRID_SIZE = 20;
 
 // Next geeft de locale van de bovenliggende route mee, zodat we per taal
 // alleen de juiste familieslugs genereren (nl → onderdelen/banden,
@@ -141,18 +173,32 @@ function GroupsFallback() {
   );
 }
 
-/** Banden in de gekozen maat */
+/**
+ * Banden in de gekozen maat, met het merkfilter erboven.
+ *
+ * **Dat filter stond hier niet, en dat was de klacht van de eigenaar
+ * (2026-10-12):** wie op /nl/banden een maat invulde kreeg honderd banden
+ * zonder een knop om ze mee terug te brengen, terwijl dezelfde zoekopdracht
+ * binnen Auto/SUV er wel een had. De filters van de leverancier horen bij een
+ * categorie en vervallen bij een maatzoekopdracht (@docs/DECISIONS.md #28),
+ * dus hier geldt dezelfde oplossing als daar: de merken worden geteld over de
+ * treffers zelf, met echte aantallen.
+ */
 async function TyreResults({
   family,
+  familySlugParam,
   size,
   season,
+  brand,
 }: {
   family: ProductFamily;
+  familySlugParam: string;
   size: TyreSize;
   season: TyreSeason | null;
+  brand: string | null;
 }) {
   const tTyres = await getTranslations("tyres");
-  const tyres = filterTyres(
+  const found = filterTyres(
     await getCatalogProvider().getParts({
       family,
       search: tyreSearchTerm(size, season),
@@ -160,21 +206,43 @@ async function TyreResults({
     }),
     size,
     season,
+  );
+  // Eerst tellen, dan filteren: anders gaan de aantallen achter de merken
+  // over de banden die na het merkfilter overblijven, en dat is per definitie
+  // alleen het gekozen merk.
+  const facets = brandFacets(found);
+  const tyres = (
+    brand ? found.filter((part) => matchesBrand(part, brand)) : found
   ).slice(0, PAGE_SIZE);
+
+  // Zonder deze drie in elke merklink valt de maat uit de URL en staat de
+  // klant terug op de kale familiepagina.
+  const sizeQuery: Record<string, string> = {
+    breedte: String(size.width),
+    hoogte: String(size.height),
+    diameter: String(size.diameter),
+    ...(season ? { seizoen: season } : {}),
+  };
 
   return (
     <section className="mt-10">
       <h2 className="text-2xl">
         {tTyres("results", { size: formatTyreSize(size) })}
       </h2>
+      <div className="mt-6">
+        <TyreBrandFilter
+          facets={facets}
+          active={brand}
+          family={familySlugParam}
+          query={sizeQuery}
+        />
+      </div>
       {tyres.length === 0 ? (
-        <p className="mt-6 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+        <p className="max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
           {tTyres("noResults", { size: formatTyreSize(size) })}
         </p>
       ) : (
-        <div className="mt-6">
-          <ProductGrid parts={tyres} />
-        </div>
+        <ProductGrid parts={tyres} />
       )}
     </section>
   );
@@ -300,22 +368,41 @@ async function PartsSearchResults({
   );
 }
 
-/** Categorieknoppen en een uitgelichte rij, voor de families zonder auto */
+/**
+ * Categorieknoppen, filters en de artikelen - voor de families zonder auto.
+ *
+ * **De filters stonden hier niet**, en dat was de tweede helft van de klacht
+ * van 2026-10-12: op /nl/banden was er geen merk- of laadindexfilter te
+ * bekennen tot de klant eerst Auto/SUV, Offroad of Transporter aanklikte.
+ *
+ * Ze horen hier wel thuis, want het rijtje eronder kwam altijd al uit een
+ * enkele categorie: `getParts` zonder categorie valt terug op de eerste met
+ * aanbod (tyre24-provider.ts). De filters komen nu uit diezelfde categorie,
+ * dus ze filteren precies wat eronder staat en beloven niets over de rest van
+ * de familie - daarvoor staan de categorieknoppen erboven.
+ *
+ * **Het kost geen extra verzoek.** `getFilters` vraagt
+ * `items?parentNodeId=<eerste>&limit=20`, en met FAMILY_GRID_SIZE op twintig
+ * is dat letterlijk dezelfde URL als die van de artikelen zelf. Next haalt
+ * hem een keer op, en het warmrondje heeft hem na een deploy al staan.
+ */
 async function CategoryBrowse({
   family,
   familySlugParam,
   showFeatured,
+  selected,
 }: {
   family: ProductFamily;
   familySlugParam: string;
   showFeatured: boolean;
+  selected: SelectedFilters;
 }) {
   const t = await getTranslations("family");
+  const tFilters = await getTranslations("filters");
   const provider = getCatalogProvider();
-  const [categories, parts] = await Promise.all([
-    provider.getCategories(family).then(localizeCategories),
-    provider.getParts({ family, limit: 8 }),
-  ]);
+  const categories = await provider
+    .getCategories(family)
+    .then(localizeCategories);
 
   if (categories.length === 0) {
     // Eerlijke lege staat: geen verzonnen producten als er geen bron is
@@ -325,6 +412,29 @@ async function CategoryBrowse({
       </p>
     );
   }
+
+  // Dezelfde categorie die `getParts` hieronder zelf zou kiezen.
+  const primary = categories[0];
+  const [filterGroups, parts] =
+    showFeatured && primary
+      ? await Promise.all([
+          provider.getFilters(family, primary.slug),
+          provider.getParts({
+            family,
+            filters: selected,
+            limit: FAMILY_GRID_SIZE,
+          }),
+        ])
+      : [[], []];
+
+  const activeCount = countActiveFilters(selected);
+  const filters = (
+    <ProductFilters
+      groups={filterGroups}
+      selected={selected}
+      family={familySlugParam}
+    />
+  );
 
   return (
     <>
@@ -346,17 +456,54 @@ async function CategoryBrowse({
         </ul>
       </nav>
 
-      {/* Alleen tonen als er echt iets is: de eerste categorie van een
-          familie kan leeg zijn of (bij Tyre24) een 500 geven. Bij een
-          gekozen bandenmaat staan de treffers al boven; een blok
-          "veelgekocht" eronder leidt daar alleen van af. */}
-      {showFeatured && parts.length > 0 && (
-        <>
-          <h2 className="mt-12 text-2xl">{t("featuredTitle")}</h2>
-          <div className="mt-6">
-            <ProductGrid parts={parts} />
+      {/* Bij een gekozen bandenmaat staan de treffers al boven; een tweede
+          lijst eronder leidt daar alleen van af. */}
+      {showFeatured && (
+        <div className="mt-12 flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+          {filterGroups.length > 0 && (
+            <>
+              {/* Mobiel uitklapbaar, zodat de producten bovenaan blijven */}
+              <details className="rounded-lg border border-border lg:hidden">
+                <summary className="cursor-pointer px-4 py-3 font-semibold">
+                  {tFilters("toggle")}
+                  {activeCount > 0 && (
+                    <span className="ms-2 rounded-full bg-caro-orange px-2 py-0.5 text-xs text-caro-ink tabular-nums">
+                      {activeCount}
+                    </span>
+                  )}
+                </summary>
+                <div className="border-t border-border p-4">{filters}</div>
+              </details>
+
+              <aside className="hidden w-64 shrink-0 lg:block">{filters}</aside>
+            </>
+          )}
+
+          <div className="min-w-0 flex-1">
+            <BrandTiles
+              groups={filterGroups}
+              selected={selected}
+              family={familySlugParam}
+            />
+
+            <h2 className="text-2xl">
+              {activeCount > 0 ? t("filteredTitle") : t("featuredTitle")}
+            </h2>
+            <p className="mt-2 text-sm text-muted">
+              {tFilters("resultCount", { count: parts.length })}
+            </p>
+
+            {parts.length === 0 ? (
+              <p className="mt-6 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+                {activeCount > 0 ? tFilters("noResults") : t(`${family}.empty`)}
+              </p>
+            ) : (
+              <div className="mt-6">
+                <ProductGrid parts={parts} />
+              </div>
+            )}
           </div>
-        </>
+        </div>
       )}
     </>
   );
@@ -372,8 +519,13 @@ export default async function FamilyPage({ params, searchParams }: Props) {
   const t = await getTranslations("family");
   const familyName = t(`${family}.title`);
 
-  const { oen, auto, breedte, hoogte, diameter, seizoen } = await searchParams;
+  const query = await searchParams;
+  const { oen, auto, breedte, hoogte, diameter, seizoen } = query;
   const searchTerm = (Array.isArray(oen) ? oen[0] : oen)?.trim();
+
+  // De filters van de leverancier staan sinds 2026-10-12 ook op deze pagina
+  // en niet pas op de categoriepagina; zie CategoryBrowse hierboven.
+  const selected = parseFilterParam(query[FILTER_PARAM]);
 
   // Banden hebben een eigen ingang: de klant zoekt op de maat die op zijn
   // band staat, niet op een categorie.
@@ -382,6 +534,9 @@ export default async function FamilyPage({ params, searchParams }: Props) {
     ? parseTyreSize({ width: breedte, height: hoogte, diameter })
     : null;
   const tyreSeason = parseTyreSeason(seizoen);
+  // Het merk telt alleen bij een maatzoekopdracht: zonder maat komt de lijst
+  // uit een categorie en loopt het merk via `selected` hierboven.
+  const tyreBrand = tyreSize && query.merk ? query.merk : null;
 
   // Onderdelen komen uit de Wearparts-API: zoeken op naam kan altijd,
   // bladeren pas als er een auto gekozen is (docs/api/WEARPARTS.md).
@@ -411,7 +566,13 @@ export default async function FamilyPage({ params, searchParams }: Props) {
 
       {tyreSize && (
         <Suspense fallback={<GridFallback />}>
-          <TyreResults family={family} size={tyreSize} season={tyreSeason} />
+          <TyreResults
+            family={family}
+            familySlugParam={slug}
+            size={tyreSize}
+            season={tyreSeason}
+            brand={tyreBrand}
+          />
         </Suspense>
       )}
 
@@ -476,6 +637,7 @@ export default async function FamilyPage({ params, searchParams }: Props) {
             family={family}
             familySlugParam={slug}
             showFeatured={!tyreSize}
+            selected={selected}
           />
         </Suspense>
       )}
