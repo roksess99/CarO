@@ -76,13 +76,17 @@ const PHOTOS: Record<string, string> = {
  * Elektrische systemen en een remschijf bij Remsysteem; er een tweede voor
  * zoeken zou alleen een tweede bestand opleveren.
  *
- * **Vijf groepen hebben er bewust geen.** Bij Informatie / Communicatie,
- * Veiligheidssystemen, Hybride-/elektrische aandrijving, Persluchtsysteem en
- * Wielen/Banden leverde de catalogus voor de gemeten auto geen bruikbare foto
- * — een haaienvinantenne met het watermerk van de groothandel er dwars
- * overheen, of helemaal niets. Die houden de lijntekening van de leverancier,
- * en bij Wielen/Banden is dat zelfs het betere beeld: een wiel zegt meer dan
- * de wielbout die de catalogus aandraagt.
+ * **Drie groepen hebben er bewust geen.** Bij Informatie / Communicatie,
+ * Veiligheidssystemen en Hybride-/elektrische aandrijving leverde de catalogus
+ * voor de gemeten auto geen bruikbare foto — een haaienvinantenne met het
+ * watermerk van de groothandel er dwars overheen, of helemaal niets. Die
+ * houden de lijntekening van de leverancier.
+ *
+ * **Persluchtsysteem en Wielen/Banden kwamen er 2026-10-13 alsnog bij**, en
+ * langs een andere weg: niet via de categorieboom maar via een zoekopdracht op
+ * naam. Die boom hangt aan de gekozen auto en had voor deze twee niets; een
+ * zoekopdracht niet, want die werkt zonder auto (@docs/api/WEARPARTS.md). Dat
+ * is de weg om te volgen als er nog een groep bijkomt die leeg blijft.
  */
 const MAIN_PHOTOS: Record<string, string> = {
   aandrijfassentoebehoren: "/onderdelen/groep-aandrijfassen.jpg",
@@ -100,6 +104,7 @@ const MAIN_PHOTOS: Record<string, string> = {
   koppelingmontageonderdelen: "/onderdelen/groep-koppeling.jpg",
   motor: "/onderdelen/groep-motor.jpg",
   nevenbak: "/onderdelen/groep-nevenbak.jpg",
+  persluchtsysteem: "/onderdelen/groep-persluchtsysteem.jpg",
   ontstekinggloeisysteem: "/onderdelen/bougie.jpg",
   remsysteem: "/onderdelen/remschijf.jpg",
   riemenspanenlooprollen: "/onderdelen/distributieriem.jpg",
@@ -113,6 +118,7 @@ const MAIN_PHOTOS: Record<string, string> = {
   veringdemping: "/onderdelen/schokdemper.jpg",
   versnellingsbak: "/onderdelen/groep-versnellingsbak.jpg",
   verwarmingventilatie: "/onderdelen/groep-verwarming.jpg",
+  wielenbanden: "/onderdelen/groep-wielen-banden.jpg",
   wielophangingwiellagers: "/onderdelen/groep-wielophanging.jpg",
   wisserbladentoebehoren: "/onderdelen/wisserblad.jpg",
 };

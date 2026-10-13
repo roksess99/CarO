@@ -144,7 +144,7 @@ Brandstofmanagement het brandstoffilter en Service-/ Inspectie- /
 Onderhoudsonderdelen het oliefilter. Een tweede bestand met hetzelfde beeld
 zou alleen een tweede bestand zijn.
 
-**Zes groepen houden de lijntekening van de leverancier**, en dat is geen
+**Vier groepen houden de lijntekening van de leverancier**, en dat is geen
 omissie maar het resultaat van kijken:
 
 | Groep | Waarom geen foto |
@@ -152,9 +152,64 @@ omissie maar het resultaat van kijken:
 | Informatie / Communicatiesystemen | de catalogus geeft alleen haaienvinantennes, en die liggen onder een herhaald watermerk van de groothandel |
 | Veiligheidssystemen | een kabelboom en een stekker; een airbag zelf staat er niet in |
 | Hybride-/elektrische aandrijving | twee artikelen voor deze auto, waarvan een maattekening |
-| Persluchtsysteem | nul artikelen, langs vier eindgroepen geprobeerd |
-| Wielen/Banden | alleen wielbouten en bandenspanningsensoren. Het pictogram van de leverancier is hier zelfs beter: een wiel zegt meer dan een bout |
 | Koplampreiniging | niet gezocht; dit is de kleinste groep van het rooster |
+
+## Persluchtsysteem en Wielen/Banden - 2026-10-13, langs een andere weg
+
+Die twee stonden hierboven eerst bij "geen foto". De eigenaar leverde er zelf
+beeld voor aan en dat werkte als aanwijzing: **er is wel aanbod, het hangt
+alleen niet aan de categorieboom van deze auto.**
+
+De boom vraagt een `carId` en gaf voor Persluchtsysteem nul artikelen langs
+vier eindgroepen. Een **zoekopdracht op naam** werkt zonder auto
+(@docs/api/WEARPARTS.md) en gaf wel treffers:
+
+| Zoekterm | Treffers |
+|---|---|
+| `persluchtpistool` | 2 |
+| `luchtdrukpistool` | 50 |
+| `wielmoersleutel` | 34 |
+| `bandenpomp`, `kruissleutel`, `reservewiel` | 0 |
+
+**Dat is de werkwijze voor een groep die leeg blijft**: niet nog een eindgroep
+proberen, maar op naam zoeken.
+
+**Wielen/Banden is daarmee een herziening.** Hierboven stond dat de
+lijntekening daar het betere beeld was, want de catalogus gaf alleen wielbouten
+en bandenspanningsensoren - en een wiel zegt meer dan een bout. Dat klopte voor
+wat er toen lag; met de kruissleutel erbij is het argument weg.
+
+| Bestand | Hoofdgroep | Merk | Grootte | Bron |
+|---|---|---|---|---|
+| `groep-persluchtsysteem.jpg` | Persluchtsysteem | SW-Stahl Luchtdrukpistool | 6 kB | zoekopdracht `luchtdrukpistool` |
+| `groep-wielen-banden.jpg` | Wielen/Banden | HP-Autozubehor Wielmoersleutels | 8 kB | zoekopdracht `wielmoersleutel` |
+
+### Wat de eigenaar aanleverde, en waarom het er niet in staat
+
+Twee bestanden in `public/onderdelen/`, allebei niet gebruikt:
+
+**`8796209381406.webp`** - een lijntekening van een bestelbus op een krik, met
+de onderdelen eromheen benoemd: Krik, Wieldop, Wielmoeren, Reservewiel,
+Kruissleutel. GEMETEN op tegelformaat (80x56): een lichtgrijze vlek. De
+labels worden streepjes en de omtrek van de bus verdwijnt. Het is bovendien
+een tekening met **Nederlandse tekst erin**, en de winkel is tweetalig - op
+`/en/` zou er Nederlands in het beeld staan.
+
+**`autojack-5-delige-compressor-accessoire-kit-air5p.webp`** - een
+compressor-accessoireset. Die leest op tegelformaat juist prima: blauwe
+pistolen, rode ketel, oranje slang. Niet gebruikt om een andere reden: het is
+een productfoto van Autojack, een merk dat deze winkel niet verkoopt, van een
+pagina waar we geen leveranciersrelatie mee hebben. **Geen watermerk is geen
+licentie.** Dat is hetzelfde punt als de vier iStock-previews op de homepage en
+de Alamy-preview van de schokdemper; alleen ontbreekt hier de waarschuwing in
+beeld.
+
+Het verschil met de foto's die hier wel staan is niet esthetisch maar
+juridisch: die komen uit de catalogus van onze eigen groothandel en staan al
+op elke productkaart in deze winkel.
+
+Beide bestanden zijn uit `public/` gehaald - alles daar is publiek opvraagbaar
+zodra het meegaat in een deploy.
 
 ## Hoe de kandidaten gevonden zijn
 
