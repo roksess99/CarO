@@ -72,6 +72,15 @@ is. Anders dan bij een kortingscode verdwijnt deze rij wél met de bestelling
 meer als geverifieerde aankoop gelden, en dan hoort hij ook niet meer op de
 site te staan.
 
+**`orders` draagt sinds 2026-10-14 ook de track & trace** (`tracking_code`,
+`tracking_carrier`, `tracking_sent_at`; de eerste kolom stond er al sinds het
+begin maar werd nooit gevuld — @docs/DECISIONS.md #33). Dat is geen nieuw doel
+en dus geen nieuwe regel op de pagina: `privacy.server.order` noemt als doel al
+*"bezorgen, je op de hoogte houden"*, en een barcode van de vervoerder is
+precies dat. Het valt onder dezelfde grondslag en dezelfde bewaartermijn als de
+rest van de bestelling. `privacy.lastUpdated` blijft daarom staan — voor de
+bezoeker verandert er niets aan wat wij bewaren of waarvoor.
+
 **Geen mailinglijst.** Er is geen tabel met adressen voor marketing en die
 komt er ook niet zonder dat #15 opnieuw bekeken wordt: verzamelen voor een
 doel dat je nog niet hebt mag niet. De pagina zegt dat expliciet

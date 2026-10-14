@@ -3313,6 +3313,128 @@ géén leveranciersaanroep, want zonder zoekterm is `results = []`.
 
 ---
 
+## 33. Track & trace naar de klant — VASTGESTELD 2026-10-14
+
+De eigenaar: *"laatste wat we nog gaan toevoegen is de track and trace naar de
+klant versturen, maak een pagina hiervoor in het beheerderpaneel waarbij de
+beheerder een lijst krijgt van bestellingen en een invoerveld voor de track
+and trace link."*
+
+Gebouwd als `/beheer/verzending`: de betaalde bestellingen onder elkaar, per
+bestelling een vervoerder, een veld en één knop. De klant krijgt een mail in
+de taal waarin hij bestelde.
+
+**De kolom stond er al.** `orders.tracking_code` zit sinds `0001_init.sql` in
+de tabel, met het commentaar *"de track & trace die hij van de vervoerder
+krijgt"* — en er heeft nooit iets in gestaan: geen enkele regel code schreef
+of las hem. Dat is het soort dode voorziening dat je bij het bouwen bijna
+vertrouwt; de breedte was namelijk op een códe gezet, niet op een link.
+
+### Een link of een code, en de link wint
+
+De beheerder krijgt van de vervoerder een mail met een lijn erin. Die mag hij
+plakken, en dan gaat hij onveranderd naar de klant. Heeft hij alleen een
+barcode, dan bouwen wij de link uit de vervoerder plus het bezorgadres —
+PostNL wil barcode, land én postcode, en die drie staan op de bestelling.
+
+| Invoer | Wat de klant krijgt |
+|---|---|
+| `https://jouw.postnl.nl/…` | precies die link, achter de knop |
+| `3SDFC1234567890` + PostNL | de knop, opgebouwd uit code + `NL` + postcode |
+| `3SDFC1234567890` + "andere vervoerder" | alleen de code, géén knop |
+
+Drie dingen zitten er met opzet zo in:
+
+- **De URL-sjablonen van de vervoerders zijn niet gemeten tegen een echte
+  zending**, en dat kan ook niet zonder een echt pakket. Ze staan in
+  `lib/orders/tracking.ts` en zijn één regel per vervoerder. Klopt er een niet
+  meer, dan is de uitwijk er al: de lijn uit de eigen mail van de vervoerder
+  plakken, want die gaat niet langs het sjabloon.
+- **Geen knop verzinnen die we niet kunnen onderbouwen.** Bij "andere
+  vervoerder" krijgt de klant de code zonder link. Een knop die op "zending
+  niet gevonden" uitkomt is onze schuld en niet die van de vervoerder.
+- **Het formulier toont de link terwijl je typt.** Daarom is het een
+  clientcomponent: `tracking.ts` bouwt in de browser dezelfde link die de
+  server straks in de mail zet, dus een tikfout in de barcode zie je vóór het
+  versturen. Dat bestand praat geen database aan, en dat is geen detail (#17).
+
+**Afkappen mag niet, weigeren wel.** 64 tekens is te krap voor een link —
+`jouw.postnl.nl/track-and-trace/3SDFC1234567890-NL-7038DE` is er 72 — dus
+`0012_tracking.sql` verbreedt de kolom naar 255. Daarbovenop weigert het
+formulier wat niet past, met de melding erbij. Dat is dezelfde les als #30:
+**deze server weigert een te lange waarde niet, hij kapt hem stil af**, en een
+afgekapte link geeft de klant een 404 bij zijn vervoerder.
+
+### De volgorde: eerst naar buiten, dan aftekenen
+
+Dezelfde opbouw als bij een terugbetaling (#20), en om dezelfde reden.
+
+```
+keuren  →  code opslaan  →  mail naar de klant  →  tracking_sent_at zetten
+```
+
+`tracking_sent_at` is wat het scherm leest, niet de code. Zou de datum vóór de
+mail gezet worden en de verzending daarna mislukken, dan staat de bestelling
+als "bericht verstuurd" in de lijst terwijl de klant niets weet — en dan kijkt
+niemand er ooit nog naar. Nu staat de code er al wél, en is één klik genoeg
+voor een tweede poging.
+
+Twee sloten, want een mail aan een klant is niet terug te draaien:
+
+1. **Alleen betaalde bestellingen.** Een verzendbericht over een onbetaalde
+   bestelling zegt iets dat niet waar is. Het scherm toont ze niet en de
+   Server Action weigert ze.
+2. **Een tweede bericht vraagt een bevestiging.** Een verkeerd overgetypte
+   code moet te herstellen zijn, maar niet met één klik: de knop heet dan
+   "opnieuw versturen" en vraagt daarna "ja, nog een bericht".
+
+En één ding dat bij het bouwen bleek: **`affectedRows` is geen antwoord op "is
+het gelukt"**. MySQL geeft bij een UPDATE het aantal *gewijzigde* rijen terug,
+niet het aantal gevonden rijen. Dezelfde code nog eens opslaan — precies wat
+er gebeurt na een mislukte mail — geeft dus 0, en dat zou als fout gelezen
+worden. `saveTracking` toetst er daarom niet op; `markTrackingSent` kijkt
+achteraf of het veld werkelijk gevuld staat, want `DATETIME` bewaart hele
+seconden en twee pogingen binnen één seconde wijzigen niets.
+
+### Het recht zit bij `bestellingen`
+
+Dus bij de eigenaar (#19). Het scherm toont naam en mailadres van de klant en
+stuurt hem een bericht; dat is geen marketing- en geen boekhoudwerk.
+
+### Wat er niet in zit
+
+- **Geen statusupdates van de vervoerder.** Wij sturen één bericht met een
+  code; of het pakket aankomt weten we niet. Dat is dezelfde grens als bij de
+  beoordelingsuitnodiging (#18): er komt geen bericht van de vervoerder, en
+  daarom hangt die uitnodiging aan de betaaldatum en niet aan de bezorging.
+- **`purchased_at` wordt hier niet gezet**, en dat is een openstaande vraag
+  voor de eigenaar. Dat veld bepaalt wanneer de beoordelingsuitnodiging
+  uitgaat (zeven dagen ná de inkoop, anders veertien dagen na de betaling) en
+  **er schrijft vandaag niets in** — het staat sinds `0001` in de tabel en
+  alleen de uitnodiging leest het. Het verzendbericht is het moment waarop de
+  beheerder weet dat het pakket onderweg is, dus dit is de plek waar die datum
+  vanzelf zou kunnen meekomen. Het verschuift dan wel de uitnodiging naar
+  zeven dagen daarna in plaats van veertien dagen na de betaling, en dat is
+  een keuze van de eigenaar en niet van mij.
+- **Geen bericht bij het inkopen.** Tussen betalen en verzenden zit handwerk
+  bij de groothandel (#4); de klant hoort daar niets over, en dat hoeft ook
+  niet — hij heeft een verwachte leverdatum (#27).
+- **Geen retourlabel in deze mail.** Dat zit al bij de bestelling in het
+  pakket (#20).
+
+De mail is te bekijken zonder er een te versturen:
+`/api/dev/order-mail?ref=<nummer>&view=verzending&code=3SDFC1234567890&vervoerder=postnl`
+(alleen in ontwikkeling). GEMETEN 2026-10-14 op twee bestaande bestellingen:
+de Nederlandse geeft `jouw.postnl.nl/track-and-trace/3SDFC1234567890-NL-6707BV`
+— let op de postcode zonder spatie, die staat met spatie in de database — en
+de Engelse geeft dezelfde mail in het Engels, met **"Netherlands"** in het
+adres. Dat laatste is nieuw: de bevestigingsmail zet daar nog `Nederland` in
+een Engelse mail (`country === "NL" ? "Nederland" : …`). Deze mail vraagt het
+aan `Intl`, dus het kost geen vertaalsleutel. Het is daarmee ook een gemeten
+foutje in de bevestigingsmail dat nog openstaat.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -3430,6 +3552,7 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
 | 2026-10-11 | Catalogus warmen na een deploy, en de drie tellers samen in één verzoek | GEMETEN: een verlopen cache-ingang serveert in 0,09 s, dus alleen een categorie die nog nooit is opgehaald kost zeven seconden — één rondje van 23 aanroepen volstaat, geen warmhoudronde (#32) |
+| 2026-10-14 | Track & trace naar de klant vanuit `/beheer/verzending` | De eigenaar wilde de code zelf kunnen versturen. De kolom stond sinds `0001` ongebruikt in de tabel en was op een code gezet, niet op een link: 64 tekens kapt een PostNL-link stil af. Eerst de mail naar buiten, dan pas aftekenen dat hij eruit is (#33) |
 | 2026-10-13 | De vier iStock-previews op de homepage vervangen door CC0-beeld | Het laatste openstaande punt van #9 en het enige dat geld kon kosten. De eerdere conclusie "vrije stock dekt dit niet" gold voor spécifieke onderdelen, niet voor generieke onderwerpen als banden en velgen — daar zijn honderden CC0-treffers (#9) |
 | 2026-10-12 | Filters ook op de familiepagina, en een filterklik scrolt niet meer naar boven | De klant zag bij banden pas filters nadat hij Auto/SUV had aangeklikt, en elke filterklik zette hem terug bovenaan de pagina. Het rijtje op die pagina kwam altijd al uit één categorie, dus de filters horen er (#28) |
 | 2026-10-12 | Foto's in het rooster "Categorieën voor jouw auto" | De eigenaar vroeg erom; 29 van de 35 hoofdgroepen hebben er een, tien lenen een foto die er al stond en zes houden de lijntekening. De koppeling gaat op naam, want een groepnummer van de leverancier verschuift (#9, #7) |
