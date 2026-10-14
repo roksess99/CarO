@@ -585,6 +585,12 @@
       "vatNumber": "Btw {value}"
     }
   },
+  "cookies": {
+    "label": "Over opslag op je apparaat",
+    "text": "Deze winkel zet alleen op je apparaat wat nodig is om te werken — je winkelwagen, je bezorggegevens, je taal, je thema en de auto die je koos. Geen tracking, geen advertenties, geen derde partijen.",
+    "link": "Lees wat we bewaren",
+    "ok": "Begrepen"
+  },
   "footer": {
     "termsTitle": "Voorwaarden",
     "shippingTitle": "Verzending",
@@ -658,7 +664,7 @@
   "privacy": {
     "title": "Privacy en cookies",
     "intro": "Deze webshop slaat zo min mogelijk op. Hieronder staat precies wat er op je apparaat wordt bewaard, wat er bij een bestelling in onze database komt, waarom, en hoe lang.",
-    "lastUpdated": "Laatst bijgewerkt: 9 oktober 2026",
+    "lastUpdated": "Laatst bijgewerkt: 14 oktober 2026",
     "storageTitle": "Wat we op je apparaat opslaan",
     "storageIntro": "De wet maakt geen onderscheid tussen cookies en andere opslag in je browser: voor localStorage gelden dezelfde regels. Daarom staat alles hier in één overzicht.",
     "tableName": "Naam",
@@ -686,13 +692,17 @@
         "purpose": "De auto die je hebt opgezocht, zodat we passende onderdelen kunnen tonen.",
         "retention": "Tot je een andere auto kiest of je browsergegevens wist."
       },
-      "theme": {
+      "caro-cookie-notice": {
+      "purpose": "Onthoudt dat je de melding onderaan over opslag hebt weggeklikt, zodat hij niet terugkomt.",
+      "retention": "Tot je je browsergegevens wist."
+    },
+    "theme": {
         "purpose": "Je keuze voor het lichte of donkere thema.",
         "retention": "Tot je je browsergegevens wist."
       }
     },
-    "noBannerTitle": "Waarom je geen cookiebanner ziet",
-    "noBannerBody": "Toestemming vragen is verplicht voor opslag die niet nodig is om de site te laten werken — denk aan het meten van bezoekersgedrag of advertenties. Alles in de tabel hierboven is óf noodzakelijk om de webshop te laten functioneren, óf een keuze die je zelf hebt gemaakt. Daarvoor geldt een wettelijke uitzondering en hoeven we geen toestemming te vragen. We vinden het bovendien misleidend om toestemming te vragen voor iets dat je niet kunt weigeren zonder dat de winkelwagen stopt met werken. De regel gaat trouwens alleen over wat er op jóuw apparaat wordt gezet; wat we van een bestelling op onze eigen server bewaren valt eronder niet — dat staat verderop.",
+    "noBannerTitle": "Waarom we geen toestemming vragen",
+    "noBannerBody": "Toestemming vragen is verplicht voor opslag die niet nodig is om de site te laten werken — denk aan het meten van bezoekersgedrag of advertenties. Alles in de tabel hierboven is óf noodzakelijk om de webshop te laten functioneren, óf een keuze die je zelf hebt gemaakt. Daarvoor geldt een wettelijke uitzondering en hoeven we geen toestemming te vragen. We vinden het bovendien misleidend om toestemming te vragen voor iets dat je niet kunt weigeren zonder dat de winkelwagen stopt met werken. De strook die je onderaan het scherm zag vraagt dan ook niets: die vertelt alleen wat hier staat, en verdwijnt zodra je hem wegklikt. De regel gaat trouwens alleen over wat er op jóuw apparaat wordt gezet; wat we van een bestelling op onze eigen server bewaren valt eronder niet — dat staat verderop.",
     "noTracking": "We gebruiken geen analytics, geen advertentiecookies, geen social-mediaknoppen en geen trackers van derden. De site laadt ook geen lettertypen of scripts van externe servers.",
     "personalDataTitle": "Persoonsgegevens die we verwerken",
     "personalDataBody": "Zolang je alleen rondkijkt, verwerken we geen persoonsgegevens. Dat verandert op drie momenten:",

@@ -26,9 +26,15 @@ mis je met bladeren.
 | `caro-checkout` | localStorage | `src/lib/checkout/storage.ts` |
 | `caro-vehicle` | localStorage | `src/components/vehicle/use-vehicle.ts` |
 | `theme` | localStorage | `src/components/theme-toggle.tsx` (en het init-script in de layout) |
+| `caro-cookie-notice` | localStorage | `src/components/cookie-notice.tsx` |
 
 `sessionStorage` wordt nergens gebruikt, en de shop schrijft zelf geen enkele
 cookie: `NEXT_LOCALE` komt uit next-intl.
+
+**`caro-cookie-notice` is er sinds 2026-10-14** en onthoudt dat de bezoeker de
+strook onderaan het scherm heeft weggeklikt. Dat is zelf ook opslag en staat
+daarom gewoon in de tabel op de pagina — een melding over opslag die zijn eigen
+sleutel verzwijgt zou een rare zijn.
 
 ## Op onze eigen server
 
@@ -115,7 +121,14 @@ vraagt dat de foto's via ons eigen domein lopen.
 Dit is 2026-09-17 nagelopen omdat de vraag terecht opkwam: als we mailadressen
 in een database bewaren, hebben we dan een cookiebanner nodig?
 
-**Nee.** De toestemmingsplicht van art. 11.7a Tw gaat uitsluitend over het
+**Nee** — en sinds 2026-10-14 staat er wél een strook onderaan het scherm die
+dat uitlegt (@docs/DECISIONS.md #16). **Die vraagt niets.** Het verschil is
+niet cosmetisch: een banner met een weiger-knop zou moeten betekenen dat de
+winkelwagen leeg blijft als je erop drukt, en toestemming vragen voor iets dat
+je niet kunt weigeren is misleidend. De strook vertelt alleen wat er in de
+tabel hierboven staat, wijst naar deze pagina en verdwijnt bij een klik.
+
+De toestemmingsplicht van art. 11.7a Tw gaat uitsluitend over het
 plaatsen van of toegang krijgen tot gegevens **op de randapparatuur van de
 gebruiker** — cookies, localStorage, sessionStorage, fingerprinting. Wat een
 server in zijn eigen database zet valt er niet onder; dat is een AVG-vraag, en

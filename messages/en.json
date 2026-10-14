@@ -585,6 +585,12 @@
       "vatNumber": "VAT {value}"
     }
   },
+  "cookies": {
+    "label": "About storage on your device",
+    "text": "This shop only puts on your device what it needs to work — your cart, your delivery details, your language, your theme and the car you picked. No tracking, no advertising, no third parties.",
+    "link": "Read what we keep",
+    "ok": "Got it"
+  },
   "footer": {
     "termsTitle": "Terms",
     "shippingTitle": "Shipping",
@@ -658,7 +664,7 @@
   "privacy": {
     "title": "Privacy and cookies",
     "intro": "This shop stores as little as possible. Below is exactly what is kept on your device, what goes into our database when you order, why, and for how long.",
-    "lastUpdated": "Last updated: 9 October 2026",
+    "lastUpdated": "Last updated: 14 October 2026",
     "storageTitle": "What we store on your device",
     "storageIntro": "The law makes no distinction between cookies and other browser storage: the same rules apply to localStorage. That is why everything is listed together here.",
     "tableName": "Name",
@@ -686,13 +692,17 @@
         "purpose": "The car you looked up, so we can show parts that fit it.",
         "retention": "Until you choose another car or clear your browser data."
       },
-      "theme": {
+      "caro-cookie-notice": {
+      "purpose": "Remembers that you dismissed the notice at the bottom about storage, so it does not come back.",
+      "retention": "Until you clear your browser data."
+    },
+    "theme": {
         "purpose": "Your choice of light or dark theme.",
         "retention": "Until you clear your browser data."
       }
     },
-    "noBannerTitle": "Why you do not see a cookie banner",
-    "noBannerBody": "Consent is required for storage that is not needed to make the site work — think of measuring visitor behaviour or advertising. Everything in the table above is either necessary for the shop to function, or a choice you made yourself. A legal exception covers that, so we do not have to ask. We also think it is misleading to ask permission for something you cannot refuse without the cart breaking. Note that this rule is only about what is placed on your device; what we keep on our own server about an order falls outside it — that is further down.",
+    "noBannerTitle": "Why we do not ask for consent",
+    "noBannerBody": "Consent is required for storage that is not needed to make the site work — think of measuring visitor behaviour or advertising. Everything in the table above is either necessary for the shop to function, or a choice you made yourself. A legal exception covers that, so we do not have to ask. We also think it is misleading to ask permission for something you cannot refuse without the cart breaking. The bar you saw at the bottom of the screen therefore asks nothing: it only tells you what is on this page, and disappears once you dismiss it. Note that this rule is only about what is placed on your device; what we keep on our own server about an order falls outside it — that is further down.",
     "noTracking": "We use no analytics, no advertising cookies, no social media buttons and no third-party trackers. The site also loads no fonts or scripts from external servers.",
     "personalDataTitle": "Personal data we process",
     "personalDataBody": "As long as you are only browsing, we process no personal data. That changes at three moments:",

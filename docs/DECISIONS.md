@@ -1954,6 +1954,51 @@ onder — dat is een AVG-vraag, en die is hierboven beantwoord. De vijf sleutels
 in de browser zijn onveranderd en alle vijf noodzakelijk of zelfgekozen; de
 uitzondering van lid 3 blijft dus gelden.
 
+### Er staat nu wél een strook — maar hij vraagt niets — 2026-10-14
+
+De eigenaar vroeg alsnog om een cookiebanner in de webshop. Dat botst met het
+besluit hierboven, dus eerst wat er precies niet mag en wat wel.
+
+**Toestemming vragen kan hier niet eerlijk.** Een banner met een weigerknop
+belooft een keuze. Wat de bezoeker hier zou weigeren is zijn eigen
+winkelwagen, zijn bezorggegevens, zijn taal, zijn thema en de auto die hij
+koos — klikt hij "weigeren", dan moet de wagen leeg blijven. Toestemming
+vragen voor iets dat je niet kunt weigeren is misleidend, en de ACM ziet dat
+net zo.
+
+**Wat wél kan is het vertellen.** Er staat sinds vandaag een strook onderaan
+het scherm (`components/cookie-notice.tsx`): wat er op het apparaat komt en
+waarom, geen tracking, geen derden, een link naar de privacyverklaring en één
+knop om hem weg te doen. Hij vraagt niets en blokkeert niets, dus hij is geen
+toestemmingsbanner — en voor de bezoeker ziet het eruit als wat de eigenaar
+vroeg.
+
+Vier dingen die eraan vastzitten:
+
+- **De strook onthoudt zelf iets**, namelijk dat je hem weggeklikt hebt
+  (`caro-cookie-notice` in localStorage). Die sleutel staat daarom in de
+  tabel op `/nl/privacy` en in @docs/PRIVACY.md. Een melding over opslag die
+  zijn eigen sleutel verzwijgt zou een rare zijn.
+- **Hij staat niet in de HTML van de server.** Of iemand hem al weggeklikt
+  heeft staat in zijn browser, en de server weet dat niet; meesturen zou hem
+  laten flitsen bij iedereen die hem allang kent. Daarom
+  `useSyncExternalStore` met "weggeklikt" als serverantwoord, en geen
+  `useState` in een effect — dat laatste weigert de lintregel
+  `react-hooks/set-state-in-effect` ook.
+- **Zonder opslag blijft hij werken.** In een privévenster kan `localStorage`
+  gooien; dan verschijnt de strook bij elke verse paginalading opnieuw, maar
+  de knop doet het wel (het weggeklikt-zijn staat eerst in het geheugen, dan
+  pas in de opslag).
+- **De kop op de privacypagina is omgezet** van "Waarom je geen cookiebanner
+  ziet" naar "Waarom we geen toestemming vragen", met één zin erbij over de
+  strook. Een pagina die zegt dat je niets ziet terwijl er iets staat, klopt
+  niet meer.
+
+**Dit is niet de banner die je nodig hebt zodra er een derde partij bij komt.**
+Vervang hem dan door een echte, mét voorafgaande blokkering — weigeren net zo
+makkelijk als accepteren, en niets laden voordat er geklikt is. Hergebruik de
+strook daar niet voor: hij heeft geen toestemmingsopslag en blokkeert niets.
+
 **De banner komt er wél** zodra er iets bijkomt dat geen van beide is:
 analytics, een advertentiepixel, een ingesloten YouTube-speler of een
 chatwidget van een derde. Dan moet het een banner **mét voorafgaande
@@ -3552,6 +3597,7 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-09-29 | Productie bouwt met webpack (`next build --webpack`) | Turbopack start voor de Tailwind-loader een apart node-proces, en dat mag niet op de bouwmachine van Hostinger (#21) |
 | 2026-10-01 | `pnpm audit` hoort bij af, en diepe kwetsbaarheden gaan met een override | De scan van Hostinger meldde zeventien stuks, drie kritiek; de helft zat vier tot acht lagen diep en is niet met een opwaardering te bereiken (#23) |
 | 2026-10-11 | Catalogus warmen na een deploy, en de drie tellers samen in één verzoek | GEMETEN: een verlopen cache-ingang serveert in 0,09 s, dus alleen een categorie die nog nooit is opgehaald kost zeven seconden — één rondje van 23 aanroepen volstaat, geen warmhoudronde (#32) |
+| 2026-10-14 | Een informatiestrook over opslag in de winkel, géén toestemmingsbanner | De eigenaar vroeg om een cookiebanner. Toestemming vragen kan hier niet eerlijk: wat de bezoeker zou weigeren is zijn eigen winkelwagen. De strook vertelt het dus, vraagt niets en blokkeert niets (#16) |
 | 2026-10-14 | Track & trace naar de klant vanuit `/beheer/verzending` | De eigenaar wilde de code zelf kunnen versturen. De kolom stond sinds `0001` ongebruikt in de tabel en was op een code gezet, niet op een link: 64 tekens kapt een PostNL-link stil af. Eerst de mail naar buiten, dan pas aftekenen dat hij eruit is (#33) |
 | 2026-10-13 | De vier iStock-previews op de homepage vervangen door CC0-beeld | Het laatste openstaande punt van #9 en het enige dat geld kon kosten. De eerdere conclusie "vrije stock dekt dit niet" gold voor spécifieke onderdelen, niet voor generieke onderwerpen als banden en velgen — daar zijn honderden CC0-treffers (#9) |
 | 2026-10-12 | Filters ook op de familiepagina, en een filterklik scrolt niet meer naar boven | De klant zag bij banden pas filters nadat hij Auto/SUV had aangeklikt, en elke filterklik zette hem terug bovenaan de pagina. Het rijtje op die pagina kwam altijd al uit één categorie, dus de filters horen er (#28) |
