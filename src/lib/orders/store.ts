@@ -1,5 +1,5 @@
 import type { OrderDocument } from "@/lib/checkout/order-document";
-import { query, queryOne, readJson, transaction } from "@/lib/db/client";
+import { execute, query, queryOne, readJson, transaction } from "@/lib/db/client";
 import type { ProductFamily } from "@/lib/catalog/families";
 import type { OrderStatus, StoredOrder } from "./types";
 
@@ -337,6 +337,176 @@ export async function orderTotals(): Promise<{
     paidVatCents: Number(row?.paid_vat ?? 0),
     openCount: Number(row?.open_count ?? 0),
   };
+}
+
+/**
+ * Eén regel per betaalde bestelling voor het verzendscherm.
+ *
+ * Een eigen vraag en niet `listOrders` met een veld erbij: dit scherm heeft de
+ * **postcode** nodig (PostNL bouwt zijn link uit barcode plus postcode, zie
+ * `tracking.ts`) en het dashboard heeft die niet nodig. Een adres meesturen
+ * naar een scherm dat er niets mee doet is precies wat #19 verbiedt.
+ */
+export interface Shipment {
+  reference: string;
+  createdAt: string;
+  paidAt: string | null;
+  customerName: string;
+  email: string;
+  postcode: string;
+  country: string;
+  totalGrossCents: number;
+  lineCount: number;
+  trackingCode: string | null;
+  trackingCarrier: string | null;
+  /** Wanneer het bericht aan de klant de deur uit ging */
+  trackingSentAt: string | null;
+}
+
+interface ShipmentRow {
+  reference: string;
+  created_at: Date;
+  paid_at: Date | null;
+  first_name: string;
+  last_name: string;
+  email: string;
+  postcode: string;
+  country: string;
+  total_gross_cents: number;
+  line_count: number;
+  tracking_code: string | null;
+  tracking_carrier: string | null;
+  tracking_sent_at: Date | null;
+}
+
+/**
+ * Betaalde bestellingen, nieuwste eerst.
+ *
+ * `onlyOpen` laat alleen zien wat nog geen verzendbericht heeft gekregen —
+ * dat is de werkvoorraad. De rest blijft opvraagbaar, want een code kan
+ * verkeerd overgetypt zijn en dan moet hij te herstellen zijn.
+ */
+export async function listShipments(options: {
+  limit: number;
+  onlyOpen?: boolean;
+}): Promise<Shipment[]> {
+  // Zelfde reden als in `listOrders`: LIMIT gaat bij MariaDB niet als
+  // parameter mee, dus eerst tot een geheel getal dwingen.
+  const limit = Math.min(Math.max(Math.trunc(options.limit), 1), 200);
+
+  const rows = await query<ShipmentRow>(
+    `SELECT o.reference, o.created_at, o.paid_at,
+            o.first_name, o.last_name, o.email, o.postcode, o.country,
+            o.total_gross_cents,
+            o.tracking_code, o.tracking_carrier, o.tracking_sent_at,
+            COUNT(l.id) AS line_count
+       FROM orders o
+       LEFT JOIN order_lines l ON l.order_reference = o.reference
+      WHERE o.status = 'paid'
+        ${options.onlyOpen ? "AND o.tracking_sent_at IS NULL" : ""}
+      GROUP BY o.reference
+      ORDER BY o.paid_at DESC, o.created_at DESC
+      LIMIT ${limit}`,
+  );
+
+  return rows.map((row) => ({
+    reference: row.reference,
+    createdAt: row.created_at.toISOString(),
+    paidAt: isoOrNull(row.paid_at),
+    customerName: `${row.first_name} ${row.last_name}`.trim(),
+    email: row.email,
+    postcode: row.postcode,
+    country: row.country,
+    totalGrossCents: row.total_gross_cents,
+    lineCount: Number(row.line_count),
+    trackingCode: row.tracking_code,
+    trackingCarrier: row.tracking_carrier,
+    trackingSentAt: isoOrNull(row.tracking_sent_at),
+  }));
+}
+
+/** De track & trace van één bestelling, met het adres dat de link nodig heeft */
+export async function readTracking(reference: string): Promise<{
+  status: OrderStatus;
+  postcode: string;
+  country: string;
+  trackingCode: string | null;
+  trackingCarrier: string | null;
+  trackingSentAt: string | null;
+} | null> {
+  const row = await queryOne<{
+    status: OrderStatus;
+    postcode: string;
+    country: string;
+    tracking_code: string | null;
+    tracking_carrier: string | null;
+    tracking_sent_at: Date | null;
+  }>(
+    `SELECT status, postcode, country,
+            tracking_code, tracking_carrier, tracking_sent_at
+       FROM orders WHERE reference = ?`,
+    [reference],
+  );
+  if (!row) return null;
+  return {
+    status: row.status,
+    postcode: row.postcode,
+    country: row.country,
+    trackingCode: row.tracking_code,
+    trackingCarrier: row.tracking_carrier,
+    trackingSentAt: isoOrNull(row.tracking_sent_at),
+  };
+}
+
+/**
+ * De code wegschrijven, nog zonder hem verstuurd te noemen.
+ *
+ * Twee stappen en niet één, met de mail ertussen. Hetzelfde patroon als bij
+ * een terugbetaling (@docs/DECISIONS.md #20): wat naar buiten gaat eerst, en
+ * pas daarna aftekenen dat het gebeurd is. Zou `tracking_sent_at` hier al
+ * gezet worden en de mail daarna mislukken, dan staat de bestelling als
+ * "bericht verstuurd" in het scherm terwijl de klant niets weet — en dan
+ * kijkt niemand er ooit nog naar.
+ *
+ * `status = 'paid'` staat er als slot, niet als controle: de aanroeper heeft
+ * de status al gelezen, maar tussen lezen en schrijven past een webhook.
+ *
+ * **Niet op `affectedRows` toetsen.** MySQL geeft bij een UPDATE het aantal
+ * *gewijzigde* rijen terug, niet het aantal gevonden rijen — dezelfde code
+ * nog eens opslaan (een mail die opnieuw moet omdat de eerste mislukte) geeft
+ * dus 0, en dat is geen fout.
+ */
+export async function saveTracking(
+  reference: string,
+  code: string,
+  carrier: string,
+): Promise<void> {
+  await execute(
+    `UPDATE orders SET tracking_code = ?, tracking_carrier = ?
+      WHERE reference = ? AND status = 'paid'`,
+    [code, carrier, reference],
+  );
+}
+
+/**
+ * Aftekenen dat het verzendbericht eruit is.
+ *
+ * Geeft terug of het veld daarna werkelijk gevuld staat. Dat wordt apart
+ * nagekeken in plaats van uit `affectedRows` afgeleid: `DATETIME` bewaart
+ * hele seconden, dus twee pogingen binnen dezelfde seconde wijzigen niets en
+ * zouden ten onrechte als mislukt gelden. Wat de aanroeper moet weten is of
+ * de bestelling nu als verzonden in het scherm staat.
+ */
+export async function markTrackingSent(reference: string): Promise<boolean> {
+  await execute(`UPDATE orders SET tracking_sent_at = ? WHERE reference = ?`, [
+    new Date(),
+    reference,
+  ]);
+  const row = await queryOne<{ tracking_sent_at: Date | null }>(
+    `SELECT tracking_sent_at FROM orders WHERE reference = ?`,
+    [reference],
+  );
+  return Boolean(row?.tracking_sent_at);
 }
 
 /** Alleen voor het verhuisscript: bestaat deze bestelling al? */
