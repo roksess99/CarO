@@ -96,6 +96,17 @@ kleuren van het select-element niet automatisch over in het popupvenster.
   clientcomponent. Een gewoon `<script dangerouslySetInnerHTML>` in de `<head>`
   staat in de HTML die de server stuurt en draait tijdens het parsen, vóór de
   eerste schilderbeurt. Zo zet het thema-script zijn class (`[locale]/layout.tsx`).
+- **Die waarschuwing zie je in dev alsnog, en dat is geen regressie.**
+  *"Encountered a script tag while rendering React component"* verschijnt zodra
+  React de wortel in de brówser opbouwt in plaats van de serverHTML te
+  hydrateren. Twee gevallen doen dat: een **404-pagina**, en een **fout tijdens
+  het renderen** — de taalwisselaar gooide er zo een (zie het commentaar in
+  `locale-switcher.tsx`). Het script zelf is niet het probleem: het staat in de
+  HTML die de server stuurde en heeft allang gedraaid. GEMETEN 2026-10-14 op
+  een productiebuild (`pnpm build` + `pnpm start`): op `/nl` én op een
+  404-pagina **nul consolemeldingen**, en `<html>` draagt zijn themaclass. In
+  dev blijft hij staan; React-waarschuwingen zitten niet in de productiebundel.
+  Komt hij ergens anders opeens op, kijk dan eerst of er een fout bóven staat.
 - Lege staat is een uitnodiging tot actie, niet alleen "geen resultaten".
 - Artikelnummers en prijzen: `font-variant-numeric: tabular-nums` zodat kolommen uitlijnen.
 

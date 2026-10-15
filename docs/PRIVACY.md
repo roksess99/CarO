@@ -26,9 +26,15 @@ mis je met bladeren.
 | `caro-checkout` | localStorage | `src/lib/checkout/storage.ts` |
 | `caro-vehicle` | localStorage | `src/components/vehicle/use-vehicle.ts` |
 | `theme` | localStorage | `src/components/theme-toggle.tsx` (en het init-script in de layout) |
+| `caro-cookie-notice` | localStorage | `src/components/cookie-notice.tsx` |
 
 `sessionStorage` wordt nergens gebruikt, en de shop schrijft zelf geen enkele
 cookie: `NEXT_LOCALE` komt uit next-intl.
+
+**`caro-cookie-notice` is er sinds 2026-10-14** en onthoudt dat de bezoeker de
+strook onderaan het scherm heeft weggeklikt. Dat is zelf ook opslag en staat
+daarom gewoon in de tabel op de pagina — een melding over opslag die zijn eigen
+sleutel verzwijgt zou een rare zijn.
 
 ## Op onze eigen server
 
@@ -72,6 +78,15 @@ is. Anders dan bij een kortingscode verdwijnt deze rij wél met de bestelling
 meer als geverifieerde aankoop gelden, en dan hoort hij ook niet meer op de
 site te staan.
 
+**`orders` draagt sinds 2026-10-14 ook de track & trace** (`tracking_code`,
+`tracking_carrier`, `tracking_sent_at`; de eerste kolom stond er al sinds het
+begin maar werd nooit gevuld — @docs/DECISIONS.md #33). Dat is geen nieuw doel
+en dus geen nieuwe regel op de pagina: `privacy.server.order` noemt als doel al
+*"bezorgen, je op de hoogte houden"*, en een barcode van de vervoerder is
+precies dat. Het valt onder dezelfde grondslag en dezelfde bewaartermijn als de
+rest van de bestelling. `privacy.lastUpdated` blijft daarom staan — voor de
+bezoeker verandert er niets aan wat wij bewaren of waarvoor.
+
 **Geen mailinglijst.** Er is geen tabel met adressen voor marketing en die
 komt er ook niet zonder dat #15 opnieuw bekeken wordt: verzamelen voor een
 doel dat je nog niet hebt mag niet. De pagina zegt dat expliciet
@@ -106,7 +121,14 @@ vraagt dat de foto's via ons eigen domein lopen.
 Dit is 2026-09-17 nagelopen omdat de vraag terecht opkwam: als we mailadressen
 in een database bewaren, hebben we dan een cookiebanner nodig?
 
-**Nee.** De toestemmingsplicht van art. 11.7a Tw gaat uitsluitend over het
+**Nee** — en sinds 2026-10-14 staat er wél een strook onderaan het scherm die
+dat uitlegt (@docs/DECISIONS.md #16). **Die vraagt niets.** Het verschil is
+niet cosmetisch: een banner met een weiger-knop zou moeten betekenen dat de
+winkelwagen leeg blijft als je erop drukt, en toestemming vragen voor iets dat
+je niet kunt weigeren is misleidend. De strook vertelt alleen wat er in de
+tabel hierboven staat, wijst naar deze pagina en verdwijnt bij een klik.
+
+De toestemmingsplicht van art. 11.7a Tw gaat uitsluitend over het
 plaatsen van of toegang krijgen tot gegevens **op de randapparatuur van de
 gebruiker** — cookies, localStorage, sessionStorage, fingerprinting. Wat een
 server in zijn eigen database zet valt er niet onder; dat is een AVG-vraag, en

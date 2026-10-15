@@ -141,10 +141,14 @@ async function renderAttachment(
  * bestellingen door, en een bevestigingsmail hoort niet op schijf-IO te
  * wachten. Lukt het lezen niet — bestand weg na een half gelukte deploy —
  * dan gaat de mail zonder logo de deur uit in plaats van helemaal niet.
+ *
+ * Geëxporteerd omdat het verzendbericht (`app/beheer/verzending/actions.ts`)
+ * hetzelfde logo met dezelfde `cid:` gebruikt. Twee keer inlezen zou twee
+ * caches geven voor één bestand.
  */
 let logoCache: MailAttachment | null | undefined;
 
-async function logoAttachment(): Promise<MailAttachment | null> {
+export async function logoAttachment(): Promise<MailAttachment | null> {
   if (logoCache !== undefined) return logoCache;
   try {
     const file = path.join(process.cwd(), "public", "brand", "caro-lockup-email.png");

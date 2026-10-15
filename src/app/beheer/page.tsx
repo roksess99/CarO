@@ -57,6 +57,9 @@ const MAANDEN = [
 ] as const;
 
 const NAV: ReadonlyArray<{ href: string; label: string; needs: Permission }> = [
+  // Verzending zit achter `bestellingen`: het scherm toont naam en mailadres
+  // van de klant en stuurt hem een bericht (@docs/DECISIONS.md #19).
+  { href: "/beheer/verzending", label: "Verzending", needs: "bestellingen" },
   { href: "/beheer/prijzen", label: "Prijzen", needs: "prijzen" },
   { href: "/beheer/kortingen", label: "Kortingen", needs: "kortingen" },
   {

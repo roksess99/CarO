@@ -45,6 +45,7 @@ regels code voor wachtwoorden, 2FA en sessies samen. De afweging staat in §4.0.
 /beheer/kortingen           tijdelijke acties
 /beheer/kortingscodes       codes met teller en looptijd
 /beheer/beoordelingen       beoordelingen beantwoorden en uitnodigen
+/beheer/verzending          track & trace naar de klant sturen
 /beheer/retouren            retouren afhandelen en terugbetalen
 /beheer/beheerders          uitnodigen, rollen, toegang intrekken
 ```
@@ -407,6 +408,36 @@ uitgenodigd" met de datum waarop dat vanzelf gebeurt.
   eerst een knop "Nu uitnodigen" die alleen de dagclaim oversloeg en dus
   verstuurde wat tóch al aan de beurt was — precies het geval waarin je niet
   hoeft te drukken.
+
+### Verzending — recht `bestellingen`, alleen de eigenaar
+
+De betaalde bestellingen onder elkaar; per bestelling een vervoerder, een veld
+voor de track & trace en één knop. De klant krijgt een mail in de taal waarin
+hij bestelde.
+
+Drie dingen hieruit zijn overdraagbaar naar elke winkel:
+
+- **Neem zowel een code als een hele link aan, en laat de link winnen.** Wat de
+  beheerder uit de mail van zijn vervoerder plakt weet meer dan jouw sjabloon.
+  Bouw je zelf een link uit een barcode, dan heb je er vaak meer voor nodig dan
+  de code — PostNL wil ook het land en de postcode — en die staan op de
+  bestelling, dus laat ze niet intypen.
+- **Verzin geen volglink die je niet kunt onderbouwen.** Kies de beheerder
+  "andere vervoerder", dan krijgt de klant de code zonder knop. Een knop die op
+  "zending niet gevonden" uitkomt is jouw fout, niet die van de vervoerder.
+- **Eerst het bericht naar buiten, dan aftekenen dat het eruit is.** Dezelfde
+  volgorde als bij een terugbetaling (§8). Het scherm leest de datum waarop het
+  bericht verstuurd is, niet of er een code staat — anders staat een bestelling
+  als "verzonden" in de lijst terwijl de mail mislukte.
+
+En een valkuil die in §9 hoort maar hier opduikt: **`affectedRows` van een
+UPDATE is het aantal *gewijzigde* rijen, niet het aantal gevonden rijen.**
+Dezelfde code nog eens opslaan (na een mislukte mail) geeft dus 0, en dat is
+geen fout. Toets op wat je daarna in de rij vindt, niet op dat getal.
+
+Twee sloten, want een mail aan een klant is niet terug te draaien: alleen
+betaalde bestellingen, en een tweede bericht over dezelfde bestelling vraagt
+een bevestiging.
 
 ### Retouren — recht `retouren`, alleen de eigenaar
 

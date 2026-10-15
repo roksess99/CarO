@@ -22,6 +22,10 @@ const STORAGE_ITEMS = [
   { key: "caro-checkout", kind: "local" },
   { key: "caro-vehicle", kind: "local" },
   { key: "theme", kind: "local" },
+  // De melding onderaan het scherm onthoudt hier dat je hem hebt
+  // weggeklikt. Dat is zelf ook opslag, dus hij hoort in deze tabel —
+  // een melding over opslag die zichzelf verzwijgt zou raar zijn.
+  { key: "caro-cookie-notice", kind: "local" },
 ] as const;
 
 /**

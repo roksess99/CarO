@@ -31,6 +31,10 @@ export type AuditAction =
   | "beoordeling.getoond"
   | "prijsmeting.handmatig"
   | "bestelling.ingekocht"
+  // Track & trace naar de klant. Staat in het logboek omdat het een bericht
+  // aan een klant is: hij kan erop terugkomen ("ik heb niets gehad"), en dan
+  // is dit de plek waar staat wanneer het eruit ging en met welke code.
+  | "verzending.verstuurd"
   | "retour.ontvangen"
   // Geld dat de deur uit gaat, en de enige regel hier die dat doet. Het
   // `re_…`-kenmerk van de betaaldienst staat in `detail`, ook als de rij daarna niet
