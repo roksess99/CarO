@@ -23,6 +23,31 @@ export function LocaleSwitcher() {
   );
 
   /**
+   * Draagt `params` alles wat dit pathname nodig heeft?
+   *
+   * `usePathname()` leest de URL en `useParams()` de gerenderde boom, en die
+   * twee lopen niet altijd gelijk op — tijdens een Fast Refresh op een
+   * categoriepagina stond de URL al op `/[family]` terwijl params nog alleen
+   * `{locale}` droeg. De Link gooit dan *Insufficient params provided for
+   * localized pathname*, en een fout tijdens het renderen laat React de hele
+   * boom opnieuw opbouwen in de browser — wat op zijn beurt de waarschuwing
+   * over het thema-script in de `<head>` oplevert. Twee meldingen, één
+   * oorzaak.
+   *
+   * GEMETEN 2026-10-14 in de console, met `Template: /[family]` en
+   * `Params: {"locale":"nl"}` erbij.
+   *
+   * Een taalknop is het niet waard om een pagina voor om te gooien, dus bij
+   * een gat valt hij terug op de homepage van die taal. Dat duurt één render:
+   * zodra de boom bij de URL is, staat de juiste link er weer.
+   */
+  function hasParamsFor(path: string): boolean {
+    return [...path.matchAll(/\[\.*([^\]]+)\]/g)].every(
+      ([, name]) => params[name] !== undefined,
+    );
+  }
+
+  /**
    * De familieslug is taalafhankelijk (banden ↔ tyres). Zonder deze
    * vertaling zou de taalwissel naar /en/banden/... gaan en dat bestaat niet.
    */
@@ -40,7 +65,11 @@ export function LocaleSwitcher() {
         <Link
           key={l}
           // @ts-expect-error -- params horen bij het huidige pathname (next-intl-patroon voor dynamische routes)
-          href={{ pathname, params: paramsForLocale(l), query }}
+          href={
+            hasParamsFor(pathname)
+              ? { pathname, params: paramsForLocale(l), query }
+              : "/"
+          }
           locale={l}
           aria-label={t(l)}
           aria-current={l === locale ? "true" : undefined}
