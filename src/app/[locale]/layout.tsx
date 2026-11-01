@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import {
+  getMessages,
+  getTranslations,
+  setRequestLocale,
+} from "next-intl/server";
 import { Anton, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { BackToTop } from "@/components/back-to-top";
@@ -9,6 +13,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { BottomNav } from "@/components/bottom-nav";
 import { SiteHeader } from "@/components/site-header";
 import { PageBeacon } from "@/components/stats/page-beacon";
+import { clientMessages } from "@/i18n/client-messages";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
 import { vehicleMakeNames } from "@/lib/vehicle/makes";
@@ -73,7 +78,18 @@ export default async function LocaleLayout({
   // Merkenlijst: één keer per paginaweergave, hier. Header, tabbalk en
   // autokiezer delen hem — apart opgehaald stond dezelfde call drie keer in
   // het log (zie site-header.tsx).
-  const makes = await vehicleMakeNames();
+  //
+  // Naast de berichten, niet erachter: de lijst komt bij de leverancier
+  // vandaan en de berichten uit de request-config, dus ze weten niets van
+  // elkaar.
+  const [makes, alleBerichten] = await Promise.all([
+    vehicleMakeNames(),
+    getMessages(),
+  ]);
+  // En de provider krijgt alleen de namespaces die een clientcomponent echt
+  // opvraagt. Zonder die afbakening erft hij de hele boom en gaat die in de
+  // RSC-payload mee naar de browser — zie i18n/client-messages.ts.
+  const messages = clientMessages(alleBerichten);
 
   return (
     <html
@@ -88,7 +104,7 @@ export default async function LocaleLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="flex min-h-screen flex-col font-sans antialiased">
-        <NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages}>
           <a
             href="#main"
             className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-caro-orange focus:px-4 focus:py-2 focus:font-semibold focus:text-caro-ink"

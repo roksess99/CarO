@@ -3572,6 +3572,116 @@ een Engelse mail (`country === "NL" ? "Nederland" : …`). Deze mail vraagt het
 aan `Intl`, dus het kost geen vertaalsleutel. Het is daarmee ook een gemeten
 foutje in de bevestigingsmail dat nog openstaat.
 
+## 34. Wat de browser aan teksten en aan wachttijd meekrijgt — GEMETEN 2026-11-01
+
+Een doorloop langs alle pagina's op twee vragen: staan er aanroepen in de rij
+die naast elkaar konden, en draait er iets in de browser dat op de server hoort?
+Dit is het vervolg op #32, dat over het aantal API-verzoeken ging; hier gaat het
+over de bytes en over de volgorde.
+
+### De clientbundel bevatte geen onnodige `"use client"`
+
+Zevenenvijftig bestanden dragen de directive, en met hun imports erbij zijn dat
+165 bestanden in de bundel. Nagelopen op wat ze daar doen: **ze hebben hem alle
+zevenenvijftig nodig** — `useActionState` in de formulieren van het paneel,
+`useLinkStatus` in "Meer laden", `useSyncExternalStore` in de winkelwagen en de
+cookiestrook, `useRef`/`useState` in de lades. Er valt dus niets terug te zetten
+naar de server.
+
+De grootste brokken in `.next/static/chunks` zijn ook niet van ons: 236 kB
+router van Next, 200 kB + 188 kB React, 132 kB `main`, 112 kB polyfills (die
+een moderne browser niet laadt). De eigen componenten zitten in de staart.
+
+**Waar het wél misging is de laag ertussen.** `useTranslations` staat in negen
+bestanden zónder de directive — `product-card`, `product-grid`, `site-footer`,
+`trust-badges`, `company-details`, `availability-badge`, `not-found` en twee
+badges. Dat is toegestaan en goed: next-intl laat de hook ook in een
+servercomponent lezen. Twee ervan (`old-price`, `discount-badge`) worden door
+een clientcomponent geïmporteerd en staan daarom alsnog in de bundel; de andere
+zeven niet. Dat onderscheid is nagerekend met een script en niet geschat.
+
+### De hele berichtenboom ging mee naar de browser — 58 van 218 kB
+
+`NextIntlClientProvider` stond zonder `messages` in de layout. Dan erft hij de
+boom van de server, en die gaat in de RSC-payload mee de deur uit. GEMETEN op
+de voorgerenderde `/nl/cart`:
+
+| Wat | Sleutels | Bytes | Op de cart-pagina te zien? |
+|---|---|---|---|
+| `privacy` | 61 | 7.755 | nee |
+| `family` | 61 | 7.080 | ja (tabbalk) |
+| `returns` | 58 | 5.220 | ja (retourformulier is client) |
+| `faq` | 25 | 3.771 | nee |
+| `terms` | 21 | 3.188 | nee |
+| `filters` | 73 | 2.876 | nee |
+| `orderMail` + `trackingMail` | 58 | 3.572 | **nooit — dit zijn maileksten** |
+| … 31 andere | | | |
+| **totaal** | **794** | **59.498** | **27% van de HTML** |
+
+De teksten van de bevestigingsmail en het verzendbericht staan dus in de
+browser van elke bezoeker. Ze worden daar nooit gerenderd — een mail wordt op
+de server opgebouwd en met SMTP verstuurd.
+
+**Opgelost door de provider alleen te geven wat een clientcomponent opvraagt.**
+Welke dat zijn is uitgerekend over de sluiting van de bundel, niet geraden:
+negentien van de achtendertig namespaces. De lijst staat in
+`src/i18n/client-messages.ts`.
+
+| | vóór | ná |
+|---|---|---|
+| `/nl/cart` | 223.284 B | **196.396 B** |
+| teksten in de payload | 51.756 B (100%) | 26.165 B (51%) |
+
+Dat is 26 kB minder op **elke** pagina, in beide talen, en er verdwijnt geen
+letter uit de winkel: een servercomponent leest zijn teksten rechtstreeks uit
+de request-config en ziet nog steeds alles.
+
+**De prijs is een lijst die kan verlopen**, en die prijs is betaald in plaats
+van genegeerd: `pnpm messages:check` loopt de bundel opnieuw af en faalt als er
+een namespace opgevraagd wordt die niet meegaat. Zonder die controle zou een
+nieuw clientonderdeel stilletjes `cart.title` in beeld zetten in plaats van
+"Winkelwagen" — next-intl rendert dan de sleutel.
+
+### Eén echte waterval, op de productpagina
+
+De rest van de winkel bleek al parallel te staan: de categoriepagina start zijn
+lijst, filters en producten tegelijk (met een reden in het commentaar), de
+familiepagina hangt elk blok in zijn eigen `<Suspense>`, en `articleCounts`
+heeft een eigen pool van zes. Wat eroverheen gekeken was:
+
+```
+findPart            → artikel bij de leverancier
+expectedDelivery    → leverdatum, hangt aan het artikel      ✓ moet wachten
+getCategories       → categorielijst, hangt aan de famílie   ✗ stond erachter
+```
+
+De derde aanroep weet niets van het artikel en stond toch achter twee aanroepen
+in de rij. Hij start nu meteen en wordt onderaan opgehaald, net als op de
+categoriepagina. Eén heenweg naar de leverancier minder, op elke productpagina.
+
+Dat de uitkomst gelijk blijft is nagekeken in de browser: de JSON-LD van de
+APOLLO-band houdt `"category":"Auto / SUV"`, dus de vertaalde categorienaam komt
+nog net zo goed binnen.
+
+### Wat bewust blijft staan
+
+**De merkenlijst in de layout.** `await vehicleMakeNames()` staat vóór de
+`<html>` en houdt dus de hele schil op. Dat kán weg door de belofte door te
+geven en hem met `use()` in de drie clientonderdelen op te halen, elk achter een
+`<Suspense>`. Niet gedaan, en de reden is een meting uit #32: een verlopen
+cache-ingang serveert in 0,09 s en de lijst staat een etmaal. Het kost dus
+alleen iets op de eerste weergave na een deploy, en daarvoor is er al een
+warmrondje. Drie clientonderdelen verbouwen voor dat ene geval is de
+ingewikkeldheid niet waard.
+
+**De vijf `getTranslations` achter elkaar** op de categoriepagina. Dat ziet uit
+als een waterval en is er geen: de eerste laadt het berichtenbestand, de andere
+vier komen uit dezelfde gecachte config en wachten op niets.
+
+**De twee queries op `/beheer/facturen`.** `searchInvoices` heeft het jaar nodig
+dat uit `invoiceBreakdown` komt — een echte afhankelijkheid, geen vergeten
+`Promise.all`.
+
 ---
 
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
@@ -3711,4 +3821,5 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-10-02 | Eigen bezoekcijfers in het dashboard, geen analysedienst | Een script van een derde maakt een toestemmingsbanner verplicht en meet dan nog maar de helft van de bezoekers; vijf eigen tellers beantwoorden de vraag wáár het afrekenen stukloopt (#24) |
 | 2026-10-01 | Voorraad én prijs komen van dezelfde groothandel, en het aantal is erop begrensd | `item.stock` klopt bij de helft van de artikelen niet met de groothandels eronder; vier banden kopen waar er één ligt kostte gemiddeld € 60,36 per set (#22) |
 | 2026-10-01 | Een actie op onderdelen wordt een aankondiging in de carrousel | Die catalogus is niet als lijst op te vragen zonder gekozen auto, dus zonder dia stond de grootste productgroep van de winkel nergens aangekondigd (#14) |
+| 2026-11-01 | De browser krijgt alleen de teksten die hij rendert | GEMETEN: 27% van de HTML was de hele berichtenboom, de maileksten incluis; negentien van de achtendertig namespaces zijn genoeg, en `pnpm messages:check` houdt die lijst eerlijk (#34) |
 | 2026-09-19 | Beoordelingen verschijnen meteen, verbergen alleen met reden | Selectief publiceren is een oneerlijke handelspraktijk; antwoorden werkt beter dan weghalen (#18) |

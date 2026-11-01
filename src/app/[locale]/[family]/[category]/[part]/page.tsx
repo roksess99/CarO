@@ -151,20 +151,30 @@ export default async function ProductPage({ params }: Props) {
   const family = familyFromSlug(familyParam, locale);
   if (!family) notFound();
 
-  const part = await findPart(family, category, partSlug);
-  // Eén aanroep extra bij de leverancier, een uur gecacht, en alleen hier —
-  // in een productraster zou dit tientallen aanroepen per bezoeker worden.
-  const leverdatum = part ? await expectedDelivery(part, 1) : null;
-  const t = await getTranslations("product");
-  const tFamily = await getTranslations("family");
-  const tFilters = await getTranslations("filters");
   // Het artikel kent zijn eigen categorienaam, maar die komt in de taal van
   // de leverancier. De categorielijst kent onze vertaling; lukt het opzoeken
   // niet (area 3 levert geen lijst), dan valt hij terug op de naam van het
   // artikel zelf.
-  const categories = await localizeCategories(
-    await getCatalogProvider().getCategories(family),
-  );
+  //
+  // Die lijst hangt alleen aan de familie, niet aan het artikel — hij stond
+  // hier eerder onder `findPart` en wachtte dus op twee aanroepen die er
+  // niets mee te maken hebben. Nu start hij meteen en wordt hij hieronder
+  // opgehaald; dat scheelt één heenweg naar de leverancier op elke
+  // productpagina. Valt `findPart` op een 404, dan loopt dit werk voor niets,
+  // maar het kan niet mislopen: `getCategories` geeft bij een fout een lege
+  // lijst terug en gooit nooit (tyre24-provider.ts).
+  const categoriesPromise = getCatalogProvider()
+    .getCategories(family)
+    .then(localizeCategories);
+
+  const part = await findPart(family, category, partSlug);
+  // Eén aanroep extra bij de leverancier, een uur gecacht, en alleen hier —
+  // in een productraster zou dit tientallen aanroepen per bezoeker worden.
+  const leverdatum = await expectedDelivery(part, 1);
+  const t = await getTranslations("product");
+  const tFamily = await getTranslations("family");
+  const tFilters = await getTranslations("filters");
+  const categories = await categoriesPromise;
   // GEMETEN 2026-09-09: bij onderdelen leverde dit een lege naam op. De
   // categorielijst kent die familie niet (de boom hangt aan een auto) en
   // `part.categoryName` is dan een lege string — die overleeft `??`, want

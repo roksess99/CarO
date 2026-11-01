@@ -136,6 +136,15 @@ kleuren van het select-element niet automatisch over in het popupvenster.
   verwijderd — maar omdat het niets kost en de deur openhoudt.
 - Prijzen blijven `nl-NL` (`lib/format.ts`): euro-notatie, ook op de Engelse
   pagina's. De shop levert alleen in Nederland en de factuur is Nederlands.
+- **De browser krijgt niet de hele berichtenboom.** `NextIntlClientProvider`
+  staat in de layout met een afgebakende `messages`; welke namespaces dat zijn
+  staat in `src/i18n/client-messages.ts`. Zonder die afbakening gingen alle 794
+  teksten mee in de RSC-payload van élke pagina, 27% van de HTML, de teksten
+  van de bevestigingsmail incluis (@docs/DECISIONS.md #34). Geef je een
+  clientcomponent een nieuwe namespace, zet hem daar dan bij en draai
+  `pnpm messages:check` — vergeten is geen crash maar `cart.title` in beeld.
+  Een **servercomponent** hoeft hier niets mee: `useTranslations` en
+  `getTranslations` lezen daar rechtstreeks uit de request-config.
 
 ## Onderdelencatalogus (Wearparts)
 
@@ -161,6 +170,16 @@ kleuren van het select-element niet automatisch over in het popupvenster.
 - WebP, lazy loading behalve de eerste rij van het grid.
 - Geen library groter dan 15kB gzipped zonder te vragen.
 - Budget: LCP < 2,5s op 4G, CLS < 0,1.
+- **Twee aanroepen die niets van elkaar weten staan niet in de rij.** Start de
+  belofte boven de `await` die er niet van afhangt en haal hem onderaan op —
+  zoals de categorielijst op de categorie- en de productpagina. Hangt het blok
+  écht aan de leverancier, dan hoort het in zijn eigen `<Suspense>` met een
+  skeleton dat de hoogte al inneemt, zodat de kop meteen in de HTML staat.
+- **`"use client"` op het kleinste blad.** Zet de directive op het onderdeel
+  dat de hook nodig heeft, niet op de pagina eromheen. Alle 57 bestanden die
+  hem nu dragen hebben hem nodig; dat is nagerekend (@docs/DECISIONS.md #34).
+  Let wel op de laag ertussen: een component zónder directive die door een
+  clientcomponent geïmporteerd wordt, staat alsnog in de bundel.
 
 ## SEO
 

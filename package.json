@@ -8,6 +8,7 @@
     "db:check": "node scripts/check-db.mjs",
     "db:migrate": "node scripts/migrate-db.mjs",
     "mail:check": "node scripts/check-mail.mjs",
+    "messages:check": "node scripts/check-messages.mjs",
     "stripe:check": "node scripts/check-stripe.mjs",
     "orders:migrate": "node scripts/migrate-orders.mjs",
     "dev": "next dev",
