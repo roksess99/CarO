@@ -175,6 +175,8 @@ pnpm stripe:check # test- of live-sleutel, `charges_enabled` en wat de
                   # verificatie nog vraagt; foutcode als er niet geïnd kan
                   # worden (@docs/STRIPE.md, @docs/DECISIONS.md #29)
 pnpm catalog:check # werken de sleutels bij de leverancier nog? (@docs/DECISIONS.md #26)
+pnpm messages:check # welke namespaces de browser krijgt; faalt als een
+                  # clientcomponent er een opvraagt die niet meegaat (#34)
 pnpm db:check     # verbinding en schema nakijken
 pnpm db:migrate   # openstaande migraties tonen; --write voert ze uit (#25)
 pnpm orders:migrate # JSON-bestellingen naar de database (--write om te doen)
@@ -192,6 +194,9 @@ Er is nog geen testrunner. Staat er `pnpm test` in een instructie: die bestaat
 niet, gebruik de twee controlescripts hierboven plus de browser.
 
 Draai `pnpm typecheck && pnpm lint` voordat je zegt dat werk af is. Raak je
+een clientcomponent aan, dan ook `pnpm messages:check`: de browser krijgt niet
+meer de hele berichtenboom, en een vergeten namespace rendert de sleutel in
+plaats van de tekst (@docs/DECISIONS.md #34). Raak je
 `package.json` aan, dan ook `pnpm audit`: de hostingpartij scant mee en meldt
 wat daar blijft staan (@docs/DECISIONS.md #23).
 
@@ -285,7 +290,7 @@ messages/nl.json, en.json
 1. Typecheck en lint slagen
 2. Werkt op 375px en desktop
 3. Toetsenbordnavigatie werkt, focus zichtbaar
-4. NL en EN teksten aanwezig in `messages/`
+4. NL en EN teksten aanwezig in `messages/`, en `pnpm messages:check` slaagt
 5. Geen nieuwe console errors
 
 <!-- BEGIN:nextjs-agent-rules -->
