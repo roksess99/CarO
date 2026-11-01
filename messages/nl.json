@@ -214,7 +214,6 @@
     "clearAll": "Alles wissen",
     "removeFilter": "Filter {value} verwijderen",
     "resultCount": "{count, plural, =0 {Geen artikelen gevonden} =1 {1 artikel} other {Eerste # artikelen}}",
-    "moreBrands": "Nog {count} merken in de lijst hieronder.",
     "labels": {
       "manufacturer": "Merk",
       "loadIndex": "Laadindex",

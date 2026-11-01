@@ -8,11 +8,12 @@ const TILES = 12;
 /**
  * Merkfilter bij een zoekopdracht op bandenmaat.
  *
- * **Waarom dit naast `BrandTiles` bestaat en niet erin.** Die rij komt uit de
- * filterrespons van de leverancier, en die hoort bij een categorie. Zoekt de
- * klant op maat, dan komt de lijst uit een zoekopdracht en vervallen die
+ * **Waarom dit naast het gewone filterpaneel bestaat.** Dat paneel komt uit
+ * de filterrespons van de leverancier, en die hoort bij een categorie. Zoekt
+ * de klant op maat, dan komt de lijst uit een zoekopdracht en vervallen die
  * filters — tot nu toe stond er dan niets, en 200 banden in één maat zijn
- * niet door te scrollen.
+ * niet door te scrollen. Dit is dus geen tweede merkfilter naast het eerste:
+ * waar deze staat, staat die ander er niet.
  *
  * Hier worden de merken dus geteld over de treffers zelf
  * (`lib/catalog/brand-facets.ts`). Dat geeft **echte aantallen** achter de

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { BrandTiles } from "@/components/brand-tiles";
 import { JsonLd } from "@/components/json-ld";
 import { LoadMore } from "@/components/load-more";
 import { ProductFilters } from "@/components/product-filters";
@@ -455,20 +454,14 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         )}
 
         <div className="min-w-0 flex-1">
-          {/* Merk boven de producten en over de volle breedte: in de 256px
-              brede zijbalk werden namen als "Alfa Romeo" afgekapt tot
-              "Alfa R…", en merk is waar de meeste klanten op filteren. */}
-          {!tyreSize && (
-            <BrandTiles
-              groups={filterGroups}
-              selected={selected}
-              family={familyParam}
-              category={slug}
-            />
-          )}
+          {/* Hier stond tot 2026-11-01 een merkenrij in tegels, bovenop het
+              merkfilter in het paneel hiernaast. Twee keer hetzelfde filter
+              op één pagina, gemeld door de eigenaar — de uitklapbare blijft
+              (@docs/DECISIONS.md #28).
 
-          {/* Zelfde plek, andere bron: bij een maat tellen we de merken over
-              de treffers (@docs/DECISIONS.md #28). */}
+              Bij een maatzoekopdracht is dit géén dubbeling: dan vervalt het
+              filterblok van de categorie en worden de merken over de treffers
+              zelf geteld. */}
           {tyreSize && (
             <TyreBrandFilter
               facets={tyreBrands}

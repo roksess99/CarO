@@ -214,7 +214,6 @@
     "clearAll": "Clear all",
     "removeFilter": "Remove filter {value}",
     "resultCount": "{count, plural, =0 {No items found} =1 {1 item} other {First # items}}",
-    "moreBrands": "{count} more brands in the list below.",
     "labels": {
       "manufacturer": "Brand",
       "loadIndex": "Load index",

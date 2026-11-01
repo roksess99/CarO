@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { BrandTiles } from "@/components/brand-tiles";
 import { GroupList } from "@/components/catalog/group-list";
 import { FaqList } from "@/components/faq-list";
 import { ProductFilters } from "@/components/product-filters";
@@ -480,12 +479,9 @@ async function CategoryBrowse({
           )}
 
           <div className="min-w-0 flex-1">
-            <BrandTiles
-              groups={filterGroups}
-              selected={selected}
-              family={familySlugParam}
-            />
-
+            {/* Geen merkenrij in tegels meer: het merkfilter staat in het
+                paneel hiernaast en stond hier een tweede keer
+                (@docs/DECISIONS.md #28). */}
             <h2 className="text-2xl">
               {activeCount > 0 ? t("filteredTitle") : t("featuredTitle")}
             </h2>
