@@ -110,6 +110,45 @@ const SPECIALS: ReadonlyArray<{
 
 const SPECIAL_ATTRS = new Set(SPECIALS.flatMap((special) => special.attrs));
 
+/**
+ * Filters die zeggen **waar op de auto** het onderdeel zit.
+ *
+ * Winkelkeuze van de eigenaar 2026-11-01: bij remblokken, remschijven en
+ * alles waar een `Inbouwplaats` op zit hoort die bovenaan te staan en het
+ * merk eronder. Dat is ook de volgorde waarin je een onderdeel kiest: eerst
+ * wélk onderdeel je nodig hebt — vooras of achteras, en kies je daar
+ * verkeerd dan past het niet — en pas daarna van wie.
+ *
+ * **Op de kop en niet op het attribuutnummer.** GEMETEN 2026-11-01 over alle
+ * 5410 koppen van `/attributeNames`: "Inbouwplaats" bestaat onder **vijf**
+ * ids (100, 9019, 9067, 9164, 9165), "Inbouwzijde" en "Aspositie" onder nog
+ * eens drie. Op nummer toetsen zou dus vier van de vijf missen. Dit bestand
+ * groepeert sowieso al op kop, juist omdat dezelfde eigenschap bij de
+ * leverancier onder meerdere nummers binnenkomt.
+ *
+ * Komt er een kop bij die hetzelfde zegt, dan is dat één regel hier.
+ */
+const FITMENT_KEYS: ReadonlySet<string> = new Set([
+  "inbouwplaats",
+  "inbouwzijde",
+  "aspositie",
+]);
+
+/**
+ * Waar een filter in het paneel staat: passing, dan merk, dan de rest.
+ *
+ * Alleen deze drie rangen, en binnen een rang blijft de volgorde die er al
+ * was — `sort` is stabiel. Een volledige volgorde uitschrijven zou betekenen
+ * dat elke nieuwe eigenschap van de leverancier er een plek bij moet krijgen,
+ * en precies dát is wat dit bestand nergens doet (@docs/DECISIONS.md #7: de
+ * data bepaalt welke filters er zijn, niet een lijst).
+ */
+function panelRank(def: PartFilterDef): number {
+  if (FITMENT_KEYS.has(def.key)) return 0;
+  if (def.key === PART_FILTER_KEYS.brand) return 1;
+  return 2;
+}
+
 /** Eén filter: waar de waarde vandaan komt en hoe hij heet */
 export interface PartFilterDef {
   key: string;
@@ -161,6 +200,9 @@ function valueFor(
  * Merk staat er altijd bij (100% dekking, per definitie). De rest wordt
  * gegroepeerd op kop, niet op id: dezelfde eigenschap komt bij de leverancier
  * soms onder twee nummers binnen, en dan hoort het één filter te zijn.
+ *
+ * De volgorde waarin ze hier opgebouwd worden is niet de volgorde waarin ze
+ * in het paneel staan — zie `panelRank`: de passing gaat vóór het merk.
  */
 export function buildPartFilters(
   articles: ReadonlyArray<WearpartsArticle>,
@@ -205,7 +247,9 @@ export function buildPartFilters(
     kandidaten.push({ key, label, attrs: [...attrs] });
   }
 
-  return kandidaten.filter((def) => usable(def, articles));
+  return kandidaten
+    .filter((def) => usable(def, articles))
+    .sort((a, b) => panelRank(a) - panelRank(b));
 }
 
 /**

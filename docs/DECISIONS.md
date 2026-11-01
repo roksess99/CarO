@@ -184,6 +184,53 @@ van de server, hoogstens drie categorieën tegelijk. GEMETEN op een koud
 gestarte server: vier weergaven van dezelfde categorie met verschillende
 filters kostten **één** call (5,8 s koud, daarna 0,7–1,0 s).
 
+#### De passing staat boven het merk — winkelkeuze 2026-11-01
+
+De eigenaar: *"bij remblokken, remschijven etc. waarbij je op inbouwplaats kan
+filteren wil ik de inbouwplaats-filter als eerst tonen, daarna de merkfilter.
+Pas de volgorde overal waar het kan."*
+
+Dat is ook de volgorde waarin je een onderdeel kiest: eerst wélk onderdeel je
+nodig hebt — vooras of achteras, en kies je daar verkeerd dan past het niet —
+en pas daarna van wie. Het merk stond er alleen vooraan omdat het als eerste
+in de lijst werd opgebouwd, niet omdat iemand dat zo bedacht had.
+
+**De sortering gaat op de kop, niet op het attribuutnummer**, en dat is geen
+voorkeur maar een meting. GEMETEN 2026-11-01 over alle 5410 koppen van
+`/attributeNames`:
+
+| Kop | Attribuut-ids |
+|---|---|
+| Inbouwplaats | **100, 9019, 9067, 9164, 9165** |
+| Inbouwzijde | 9072 |
+| Aspositie | 453, 9283 |
+
+Op nummer toetsen zou dus vier van de vijf `Inbouwplaats`-varianten missen.
+`part-filters.ts` groepeerde sowieso al op kop, precies omdat dezelfde
+eigenschap bij de leverancier onder meerdere nummers binnenkomt.
+
+Drie rangen, meer niet: **passing, dan merk, dan de rest in de volgorde die er
+al was** (`panelRank`, stabiele sortering). Een volledige volgorde uitschrijven
+zou betekenen dat elke nieuwe eigenschap van de leverancier er een plek bij
+moet krijgen — en dat is precies wat dit hoofdstuk nergens doet: de data
+bepaalt welke filters er zijn, niet een lijst.
+
+GEMETEN in de browser op carId 128136, desktop én het uitklappaneel op 375px:
+
+| Categorie | Volgorde |
+|---|---|
+| Remschijf | **Inbouwplaats** · Merk · Remschijftype · Oppervlakte |
+| Remblok | **Inbouwplaats** · Merk |
+| Schokdemper | **Inbouwplaats** · Merk · Inbouwtype · Bevestigingstype |
+| Oliefilter | Merk — ongewijzigd, die heeft geen inbouwplaats |
+| motorolie | Merk · Viscositeit · Inhoud · … — ongewijzigd |
+
+**Waar het nog niet geldt, en dat is een vraag voor de eigenaar:** bij velgen
+staat het merk ook bovenaan terwijl **Velgverbinding, Velgmaat en ET** bepalen
+of een velg past. Dezelfde redenering zou daar dus dezelfde volgorde geven.
+Dat is een aparte lijst (`filter-groups.ts`, een allowlist per area met de
+volgorde erin) en het is niet gevraagd, dus het staat er nog zoals het stond.
+
 ---
 
 ### GEVONDEN 2026-09-25: een groep-id van de leverancier is geen sleutel
