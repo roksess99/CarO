@@ -71,8 +71,12 @@ export async function ProductFilters({
 
   return (
     <div>
-      <div className="flex items-baseline justify-between gap-4">
-        <h2 className="text-lg">{t("title")}</h2>
+      {/* De kop alleen op desktop. Op mobiel zit dit paneel in een
+          <details> waarvan de samenvatting óók "Filters" heet, en dan staat
+          het er twee keer onder elkaar — gemeld door de eigenaar
+          2026-11-01. De wis-knop blijft op beide maten staan. */}
+      <div className="flex items-baseline justify-end gap-4 lg:justify-between">
+        <h2 className="hidden text-lg lg:block">{t("title")}</h2>
         {activeCount > 0 && (
           <Link
             href={hrefFor({})}
@@ -169,7 +173,13 @@ export async function ProductFilters({
                           >
                             {active ? "✓" : ""}
                           </span>
-                          <span className="truncate">
+                          {/* Afbreken in plaats van afkappen: de zijbalk is
+                              256px breed en "MERCEDES-BENZ" werd daar
+                              "MERCEDES-…". Dat was de reden dat de merken
+                              ooit als tegelrij boven de producten stonden;
+                              die rij is 2026-11-01 weggehaald omdat hij het
+                              filter verdubbelde (@docs/DECISIONS.md #28). */}
+                          <span className="break-words">
                             {filterValueLabel(option.label, t)}
                           </span>
                         </span>

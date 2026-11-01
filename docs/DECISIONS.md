@@ -2899,6 +2899,53 @@ klant boven de kop in plaats van in zijn eigen filterlijst.
 **Niet overal.** De categorieknoppen en het kruimelpad houden de sprong: dat
 zijn andere pagina's, en daar hoort de bovenkant.
 
+### Het merkfilter stond er twee keer — OPGERUIMD 2026-11-01
+
+De eigenaar stuurde twee schermafdrukken van dezelfde pagina:
+
+1. op mobiel stond **"Filters" twee keer onder elkaar** — de samenvatting van
+   het uitklappaneel (`filters.toggle`) en de kop ín dat paneel
+   (`filters.title`), allebei letterlijk "Filters";
+2. op een categoriepagina stond **het merkfilter twee keer**: als uitklapgroep
+   in het paneel én als tegelrij boven de producten.
+
+Allebei weggenomen, en het tweede is een terugdraaiing van een keuze die hier
+nooit expliciet stond.
+
+**De tegelrij (`brand-tiles.tsx`) is weg.** Die bestond om twee redenen: de
+zijbalk is 256px breed en kapte "MERCEDES-BENZ" af tot "MERCEDES-…", en merk
+is waar de meeste klanten op filteren. Het eerste is opgelost waar het hoorde
+— de filterlabels **breken nu af in plaats van afgekapt te worden** — en het
+tweede weegt niet op tegen hetzelfde filter twee keer op één scherm.
+
+Wat er met die rij verdwijnt en wat je moet weten als je hem ooit terugzet:
+`PROMINENT_BRANDS`, de handgeschreven lijst van 38 merken die bepaalde welke
+twaalf vooraan stonden. Die lijst was nodig omdat het `count`-veld van Tyre24
+bij **elk** merk op 1 staat (GEMETEN 2026-08-16), dus sorteren op populariteit
+kan niet. In het filterpaneel speelt dat niet: daar staan ze alfabetisch, met
+een scrollvak zodra het er meer dan tien zijn.
+
+**`TyreBrandFilter` blijft staan en is géén dubbeling.** Die verschijnt alleen
+bij een zoekopdracht op bandenmaat, en juist dán vervalt het filterblok van de
+categorie (`/items` accepteert `search` óf `parentNodeId`, nooit allebei).
+Waar de een staat, staat de ander er niet — GEMETEN 2026-11-01 op
+`?breedte=205&hoogte=55&diameter=16`: één "Merk", met "Nog 64 merken tonen".
+
+**De dubbele kop is één regel CSS.** De `<h2>` van het paneel staat nu op
+`hidden lg:block`: op mobiel ís de samenvatting van de uitklap al de kop, op
+desktop is er geen uitklap en hoort hij er wel. Het paneel zelf staat twee keer
+in de HTML (een `<details>` voor mobiel, een `<aside>` voor desktop) en de
+breakpoint laat er precies één zien — op `offsetParent` tellen dus, niet op het
+aantal elementen in de DOM.
+
+GEMETEN 2026-11-01, zichtbare koppen op `/nl/banden/auto-suv-1`:
+
+| Breedte | Koppen |
+|---|---|
+| 375px | Filters · Merk · Laadindex |
+| 1280px | Filters · Merk · Laadindex |
+| 1280px, remschijf | Filters · Inbouwplaats · Merk · Remschijftype · Oppervlakte |
+
 ---
 
 ## 29. Een werkende sleutel is geen werkende kassa — VASTGESTELD 2026-10-08
