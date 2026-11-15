@@ -26,6 +26,26 @@ const CARRIERS = [
 const linkClass =
   "text-muted underline-offset-4 hover:text-foreground hover:underline";
 
+/**
+ * De bouwer van de site, onderaan onder de copyrightregel.
+ *
+ * Een gewone `<a>` en niet de `Link` uit `@/i18n/navigation`: die zet er een
+ * taalvoorvoegsel voor, en dit is geen pagina van deze winkel. In een nieuw
+ * tabblad, zodat een klant de winkel niet verlaat; `rel="noopener"` hoort daar
+ * standaard bij.
+ *
+ * Geen logo en geen beeld — dat zou een verzoek naar een server van een derde
+ * zijn, en de winkel laadt niets van buiten (@docs/PRIVACY.md).
+ */
+const CREDIT_UTM =
+  "utm_source=caroparts&utm_medium=referral&utm_campaign=footer-credit";
+
+function creditHref(locale: string): string {
+  return locale === "en"
+    ? `https://nixlo.nl/en?${CREDIT_UTM}`
+    : `https://nixlo.nl/?${CREDIT_UTM}`;
+}
+
 function Column({
   title,
   children,
@@ -244,9 +264,29 @@ export function SiteFooter() {
           </section>
         </div>
 
-        <p className="mt-8 border-t border-border pt-6 text-muted">
-          {t("copyright", { year: new Date().getFullYear() })}
-        </p>
+        {/* Onder elkaar en links uitgelijnd, niet naast elkaar aan de
+            rechterkant. GEMETEN op 375px: de zwevende knop "Terug naar boven"
+            staat `fixed end-4` en dekte het woord "Nixlo" volledig af. Die
+            knop hangt aan het venster, dus hij schuift niet mee met de
+            container — op elke breedte waar de container tot aan de rand
+            loopt zou het opnieuw botsen. */}
+        <div className="mt-8 space-y-1 border-t border-border pt-6 text-muted">
+          <p>{t("copyright", { year: new Date().getFullYear() })}</p>
+          <p>
+            {t.rich("credit", {
+              nixlo: (chunks) => (
+                <a
+                  href={creditHref(locale)}
+                  target="_blank"
+                  rel="noopener"
+                  className="underline-offset-4 hover:text-foreground hover:underline"
+                >
+                  {chunks}
+                </a>
+              ),
+            })}
+          </p>
+        </div>
       </div>
     </footer>
   );
