@@ -302,6 +302,7 @@ export function toPart(
     availability: best.stock > 0 ? "in-stock" : "out-of-stock",
     imageUrl: article.image,
     specs,
+    kinds: articleKinds(article),
     stock: best.stock,
     ...(best.sellerId === undefined ? {} : { sellerId: best.sellerId }),
   };

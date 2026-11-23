@@ -103,6 +103,68 @@ const SEASON_SEARCH_WORD: Record<TyreSeason, string> = {
   allseason: "all season",
 };
 
+/**
+ * Hoeveel banden een zoekopdracht op maat ophaalt. **Eén getal voor elke
+ * plek die op maat zoekt** — de familiepagina, de categoriepagina en de rij
+ * op de homepage — want Next sleutelt zijn cache op de volledige URL: met een
+ * ander `limit` is het een tweede verzoek bij de leverancier in plaats van
+ * hetzelfde antwoord. Honderdtwintig omdat het merkfilter over de treffers
+ * telt (zie `[family]/page.tsx`).
+ */
+export const TYRE_FETCH_SIZE = 120;
+
+/**
+ * Seizoenen met een eigen pagina zonder maat: `/nl/banden?seizoen=winter`,
+ * met eigen titel, `<h1>` en canonical. "Winterbanden" is in het najaar een
+ * van de grootste zoektermen in de branche, en zonder deze pagina had de
+ * winkel er niets voor (#35 telde het seizoen bewust niet mee).
+ *
+ * **Alleen wat gemeten is.** GEMETEN 2026-11-23, één verzoek per seizoen op
+ * area 6 met `limit=120`, telkens in tientallen maten door elkaar:
+ *
+ *   search=winter        120 van de 120 `Inzet: Winterreifen`       koud 19 s
+ *   search=zomer         120 van de 120 `Inzet: Sommerreifen`       koud 24 s
+ *   search=all season    120 van de 120 `Inzet: Ganzjahresreifen`   koud 14 s
+ *
+ * "zomer" had in een productnaam ook iets anders kunnen betekenen; dat bleek
+ * niet zo. Koud zijn ze traag, vandaar dat `warm.ts` ze na een deploy
+ * aanraakt.
+ */
+export const SEASON_LANDINGS: readonly TyreSeason[] = [
+  "winter",
+  "zomer",
+  "allseason",
+];
+
+/**
+ * Het seizoen van een datum: oktober tot en met maart winter, de rest zomer.
+ * Dat is de vuistregel "van oktober tot Pasen", afgerond op hele maanden zodat
+ * hij niet van de paasdatum afhangt. Bepaalt welke seizoenspagina vooraan
+ * staat (#36).
+ */
+export function seasonForDate(date: Date): "winter" | "zomer" {
+  const month = date.getMonth() + 1;
+  return month >= 10 || month <= 3 ? "winter" : "zomer";
+}
+
+/**
+ * De seizoenslinks onder de populaire maten: het seizoen van nu, met
+ * all-season ernaast. All-season is niet aan een seizoen gebonden en staat er
+ * daarom het hele jaar (keuze van de eigenaar, 2026-11-23).
+ */
+export function seasonLinksForDate(date: Date): TyreSeason[] {
+  return [seasonForDate(date), "allseason"];
+}
+
+export function isSeasonLanding(season: TyreSeason | null): season is TyreSeason {
+  return season !== null && SEASON_LANDINGS.includes(season);
+}
+
+/** Zoekterm voor een seizoenspagina zonder maat: alleen het seizoenswoord */
+export function seasonSearchTerm(season: TyreSeason): string {
+  return SEASON_SEARCH_WORD[season];
+}
+
 /** Zoekterm voor /items — de spatie is verplicht, zie de kop van dit bestand */
 export function tyreSearchTerm(
   size: TyreSize,
@@ -156,4 +218,16 @@ export function filterTyres(
     if (!partSize || !sameSize(partSize, size)) return false;
     return !season || partTyreSeason(part) === season;
   });
+}
+
+/**
+ * Houdt alleen banden van het gevraagde seizoen over. Op het zoekwoord alleen
+ * vertrouwen we niet: een band die "winter" in zijn naam draagt maar als
+ * zomerband geboekt staat, hoort niet op de winterpagina.
+ */
+export function filterSeason(
+  parts: readonly Part[],
+  season: TyreSeason,
+): Part[] {
+  return parts.filter((part) => partTyreSeason(part) === season);
 }

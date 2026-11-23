@@ -56,6 +56,12 @@ export interface Part {
    * een (vertaalde) naam meelevert. `value` is leverancierstekst.
    */
   specs?: ReadonlyArray<{ key: string; value: string; label?: string }>;
+  /**
+   * Het soort artikel volgens TecDoc (`genericArticleId`), alleen bij
+   * onderdelen. Motorolie is 3224. Staat op het artikel zelf en dus ook bij een
+   * zoekresultaat, anders dan de categorie (`lib/admin/part-kinds.ts`).
+   */
+  kinds?: ReadonlyArray<string>;
   /** Aantal op voorraad bij de groothandel, als de bron dat meegeeft */
   stock?: number;
   /**

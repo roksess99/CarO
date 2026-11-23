@@ -6,7 +6,13 @@ import {
   PRODUCT_FAMILIES,
   usesVehicleCatalog,
 } from "@/lib/catalog/families";
+import {
+  POPULAR_TYRE_SIZES,
+  tyreSizeQuery,
+} from "@/lib/catalog/popular-tyre-sizes";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import { SEASON_LANDINGS } from "@/lib/catalog/tyre-size";
+import { GUIDES, guideSlug } from "@/lib/guides";
 import { SITE_URL } from "@/lib/site";
 
 /**
@@ -87,6 +93,46 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ),
     ),
 
+    // De gangbare bandenmaten als eigen pagina (lib/catalog/popular-tyre-
+    // sizes.ts). Met de maat in de querystring, want zo staat ook de
+    // canonical op die pagina; een sitemap die iets anders noemt dan de
+    // canonical spreekt zichzelf tegen.
+    //
+    // De `&` gaat er als `&amp;` in, met de hand: Next zet de URL zonder
+    // escapen in de XML (GEMETEN 2026-11-23 op een productiebuild), en een
+    // kale `&` maakt de héle sitemap ongeldig, niet alleen deze regel.
+    ...POPULAR_TYRE_SIZES.flatMap((size) =>
+      entry(
+        (locale) =>
+          `${getPathname({
+            locale,
+            href: {
+              pathname: "/[family]",
+              params: { family: familySlug("banden", locale) },
+            },
+          })}?${new URLSearchParams(tyreSizeQuery(size))
+            .toString()
+            .replaceAll("&", "&amp;")}`,
+        { changeFrequency: "daily", priority: 0.7 },
+      ),
+    ),
+
+    // De seizoenspagina's (`?seizoen=winter`), om dezelfde reden: zo staat
+    // hun canonical. Eén parameter, dus geen `&` om te escapen.
+    ...SEASON_LANDINGS.flatMap((season) =>
+      entry(
+        (locale) =>
+          `${getPathname({
+            locale,
+            href: {
+              pathname: "/[family]",
+              params: { family: familySlug("banden", locale) },
+            },
+          })}?seizoen=${season}`,
+        { changeFrequency: "daily", priority: 0.8 },
+      ),
+    ),
+
     ...categoriesPerFamily.flatMap(({ family, categories }) =>
       categories.flatMap((category) =>
         entry(
@@ -132,6 +178,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     }),
+
+    // Wie de winkel is, en de gidsen per zoekvraag (#37). Die laatste zijn
+    // ingangen voor wie nog niet weet welke maat of olie hij zoekt.
+    ...entry((locale) => getPathname({ locale, href: "/about" }), {
+      changeFrequency: "yearly",
+      priority: 0.5,
+    }),
+    ...entry((locale) => getPathname({ locale, href: "/guides" }), {
+      changeFrequency: "monthly",
+      priority: 0.5,
+    }),
+    ...GUIDES.flatMap((guide) =>
+      entry(
+        (locale) =>
+          getPathname({
+            locale,
+            href: {
+              pathname: "/guides/[guide]",
+              params: { guide: guideSlug(guide, locale) },
+            },
+          }),
+        { changeFrequency: "monthly", priority: 0.6 },
+      ),
+    ),
     // Hoe je iets terugstuurt is een vraag die mensen googelen vóórdat ze
     // bestellen; die pagina hoort dus vindbaar te zijn. De varianten met een
     // ordernummer erin sluit robots.ts uit.

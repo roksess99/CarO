@@ -56,6 +56,16 @@ export function VehicleSearch({
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // Leeg veld: dezelfde melding als bij een verkeerd kenteken, maar zonder
+    // ronde naar de server, en de cursor terug in de plaat. De knop staat
+    // daarom niet meer op `disabled` zolang het veld leeg is — dan was hij
+    // grijs bij elk eerste bezoek en had de hero geen enkele oranje knop
+    // (@docs/DECISIONS.md #36, .claude/rules/frontend.md).
+    if (plate.trim().length === 0) {
+      setError("invalidPlate");
+      inputRef.current?.focus();
+      return;
+    }
     setError(null);
     startTransition(async () => {
       const result = await lookupVehicleAction(plate);
@@ -191,7 +201,7 @@ export function VehicleSearch({
           nooit, ook niet in het smalle headerpaneel. */}
       <button
         type="submit"
-        disabled={pending || plate.trim().length === 0}
+        disabled={pending}
         className="mt-2 flex h-14 w-full items-center justify-center gap-2 rounded-md bg-caro-orange px-6 text-base font-bold text-caro-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
       >
         <svg

@@ -26,11 +26,30 @@ export function TyreSizeForm({
   action,
   size,
   season,
+  submitStyle = "primary",
+  layout = "full",
+  mobile = "full",
 }: {
   /** Pad waar het formulier naartoe gaat; de pagina leest de query */
   action: string;
   size: TyreSize | null;
   season: TyreSeason | null;
+  /**
+   * "secondary" in de hero: daar is de kentekencheck de enige primaire actie,
+   * en twee oranje knoppen naast elkaar laten de klant kiezen waar niets te
+   * kiezen valt (zie hero.tsx). Een oranje rand en geen vlak, zodat hij wel
+   * herkenbaar een knop blijft.
+   */
+  submitStyle?: "primary" | "secondary";
+  /** "compact": één regel, zonder tekening en seizoen — zie hieronder */
+  layout?: "full" | "compact";
+  /**
+   * "lean": onder `lg` zonder tekening en seizoenskeuze. Voor de hero, waar
+   * de volle kiezer op een telefoon 700px onder de kentekenzoeker innam en
+   * de hero zo 1.370px hoog maakte (GEMETEN 2026-11-23 op 375px). Op
+   * `/banden` zelf blijft hij volledig: daar ís dit de pagina.
+   */
+  mobile?: "full" | "lean";
 }) {
   const t = useTranslations("tyres");
   const [width, setWidth] = useState(size ? String(size.width) : "");
@@ -71,13 +90,45 @@ export function TyreSizeForm({
     </div>
   );
 
+  const submitClass = `h-12 rounded-md px-6 font-semibold ${
+    submitStyle === "primary"
+      ? "bg-caro-orange text-caro-ink"
+      : "border-2 border-caro-orange text-foreground hover:bg-surface"
+  }`;
+
+  // Compact: drie keuzelijsten en de knop op één regel, zonder tekening en
+  // zonder seizoen. Voor onder de aanbiedingencarrousel in de hero, waar de
+  // volle kiezer de actie naar beneden zou duwen (@docs/DECISIONS.md #36).
+  // Het seizoen kan de klant op de maatpagina nog kiezen; zonder `seizoen`
+  // in de URL toont die alle seizoenen.
+  if (layout === "compact") {
+    return (
+      <form
+        action={action}
+        className="mt-3 grid grid-cols-3 items-end gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]"
+      >
+        {field("breedte", t("width"), width, setWidth, TYRE_WIDTHS)}
+        {field("hoogte", t("height"), height, setHeight, TYRE_HEIGHTS)}
+        {field("diameter", t("diameter"), diameter, setDiameter, TYRE_DIAMETERS)}
+        <button
+          type="submit"
+          className={`col-span-3 w-full sm:col-span-1 ${submitClass}`}
+        >
+          {t("submit")}
+        </button>
+      </form>
+    );
+  }
+
   return (
     /* Op desktop naast elkaar: de kaart loopt over de volle contentbreedte
        en met alles onder elkaar bleef rechts een half scherm leeg, terwijl
        de klant naar beneden moest voor de knop. Onder lg blijft het één
        kolom — daar klopte de volgorde al. */
     <div className="mt-4 lg:grid lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-start lg:gap-10">
-      <TyreWall width={width} height={height} diameter={diameter} />
+      <div className={mobile === "lean" ? "hidden lg:block" : undefined}>
+        <TyreWall width={width} height={height} diameter={diameter} />
+      </div>
 
       <form action={action} className="mt-4 lg:mt-0">
         <div className="grid grid-cols-3 gap-2 sm:max-w-md">
@@ -86,7 +137,12 @@ export function TyreSizeForm({
           {field("diameter", t("diameter"), diameter, setDiameter, TYRE_DIAMETERS)}
         </div>
 
-        <fieldset className="mt-5">
+        {/* Verborgen met display:none, dus de radioknoppen gaan dan niet mee
+            in het formulier — en zonder `seizoen` toont de maatpagina alle
+            seizoenen, precies wat "Alle" hier ook doet. */}
+        <fieldset
+          className={mobile === "lean" ? "mt-5 hidden lg:block" : "mt-5"}
+        >
           <legend className={labelClass}>{t("season")}</legend>
           {/* Radioknoppen en geen keuzelijst: het zijn er vier en ze passen op
               een telefoon op twee regels. Zo is de keuze meteen zichtbaar. */}
@@ -110,7 +166,7 @@ export function TyreSizeForm({
 
         <button
           type="submit"
-          className="mt-6 h-12 w-full rounded-md bg-caro-orange px-6 font-semibold text-caro-ink sm:w-auto sm:min-w-64"
+          className={`mt-6 w-full sm:w-auto sm:min-w-64 ${submitClass}`}
         >
           {t("submit")}
         </button>

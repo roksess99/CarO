@@ -32,7 +32,10 @@ const CACHE = {
 } as const;
 
 function token(): string | null {
-  return process.env.TYRE24_WEARPARTS_TOKEN ?? null;
+  // `||` en niet `??`: een lege variabele is geen sleutel. Met `??` ging een
+  // lege waarde (zo start je lokaal op mockdata) gewoon als header mee en
+  // kostte elke pagina toch een — geweigerd — verzoek bij de leverancier.
+  return process.env.TYRE24_WEARPARTS_TOKEN || null;
 }
 
 async function get(

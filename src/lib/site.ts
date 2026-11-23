@@ -151,6 +151,58 @@ export function breadcrumbJsonLd(
 }
 
 /**
+ * `Organization` + `WebSite` voor de homepage.
+ *
+ * Zegt een zoekmachine wíe deze winkel is: de naam, het logo, het adres en
+ * hoe je ons bereikt. Productpagina's noemden CaroParts al als verkoper,
+ * maar nergens stond wat die naam is. Alles komt uit `COMPANY`, dezelfde
+ * bron als de factuur en de footer, zodat het niet kan afwijken van wat de
+ * klant op de pagina leest.
+ *
+ * Geen `telephone`: er is bewust geen nummer (@docs/DECISIONS.md #3). Geen
+ * `SearchAction`: de zoekbalk in Google's resultaten bestaat sinds 2024 niet
+ * meer, en onze zoekpagina staat op noindex.
+ */
+export function organizationJsonLd(locale: string) {
+  const organizationId = `${SITE_URL}/#organization`;
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": organizationId,
+      name: SITE_NAME,
+      legalName: COMPANY.legalName,
+      url: SITE_URL,
+      // Vierkant en ruim boven de 112px die Google vraagt
+      logo: `${SITE_URL}/brand/caro-profiel-512.png`,
+      email: COMPANY.email,
+      vatID: COMPANY.vatNumber,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: COMPANY.street,
+        postalCode: COMPANY.postcode,
+        addressLocality: COMPANY.city,
+        addressCountry: "NL",
+      },
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer service",
+        email: COMPANY.email,
+        availableLanguage: ["nl", "en"],
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: SITE_NAME,
+      url: `${SITE_URL}/${locale}`,
+      inLanguage: locale,
+      publisher: { "@id": organizationId },
+    },
+  ];
+}
+
+/**
  * `FAQPage` voor de veelgestelde vragen.
  *
  * De vragen staan óók gewoon zichtbaar op de pagina; dit is dezelfde inhoud

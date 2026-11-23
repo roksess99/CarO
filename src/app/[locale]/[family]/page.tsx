@@ -7,9 +7,11 @@ import { FaqList } from "@/components/faq-list";
 import { ProductFilters } from "@/components/product-filters";
 import { ProductGrid } from "@/components/product-grid";
 import { TyreBrandFilter } from "@/components/tyres/tyre-brand-filter";
+import { PopularTyreSizes } from "@/components/tyres/popular-tyre-sizes";
 import { TyreSizePicker } from "@/components/tyres/tyre-size-picker";
 import { SelectedCarInUrl } from "@/components/vehicle/use-selected-car";
 import { getPathname, Link } from "@/i18n/navigation";
+import { guideByKey, guideSlug } from "@/lib/guides";
 import type { Locale } from "@/i18n/routing";
 import {
   familyFromSlug,
@@ -28,11 +30,15 @@ import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { SelectedFilters } from "@/lib/catalog/types";
 import {
+  filterSeason,
   filterTyres,
   formatTyreSize,
+  isSeasonLanding,
+  seasonSearchTerm,
   parseTyreSeason,
   parseTyreSize,
   type TyreSeason,
+  TYRE_FETCH_SIZE,
   type TyreSize,
   tyreSearchTerm,
 } from "@/lib/catalog/tyre-size";
@@ -41,6 +47,9 @@ import {
   popularPartGroups,
   searchParts,
 } from "@/lib/catalog/wearparts-provider";
+import { formatPriceCents } from "@/lib/format";
+import { tyreSizeQuery } from "@/lib/catalog/popular-tyre-sizes";
+import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/shipping";
 import { SITE_NAME, localizedMetadata, socialMetadata } from "@/lib/site";
 
 type Props = {
@@ -65,20 +74,14 @@ const PAGE_SIZE = 20;
 /** Vragen per familie, in vaste volgorde (teksten in messages/) */
 const FAQ_KEYS = ["q1", "q2", "q3"] as const;
 
-/**
- * Banden halen we ruimer op dan we tonen. De zoekfunctie van de leverancier
- * is op de maat verrassend nauwkeurig (gemeten: 60 van de 60 treffers in de
- * gevraagde maat), maar wij rekenen het na op het maatblok van het artikel —
- * die marge vangt op wat daarbij afvalt.
- *
- * **Sinds 2026-10-12 honderdtwintig in plaats van dertig**, en om dezelfde
- * reden als op de categoriepagina: het merkfilter eronder telt over de
- * treffers zelf, dus met dertig zou het de merken van de eerste dertig banden
- * tonen in plaats van die van de maat. Het kost geen extra verzoek — het is
- * exact dezelfde aanroep als die van de categoriepagina (`search` +
- * `limit=120`), dus de twee delen één antwoord uit de cache.
- */
-const TYRE_FETCH_SIZE = 120;
+// Banden halen we ruimer op dan we tonen (`TYRE_FETCH_SIZE`, 120). De
+// zoekfunctie van de leverancier is op de maat verrassend nauwkeurig
+// (gemeten: 60 van de 60 treffers in de gevraagde maat), maar wij rekenen het
+// na op het maatblok van het artikel — die marge vangt op wat daarbij afvalt.
+// Sinds 2026-10-12 honderdtwintig in plaats van dertig: het merkfilter telt
+// over de treffers zelf. Het getal staat in `lib/catalog/tyre-size.ts`, zodat
+// deze pagina, de categoriepagina en de homepage één antwoord uit de cache
+// delen.
 
 /**
  * Artikelen op de familiepagina van banden, velgen en toebehoren.
@@ -100,7 +103,10 @@ export function generateStaticParams({ params }: { params: { locale: string } })
   }));
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: Props): Promise<Metadata> {
   const { locale, family: slug } = await params;
   const family = familyFromSlug(slug, locale);
   if (!family) return {};
@@ -114,16 +120,82 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         params: { family: familySlug(family, targetLocale) },
       },
     });
-  const title = `${t(`${family}.title`)} — ${SITE_NAME}`;
+  // Een bandenmaat is een eigen pagina: "205/55 R16 banden" is waar mensen
+  // op zoeken. Hij krijgt daarom een eigen titel en een canonical mét de
+  // maat. Seizoen en merk tellen niet mee — dat zijn varianten van deze
+  // maatpagina, en `merk=` staat in robots.txt op disallow.
+  const query = await searchParams;
+  const size =
+    family === "banden"
+      ? parseTyreSize({
+          width: query.breedte,
+          height: query.hoogte,
+          diameter: query.diameter,
+        })
+      : null;
+  if (size) {
+    const label = formatTyreSize(size);
+    const withSize = (path: string) =>
+      `${path}?${new URLSearchParams(tyreSizeQuery(size))}`;
+    const sizeTitle = `${t("sizeMetaTitle", { size: label })} — ${SITE_NAME}`;
+    const sizeDescription = t("sizeMetaDescription", {
+      size: label,
+      site: SITE_NAME,
+      amount: formatPriceCents(FREE_SHIPPING_THRESHOLD_CENTS),
+    });
+    return {
+      title: sizeTitle,
+      description: sizeDescription,
+      ...localizedMetadata(locale, (l) => withSize(localizedHref(l))),
+      ...socialMetadata({
+        locale,
+        title: sizeTitle,
+        description: sizeDescription,
+        path: withSize(localizedHref(locale as Locale)),
+      }),
+    };
+  }
+
+  // Een seizoen zónder maat is ook een eigen pagina: "winterbanden" is waar
+  // mensen in het najaar op zoeken. Canonical mét het seizoen. Met een maat
+  // erbij blijft het seizoen een variant van de maatpagina (hierboven).
+  const season = family === "banden" ? parseTyreSeason(query.seizoen) : null;
+  if (isSeasonLanding(season)) {
+    const withSeason = (path: string) => `${path}?seizoen=${season}`;
+    const seasonTitle = `${t(`season.${season}.metaTitle`)} — ${SITE_NAME}`;
+    const seasonDescription = t(`season.${season}.metaDescription`, {
+      site: SITE_NAME,
+      amount: formatPriceCents(FREE_SHIPPING_THRESHOLD_CENTS),
+    });
+    return {
+      title: seasonTitle,
+      description: seasonDescription,
+      ...localizedMetadata(locale, (l) => withSeason(localizedHref(l))),
+      ...socialMetadata({
+        locale,
+        title: seasonTitle,
+        description: seasonDescription,
+        path: withSeason(localizedHref(locale as Locale)),
+      }),
+    };
+  }
+
+  // Een titel met wat de klant typt ("banden kopen") in plaats van alleen de
+  // familienaam. GEMETEN 2026-11-23: `<title>Banden — CaroParts</title>`.
+  const title = `${t(`${family}.metaTitle`)} — ${SITE_NAME}`;
+  const description = t(`${family}.metaDescription`, {
+    site: SITE_NAME,
+    amount: formatPriceCents(FREE_SHIPPING_THRESHOLD_CENTS),
+  });
 
   return {
     title,
-    description: t(`${family}.intro`),
+    description,
     ...localizedMetadata(locale, localizedHref),
     ...socialMetadata({
       locale,
       title,
-      description: t(`${family}.intro`),
+      description,
       path: localizedHref(locale as Locale),
     }),
   };
@@ -239,6 +311,61 @@ async function TyreResults({
       {tyres.length === 0 ? (
         <p className="max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
           {tTyres("noResults", { size: formatTyreSize(size) })}
+        </p>
+      ) : (
+        <ProductGrid parts={tyres} />
+      )}
+    </section>
+  );
+}
+
+/**
+ * Banden van één seizoen, zonder maat: de inhoud van `/nl/banden?seizoen=winter`.
+ *
+ * Zelfde opbouw als `TyreResults` hierboven — merkfilter over de treffers,
+ * dan het raster — maar met het seizoenswoord als zoekterm. Wie een maat
+ * kiest in de kiezer erboven houdt het seizoen (de kiezer krijgt het mee) en
+ * komt op de maatpagina met `seizoen=winter` erin.
+ */
+async function SeasonResults({
+  family,
+  familySlugParam,
+  season,
+  brand,
+}: {
+  family: ProductFamily;
+  familySlugParam: string;
+  season: TyreSeason;
+  brand: string | null;
+}) {
+  const tTyres = await getTranslations("tyres");
+  const found = filterSeason(
+    await getCatalogProvider().getParts({
+      family,
+      search: seasonSearchTerm(season),
+      limit: TYRE_FETCH_SIZE,
+    }),
+    season,
+  );
+  const facets = brandFacets(found);
+  const tyres = (
+    brand ? found.filter((part) => matchesBrand(part, brand)) : found
+  ).slice(0, PAGE_SIZE);
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-2xl">{tTyres(`seasonResults.${season}`)}</h2>
+      <div className="mt-6">
+        <TyreBrandFilter
+          facets={facets}
+          active={brand}
+          family={familySlugParam}
+          query={{ seizoen: season }}
+        />
+      </div>
+      {tyres.length === 0 ? (
+        <p className="max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+          {tTyres(`seasonNoResults.${season}`)}
         </p>
       ) : (
         <ProductGrid parts={tyres} />
@@ -514,6 +641,7 @@ export default async function FamilyPage({ params, searchParams }: Props) {
 
   const t = await getTranslations("family");
   const familyName = t(`${family}.title`);
+  const tGuides = await getTranslations("guides");
 
   const query = await searchParams;
   const { oen, auto, breedte, hoogte, diameter, seizoen } = query;
@@ -530,9 +658,14 @@ export default async function FamilyPage({ params, searchParams }: Props) {
     ? parseTyreSize({ width: breedte, height: hoogte, diameter })
     : null;
   const tyreSeason = parseTyreSeason(seizoen);
-  // Het merk telt alleen bij een maatzoekopdracht: zonder maat komt de lijst
-  // uit een categorie en loopt het merk via `selected` hierboven.
-  const tyreBrand = tyreSize && query.merk ? query.merk : null;
+  // Een seizoen zonder maat is een eigen pagina ("Winterbanden"), maar alleen
+  // voor de seizoenen in SEASON_LANDINGS — zie tyre-size.ts.
+  const seasonLanding =
+    tyreFamily && !tyreSize && isSeasonLanding(tyreSeason) ? tyreSeason : null;
+  // Het merk telt alleen bij een zoekopdracht op maat of seizoen: anders komt
+  // de lijst uit een categorie en loopt het merk via `selected` hierboven.
+  const tyreBrand =
+    (tyreSize || seasonLanding) && query.merk ? query.merk : null;
 
   // Onderdelen komen uit de Wearparts-API: zoeken op naam kan altijd,
   // bladeren pas als er een auto gekozen is (docs/api/WEARPARTS.md).
@@ -547,8 +680,37 @@ export default async function FamilyPage({ params, searchParams }: Props) {
   return (
     <div className="site-container py-12 md:py-16">
       <p className="eyebrow text-sm">{t("eyebrow")}</p>
-      <h1 className="mt-3 text-3xl md:text-4xl">{familyName}</h1>
-      <p className="mt-4 max-w-xl text-muted">{t(`${family}.intro`)}</p>
+      <h1 className="mt-3 text-3xl md:text-4xl">
+        {tyreSize
+          ? t("sizeHeading", { size: formatTyreSize(tyreSize) })
+          : seasonLanding
+            ? t(`season.${seasonLanding}.heading`)
+            : familyName}
+      </h1>
+      <p className="mt-4 max-w-xl text-muted">
+        {tyreSize
+          ? t("sizeIntro", { size: formatTyreSize(tyreSize) })
+          : seasonLanding
+            ? t(`season.${seasonLanding}.intro`)
+            : t(`${family}.intro`)}
+      </p>
+      {/* De winterpagina en de gids over winterbanden wijzen naar elkaar
+          (#37): wie twijfelt of hij ze nodig heeft, leest daar verder. */}
+      {seasonLanding === "winter" && (
+        <p className="mt-3 text-sm">
+          <Link
+            href={{
+              pathname: "/guides/[guide]",
+              params: {
+                guide: guideSlug(guideByKey("winterTyres"), locale),
+              },
+            }}
+            className="font-semibold underline decoration-caro-orange decoration-2 underline-offset-4"
+          >
+            {tGuides("winterTyres.title")} ›
+          </Link>
+        </p>
+      )}
 
       {/* Banden: eerst de maat, dan pas categorieën. Wie banden koopt weet
           welke maat hij nodig heeft en niets anders. */}
@@ -560,6 +722,15 @@ export default async function FamilyPage({ params, searchParams }: Props) {
         />
       )}
 
+      {/* Gangbare maten als gewone links, onder de kiezer. Ook mét een
+          gekozen maat: van daaruit naar de volgende maat is één klik, en
+          de maatpagina's linken zo onderling. */}
+      {tyreFamily && (
+        <div className="mt-8">
+          <PopularTyreSizes />
+        </div>
+      )}
+
       {tyreSize && (
         <Suspense fallback={<GridFallback />}>
           <TyreResults
@@ -567,6 +738,17 @@ export default async function FamilyPage({ params, searchParams }: Props) {
             familySlugParam={slug}
             size={tyreSize}
             season={tyreSeason}
+            brand={tyreBrand}
+          />
+        </Suspense>
+      )}
+
+      {seasonLanding && (
+        <Suspense fallback={<GridFallback />}>
+          <SeasonResults
+            family={family}
+            familySlugParam={slug}
+            season={seasonLanding}
             brand={tyreBrand}
           />
         </Suspense>
@@ -632,7 +814,7 @@ export default async function FamilyPage({ params, searchParams }: Props) {
           <CategoryBrowse
             family={family}
             familySlugParam={slug}
-            showFeatured={!tyreSize}
+            showFeatured={!tyreSize && !seasonLanding}
             selected={selected}
           />
         </Suspense>

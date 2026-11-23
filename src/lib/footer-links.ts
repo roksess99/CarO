@@ -54,3 +54,26 @@ export const POPULAR_PARTS = [
   "Distributieriem",
   "Accu",
 ] as const;
+
+/**
+ * De foto bij elk veelgezocht onderdeel, voor de tegels op de homepage.
+ *
+ * Een sleutel uit `lib/catalog/group-photos.ts`, dus dezelfde foto's van de
+ * groothandel als in de rij "meest gezocht" (@docs/DECISIONS.md #9). Een
+ * `Record` op het type van `POPULAR_PARTS`: zet je er een onderdeel bij, dan
+ * weigert TypeScript te bouwen tot hij ook een foto heeft — een tegel zonder
+ * beeld valt in een raster van foto's direct op.
+ */
+export const POPULAR_PART_PHOTOS: Record<
+  (typeof POPULAR_PARTS)[number],
+  string
+> = {
+  Remschijf: "remschijf",
+  Remblokken: "remblok",
+  Oliefilter: "oliefilter",
+  Luchtfilter: "luchtfilter",
+  Schokdemper: "schokdemper",
+  Bougie: "bougie",
+  Distributieriem: "distributieriem",
+  Accu: "accu",
+};

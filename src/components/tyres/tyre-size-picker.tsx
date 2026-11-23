@@ -1,6 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { TyreSizeForm } from "@/components/tyres/tyre-size-form";
+import { Link } from "@/i18n/navigation";
 import type { TyreSeason, TyreSize } from "@/lib/catalog/tyre-size";
+import { guideByKey, guideSlug } from "@/lib/guides";
 
 /**
  * Bandenmaat kiezen: breedte, hoogte, diameter en seizoen.
@@ -21,13 +23,17 @@ export async function TyreSizePicker({
   action,
   size,
   season,
+  guideLink = true,
 }: {
   /** Pad waar het formulier naartoe gaat; de pagina leest de query */
   action: string;
   size: TyreSize | null;
   season: TyreSeason | null;
+  /** Uit op de gids zelf: een link naar de pagina waar je al bent */
+  guideLink?: boolean;
 }) {
   const t = await getTranslations("tyres");
+  const locale = await getLocale();
 
   return (
     <section className="mt-8 rounded-xl border border-border p-4 md:p-6">
@@ -40,6 +46,20 @@ export async function TyreSizePicker({
           {t("helpTitle")}
         </summary>
         <p className="mt-1 max-w-prose text-sm text-muted">{t("helpBody")}</p>
+        {/* De hele uitleg staat in een gids (#37); hier alleen de kern. */}
+        {guideLink && (
+        <p className="mt-2 text-sm">
+          <Link
+            href={{
+              pathname: "/guides/[guide]",
+              params: { guide: guideSlug(guideByKey("tyreSize"), locale) },
+            }}
+            className="font-semibold underline decoration-caro-orange decoration-2 underline-offset-4"
+          >
+            {t("guideLink")} ›
+          </Link>
+        </p>
+        )}
       </details>
     </section>
   );

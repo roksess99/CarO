@@ -3,7 +3,14 @@ import {
   usesVehicleCatalog,
   type ProductFamily,
 } from "@/lib/catalog/families";
+import { HOME_TYRE_SIZE } from "@/lib/catalog/popular-tyre-sizes";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import {
+  SEASON_LANDINGS,
+  seasonSearchTerm,
+  TYRE_FETCH_SIZE,
+  tyreSearchTerm,
+} from "@/lib/catalog/tyre-size";
 
 /**
  * De catalogus één keer aanraken, zodat de eerste echte bezoeker niet wacht.
@@ -42,10 +49,17 @@ import { getCatalogProvider } from "@/lib/catalog/provider";
  * Dezelfde aanroepen als de pagina's zelf doen, met dezelfde aantallen. Dat
  * is geen detail: Next sleutelt zijn cache op de volledige URL, dus een
  * rondje met `limit: 24` warmt niets op voor een pagina die er 20 vraagt.
- * Vandaar dat de twee getallen hieronder kopieën zijn van `PAGE_SIZE` in
- * `app/[locale]/[family]/[category]/page.tsx` en `PER_FAMILY` in
- * `app/[locale]/page.tsx`. Veranderen die, dan verliest dit bestand stil zijn
+ * Vandaar dat `CATEGORY_PAGE_SIZE` hieronder een kopie is van `PAGE_SIZE` in
+ * `app/[locale]/[family]/[category]/page.tsx`, en dat de zoekopdrachten op
+ * band dezelfde constanten importeren als de pagina's (`TYRE_FETCH_SIZE`,
+ * `HOME_TYRE_SIZE`). Verandert de kopie, dan verliest dit bestand stil zijn
  * nut — er gaat niets stuk, het wordt alleen weer traag.
+ *
+ * **Sinds 2026-11-23 ook vier zoekopdrachten op band:** de rij "Banden in
+ * maat 205/55 R16" op de homepage en de drie seizoenspagina's (winter, zomer,
+ * all-season). Die kostten koud 19, 24 en 14 seconden (GEMETEN, één verzoek
+ * per stuk). De oude homepagerijen — vier
+ * artikelen per familie — bestaan niet meer (#36) en zijn hier weg.
  *
  * **Onderdelen doen niet mee.** Die catalogus hangt aan een gekozen auto
  * (`/category` zonder `carId` geeft ERR_MISSING_MANDATORY_PARAMETER, #7), dus
@@ -60,8 +74,6 @@ import { getCatalogProvider } from "@/lib/catalog/provider";
 /** Gelijk aan `PAGE_SIZE` in de categoriepagina */
 const CATEGORY_PAGE_SIZE = 20;
 
-/** Gelijk aan `PER_FAMILY` op de homepage */
-const HOME_TILE_SIZE = 4;
 
 /**
  * Rust tussen twee aanroepen.
@@ -108,18 +120,30 @@ export async function warmCatalog(): Promise<WarmResult & { skipped: boolean }> 
     (family) => !usesVehicleCatalog(family),
   );
 
+  // Zoekopdrachten op band die een vaste pagina hebben: de rij op de
+  // homepage en de seizoenspagina's. Zelfde term en zelfde limit als daar.
+  const bandenZoeken = [
+    tyreSearchTerm(HOME_TYRE_SIZE, null),
+    ...SEASON_LANDINGS.map(seasonSearchTerm),
+  ];
+
   try {
-    for (const family of bladerbaar) {
-      // 1. De rij op de homepage. Zonder categorie, net als daar.
+    for (const search of bandenZoeken) {
       try {
-        await provider.getParts({ family, limit: HOME_TILE_SIZE });
+        await provider.getParts({
+          family: "banden",
+          search,
+          limit: TYRE_FETCH_SIZE,
+        });
         calls += 1;
       } catch (error) {
-        errors.push(`${family} (homepage): ${melding(error)}`);
+        errors.push(`banden "${search}": ${melding(error)}`);
       }
       await rust(PAUSE_MS);
+    }
 
-      // 2. De categorieboom. Die zit een uur in de cache en wordt door de
+    for (const family of bladerbaar) {
+      // 1. De categorieboom. Die zit een uur in de cache en wordt door de
       //    navigatie, het kruimelpad en de familiepagina gedeeld.
       let lijst: { slug: string }[] = [];
       try {
@@ -131,7 +155,7 @@ export async function warmCatalog(): Promise<WarmResult & { skipped: boolean }> 
       }
       await rust(PAUSE_MS);
 
-      // 3. De eerste pagina van elke categorie — dit is wat zes seconden kost.
+      // 2. De eerste pagina van elke categorie — dit is wat zes seconden kost.
       for (const category of lijst) {
         try {
           await provider.getParts({

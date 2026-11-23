@@ -3684,6 +3684,294 @@ dat uit `invoiceBreakdown` komt — een echte afhankelijkheid, geen vergeten
 
 ---
 
+## 35. Vindbaarheid: wat Google van de winkel kon zien — GEMETEN 2026-11-23
+
+Een SEO-audit op caroparts.nl, met `curl` op de live site. De techniek stond
+grotendeels goed (canonical, hreflang, echte 404's, `Product`-markering); wat
+misging zat in wat een crawler kón bereiken.
+
+| Gemeten | Gevolg | Wat er nu staat |
+|---|---|---|
+| 20 productlinks per categorie, daarna alleen `?toon=40` — en die staat op disallow | Van elke categorie zag Google twintig producten, van de ~1.600 in Auto / SUV | `?pagina=N` met eigen artikelen, eigen canonical en titel (`components/pagination.tsx`) |
+| `www.caroparts.nl` gaf een eigen 200 | Een tweede kopie van de winkel | 301 naar het domein zonder www in `proxy.ts` |
+| `<title>Auto / SUV — CaroParts</title>` | Het zoekwoord "banden" stond er niet in | "Auto / SUV-banden kopen", ook als `<h1>` |
+| Nul links met `breedte=` op de hele site | Geen enkele bandenmaat vindbaar | Twaalf gangbare maten als link op de homepage, `/banden` en in de sitemap, met eigen titel en canonical |
+| x-default `/` in de HTTP-header, `/nl` in de HTML | Twee bronnen die elkaar tegenspreken | `alternateLinks: false`; alleen de HTML telt |
+| Geen `Organization` op de homepage, geen HSTS | — | Allebei toegevoegd, uit `COMPANY` |
+| `APOLLO AL-4GW … — APOLLO — CaroParts` | Merk dubbel in de titel | Merk valt weg als het al in de naam staat |
+
+**Onderdelen vallen hier bewust buiten.** Bladeren kan alleen met een auto
+(`?auto=`), en een categorie per auto is precies de variant die robots.txt
+uitsluit (#7). De onderdelenpagina's houden dus hun titel en canonical maar
+krijgen geen paginering.
+
+### Drie keuzes die erin zitten
+
+**Hoogstens vijftig pagina's per categorie** (`MAX_PAGES`). Elke pagina is een
+eigen verzoek bij de leverancier (`limit=20&page=N`), en een crawler die alles
+afloopt betaalt dat per pagina. Duizend artikelen per categorie is ruim
+genoeg om gevonden te worden; de rest blijft voor de klant bereikbaar.
+
+**Een pagina voorbij het eind is een 404, geen lege lijst.** Door de
+`loading.tsx` van de categorieroute wordt dat in de praktijk status 200 met
+`noindex` — dezelfde grens als bij een onbekende bandencategorie. Onschadelijk,
+maar het is geen echte 404.
+
+**De twaalf bandenmaten zijn een voornemen, geen meting.** Ze zijn niet
+afgezet tegen de catalogus of de verkoop, want lokaal is bewust niet bij de
+leverancier gevraagd. Valt er een tegen, dan toont de pagina een lege staat en
+hoort hij uit `lib/catalog/popular-tyre-sizes.ts`.
+
+### Ook gevonden
+
+**Next escapet een `&` in de sitemap niet.** Een maat-URL met drie parameters
+maakte de héle sitemap ongeldige XML. De sitemap zet nu zelf `&amp;` neer.
+
+**Lokaal testen zonder de leverancier** kan met lege tokens:
+`TYRE24_WEARPARTS_TOKEN` gaf met `??` een lege string door en kostte toch een
+(geweigerd) verzoek per pagina; dat is nu `||`.
+
+### Nog niet gemeten
+
+Core Web Vitals en Lighthouse: de runtime van het auditgereedschap stond niet
+klaar. De HTML van een categoriepagina is 766 kB, met 386 filterlinks omdat het
+filterpaneel voor mobiel en desktop twee keer in de HTML staat — dat is het
+volgende spoor als de LCP tegenvalt.
+
+---
+
+## 36. Indeling homepage, afgezet tegen Autodoc en Winparts — 2026-11-23
+
+Gevraagd door de eigenaar: de homepage verbeteren *"obv een vergelijking met
+andere soortgelijke webshops zoals autodoc, winparts"*. Beide sites geven een
+403 aan een gewone fetch; ze zijn in de browser bekeken, met alle niet-nodige
+cookies geweigerd.
+
+| Blok | Autodoc | Winparts | CaroParts vóór | Nu |
+|---|---|---|---|---|
+| Kenteken + merk/model/motor boven de vouw | links, met bannercarrousel rechts | rechts, met categoriemenu links en banner in het midden | ja, links | ongewijzigd |
+| Onderdelen op het oog, met foto | "Nu heel populair" en een raster van 12 hoofdgroepen | "Populaire productgroepen", plus een vaste categoriekolom | **ontbrak** | 8 fototegels direct onder de hero |
+| Productgroepen | banden, accessoires, gereedschap in het menu | idem | 4 familietegels | ongewijzigd, nu na de onderdelen |
+| Automerken | raster van 16 merken + "meer automerken" | alleen in de footer | alleen in de footer | 8 merken naast de bandenmaten |
+| Productrijen | bestsellers en aanbiedingen | tips en weekaanbieding | per familie | ongewijzigd |
+| USP's | strook halverwege | balk in de header | in de hero-banner | ongewijzigd |
+| Tekst onderaan | lang SEO-blok | geen | sinds #35 | ongewijzigd |
+
+**Vervolg, dezelfde dag: de banden staan in de hero.** Winparts heeft in zijn
+zoekpaneel een tweede tab "Autobanden"; Autodoc zet banden in het hoofdmenu.
+Bij ons stond rechts een tekstbanner die de kop links in andere woorden
+herhaalde. Daar staat nu de bandenmaatkiezer — een gewoon GET-formulier naar
+/banden, dus de maat komt in de URL en de klant landt op de maatpagina uit
+#35.
+
+**Met een lopende actie staan ze er allebei** (keuze van de eigenaar, ook
+2026-11-23). De carrousel blijft bovenaan, want een actie is tijdelijk en
+hoort het opvallendst te zijn; daaronder staat de bandenmaat op één regel —
+breedte, hoogte, diameter en de knop, zonder tekening en zonder seizoen
+(`layout="compact"` in `tyre-size-form.tsx`). Het seizoen kiest de klant op de
+maatpagina. Eerst verdween de bandenzoeker bij een actie helemaal uit de hero;
+dat was de vraag die dit opleverde.
+
+GEZIEN in de browser met een tijdelijke nepactie in een mockbuild (daarna
+weggehaald): de rechterkolom komt met carrousel en strook ongeveer even hoog
+uit als het kentekenpaneel links.
+
+Twee dingen die daarbij moesten:
+
+- **De drie voordelen staan nu altijd in een strook onder de hero**, niet meer
+  in de banner. Ze mogen niet wegvallen (#14), en zo is er één plek in plaats
+  van twee varianten.
+- **De knop van de bandenkiezer is omlijnd**, niet oranje (`submitStyle` in
+  `tyre-size-form.tsx`). De kentekencheck is de enige primaire actie in de
+  hero; twee oranje knoppen naast elkaar laten de klant kiezen waar niets te
+  kiezen valt.
+
+De `<h1>` werd "Auto-onderdelen die op jouw auto passen" in plaats van "Het
+juiste onderdeel, zonder gedoe": dezelfde toon (docs/BRAND.md: "past op jouw
+auto"), maar mét het woord waar op gezocht wordt.
+
+**Wat bewust níet is overgenomen:**
+
+- **Een reclamebanner in de hero.** Beide sites draaien daar een Black
+  Friday-carrousel. Bij ons komt daar alleen een carrousel als er een echte
+  actie loopt (#14); een verzonnen actie tonen is misleidend.
+- **Sterren en "veilig bestellen 200 dagen" bij elk product.** Wij tonen
+  alleen echte beoordelingen (#18) en onze eigen voorwaarden.
+- **Zestien merken.** De acht in de footer zijn gemeten op treffers; Citroën
+  gaf er drie en staat er niet in. Zonder meting komen er geen merken bij.
+- **Een vaste categoriekolom links (Winparts).** Onderdelencategorieën hangen
+  bij ons aan een auto (#7); een vaste lijst zou naar lege pagina's wijzen.
+
+**De onderdeeltegels zoeken op naam** (`/zoeken?q=Remblokken`), net als
+"Veelgezocht" in de footer: dat werkt zonder auto en de termen zijn gemeten.
+Ze dragen dus geen SEO-waarde (`q=` staat op disallow); het zijn ingangen voor
+de klant. De merkknoppen ook niet: `merk=` staat op disallow.
+
+**De nieuwe teksten staan in de namespace `homeInfo` en niet in `home`.**
+`home` gaat mee naar de browser (de hero is een clientcomponent); deze blokken
+zijn servercomponenten en hebben dat niet nodig. GEMETEN met
+`pnpm messages:check`: 28.999 bytes met de teksten in `home`, 27.710 in
+`homeInfo` (#34).
+
+### Tweede ronde, dezelfde dag: wat er nog mis was
+
+Op verzoek van de eigenaar nog eens nagelopen, nu ook op 375px (de pagina in
+een `srcdoc`-iframe van 375px breed, op een mockbuild) en tegen mister-auto.nl
+en banden.nl. Wat eruit kwam en wat ermee gebeurd is:
+
+| Gevonden | Gevolg | Nu |
+|---|---|---|
+| De kentekenknop stond op `disabled` zolang het veld leeg was | Bij elk eerste bezoek was hij grijs; de hero had dan **geen enkele oranje knop**, en de omlijnde bandenknop trok de aandacht | Altijd oranje. Leeg indienen geeft de melding "Een Nederlands kenteken heeft 6 tekens" en zet de cursor terug in de plaat, zonder serververzoek |
+| Het familieraster stond in een `<Suspense>` zonder iets om op te wachten | In de HTML stond het ná de footer, en de koppen in de broncode in de verkeerde volgorde | Zonder grens; nu op zijn plek |
+| De productrijen toonden de eerste vier artikelen van de eerste categorie per familie | Live: Duitstalige toebehoren ("Madenschraube", "Inbusschlüssel") en stalen velgen voor een Daewoo Leganza | Twee rijen: **Nu in de aanbieding** (uit de lijst van de carrousel, dus zonder verzoek extra) en **Banden in maat 205/55 R16** (exact de aanroep van de maatpagina). Eén verzoek in plaats van vier |
+| De pagina was op 375px **9.300px** lang | — | Zie hieronder |
+| `X-Powered-By: Next.js` in elk antwoord | Vertelt een scanner welk framework hier draait | `poweredByHeader: false` |
+| De kop boven de familietegels was "Auto-onderdelen vinden in de catalogus" | Er staan ook banden, velgen en toebehoren onder | "Winkelen per productgroep" |
+
+GEMETEN op 375px, voor en na:
+
+| Blok | Voor | Na | Hoe |
+|---|---|---|---|
+| Hero | 1.370px | 1.140px | De bandenkiezer zonder tekening en seizoenen onder `lg` (`mobile="lean"`); op `/banden` blijft hij volledig |
+| Populaire onderdelen | 1.043px | 481px | Vier kolommen met kleine foto's in plaats van twee; lange namen breken op een lettergreep (`lang="nl"` + `hyphens-auto`) |
+| Populaire bandenmaten | 694px | 329px | Drie per rij met alleen de maat zichtbaar. "Banden" staat er als `sr-only` bij, dus de linktekst is voor een schermlezer en een zoekmachine nog steeds "Banden 205/55 R16" |
+
+**Een valkuil die daarbij opdook:** een `sr-only`-span rechtstreeks in een
+flex-link is een eigen flex-item, en dan valt de spatie aan zijn rand weg —
+op desktop stond er "Banden205/55 R16". De tekst staat nu in één omhullende
+span.
+
+**Niet gemeten op mockdata:** de bandenrij. De mockbanden dragen geen
+maatblok, dus de rij blijft daar leeg (ook de maatpagina zelf vindt er
+niets). Live is het dezelfde aanroep als `/nl/banden?breedte=205&hoogte=55&diameter=16`;
+zonder treffers valt de rij weg in plaats van leeg te staan.
+
+### Winterbanden krijgen een eigen pagina — 2026-11-23
+
+Banden.nl zet in november "Winterbanden" voorgeselecteerd bovenaan. Bij ons
+telde `seizoen` niet mee in de canonical (#35), dus "winterbanden kopen" — in
+het najaar een van de grootste zoektermen in de branche — had geen pagina.
+De eigenaar gaf akkoord voor één meting bij de leverancier en daarna voor de
+bouw.
+
+**GEMETEN, één verzoek:** `/items?productAreaId=6&search=winter&limit=120`
+gaf **120 van de 120** banden met `Inzet: Winterreifen`, in tientallen maten
+door elkaar. De zoekfunctie filtert dus ook zonder maat netjes op seizoen.
+**Koud duurde het 19 seconden.**
+
+Wat er nu staat:
+
+- **`/nl/banden?seizoen=winter`** (en `/en/tyres?seizoen=winter`): titel
+  "Winterbanden kopen", `<h1>` "Winterbanden", canonical en hreflang **mét**
+  `?seizoen=winter`, en de winterbanden eronder met een merkfilter geteld over
+  de treffers. De maatkiezer staat bovenaan met "Winter" al gekozen, dus wie
+  zijn maat invult komt op de maatpagina met het seizoen erin.
+- **Met een maat erbij verandert er niets**: dan blijft het seizoen een
+  variant van de maatpagina, zoals in #35.
+- **Eerst alleen winter, dezelfde dag ook zomer en all-season.**
+  `SEASON_LANDINGS` in `lib/catalog/tyre-size.ts` is de lijst. Op verzoek van
+  de eigenaar zijn de andere twee net zo gemeten, met één verzoek per stuk:
+  `search=zomer` gaf **120 van de 120** `Sommerreifen` (koud 24 s),
+  `search=all season` **120 van de 120** `Ganzjahresreifen` (koud 14 s).
+  "zomer" had in een productnaam iets anders kunnen betekenen; dat bleek niet
+  zo.
+- **De seizoenslink volgt de datum** (`seasonLinksForDate`): van oktober
+  tot en met maart "Alle winterbanden", van april tot en met september "Alle
+  zomerbanden", en "Alle all-season banden" het hele jaar ernaast — die zijn
+  niet aan een seizoen gebonden (keuze van de eigenaar). Ze staan onder de
+  populaire maten, dus op de homepage én op `/banden`. Alle drie de pagina's
+  staan in de sitemap, ook als hun link even niet op de homepage staat.
+  `seizoen` stond al niet op disallow.
+- **De homepage heeft daarvoor `revalidate = 86400`.** Op de mockbuild was
+  hij volledig statisch (geen enkele fetch), en dan blijft de datum staan op
+  de dag van de bouw. Live houdt de cache van de leverancier hem al korter,
+  dus dit is een bovengrens die geen verzoek extra kost.
+- **Het warmrondje raakt hem na elke deploy aan** (`lib/catalog/warm.ts`),
+  samen met de bandenrij van de homepage. Zonder dat wacht de eerste bezoeker
+  19 seconden. De vier oude homepagerijen zijn daar tegelijk uit gehaald:
+  die bestaan niet meer.
+
+Op mockdata nagekeken: titel, canonical, hreflang, `<h1>`, de sitemap, de
+link vanaf de homepage, de voorgekozen seizoensknop, en dat `?seizoen=zomer`
+en maat+winter onveranderd zijn. Dat er echte winterbanden in het raster
+komen kan alleen live: de mockbanden dragen geen seizoen, dus daar staat de
+lege staat.
+
+---
+
+## 37. Over CaroParts en gidsen per zoekvraag — VASTGESTELD 2026-11-23
+
+De eigenaar vroeg om vergelijkingspagina's tegen Autodoc en Winparts. Het
+advies was: **nog niet**. Op beoordelingen verliezen we die vergelijking
+(Winparts.be heeft er ruim 6.600 op Trustpilot), iDEAL staat bij Stripe nog
+niet aan (#30), en de concurrentcijfers in `lib/shipping.ts` zijn van augustus.
+Vergelijkende reclame moet objectief en controleerbaar zijn (art. 6:194a BW).
+Komt het terug, dan pas na drie dingen: iDEAL live, een stuk of vijftig echte
+beoordelingen, en Search Console die vertoningen toont op zoektermen met een
+concurrentnaam erin.
+
+Wat er in plaats daarvan staat, met akkoord van de eigenaar:
+
+- **`/nl/over-caroparts`** (`/en/about`): wie de winkel is en hoe hij werkt.
+  Elke zin is terug te voeren op dit bestand — rechtstreekse levering door de
+  groothandel (#4), prijs en voorraad van dezelfde groothandel (#22), zijn
+  leverdatum (#27), passendheid via TecDoc (#6), beoordelingen alleen van echte
+  bestellingen (#18). `AboutPage`-markering met de `Organization` erin.
+- **`/nl/gids/<onderwerp>`** (`/en/guides/<topic>`), plus een overzicht op
+  `/nl/gids`. Drie gidsen: bandenmaat aflezen, winterbanden, motorolie kiezen.
+  Elke gids eindigt bij de plek in de winkel waar je het antwoord gebruikt: de
+  maatkiezer, de winterpagina of de autokeuze. `Article`- en
+  `BreadcrumbList`-markering, een eigen titel en canonical, in de sitemap. De
+  uitklapper "hoe lees ik mijn maat" onder elke maatkiezer linkt ernaar.
+
+Drie keuzes die erin zitten:
+
+- **Geen naam van de eigenaar en geen adres** op de over-pagina (keuze van de
+  eigenaar). Het adres is een woonadres en staat om die reden ook niet in de
+  footer; de voorwaarden en de privacyverklaring tonen het wel. Auteur van de
+  gidsen is daarom de winkel, niet een persoon.
+- **Wat er níet in staat:** een land van herkomst (de groothandels zitten niet
+  allemaal in Nederland en per artikel weten we het niet), en betaalmethodes
+  bij naam (`lib/payment-methods.ts` is een voornemen, geen meting).
+- **De gidsen geven alleen wat op de band, de fles of in het instructieboekje
+  staat**, plus een paar regels met bron (1,6 mm profiel, de Duitse
+  winterbandenregel met het alpinesymbool sinds 1 oktober 2024, het advies
+  van de ANWB voor 3 en 4 mm). Geen advies dat een monteur hoort te geven.
+
+**De slug verschilt per taal**, net als bij de families (`lib/guides.ts`).
+Daarvoor moest de taalknop mee: die hield de Nederlandse slug vast en stuurde
+`/nl/gids/winterbanden` naar `/en/guides/winterbanden`, een 404. GEZIEN in de
+browser en rechtgezet in `locale-switcher.tsx`.
+
+**De gidsen staan ook waar de vraag opkomt** (verzoek van de eigenaar):
+
+| Waar | Welke gids |
+|---|---|
+| Productpagina van een band | Bandenmaat aflezen |
+| Productpagina van een winterband | daarnaast Winterbanden |
+| Productpagina van motorolie | Motorolie kiezen |
+| Elke bandenmaatkiezer, onder "Waar vind ik mijn bandenmaat?" | Bandenmaat aflezen |
+| `/banden?seizoen=winter` | Winterbanden |
+
+Bij de rest staat er niets: een gids die niet over het artikel gaat is
+reclame. Motorolie wordt herkend aan het TecDoc-soortnummer 3224, dat nu als
+`kinds` op `Part` staat — dat nummer is stabiel en zit ook op een
+zoekresultaat, anders dan de categorie (#7, #17). De regel staat in
+`guidesForPart()` in `lib/guides.ts`. Op mockdata is alleen de bandenlink na
+te kijken: de mockartikelen dragen geen seizoen en geen soortnummer.
+
+Een gids toevoegen is één regel in `GUIDES` plus de tekst onder
+`guides.<key>` in beide talen. De alinea's staan als lijst in messages/, zodat
+elke gids zijn eigen lengte heeft.
+
+Op een mockbuild nagekeken: status 200 voor alle pagina's in beide talen, 404
+voor een onbekende gids en voor een Nederlandse slug onder `/en/`, titel,
+canonical, hreflang en markering, de sitemap, en op 375px geen horizontale
+overloop (een brede tabel scrolt binnen zijn eigen kader). Geen verzoek bij de
+leverancier, geen consolefout.
+
+---
+
 ## 15. Mailadressen bewaren en marketingmail — GEPARKEERD 2026-09-14
 
 **De eigenaar parkeert dit**; misschien komt er later een apart mailadres voor.
@@ -3821,5 +4109,8 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-10-02 | Eigen bezoekcijfers in het dashboard, geen analysedienst | Een script van een derde maakt een toestemmingsbanner verplicht en meet dan nog maar de helft van de bezoekers; vijf eigen tellers beantwoorden de vraag wáár het afrekenen stukloopt (#24) |
 | 2026-10-01 | Voorraad én prijs komen van dezelfde groothandel, en het aantal is erop begrensd | `item.stock` klopt bij de helft van de artikelen niet met de groothandels eronder; vier banden kopen waar er één ligt kostte gemiddeld € 60,36 per set (#22) |
 | 2026-10-01 | Een actie op onderdelen wordt een aankondiging in de carrousel | Die catalogus is niet als lijst op te vragen zonder gekozen auto, dus zonder dia stond de grootste productgroep van de winkel nergens aangekondigd (#14) |
+| 2026-11-23 | Genummerde categoriepagina's, bandenmaatpagina's en een 301 van www | Google zag twintig producten per categorie en geen enkele bandenmaat, en www was een tweede kopie van de winkel (#35) |
+| 2026-11-23 | Homepage herschikt naar Autodoc/Winparts, en de productrijen worden aanbiedingen en banden in 205/55 R16 | Onderdelen op het oog ontbraken; de oude rijen toonden wat de leverancier toevallig vooraan had, en op 375px was de pagina 9.300px lang. De kentekenknop stond grijs bij elk eerste bezoek (#36) |
+| 2026-11-23 | Over CaroParts en drie gidsen in plaats van vergelijkingspagina's | Een vergelijking met Autodoc of Winparts verliezen we nu op beoordelingen, en iDEAL staat nog niet aan; uitleg per zoekvraag en een eerlijke over-pagina werken zonder een concurrent te noemen (#37) |
 | 2026-11-01 | De browser krijgt alleen de teksten die hij rendert | GEMETEN: 27% van de HTML was de hele berichtenboom, de maileksten incluis; negentien van de achtendertig namespaces zijn genoeg, en `pnpm messages:check` houdt die lijst eerlijk (#34) |
 | 2026-09-19 | Beoordelingen verschijnen meteen, verbergen alleen met reden | Selectief publiceren is een oneerlijke handelspraktijk; antwoorden werkt beter dan weghalen (#18) |

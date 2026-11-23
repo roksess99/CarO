@@ -25,6 +25,7 @@ import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { loadPartBySlug } from "@/lib/catalog/lookup";
 import { productDescription } from "@/lib/catalog/product-description";
 import { groupNameFromSlug } from "@/lib/catalog/wearparts-provider";
+import { guideSlug, guidesForPart } from "@/lib/guides";
 import { getCatalogProvider } from "@/lib/catalog/provider";
 import type { Part } from "@/lib/catalog/types";
 import {
@@ -108,7 +109,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Niet elk artikel heeft een bruikbaar merk — bij velgen staat daar een
   // omschrijving die we wegfilteren. Dan geen lege streepjes in de titel.
-  const title = [part.name, part.brand, SITE_NAME].filter(Boolean).join(" — ");
+  //
+  // Staat het merk al in de naam — bij banden bijna altijd: "APOLLO AL-4GW
+  // 195/65 R15 91 H" — dan niet nog eens. GEMETEN 2026-11-23:
+  // `APOLLO AL-4GW … — APOLLO — CaroParts`. Dat kost tekens in een titel die
+  // Google rond de zestig afkapt, en leest als opvulling.
+  const brandInName =
+    part.brand !== "" &&
+    part.name.toLowerCase().includes(part.brand.toLowerCase());
+  const title = [part.name, brandInName ? "" : part.brand, SITE_NAME]
+    .filter(Boolean)
+    .join(" — ");
   const description = t("metaDescription", {
     name: part.name,
     brand: part.brand,
@@ -174,6 +185,7 @@ export default async function ProductPage({ params }: Props) {
   const t = await getTranslations("product");
   const tFamily = await getTranslations("family");
   const tFilters = await getTranslations("filters");
+  const tGuides = await getTranslations("guides");
   const categories = await categoriesPromise;
   // GEMETEN 2026-09-09: bij onderdelen leverde dit een lege naam op. De
   // categorielijst kent die familie niet (de boom hangt aan een auto) en
@@ -185,6 +197,8 @@ export default async function ProductPage({ params }: Props) {
     part.categoryName ||
     groupNameFromSlug(category) ||
     category;
+
+  const guides = guidesForPart(part);
 
   const canonicalPath = getPathname({
     locale: locale as Locale,
@@ -470,6 +484,31 @@ export default async function ProductPage({ params }: Props) {
             )}
 
           </dl>
+
+          {/* Gidsen die over dít artikel gaan (#37): de maat bij een band,
+              winterbanden bij een winterband, de olie-uitleg bij motorolie.
+              Bij de rest staat er niets — een gids die niet over het artikel
+              gaat is reclame. */}
+          {guides.length > 0 && (
+            <section className="mt-10">
+              <h2 className="text-lg">{t("guidesTitle")}</h2>
+              <ul className="mt-3 space-y-2 text-sm">
+                {guides.map((guide) => (
+                  <li key={guide.key}>
+                    <Link
+                      href={{
+                        pathname: "/guides/[guide]",
+                        params: { guide: guideSlug(guide, locale) },
+                      }}
+                      className="font-semibold underline decoration-caro-orange decoration-2 underline-offset-4"
+                    >
+                      {tGuides(`${guide.key}.title`)} ›
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* Voorraad, verzendkosten en bedenktijd stonden hier eerder ook;
               die staan nu bij de prijs en onder de bestelknop, wáár het
