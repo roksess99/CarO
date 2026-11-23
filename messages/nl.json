@@ -1009,6 +1009,8 @@
     "orderHint": "Levertijd, verpakking en of je kreeg wat je verwachtte.",
     "productsLegend": "De artikelen",
     "productsHint": "Optioneel. Sla gerust over wat je nog niet gebruikt hebt.",
+    "ratingOption": "{value} van 5",
+    "ratingChosen": "Je keuze: {value} van 5",
     "bodyLabel": "Wil je er iets bij vertellen?",
     "bodyPlaceholder": "Wat ging goed, en wat kon beter?",
     "nameLabel": "Naam bij je beoordeling",

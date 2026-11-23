@@ -1009,6 +1009,8 @@
     "orderHint": "Delivery time, packaging and whether you got what you expected.",
     "productsLegend": "The items",
     "productsHint": "Optional. Skip anything you have not used yet.",
+    "ratingOption": "{value} out of 5",
+    "ratingChosen": "Your choice: {value} out of 5",
     "bodyLabel": "Anything you would like to add?",
     "bodyPlaceholder": "What went well, and what could be better?",
     "nameLabel": "Name shown with your review",
