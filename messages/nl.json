@@ -67,7 +67,9 @@
           "question": "Zijn de onderdelen nieuw?",
           "answer": "Ja, allemaal nieuw en afkomstig van de fabrikanten die onze groothandel voert. CaroParts verkoopt geen gebruikte onderdelen, en niets voor vrachtwagens, landbouw of industrie."
         }
-      }
+      },
+      "metaTitle": "Auto-onderdelen op kenteken",
+      "metaDescription": "Nieuwe onderdelen die op je auto passen: vul je kenteken in of kies merk en model. Zoek ook op naam of OE-nummer. Prijzen inclusief 21% btw."
     },
     "banden": {
       "title": "Banden",
@@ -87,7 +89,9 @@
           "question": "Kan ik banden zoeken op kenteken?",
           "answer": "Nee. Er bestaat geen betrouwbare koppeling van een Nederlands kenteken naar een bandenmaat — ook niet in de open data van de RDW. Wij doen daar liever geen gok over, dus vul de maat in die op je band staat."
         }
-      }
+      },
+      "metaTitle": "Banden kopen op maat",
+      "metaDescription": "Zomer-, winter- en allseasonbanden voor auto, SUV, bestelwagen en tweewieler. Zoek op bandenmaat. Prijzen inclusief 21% btw, gratis verzending vanaf {amount}."
     },
     "velgen": {
       "title": "Velgen",
@@ -107,7 +111,9 @@
           "question": "Zijn dit stalen of lichtmetalen velgen?",
           "answer": "Op dit moment stalen velgen. Die zijn goedkoper, beter bestand tegen stoeprandjes en strooizout, en daarmee de gebruikelijke keuze voor een winterset. Lichtmetalen velgen komen later in het assortiment."
         }
-      }
+      },
+      "metaTitle": "Velgen kopen",
+      "metaDescription": "Velgen voor personenauto's, te kiezen op diameter, breedte en steekcirkel. Prijzen inclusief 21% btw, gratis verzending vanaf {amount}."
     },
     "toebehoren": {
       "title": "Toebehoren",
@@ -127,7 +133,9 @@
           "question": "Kan ik hierop filteren voor mijn eigen auto?",
           "answer": "Voor toebehoren zoeken we op merk en model in de omschrijving van de leverancier. Dat is een sterke aanwijzing, geen garantie: controleer altijd de maat of het type dat bij het artikel staat."
         }
-      }
+      },
+      "metaTitle": "Auto-accessoires en toebehoren",
+      "metaDescription": "Accu's, verlichting, oliën, autoverzorging en accessoires voor auto en tweewieler. Prijzen inclusief 21% btw, gratis verzending vanaf {amount}."
     },
     "oenElsewhere": "Wel gevonden bij banden, velgen en toebehoren voor \"{term}\"",
     "groupsTitle": "Categorieën voor jouw auto",
@@ -140,7 +148,31 @@
       "filters": "Filters",
       "oils": "Olie"
     },
-    "popularTitle": "Meest gezocht voor jouw auto"
+    "popularTitle": "Meest gezocht voor jouw auto",
+    "sizeMetaTitle": "{size} banden kopen",
+    "sizeMetaDescription": "Banden in maat {size} kopen bij {site}: zomer-, winter- en allseasonbanden van verschillende merken. Prijzen inclusief 21% btw, gratis verzending vanaf {amount}.",
+    "sizeHeading": "Banden {size}",
+    "sizeIntro": "Banden in maat {size}. Kies een seizoen of filter op merk; elke prijs is inclusief 21% btw.",
+    "season": {
+      "winter": {
+        "metaTitle": "Winterbanden kopen",
+        "metaDescription": "Winterbanden voor je auto in de gangbare maten, prijzen inclusief 21% btw. Gratis verzending vanaf {amount} en 14 dagen bedenktijd bij {site}.",
+        "heading": "Winterbanden",
+        "intro": "Winterbanden in de gangbare maten, van bekende en voordelige merken. Kies hieronder de maat die op de zijkant van je huidige band staat, dan zie je alleen winterbanden die passen."
+      },
+      "zomer": {
+        "metaTitle": "Zomerbanden kopen",
+        "metaDescription": "Zomerbanden voor je auto in de gangbare maten, prijzen inclusief 21% btw. Gratis verzending vanaf {amount} en 14 dagen bedenktijd bij {site}.",
+        "heading": "Zomerbanden",
+        "intro": "Zomerbanden in de gangbare maten, van bekende en voordelige merken. Kies hieronder de maat die op de zijkant van je huidige band staat, dan zie je alleen zomerbanden die passen."
+      },
+      "allseason": {
+        "metaTitle": "All-season banden kopen",
+        "metaDescription": "All-season banden (vierseizoenenbanden) voor je auto in de gangbare maten, prijzen inclusief 21% btw. Gratis verzending vanaf {amount} en 14 dagen bedenktijd bij {site}.",
+        "heading": "All-season banden",
+        "intro": "All-season banden rijden het hele jaar onder de auto, zonder wisselen. Kies hieronder de maat die op de zijkant van je huidige band staat, dan zie je alleen all-seasonbanden die passen."
+      }
+    }
   },
   "tyres": {
     "pickerTitle": "Kies je bandenmaat",
@@ -159,10 +191,29 @@
     "noResults": "Geen banden gevonden in maat {size}. Controleer de maat op de flank van je band of kies een ander seizoen.",
     "helpTitle": "Waar vind ik mijn bandenmaat?",
     "helpBody": "De maat staat op de flank van je band, bijvoorbeeld 205/55 R16 91 V. 205 is de breedte in millimeter, 55 de hoogte als percentage van die breedte en 16 de velgdiameter in inch. Het getal en de letter erachter zijn de laad- en snelheidsindex.",
-    "resultsInCategory": "{count, plural, =0 {Geen banden in maat {size} in deze categorie} =1 {1 band in maat {size}} other {# banden in maat {size}}}"
+    "resultsInCategory": "{count, plural, =0 {Geen banden in maat {size} in deze categorie} =1 {1 band in maat {size}} other {# banden in maat {size}}}",
+    "popularTitle": "Populaire bandenmaten",
+    "popularIntro": "Veelvoorkomende maten voor personenauto's. Staat jouw maat er niet bij? Vul hem in bij de maatkiezer op de bandenpagina.",
+    "popularLink": "<hide>Banden </hide>{size}",
+    "seasonResults": {
+      "winter": "Alle winterbanden",
+      "zomer": "Alle zomerbanden",
+      "allseason": "Alle all-season banden"
+    },
+    "seasonNoResults": {
+      "winter": "Er zijn op dit moment geen winterbanden te vinden. Kies hierboven je maat, of bekijk alle banden.",
+      "zomer": "Er zijn op dit moment geen zomerbanden te vinden. Kies hierboven je maat, of bekijk alle banden.",
+      "allseason": "Er zijn op dit moment geen all-season banden te vinden. Kies hierboven je maat, of bekijk alle banden."
+    },
+    "seasonLink": {
+      "winter": "Alle winterbanden",
+      "zomer": "Alle zomerbanden",
+      "allseason": "Alle all-season banden"
+    },
+    "guideLink": "Hoe lees je je bandenmaat?"
   },
   "categoryTiles": {
-    "title": "Auto-onderdelen vinden in de catalogus"
+    "title": "Winkelen per productgroep"
   },
   "vehicle": {
     "title": "Past het op jouw auto?",
@@ -197,16 +248,40 @@
     "plateHint": "Wij zoeken je auto op bij de RDW en tonen alleen onderdelen die erop passen."
   },
   "category": {
-    "metaDescription": "{category} voor jouw auto. Alle prijzen inclusief 21% btw.",
     "metaDescriptionParts": "{category} bestellen voor jouw auto. Vul je kenteken in en zie direct welke onderdelen passen. Prijzen inclusief 21% btw.",
     "breadcrumbAria": "Kruimelpad",
     "breadcrumbHome": "Home",
     "siblingsAria": "Andere categorieën",
-    "intro": "Ons aanbod {family} in de categorie {category}. Prijzen zijn inclusief 21% btw; filter op merk of eigenschap om snel het juiste artikel te vinden.",
     "introParts": "Onderdelen in de categorie {category} die op de gekozen auto passen, geleverd door onze groothandel. Prijzen zijn inclusief 21% btw.",
     "noParts": "Voor deze auto hebben we in deze categorie niets. Kies een andere categorie of zoek op naam of OE-nummer.",
     "showAllTypes": "Ook bijbehorende onderdelen tonen",
-    "onlyThisType": "Alleen {type} tonen"
+    "onlyThisType": "Alleen {type} tonen",
+    "metaTitle": "{name} kopen",
+    "headingWithFamily": {
+      "banden": "{category}-banden",
+      "velgen": "{category}-velgen",
+      "toebehoren": "{category}",
+      "onderdelen": "{category}"
+    },
+    "metaDescriptionFamily": {
+      "banden": "{category} kopen bij {site}. Zoek op bandenmaat en filter op merk en laadindex. Prijzen inclusief 21% btw, gratis verzending vanaf {amount}.",
+      "velgen": "{category} kopen bij {site}. Kies op diameter, breedte en steekcirkel. Prijzen inclusief 21% btw, gratis verzending vanaf {amount}.",
+      "toebehoren": "{category} voor auto en tweewieler kopen bij {site}. Filter op merk en eigenschap. Prijzen inclusief 21% btw, gratis verzending vanaf {amount}.",
+      "onderdelen": "{category} kopen bij {site}. Vul je kenteken in en zie welke onderdelen passen. Prijzen inclusief 21% btw."
+    },
+    "introFamily": {
+      "banden": "{category} van verschillende merken, als zomer-, winter- of allseasonband. Vul de maat in die op je huidige band staat, of filter op merk en laadindex. Elke prijs is inclusief 21% btw en de verzendkosten zie je vóór het afrekenen.",
+      "velgen": "{category} voor personenauto's. Kies op diameter, breedte en steekcirkel om snel de juiste maat te vinden. Elke prijs is inclusief 21% btw en de verzendkosten zie je vóór het afrekenen.",
+      "toebehoren": "{category} voor auto en tweewieler. Filter op merk of eigenschap om snel het juiste artikel te vinden. Elke prijs is inclusief 21% btw en de verzendkosten zie je vóór het afrekenen.",
+      "onderdelen": "{category} die op de gekozen auto passen. Prijzen zijn inclusief 21% btw."
+    },
+    "pagination": {
+      "nav": "Pagina's",
+      "previous": "Vorige",
+      "next": "Volgende",
+      "page": "Pagina {page}",
+      "metaPage": "pagina {page}"
+    }
   },
   "filters": {
     "title": "Filters",
@@ -299,16 +374,12 @@
     "system": "Volg de instelling van je apparaat"
   },
   "home": {
-    "metaTitle": "CaroParts — Auto-onderdelen",
-    "metaDescription": "Auto-onderdelen voor de Nederlandse markt. Zoek op onderdeel of OE-nummer. Alle prijzen inclusief 21% btw.",
-    "eyebrow": "Auto-onderdelen",
-    "bannerTitle": "Zoek het onderdeel, wij regelen de rest",
-    "bannerCta": "Bekijk het assortiment",
+    "metaTitle": "{site} — Auto-onderdelen op kenteken, banden en velgen",
+    "metaDescription": "Onderdelen die op je auto passen via je kenteken, banden op maat, velgen en toebehoren. Alle prijzen inclusief 21% btw, gratis verzending vanaf {amount} en 14 dagen bedenktijd.",
     "uspShipping": "Gratis verzending vanaf {amount}",
     "uspReturns": "14 dagen bedenktijd op elke bestelling",
     "uspVat": "Alle prijzen inclusief 21% btw",
-    "title": "Het juiste onderdeel, zonder gedoe",
-    "intro": "Zoek op onderdeel of OE-nummer. Alle prijzen zijn inclusief 21% btw en verzendkosten zie je vóór het afrekenen.",
+    "title": "Auto-onderdelen die op jouw auto passen",
     "offersEyebrow": "Nu in de aanbieding",
     "promoTitleFamily": "Nu tot {percent}% korting op alle {family}",
     "promoTitleKind": "Nu tot {percent}% korting op {subject}",
@@ -321,6 +392,30 @@
     "offersPlay": "Schuif weer door",
     "offersGoTo": "Toon aanbieding {number}",
     "offersCount": "Aanbieding {number} van {total}"
+  },
+  "homeInfo": {
+    "aboutTitle": "Onderdelen, banden en velgen bij {site}",
+    "aboutParts": "{site} verkoopt nieuwe onderdelen, banden, velgen en toebehoren voor personenauto's en tweewielers. Voor onderdelen begin je bij je kenteken: daarmee zoeken we je auto op en zie je alleen wat erop past. Geen kenteken bij de hand? Kies dan merk, model en uitvoering.",
+    "aboutTyres": "Banden zoek je op de maat die op de zijkant van je huidige band staat, bijvoorbeeld 205/55 R16: breedte, hoogte en velgdiameter. Velgen kies je op diameter, breedte en steekcirkel.",
+    "aboutShop": "Alle prijzen zijn inclusief 21% btw. Verzending kost {shipping} en is gratis vanaf {amount}, en je hebt 14 dagen bedenktijd. {site} is een Nederlandse webshop uit {city}, ingeschreven bij de KvK onder nummer {coc}.",
+    "linksAria": "Meer informatie",
+    "linksTitle": "Meer weten",
+    "linkMyCar": "Onderdelen zoeken op kenteken",
+    "linkFaq": "Veelgestelde vragen",
+    "linkReturns": "Retourneren",
+    "linkContact": "Contact",
+    "partsTitle": "Populaire onderdelen",
+    "partsIntro": "Zoek direct op onderdeel. Wil je alleen zien wat op jouw auto past, vul dan bovenaan je kenteken in.",
+    "partsByCar": "Onderdelen op kenteken",
+    "makesTitle": "Populaire automerken",
+    "makesIntro": "Kies je merk, daarna model en uitvoering, en zie welke onderdelen passen.",
+    "makesAll": "Alle automerken",
+    "tyreEyebrow": "Banden",
+    "tyreTitle": "Banden zoeken op maat",
+    "tyreIntro": "Kies de maat die op de zijkant van je huidige band staat, bijvoorbeeld 205/55 R16.",
+    "offersTitle": "Nu in de aanbieding",
+    "offersAll": "Alle aanbiedingen",
+    "tyresAll": "Alle banden in {size}"
   },
   "offers": {
     "title": "Aanbiedingen",
@@ -388,7 +483,8 @@
       "maxLoad": "Max. draagvermogen",
       "wheelMounting": "Wielmontage"
     },
-    "shippingLine": "Verzending {shipping} — gratis vanaf {freeFrom}"
+    "shippingLine": "Verzending {shipping} — gratis vanaf {freeFrom}",
+    "guidesTitle": "Hulp bij het kiezen"
   },
   "cart": {
     "metaTitle": "Winkelwagen — CaroParts",
@@ -617,7 +713,9 @@
     "paymentTitle": "Betaalmethoden",
     "paymentNote": "Betalen gaat via Stripe. Je bank- en kaartgegevens komen nooit bij ons binnen.",
     "idealWeroAlt": "iDEAL en Wero",
-    "reviewsLink": "Beoordelingen"
+    "reviewsLink": "Beoordelingen",
+    "aboutLink": "Over CaroParts",
+    "guidesLink": "Gidsen"
   },
   "terms": {
     "title": "Algemene voorwaarden",
@@ -692,10 +790,10 @@
         "retention": "Tot je een andere auto kiest of je browsergegevens wist."
       },
       "caro-cookie-notice": {
-      "purpose": "Onthoudt dat je de melding onderaan over opslag hebt weggeklikt, zodat hij niet terugkomt.",
-      "retention": "Tot je je browsergegevens wist."
-    },
-    "theme": {
+        "purpose": "Onthoudt dat je de melding onderaan over opslag hebt weggeklikt, zodat hij niet terugkomt.",
+        "retention": "Tot je je browsergegevens wist."
+      },
+      "theme": {
         "purpose": "Je keuze voor het lichte of donkere thema.",
         "retention": "Tot je je browsergegevens wist."
       }
@@ -1036,5 +1134,340 @@
     "verified": "Elke beoordeling hoort bij een betaalde bestelling: de uitnodiging gaat per mail naar de klant en de link werkt één keer. We halen niets weg om het cijfer op te poetsen; alleen scheldwoorden of persoonsgegevens verbergen we, en dan leggen we vast waarom.",
     "replyFrom": "Reactie van CaroParts",
     "howToGet": "Zelf een beoordeling achterlaten? Na je bestelling krijg je er vanzelf een uitnodiging voor."
+  },
+  "about": {
+    "metaTitle": "Over CaroParts: wie we zijn en hoe de winkel werkt",
+    "metaDescription": "Wie CaroParts is, waar je onderdelen vandaan komen, hoe we nagaan of iets op je auto past, en hoe betalen, verzenden en retourneren werkt.",
+    "title": "Over CaroParts",
+    "intro": "CaroParts is een Nederlandse webwinkel in auto-onderdelen, banden, velgen en toebehoren, voor personenauto's en tweewielers. Hieronder lees je hoe de winkel werkt.",
+    "who": {
+      "heading": "Wie we zijn",
+      "p1": "CaroParts is een eenmanszaak, ingeschreven bij de Kamer van Koophandel. Je hebt dus met één aanspreekpunt te maken, niet met een callcenter.",
+      "p2": "Vragen over een bestelling of een onderdeel? Mail naar {email} of gebruik het contactformulier.",
+      "link": "Naar het contactformulier"
+    },
+    "supply": {
+      "heading": "Waar je onderdelen vandaan komen",
+      "p1": "We hebben geen eigen magazijn. Je bestelling komt van een groothandel die het artikel op voorraad heeft, en die bezorgt het rechtstreeks bij je thuis.",
+      "p2": "De prijs en de voorraad op de pagina komen van diezelfde groothandel. Het aantal dat je in je winkelwagen kunt zetten is begrensd op wat daar ligt.",
+      "p3": "Staat er een verwachte leverdatum bij, dan is dat de datum die de groothandel opgeeft. Kunnen we geen datum onderbouwen, dan noemen we er geen."
+    },
+    "fitment": {
+      "heading": "Past het op je auto?",
+      "p1": "Vul je kenteken in, dan zoeken we de uitvoering van je auto op in TecDoc, de catalogus die de onderdelenbranche gebruikt. Op een productpagina zie je dan of het onderdeel past, niet past, of dat je de passing beter zelf controleert. Bij twijfel zeggen we dat, in plaats van te gokken.",
+      "p2": "Banden passen op een maat, niet op een kenteken: de RDW registreert de bandenmaat niet. Daarvoor is er de bandenmaatkiezer, en de maat staat op de band die er nu onder zit.",
+      "link": "Zo lees je je bandenmaat"
+    },
+    "orders": {
+      "heading": "Betalen, verzenden en retour",
+      "p1": "Je betaalt via Stripe; je rekening- of kaartgegevens komen niet bij ons. Alle prijzen zijn inclusief 21% btw. Verzenden kost {shipping}, en vanaf {freeFrom} is het gratis.",
+      "p2": "Je hebt 14 dagen bedenktijd. Een retour meld je aan op de retourpagina, en je geld komt terug op de rekening waarmee je betaalde.",
+      "link": "Retour aanmelden"
+    },
+    "reviews": {
+      "heading": "Beoordelingen",
+      "p1": "Na elke bestelling vragen we één keer om een beoordeling. Alleen wie echt bestelde kan er een geven, en een beoordeling staat meteen online. Verbergen doen we alleen bij misbruik, nooit om een laag cijfer.",
+      "link": "Lees de beoordelingen"
+    },
+    "privacy": {
+      "heading": "Geen tracking",
+      "p1": "We volgen je niet: geen advertentiecookies en geen analysedienst van een derde. Wat er wél in je browser staat, zoals je winkelwagen en je gekozen auto, lees je in de privacyverklaring.",
+      "link": "Naar de privacyverklaring"
+    }
+  },
+  "guides": {
+    "breadcrumbAria": "Kruimelpad",
+    "breadcrumbHome": "Home",
+    "indexTitle": "Gidsen",
+    "indexMetaTitle": "Gidsen: banden, winterbanden en motorolie uitgelegd",
+    "indexMetaDescription": "Korte uitleg bij de vragen die vóór een aankoop opkomen: je bandenmaat aflezen, wanneer winterbanden zin hebben en welke motorolie je auto nodig heeft.",
+    "indexIntro": "Korte uitleg bij de vragen die we het vaakst zien, met de informatie die op je band, je fles olie of in je instructieboekje staat.",
+    "updated": "Bijgewerkt op {date}",
+    "moreTitle": "Meer gidsen",
+    "tyreSize": {
+      "title": "Bandenmaat aflezen",
+      "metaTitle": "Bandenmaat aflezen: wat betekent 205/55 R16 91 V?",
+      "metaDescription": "Zo lees je de maat op je band: breedte, hoogte, velgdiameter, laadindex en snelheidsindex uitgelegd, plus waar je de maat vindt en hoe oud je band is.",
+      "intro": "Op de flank van elke band staat een code als 205/55 R16 91 V. Met die code zoek je een nieuwe band die past. Zo lees je hem.",
+      "sections": [
+        {
+          "heading": "Wat elk deel betekent",
+          "paragraphs": [
+            "Neem 205/55 R16 91 V als voorbeeld."
+          ],
+          "table": {
+            "caption": "De delen van een bandenmaat",
+            "columns": [
+              "Deel",
+              "Betekenis",
+              "In het voorbeeld"
+            ],
+            "rows": [
+              [
+                "205",
+                "Breedte van de band in millimeter",
+                "205 mm"
+              ],
+              [
+                "55",
+                "Hoogte van de flank, als percentage van de breedte",
+                "55% van 205 mm, ongeveer 113 mm"
+              ],
+              [
+                "R",
+                "Opbouw: radiaalband. Vrijwel elke autoband is dat",
+                "radiaal"
+              ],
+              [
+                "16",
+                "Diameter van de velg in inch",
+                "16 inch"
+              ],
+              [
+                "91",
+                "Laadindex: hoeveel één band mag dragen",
+                "615 kg per band"
+              ],
+              [
+                "V",
+                "Snelheidsindex: de hoogste snelheid waarvoor de band gemaakt is",
+                "240 km/u"
+              ]
+            ]
+          },
+          "notes": [
+            "Voor het zoeken heb je de eerste drie getallen nodig: breedte, hoogte en diameter. De laadindex en de snelheidsindex kies je minstens zo hoog als voor je auto is voorgeschreven."
+          ]
+        },
+        {
+          "heading": "Laadindex",
+          "paragraphs": [
+            "De laadindex is een code, geen gewicht. Dit zijn de gangbare waarden bij personenauto's."
+          ],
+          "table": {
+            "caption": "Laadindex en draagvermogen per band",
+            "columns": [
+              "Laadindex",
+              "Draagvermogen per band"
+            ],
+            "rows": [
+              [
+                "84",
+                "500 kg"
+              ],
+              [
+                "87",
+                "545 kg"
+              ],
+              [
+                "88",
+                "560 kg"
+              ],
+              [
+                "91",
+                "615 kg"
+              ],
+              [
+                "94",
+                "670 kg"
+              ],
+              [
+                "95",
+                "690 kg"
+              ],
+              [
+                "97",
+                "730 kg"
+              ],
+              [
+                "100",
+                "800 kg"
+              ]
+            ]
+          },
+          "notes": [
+            "Staat er XL of Reinforced op de band, dan is hij versterkt en mag hij zwaarder belast worden dan een gewone band van dezelfde maat."
+          ]
+        },
+        {
+          "heading": "Snelheidsindex",
+          "table": {
+            "caption": "Snelheidsindex en hoogste snelheid",
+            "columns": [
+              "Letter",
+              "Hoogste snelheid"
+            ],
+            "rows": [
+              [
+                "Q",
+                "160 km/u"
+              ],
+              [
+                "T",
+                "190 km/u"
+              ],
+              [
+                "H",
+                "210 km/u"
+              ],
+              [
+                "V",
+                "240 km/u"
+              ],
+              [
+                "W",
+                "270 km/u"
+              ],
+              [
+                "Y",
+                "300 km/u"
+              ]
+            ]
+          }
+        },
+        {
+          "heading": "Waar vind je de maat van je auto?",
+          "paragraphs": [
+            "Op de band zelf: de flank van de band die er nu onder zit. Let op dat een vorige eigenaar misschien ooit een andere maat heeft gekozen.",
+            "Op de sticker met de bandenspanning. Bij veel auto's zit die in de deurstijl aan de bestuurderskant of aan de binnenkant van het tankklepje, vaak met meerdere toegestane maten.",
+            "In het instructieboekje of op het certificaat van overeenstemming (CvO) van de auto.",
+            "Het kenteken helpt hier niet: de RDW registreert de bandenmaat niet. Daarom vraagt onze bandenkiezer om de maat en niet om je kenteken."
+          ]
+        },
+        {
+          "heading": "Hoe oud is je band?",
+          "paragraphs": [
+            "Na de letters DOT staat een code die eindigt op vier cijfers: de week en het jaar waarin de band gemaakt is. 2324 betekent week 23 van 2024.",
+            "Rubber veroudert ook als je weinig rijdt. Let bij een oudere band op scheurtjes in de flank."
+          ]
+        },
+        {
+          "heading": "Profiel en vervangen",
+          "paragraphs": [
+            "In Nederland moet een band minstens 1,6 mm profiel hebben. De ANWB adviseert een zomerband rond 3 mm te vervangen en een winterband rond 4 mm.",
+            "Zet op één as altijd twee dezelfde banden: dezelfde maat, hetzelfde merk en hetzelfde type. Wil je naar een andere maat, controleer dan eerst of die voor je auto is toegestaan."
+          ]
+        }
+      ]
+    },
+    "winterTyres": {
+      "title": "Winterbanden: wanneer en waarom",
+      "metaTitle": "Winterbanden: wanneer heb je ze nodig en hoe herken je ze?",
+      "metaDescription": "Wanneer winterbanden zin hebben, hoe je een echte winterband herkent aan het sneeuwvloksymbool, wat de regels zijn in Duitsland en Oostenrijk, en hoeveel profiel je nodig hebt.",
+      "intro": "In Nederland zijn winterbanden niet verplicht. Toch rijden veel mensen er in de koude maanden op, en in een paar buurlanden heb je ze bij winterweer wel nodig.",
+      "allLink": "Bekijk alle winterbanden",
+      "sections": [
+        {
+          "heading": "Wat een winterband anders doet",
+          "paragraphs": [
+            "Een winterband heeft een zachtere rubbersamenstelling die bij kou soepel blijft, en een profiel met veel kleine insnijdingen (lamellen). Dat geeft grip op koude, natte wegen, op sneeuw en op ijzel.",
+            "Als vuistregel geldt dat een winterband onder ongeveer 7 °C beter grijpt dan een zomerband, ook als er geen sneeuw ligt."
+          ]
+        },
+        {
+          "heading": "Een echte winterband herkennen",
+          "paragraphs": [
+            "Kijk op de flank naar het symbool van een berg met drie toppen en een sneeuwvlok, ook wel het alpinesymbool of 3PMSF genoemd. Een band met dat symbool is op sneeuw getest.",
+            "M+S (modder en sneeuw) alleen is geen bewijs: dat zet de fabrikant er zelf op, zonder test."
+          ]
+        },
+        {
+          "heading": "Regels in het buitenland",
+          "paragraphs": [
+            "In Duitsland geldt een situatieve winterbandenplicht: bij sneeuw, ijzel of gladheid moeten er banden met het alpinesymbool onder je auto zitten. Een band met alleen M+S telt daar sinds 1 oktober 2024 niet meer.",
+            "Oostenrijk heeft een vergelijkbare regel van 1 november tot 15 april. Ga je op wintersport, kijk dan vóór vertrek de actuele regels na voor elk land waar je doorheen rijdt, bijvoorbeeld bij de ANWB."
+          ]
+        },
+        {
+          "heading": "Wanneer wissel je?",
+          "paragraphs": [
+            "Een veelgebruikte vuistregel is van oktober tot Pasen. Beter is kijken naar de temperatuur: blijft het overdag structureel onder de 7 °C, dan is het tijd."
+          ]
+        },
+        {
+          "heading": "Profiel",
+          "paragraphs": [
+            "Wettelijk is 1,6 mm genoeg, maar een winterband verliest zijn grip op sneeuw ruim daarvoor. De ANWB adviseert een winterband rond 4 mm profiel te vervangen."
+          ]
+        },
+        {
+          "heading": "All-season als tussenweg",
+          "paragraphs": [
+            "Een all-seasonband is een compromis: beter in de winter dan een zomerband, minder goed dan een echte winterband, en het hele jaar onder de auto. Wil je er in Duitsland mee rijden bij winterweer, kies dan een all-seasonband met het alpinesymbool."
+          ]
+        }
+      ]
+    },
+    "engineOil": {
+      "title": "Motorolie kiezen",
+      "metaTitle": "Welke motorolie past bij mijn auto? 5W-30 en specificaties uitgelegd",
+      "metaDescription": "Wat 5W-30 betekent, waarom de goedkeuring van je fabrikant zwaarder weegt dan de viscositeit, en waar je vindt welke olie en hoeveel je auto nodig heeft.",
+      "intro": "Op een fles motorolie staan twee soorten informatie: de viscositeit, zoals 5W-30, en een of meer specificaties. Voor je motor tellen ze allebei, maar de specificatie het zwaarst.",
+      "ctaTitle": "Motorolie voor jouw auto",
+      "ctaBody": "Kies je auto met je kenteken. Dan staat de motorolie die de catalogus bij jouw auto koppelt bij elkaar, en filter je op viscositeit en inhoud. Leg de specificatie op de fles daarna nog even naast je instructieboekje.",
+      "ctaButton": "Kies je auto",
+      "sections": [
+        {
+          "heading": "Wat 5W-30 betekent",
+          "paragraphs": [
+            "Het getal vóór de W (van winter) zegt hoe goed de olie koud vloeit: hoe lager, hoe makkelijker hij bij een koude start door de motor stroomt. 0W vloeit koud beter dan 10W.",
+            "Het getal na het streepje zegt hoe dik de olie is op bedrijfstemperatuur, rond 100 °C. Een 30 is daar dunner dan een 40.",
+            "Kies een andere viscositeit dan voorgeschreven alleen als je fabrikant die ook toestaat."
+          ]
+        },
+        {
+          "heading": "De specificatie weegt het zwaarst",
+          "paragraphs": [
+            "Automerken keuren olie goed met een eigen code, zoals VW 504 00, MB 229.51 of BMW Longlife-04. Daarnaast zijn er algemene klassen van ACEA en API.",
+            "Twee oliën met dezelfde 5W-30 kunnen verschillende specificaties hebben, en dan past er misschien maar één. Vooral bij motoren met een roetfilter of een lang onderhoudsinterval maakt dat uit."
+          ],
+          "table": {
+            "caption": "Wat er op een fles motorolie staat",
+            "columns": [
+              "Op de fles",
+              "Wat het is",
+              "Voorbeeld"
+            ],
+            "rows": [
+              [
+                "Viscositeit",
+                "Hoe dik de olie koud en warm is",
+                "5W-30"
+              ],
+              [
+                "Goedkeuring fabrikant",
+                "Getest en vrijgegeven door het automerk",
+                "VW 504 00 / 507 00"
+              ],
+              [
+                "ACEA-klasse",
+                "Europese norm voor het soort motor",
+                "C3"
+              ],
+              [
+                "API-klasse",
+                "Amerikaanse norm; de S staat voor benzinemotoren",
+                "SP"
+              ]
+            ]
+          }
+        },
+        {
+          "heading": "Waar vind je wat je auto nodig heeft?",
+          "paragraphs": [
+            "In het instructieboekje of onderhoudsboekje staan de voorgeschreven specificatie, de viscositeit en de inhoud.",
+            "Weet je het niet zeker, vraag het dan na bij een dealer of garage van je merk. Die kan het opzoeken voor jouw uitvoering."
+          ]
+        },
+        {
+          "heading": "Hoeveel olie?",
+          "paragraphs": [
+            "Het instructieboekje noemt de inhoud, meestal inclusief het oliefilter.",
+            "Vul niet in één keer tot de bovenste streep. Giet wat minder in, laat de olie een paar minuten zakken en controleer met de peilstok: tussen de twee streepjes is goed.",
+            "Bijvullen doe je het liefst met dezelfde olie als er al in zit."
+          ]
+        }
+      ]
+    }
   }
 }

@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
+  // Geen "X-Powered-By: Next.js" in elk antwoord: het vertelt een scanner
+  // gratis welk framework hier draait, en de bezoeker heeft er niets aan.
+  poweredByHeader: false,
   experimental: {
     // De Tailwind-bundel was het enige render-blokkerende verzoek (9,7 kB,
     // ~300 ms volgens PageSpeed). Inline in de HTML kost dat verzoek niets
@@ -57,6 +60,12 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(), payment=()",
           },
+          // Alleen nog over HTTPS, ook als iemand http:// typt. Bewust
+          // zónder includeSubDomains en preload: of élk subdomein (mail,
+          // hPanel) HTTPS praat weten we niet zeker, en preload is een jaar
+          // lang niet terug te draaien. Browsers negeren deze header op
+          // http://localhost, dus ontwikkelen merkt er niets van.
+          { key: "Strict-Transport-Security", value: "max-age=31536000" },
         ],
       },
     ];

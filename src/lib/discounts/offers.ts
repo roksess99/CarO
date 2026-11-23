@@ -172,6 +172,17 @@ export async function offerSlides(limit = 8): Promise<OfferSlide[]> {
   ].slice(0, limit);
 }
 
+/**
+ * Alleen de afgeprijsde artikelen, voor de productrij "Aanbiedingen" op de
+ * homepage. Dezelfde regels en hetzelfde kwartier geheugen als de carrousel,
+ * dus naast `offerSlides()` op dezelfde pagina kost dit geen verzoek extra.
+ * Aankondigingen tellen hier niet mee: een productrij toont producten.
+ */
+export async function offerParts(limit: number): Promise<Part[]> {
+  const rules = (await activeRules()).slice(0, MAX_RULES);
+  return (await offerPartsFor(rules)).slice(0, limit);
+}
+
 /** Na een wijziging in het paneel hoeft niemand een kwartier te wachten */
 export function forgetOffers(): void {
   cache = null;

@@ -175,7 +175,11 @@ export const mockProvider: CatalogProvider = {
       result = result.filter((p) => p.oeNumber.toUpperCase() === term);
     }
     if (query.limit !== undefined) {
-      result = result.slice(0, query.limit);
+      // Zelfde betekenis als bij de leverancier: `page` is nulgebaseerd en
+      // telt in blokken van `limit`. Zonder dit gaf pagina 2 van de mock
+      // gewoon pagina 1 nog eens.
+      const start = (query.page ?? 0) * query.limit;
+      result = result.slice(start, start + query.limit);
     }
     return result;
   },

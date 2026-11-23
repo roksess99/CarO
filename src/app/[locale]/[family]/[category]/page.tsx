@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { JsonLd } from "@/components/json-ld";
 import { LoadMore } from "@/components/load-more";
+import { Pagination } from "@/components/pagination";
 import { ProductFilters } from "@/components/product-filters";
 import { ProductGrid } from "@/components/product-grid";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -17,6 +18,7 @@ import {
   formatTyreSize,
   parseTyreSeason,
   parseTyreSize,
+  TYRE_FETCH_SIZE,
   tyreSearchTerm,
 } from "@/lib/catalog/tyre-size";
 import {
@@ -38,6 +40,8 @@ import {
 } from "@/lib/catalog/wheel-size";
 import { localizeCategories } from "@/lib/catalog/localized-categories";
 import { getCatalogProvider } from "@/lib/catalog/provider";
+import { formatPriceCents } from "@/lib/format";
+import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/shipping";
 import {
   groupIdFromSlug,
   groupNameFromSlug,
@@ -54,6 +58,8 @@ type Props = {
   searchParams: Promise<{
     f?: string | string[];
     toon?: string;
+    /** Eengebaseerd paginanummer, zie components/pagination.tsx */
+    pagina?: string;
     auto?: string;
     alles?: string;
     breedte?: string;
@@ -68,12 +74,32 @@ type Props = {
 /** Producten per stap. Meer laden telt hier telkens bij op. */
 const PAGE_SIZE = 20;
 
+// Hoeveel banden we ophalen als er op maat gezocht wordt binnen één
+// categorie: `TYRE_FETCH_SIZE` uit `lib/catalog/tyre-size.ts`, hetzelfde getal
+// als de familiepagina en de homepage. Hier valt daarna eerst alles af dat in
+// een andere bandencategorie hoort.
+
 /**
- * Hoeveel banden we ophalen als er op maat gezocht wordt binnen één
- * categorie. Ruimer dan de familiepagina (30): daar tellen alle treffers
- * mee, hier valt eerst alles af dat in een andere bandencategorie hoort.
+ * Hoe ver de genummerde pagina's gaan: vijftig keer twintig is duizend
+ * artikelen per categorie.
+ *
+ * De grens is er voor de rekening, niet voor de klant. Elke pagina is één
+ * eigen verzoek bij de leverancier (`limit=20&page=N`), en een crawler die
+ * alles afloopt kost dus een verzoek per pagina. Auto / SUV telt er zo'n
+ * 1.600 (@docs/DECISIONS.md #14); de rest van de categorie blijft voor de
+ * klant bereikbaar via filters en "meer laden".
  */
-const TYRE_CATEGORY_FETCH_SIZE = 120;
+const MAX_PAGES = 50;
+
+/**
+ * `?pagina=` als getal, of 1. Alles wat geen geheel getal binnen de grens is
+ * telt als de eerste pagina: een bijgewerkte URL hoort een bruikbare pagina
+ * te geven, en de canonical wijst dan naar de schone URL.
+ */
+function pageFromParam(value: string | undefined): number {
+  const page = Number(value);
+  return Number.isInteger(page) && page >= 1 && page <= MAX_PAGES ? page : 1;
+}
 
 export async function generateMetadata({
   params,
@@ -93,19 +119,34 @@ export async function generateMetadata({
       },
     });
 
-  const meta = (name: string, description: string) => ({
-    title: `${name} — ${SITE_NAME}`,
-    description,
-    ...localizedMetadata(locale, localizedHref),
-    ...socialMetadata({
-      locale,
-      title: `${name} — ${SITE_NAME}`,
+  // Pagina 2 en verder zijn eigen pagina's met eigen artikelen, dus ook een
+  // eigen canonical. Wezen ze naar pagina 1, dan zou Google de artikelen
+  // erop als duplicaat wegzetten — en die zijn juist de reden dat ze bestaan.
+  const { pagina } = await searchParams;
+  const page = usesVehicleCatalog(family) ? 1 : pageFromParam(pagina);
+  const withPage = (path: string) =>
+    page > 1 ? `${path}?pagina=${page}` : path;
+
+  const meta = (name: string, description: string) => {
+    const title = [
+      t("metaTitle", { name }),
+      ...(page > 1 ? [t("pagination.metaPage", { page })] : []),
+      SITE_NAME,
+    ].join(" — ");
+    return {
+      title,
       description,
-      // Bewust zonder `?auto=`: de canonical is de schone URL, één pagina per
-      // categorie in plaats van één per auto (zie app/robots.ts).
-      path: localizedHref(locale),
-    }),
-  });
+      ...localizedMetadata(locale, (l) => withPage(localizedHref(l))),
+      ...socialMetadata({
+        locale,
+        title,
+        description,
+        // Bewust zonder `?auto=`: de canonical is de schone URL, één pagina
+        // per categorie in plaats van één per auto (zie app/robots.ts).
+        path: withPage(localizedHref(locale)),
+      }),
+    };
+  };
 
   // Onderdelen staan niet in `provider.getCategories()` — hun boom hangt aan
   // een auto (docs/api/WEARPARTS.md). Daardoor viel deze functie hier vroeger
@@ -132,10 +173,46 @@ export async function generateMetadata({
   const category = categories.find((c) => c.slug === slug);
   if (!category) return {};
 
-  return meta(
+  const tFamily = await getTranslations({ locale, namespace: "family" });
+  const heading = categoryHeading(
     category.name,
-    t("metaDescription", { category: category.name }),
+    family,
+    tFamily(`${family}.title`),
+    (name) => t(`headingWithFamily.${family}`, { category: name }),
   );
+  return meta(
+    heading,
+    t(`metaDescriptionFamily.${family}`, {
+      category: heading,
+      site: SITE_NAME,
+      amount: formatPriceCents(FREE_SHIPPING_THRESHOLD_CENTS),
+    }),
+  );
+}
+
+/**
+ * De kop van een categorie, met de familie erbij waar die ontbreekt.
+ *
+ * "Auto / SUV" zegt binnen de bandenpagina genoeg, maar als titel in Google
+ * staat hij los, en dan zoekt niemand op "auto / suv". GEMETEN 2026-11-23:
+ * `<title>Auto / SUV — CaroParts</title>`. Nu wordt dat "Auto / SUV-banden".
+ *
+ * Zit de familie al in de naam ("Kleine banden", "Staalvelgen"), dan blijft
+ * de naam staan — anders komt er "Kleine banden-banden". Bij toebehoren komt
+ * er niets bij: "Accu's en acculaders" is al wat de klant zoekt.
+ */
+function categoryHeading(
+  name: string,
+  family: string,
+  familyTitle: string,
+  withFamily: (category: string) => string,
+): string {
+  if (family !== "banden" && family !== "velgen") return name;
+  // Eerste vier letters van de familienaam: band/tyre, velg/whee. Genoeg om
+  // "Kleine banden" en "Staalvelgen" te herkennen, zonder woordenlijst.
+  const stem = familyTitle.toLowerCase().slice(0, 4);
+  if (name.toLowerCase().includes(stem)) return name;
+  return withFamily(name);
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
@@ -219,6 +296,14 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     ? parseWheelSelection(query)
     : {};
 
+  // Genummerde pagina's alleen bij de kale categorielijst. Met een maat, een
+  // velgkeuze of een filter is het een variant (en staat de URL in
+  // robots.txt op disallow), en "meer laden" telt vanaf pagina 1 op — die
+  // twee door elkaar zouden artikelen dubbel tonen.
+  const browsing =
+    !tyreSize && !hasWheelSelection(wheelSelection) && activeCount === 0;
+  const page = browsing && !query.toon ? pageFromParam(query.pagina) : 1;
+
   // Filters en producten parallel: beide raken dezelfde gecachte API-call.
   // Bij een gekozen velgmaat moeten we wel eerst het filterblok hebben — de
   // keuze "15 inch" bestaat daar als zeven losse teksten en die moeten mee
@@ -237,7 +322,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           .getParts({
             family,
             search: tyreSearchTerm(tyreSize, tyreSeason),
-            limit: TYRE_CATEGORY_FETCH_SIZE,
+            limit: TYRE_FETCH_SIZE,
           })
           .then((found) =>
             // Niet meteen afkappen: het merkfilter hieronder telt over de
@@ -264,8 +349,14 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             categorySlug: slug,
             filters: selected,
             limit,
+            page: page - 1,
           }),
   ]);
+
+  // Een pagina voorbij het eind bestaat niet. Zonder deze regel gaf
+  // `?pagina=49` een lege lijst met status 200 — een soft 404 per
+  // verzonnen nummer.
+  if (page > 1 && found.length === 0) notFound();
 
   // Het merkfilter hoort bij de maatzoekopdracht: daar vervallen de filters
   // van de leverancier (die horen bij een categorie) en bleef er niets over om
@@ -296,6 +387,15 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const category = categories.find((c) => c.slug === slug);
   if (!category) notFound();
 
+  // Zelfde kop als in de <title> (zie generateMetadata): "Auto / SUV-banden"
+  // in plaats van een kaal "Auto / SUV".
+  const heading = categoryHeading(
+    category.name,
+    family,
+    tFamily(`${family}.title`),
+    (name) => t(`headingWithFamily.${family}`, { category: name }),
+  );
+
   // Kruimelpad voor de zoekresultaten van Google, met dezelfde stappen als
   // de zichtbare <nav> hieronder.
   const breadcrumbs = breadcrumbJsonLd([
@@ -308,7 +408,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       }),
     },
     {
-      name: category.name,
+      name: heading,
       path: getPathname({
         locale: locale as Locale,
         href: {
@@ -351,16 +451,13 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         </ol>
       </nav>
 
-      <h1 className="mt-6 text-3xl md:text-4xl">{category.name}</h1>
+      <h1 className="mt-6 text-3xl md:text-4xl">{heading}</h1>
 
       {/* Korte inleiding: zonder tekst is dit voor een zoekmachine alleen een
           raster met prijzen, en dan valt niet af te lezen waar de pagina
           over gaat. */}
       <p className="mt-3 max-w-2xl text-muted">
-        {t("intro", {
-          category: category.name,
-          family: tFamily(`${family}.title`).toLowerCase(),
-        })}
+        {t(`introFamily.${family}`, { category: heading })}
       </p>
 
       {/* Zustercategorieën. Bij banden is dit het verschil tussen Auto/SUV,
@@ -492,7 +589,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           {/* Even veel treffers als gevraagd? Dan is er waarschijnlijk meer.
               De leverancier geeft geen totaal mee, dus dit is het eerlijkste
               signaal dat we hebben. */}
-          {parts.length >= limit && (
+          {page === 1 && parts.length >= limit && (
             <LoadMore
               href={{
                 pathname: "/[family]/[category]",
@@ -512,6 +609,28 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               }}
               label={tFilters("loadMore", { count: PAGE_SIZE })}
               busyLabel={tFilters("loadMoreBusy")}
+            />
+          )}
+
+          {/* De weg voor de crawler naar artikel 21 en verder; "meer laden"
+              hierboven staat op disallow. Op pagina 1 staan ze allebei:
+              de knop voor wie wil doorscrollen, de nummers voor wie (of wat)
+              een vaste pagina zoekt. */}
+          {browsing && !query.toon && (
+            <Pagination
+              current={page}
+              hasNext={parts.length >= PAGE_SIZE && page < MAX_PAGES}
+              hrefFor={(target) => ({
+                pathname: "/[family]/[category]",
+                params: { family: familyParam, category: slug },
+                query: target > 1 ? { pagina: String(target) } : {},
+              })}
+              labels={{
+                nav: t("pagination.nav"),
+                previous: t("pagination.previous"),
+                next: t("pagination.next"),
+                page: (target) => t("pagination.page", { page: target }),
+              }}
             />
           )}
         </div>

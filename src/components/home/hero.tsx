@@ -2,7 +2,9 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { HeroBackdrop } from "@/components/home/hero-backdrop";
 import { OfferCarousel } from "@/components/offers/offer-carousel";
 import { VehicleFinder } from "@/components/vehicle/vehicle-finder";
-import { Link } from "@/i18n/navigation";
+import { TyreSizeForm } from "@/components/tyres/tyre-size-form";
+import { getPathname } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import { familySlug } from "@/lib/catalog/families";
 import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/shipping";
 import { formatPriceCents } from "@/lib/format";
@@ -21,6 +23,7 @@ import { vehicleMakeNames } from "@/lib/vehicle/makes";
  */
 export async function Hero() {
   const t = await getTranslations("home");
+  const tInfo = await getTranslations("homeInfo");
   const locale = await getLocale();
   // Alleen de merknamen naar de browser; modellen volgen per stap
   const [makes, offers] = await Promise.all([
@@ -28,6 +31,14 @@ export async function Hero() {
     // Vijf tot acht is genoeg; niemand ziet dia negen
     offerSlides(6),
   ]);
+
+  const tyreAction = getPathname({
+    locale: locale as Locale,
+    href: {
+      pathname: "/[family]",
+      params: { family: familySlug("banden", locale) },
+    },
+  });
 
   const usps = [
     t("uspShipping", { amount: formatPriceCents(FREE_SHIPPING_THRESHOLD_CENTS) }),
@@ -56,88 +67,80 @@ export async function Hero() {
             </div>
           </div>
 
-          {/* Lopen er acties, dan staan die hier; anders blijft de banner
-              staan die verkoopt wat wél waar is. Bewust geen lege carrousel en
-              geen "binnenkort aanbiedingen" (docs/DECISIONS.md #14). */}
+          {/* Lopen er acties, dan staan die hier (docs/DECISIONS.md #14).
+              Anders de bandenmaat: de tweede manier waarop iemand hier iets
+              zoekt. Winparts zet die als tweede tab in hetzelfde zoekpaneel
+              (bekeken 2026-11-23); hier stond tot dan een tekstbanner die
+              de kop links in andere woorden herhaalde (#36). */}
           {offers.length > 0 ? (
-            <OfferCarousel slides={offers} />
-          ) : (
-          <div className="relative overflow-hidden rounded-xl border border-border bg-background p-6 md:p-10">
-            <HeroBackdrop id="banner" />
-            <div className="relative">
-              <p className="eyebrow text-sm">{t("eyebrow")}</p>
-              <p className="mt-3 max-w-lg text-3xl font-bold tracking-tight md:text-4xl">
-                {t("bannerTitle")}
-              </p>
-              <p className="mt-3 max-w-md text-muted">{t("intro")}</p>
-
-              <ul className="mt-6 space-y-2">
-                {usps.map((usp) => (
-                  <li key={usp} className="flex items-start gap-2">
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      className="mt-0.5 size-5 shrink-0 text-caro-orange"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m4 12.5 5 5L20 6.5" />
-                    </svg>
-                    {usp}
-                  </li>
-                ))}
-              </ul>
-
-              {/* Bewust een omlijnde knop en geen oranje vlak: in de hero
-                  hoort maar één primaire actie te staan, en dat is de
-                  kentekencheck links. Twee oranje knoppen naast elkaar laten
-                  de klant kiezen waar niets te kiezen valt. */}
-              {/* Naar onderdelen en niet naar banden: de banner ernaast gaat
-                  over zoeken op onderdeel of OE-nummer, en "Bekijk het
-                  assortiment" bracht je op de bandenpagina — een ander
-                  product dan de tekst belooft. */}
-              <Link
-                href={{
-                  pathname: "/[family]",
-                  params: { family: familySlug("onderdelen", locale) },
-                }}
-                className="mt-7 inline-flex rounded-md border border-border px-6 py-3 font-semibold hover:bg-surface"
-              >
-                {t("bannerCta")}
-              </Link>
+            // Mét actie: de carrousel bovenaan, want die is tijdelijk en hoort
+            // het opvallendst te zijn — en daaronder de bandenmaat op één
+            // regel, zodat wie banden zoekt niet hoeft te scrollen (keuze van
+            // de eigenaar 2026-11-23, #36). De carrousel blijft het grootste
+            // element en dus de LCP; deze strook ernaast heeft geen beeld.
+            <div className="flex flex-col gap-4">
+              <OfferCarousel slides={offers} />
+              <div className="rounded-xl border border-border bg-background p-4 md:p-5">
+                <h2 className="text-base md:text-lg">{tInfo("tyreTitle")}</h2>
+                <TyreSizeForm
+                  action={tyreAction}
+                  size={null}
+                  season={null}
+                  submitStyle="secondary"
+                  layout="compact"
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="relative overflow-hidden rounded-xl border border-border bg-background p-5 md:p-8">
+              <HeroBackdrop id="banner" />
+              <div className="relative">
+                <p className="eyebrow text-sm">{tInfo("tyreEyebrow")}</p>
+                <h2 className="mt-2 text-2xl md:text-3xl">
+                  {tInfo("tyreTitle")}
+                </h2>
+                <p className="mt-2 max-w-md text-muted">{tInfo("tyreIntro")}</p>
+                {/* Een gewoon GET-formulier naar /banden: de maat staat dan in
+                    de URL, en dat is precies de maatpagina uit #35. Werkt
+                    zonder JavaScript. De knop is omlijnd, niet oranje: de
+                    kentekencheck links blijft de enige primaire actie. */}
+                <TyreSizeForm
+                  action={tyreAction}
+                  size={null}
+                  season={null}
+                  submitStyle="secondary"
+                  mobile="lean"
+                />
+              </div>
+            </div>
           )}
         </div>
 
-        {/* De drie voordelen staan normaal ín de banner. Wordt die vervangen
-            door de aanbiedingen, dan verhuizen ze naar deze strook: "gratis
-            verzending vanaf € 100" en "14 dagen bedenktijd" zijn precies de
-            zinnen die twijfelaars overhalen en mogen niet wegvallen. */}
-        {offers.length > 0 && (
-          <ul className="mt-6 grid gap-3 border-t border-border pt-5 sm:grid-cols-3">
-            {usps.map((usp) => (
-              <li key={usp} className="flex items-start gap-2 text-sm">
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className="mt-0.5 size-4 shrink-0 text-caro-orange"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m4 12.5 5 5L20 6.5" />
-                </svg>
-                {usp}
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* De drie voordelen als vaste strook onder de hero, of er nu
+            acties lopen of niet. Ze stonden eerst ín de banner; nu die de
+            bandenmaat draagt horen ze hier — "gratis verzending vanaf
+            € 100" en "14 dagen bedenktijd" zijn de zinnen die twijfelaars
+            overhalen en mogen niet wegvallen (#14). Autodoc en Winparts
+            zetten ze net zo los in een strook. */}
+        <ul className="mt-6 grid gap-3 border-t border-border pt-5 sm:grid-cols-3">
+          {usps.map((usp) => (
+            <li key={usp} className="flex items-start gap-2 text-sm">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="mt-0.5 size-4 shrink-0 text-caro-orange"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m4 12.5 5 5L20 6.5" />
+              </svg>
+              {usp}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

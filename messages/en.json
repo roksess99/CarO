@@ -67,7 +67,9 @@
           "question": "Are the parts new?",
           "answer": "Yes, all new and from the manufacturers our wholesaler carries. CaroParts sells no used parts, and nothing for trucks, agriculture or industry."
         }
-      }
+      },
+      "metaTitle": "Car parts by number plate",
+      "metaDescription": "New parts that fit your car: enter your number plate or choose make and model. You can also search by name or OE number. Prices include 21% VAT."
     },
     "banden": {
       "title": "Tyres",
@@ -87,7 +89,9 @@
           "question": "Can I search for tyres by registration?",
           "answer": "No. There is no reliable route from a Dutch registration number to a tyre size — not even in the RDW open data. We would rather not guess about that, so enter the size printed on your tyre."
         }
-      }
+      },
+      "metaTitle": "Buy tyres by size",
+      "metaDescription": "Summer, winter and all-season tyres for cars, SUVs, vans and two-wheelers. Search by tyre size. Prices include 21% VAT, free shipping from {amount}."
     },
     "velgen": {
       "title": "Wheels",
@@ -107,7 +111,9 @@
           "question": "Are these steel or alloy wheels?",
           "answer": "Steel wheels for now. They are cheaper and stand up better to kerbs and road salt, which makes them the usual choice for a winter set. Alloy wheels join the range later."
         }
-      }
+      },
+      "metaTitle": "Buy wheels",
+      "metaDescription": "Wheels for passenger cars, chosen by diameter, width and bolt pattern. Prices include 21% VAT, free shipping from {amount}."
     },
     "toebehoren": {
       "title": "Accessories",
@@ -127,7 +133,9 @@
           "question": "Can I filter these for my own car?",
           "answer": "For accessories we search the supplier's description for make and model. That is a strong indication, not a guarantee: always check the size or type listed with the item."
         }
-      }
+      },
+      "metaTitle": "Car accessories",
+      "metaDescription": "Batteries, lighting, oils, car care and accessories for cars and two-wheelers. Prices include 21% VAT, free shipping from {amount}."
     },
     "oenElsewhere": "Found under tyres, wheels and accessories for \"{term}\"",
     "groupsTitle": "Categories for your car",
@@ -140,7 +148,31 @@
       "filters": "Filters",
       "oils": "Oil"
     },
-    "popularTitle": "Most searched for your car"
+    "popularTitle": "Most searched for your car",
+    "sizeMetaTitle": "Buy {size} tyres",
+    "sizeMetaDescription": "Buy {size} tyres at {site}: summer, winter and all-season tyres from various brands. Prices include 21% VAT, free shipping from {amount}.",
+    "sizeHeading": "{size} tyres",
+    "sizeIntro": "Tyres in size {size}. Pick a season or filter by brand; every price includes 21% VAT.",
+    "season": {
+      "winter": {
+        "metaTitle": "Buy winter tyres",
+        "metaDescription": "Winter tyres for your car in the common sizes, prices including 21% VAT. Free shipping from {amount} and a 14-day cooling-off period at {site}.",
+        "heading": "Winter tyres",
+        "intro": "Winter tyres in the common sizes, from well-known and budget brands. Choose the size on the sidewall of your current tyre below to see only winter tyres that fit."
+      },
+      "zomer": {
+        "metaTitle": "Buy summer tyres",
+        "metaDescription": "Summer tyres for your car in the common sizes, prices including 21% VAT. Free shipping from {amount} and a 14-day cooling-off period at {site}.",
+        "heading": "Summer tyres",
+        "intro": "Summer tyres in the common sizes, from well-known and budget brands. Choose the size on the sidewall of your current tyre below to see only summer tyres that fit."
+      },
+      "allseason": {
+        "metaTitle": "Buy all-season tyres",
+        "metaDescription": "All-season tyres for your car in the common sizes, prices including 21% VAT. Free shipping from {amount} and a 14-day cooling-off period at {site}.",
+        "heading": "All-season tyres",
+        "intro": "All-season tyres stay on the car all year, no switching needed. Choose the size on the sidewall of your current tyre below to see only all-season tyres that fit."
+      }
+    }
   },
   "tyres": {
     "pickerTitle": "Choose your tyre size",
@@ -159,10 +191,29 @@
     "noResults": "No tyres found in size {size}. Check the size on your tyre's sidewall or pick another season.",
     "helpTitle": "Where do I find my tyre size?",
     "helpBody": "The size is on the sidewall of your tyre, for example 205/55 R16 91 V. 205 is the width in millimetres, 55 the height as a percentage of that width and 16 the rim diameter in inches. The number and letter after it are the load and speed rating.",
-    "resultsInCategory": "{count, plural, =0 {No tyres in size {size} in this category} =1 {1 tyre in size {size}} other {# tyres in size {size}}}"
+    "resultsInCategory": "{count, plural, =0 {No tyres in size {size} in this category} =1 {1 tyre in size {size}} other {# tyres in size {size}}}",
+    "popularTitle": "Popular tyre sizes",
+    "popularIntro": "Common sizes for passenger cars. Size not listed? Enter it in the size picker on the tyres page.",
+    "popularLink": "{size}<hide> tyres</hide>",
+    "seasonResults": {
+      "winter": "All winter tyres",
+      "zomer": "All summer tyres",
+      "allseason": "All all-season tyres"
+    },
+    "seasonNoResults": {
+      "winter": "We can't find any winter tyres right now. Choose your size above, or browse all tyres.",
+      "zomer": "We can't find any summer tyres right now. Choose your size above, or browse all tyres.",
+      "allseason": "We can't find any all-season tyres right now. Choose your size above, or browse all tyres."
+    },
+    "seasonLink": {
+      "winter": "All winter tyres",
+      "zomer": "All summer tyres",
+      "allseason": "All all-season tyres"
+    },
+    "guideLink": "How do you read your tyre size?"
   },
   "categoryTiles": {
-    "title": "Find car parts in the catalogue"
+    "title": "Shop by product group"
   },
   "vehicle": {
     "title": "Does it fit your car?",
@@ -197,16 +248,40 @@
     "plateHint": "We look your car up at the RDW and show only parts that fit it."
   },
   "category": {
-    "metaDescription": "{category} for your car. All prices include 21% VAT.",
     "metaDescriptionParts": "Order {category} for your car. Enter your registration and see straight away which parts fit. Prices include 21% Dutch VAT.",
     "breadcrumbAria": "Breadcrumb",
     "breadcrumbHome": "Home",
     "siblingsAria": "Other categories",
-    "intro": "Our {family} range in the {category} category. Prices include 21% Dutch VAT; filter by brand or specification to find the right item quickly.",
     "introParts": "Parts in the {category} category that fit the selected car, supplied by our wholesaler. Prices include 21% Dutch VAT.",
     "noParts": "We have nothing in this category for this car. Pick another category, or search by name or OE number.",
     "showAllTypes": "Also show related parts",
-    "onlyThisType": "Show only {type}"
+    "onlyThisType": "Show only {type}",
+    "metaTitle": "Buy {name}",
+    "headingWithFamily": {
+      "banden": "{category} tyres",
+      "velgen": "{category} wheels",
+      "toebehoren": "{category}",
+      "onderdelen": "{category}"
+    },
+    "metaDescriptionFamily": {
+      "banden": "Buy {category} at {site}. Search by tyre size and filter by brand and load index. Prices include 21% VAT, free shipping from {amount}.",
+      "velgen": "Buy {category} at {site}. Choose by diameter, width and bolt pattern. Prices include 21% VAT, free shipping from {amount}.",
+      "toebehoren": "Buy {category} for cars and two-wheelers at {site}. Filter by brand and property. Prices include 21% VAT, free shipping from {amount}.",
+      "onderdelen": "Buy {category} at {site}. Enter your number plate and see which parts fit. Prices include 21% VAT."
+    },
+    "introFamily": {
+      "banden": "{category} from various brands, as summer, winter or all-season tyres. Enter the size on your current tyre, or filter by brand and load index. Every price includes 21% VAT and you see the shipping costs before checkout.",
+      "velgen": "{category} for passenger cars. Choose by diameter, width and bolt pattern to find the right size quickly. Every price includes 21% VAT and you see the shipping costs before checkout.",
+      "toebehoren": "{category} for cars and two-wheelers. Filter by brand or property to find the right item quickly. Every price includes 21% VAT and you see the shipping costs before checkout.",
+      "onderdelen": "{category} that fit the selected car. Prices include 21% VAT."
+    },
+    "pagination": {
+      "nav": "Pages",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page}",
+      "metaPage": "page {page}"
+    }
   },
   "filters": {
     "title": "Filters",
@@ -299,16 +374,12 @@
     "system": "Follow your device setting"
   },
   "home": {
-    "metaTitle": "CaroParts — Car parts",
-    "metaDescription": "Car parts for the Dutch market. Search by part or OE number. All prices include 21% VAT.",
-    "eyebrow": "Car parts",
-    "bannerTitle": "Find the part, we handle the rest",
-    "bannerCta": "Browse the range",
+    "metaTitle": "{site} — Car parts by number plate, tyres and wheels",
+    "metaDescription": "Parts that fit your car via your number plate, tyres by size, wheels and accessories. All prices include 21% VAT, free shipping from {amount} and 14 days to change your mind.",
     "uspShipping": "Free shipping from {amount}",
     "uspReturns": "14-day right of withdrawal on every order",
     "uspVat": "All prices include 21% VAT",
-    "title": "The right part, no hassle",
-    "intro": "Search by part or OE number. All prices include 21% VAT and shipping costs are shown before checkout.",
+    "title": "Car parts that fit your car",
     "offersEyebrow": "Now on offer",
     "promoTitleFamily": "Now up to {percent}% off all {family}",
     "promoTitleKind": "Now up to {percent}% off {subject}",
@@ -321,6 +392,30 @@
     "offersPlay": "Resume the slideshow",
     "offersGoTo": "Show offer {number}",
     "offersCount": "Offer {number} of {total}"
+  },
+  "homeInfo": {
+    "aboutTitle": "Parts, tyres and wheels at {site}",
+    "aboutParts": "{site} sells new parts, tyres, wheels and accessories for passenger cars and two-wheelers. For parts you start with your number plate: we look up your car and show only what fits. No plate at hand? Choose make, model and version instead.",
+    "aboutTyres": "Find tyres by the size printed on the sidewall of your current tyre, for example 205/55 R16: width, profile and rim diameter. Choose wheels by diameter, width and bolt pattern.",
+    "aboutShop": "All prices include 21% VAT. Shipping costs {shipping} and is free from {amount}, and you have 14 days to change your mind. {site} is a Dutch web shop based in {city}, registered with the Chamber of Commerce under number {coc}.",
+    "linksAria": "More information",
+    "linksTitle": "Learn more",
+    "linkMyCar": "Find parts by number plate",
+    "linkFaq": "Frequently asked questions",
+    "linkReturns": "Returns",
+    "linkContact": "Contact",
+    "partsTitle": "Popular parts",
+    "partsIntro": "Search straight for a part. To see only what fits your car, enter your number plate at the top.",
+    "partsByCar": "Parts by number plate",
+    "makesTitle": "Popular car makes",
+    "makesIntro": "Choose your make, then model and version, and see which parts fit.",
+    "makesAll": "All car makes",
+    "tyreEyebrow": "Tyres",
+    "tyreTitle": "Find tyres by size",
+    "tyreIntro": "Choose the size printed on the sidewall of your current tyre, for example 205/55 R16.",
+    "offersTitle": "On offer now",
+    "offersAll": "All offers",
+    "tyresAll": "All tyres in {size}"
   },
   "offers": {
     "title": "Offers",
@@ -388,7 +483,8 @@
       "maxLoad": "Max. load",
       "wheelMounting": "Wheel mounting"
     },
-    "shippingLine": "Shipping {shipping} — free from {freeFrom}"
+    "shippingLine": "Shipping {shipping} — free from {freeFrom}",
+    "guidesTitle": "Help with choosing"
   },
   "cart": {
     "metaTitle": "Shopping cart — CaroParts",
@@ -617,7 +713,9 @@
     "paymentTitle": "Payment methods",
     "paymentNote": "Payments run through Stripe. Your bank and card details never reach us.",
     "idealWeroAlt": "iDEAL and Wero",
-    "reviewsLink": "Reviews"
+    "reviewsLink": "Reviews",
+    "aboutLink": "About CaroParts",
+    "guidesLink": "Guides"
   },
   "terms": {
     "title": "Terms and conditions",
@@ -692,10 +790,10 @@
         "retention": "Until you choose another car or clear your browser data."
       },
       "caro-cookie-notice": {
-      "purpose": "Remembers that you dismissed the notice at the bottom about storage, so it does not come back.",
-      "retention": "Until you clear your browser data."
-    },
-    "theme": {
+        "purpose": "Remembers that you dismissed the notice at the bottom about storage, so it does not come back.",
+        "retention": "Until you clear your browser data."
+      },
+      "theme": {
         "purpose": "Your choice of light or dark theme.",
         "retention": "Until you clear your browser data."
       }
@@ -1036,5 +1134,340 @@
     "verified": "Every review belongs to a paid order: the invitation is emailed to the customer and the link works once. We remove nothing to polish the score; only abuse or personal data is hidden, and we record why.",
     "replyFrom": "Reply from CaroParts",
     "howToGet": "Want to leave a review yourself? You will be invited automatically after your order."
+  },
+  "about": {
+    "metaTitle": "About CaroParts: who we are and how the shop works",
+    "metaDescription": "Who CaroParts is, where your parts come from, how we check whether something fits your car, and how paying, shipping and returns work.",
+    "title": "About CaroParts",
+    "intro": "CaroParts is a Dutch web shop for car parts, tyres, wheels and accessories, for passenger cars and two-wheelers. Below you can read how the shop works.",
+    "who": {
+      "heading": "Who we are",
+      "p1": "CaroParts is a sole proprietorship registered with the Dutch Chamber of Commerce. You deal with one point of contact, not a call centre.",
+      "p2": "Questions about an order or a part? Email {email} or use the contact form.",
+      "link": "Go to the contact form"
+    },
+    "supply": {
+      "heading": "Where your parts come from",
+      "p1": "We don't run our own warehouse. Your order comes from a wholesaler that has the item in stock, and they deliver it straight to your door.",
+      "p2": "The price and the stock on the page come from that same wholesaler. The quantity you can put in your cart is capped at what they have.",
+      "p3": "If an expected delivery date is shown, it is the date the wholesaler gives. If we can't back up a date, we don't show one."
+    },
+    "fitment": {
+      "heading": "Does it fit your car?",
+      "p1": "Enter your licence plate and we look up your car's exact version in TecDoc, the catalogue the parts trade uses. A product page then tells you whether the part fits, doesn't fit, or whether you should check the fitment yourself. When in doubt we say so instead of guessing.",
+      "p2": "Tyres fit a size, not a licence plate: the Dutch vehicle authority (RDW) does not record tyre sizes. That's what the tyre size picker is for, and the size is printed on the tyre currently on your car.",
+      "link": "How to read your tyre size"
+    },
+    "orders": {
+      "heading": "Paying, shipping and returns",
+      "p1": "You pay through Stripe; your bank or card details never reach us. All prices include 21% VAT. Shipping costs {shipping}, and it's free from {freeFrom}.",
+      "p2": "You have a 14-day cooling-off period. You register a return on the returns page, and your money goes back to the account you paid with.",
+      "link": "Register a return"
+    },
+    "reviews": {
+      "heading": "Reviews",
+      "p1": "After every order we ask once for a review. Only people who actually ordered can leave one, and a review goes online straight away. We only hide reviews in case of abuse, never because of a low score.",
+      "link": "Read the reviews"
+    },
+    "privacy": {
+      "heading": "No tracking",
+      "p1": "We don't track you: no advertising cookies and no third-party analytics. What we do store in your browser, such as your cart and the car you chose, is listed in the privacy statement.",
+      "link": "Go to the privacy statement"
+    }
+  },
+  "guides": {
+    "breadcrumbAria": "Breadcrumb",
+    "breadcrumbHome": "Home",
+    "indexTitle": "Guides",
+    "indexMetaTitle": "Guides: tyres, winter tyres and engine oil explained",
+    "indexMetaDescription": "Short explanations for the questions that come up before you buy: reading your tyre size, when winter tyres make sense and which engine oil your car needs.",
+    "indexIntro": "Short explanations for the questions we see most, based on what's printed on your tyre, your bottle of oil or in your owner's manual.",
+    "updated": "Updated {date}",
+    "moreTitle": "More guides",
+    "tyreSize": {
+      "title": "Reading your tyre size",
+      "metaTitle": "Reading your tyre size: what does 205/55 R16 91 V mean?",
+      "metaDescription": "How to read the size on your tyre: width, profile, rim diameter, load index and speed rating explained, plus where to find the size and how old your tyre is.",
+      "intro": "Every tyre has a code like 205/55 R16 91 V on its sidewall. That code is what you use to find a new tyre that fits. Here's how to read it.",
+      "sections": [
+        {
+          "heading": "What each part means",
+          "paragraphs": [
+            "Take 205/55 R16 91 V as an example."
+          ],
+          "table": {
+            "caption": "The parts of a tyre size",
+            "columns": [
+              "Part",
+              "Meaning",
+              "In the example"
+            ],
+            "rows": [
+              [
+                "205",
+                "Tyre width in millimetres",
+                "205 mm"
+              ],
+              [
+                "55",
+                "Sidewall height as a percentage of the width",
+                "55% of 205 mm, about 113 mm"
+              ],
+              [
+                "R",
+                "Construction: radial. Almost every car tyre is",
+                "radial"
+              ],
+              [
+                "16",
+                "Rim diameter in inches",
+                "16 inches"
+              ],
+              [
+                "91",
+                "Load index: how much one tyre may carry",
+                "615 kg per tyre"
+              ],
+              [
+                "V",
+                "Speed rating: the highest speed the tyre is built for",
+                "240 km/h"
+              ]
+            ]
+          },
+          "notes": [
+            "To search you need the first three numbers: width, profile and diameter. Choose a load index and speed rating at least as high as specified for your car."
+          ]
+        },
+        {
+          "heading": "Load index",
+          "paragraphs": [
+            "The load index is a code, not a weight. These are the common values for passenger cars."
+          ],
+          "table": {
+            "caption": "Load index and capacity per tyre",
+            "columns": [
+              "Load index",
+              "Capacity per tyre"
+            ],
+            "rows": [
+              [
+                "84",
+                "500 kg"
+              ],
+              [
+                "87",
+                "545 kg"
+              ],
+              [
+                "88",
+                "560 kg"
+              ],
+              [
+                "91",
+                "615 kg"
+              ],
+              [
+                "94",
+                "670 kg"
+              ],
+              [
+                "95",
+                "690 kg"
+              ],
+              [
+                "97",
+                "730 kg"
+              ],
+              [
+                "100",
+                "800 kg"
+              ]
+            ]
+          },
+          "notes": [
+            "XL or Reinforced on the tyre means it is reinforced and may carry more than a standard tyre of the same size."
+          ]
+        },
+        {
+          "heading": "Speed rating",
+          "table": {
+            "caption": "Speed rating and maximum speed",
+            "columns": [
+              "Letter",
+              "Maximum speed"
+            ],
+            "rows": [
+              [
+                "Q",
+                "160 km/h"
+              ],
+              [
+                "T",
+                "190 km/h"
+              ],
+              [
+                "H",
+                "210 km/h"
+              ],
+              [
+                "V",
+                "240 km/h"
+              ],
+              [
+                "W",
+                "270 km/h"
+              ],
+              [
+                "Y",
+                "300 km/h"
+              ]
+            ]
+          }
+        },
+        {
+          "heading": "Where to find your car's size",
+          "paragraphs": [
+            "On the tyre itself: the sidewall of the tyre currently on the car. Bear in mind that a previous owner may once have chosen a different size.",
+            "On the tyre pressure sticker. On many cars it sits in the driver's door frame or inside the fuel filler flap, often listing several approved sizes.",
+            "In the owner's manual or on the car's certificate of conformity (CoC).",
+            "Your licence plate won't help here: the Dutch vehicle authority (RDW) doesn't record tyre sizes. That's why our tyre picker asks for the size, not your plate."
+          ]
+        },
+        {
+          "heading": "How old is your tyre?",
+          "paragraphs": [
+            "After the letters DOT there's a code ending in four digits: the week and year the tyre was made. 2324 means week 23 of 2024.",
+            "Rubber ages even if you don't drive much. On an older tyre, look out for small cracks in the sidewall."
+          ]
+        },
+        {
+          "heading": "Tread depth and replacing",
+          "paragraphs": [
+            "In the Netherlands a tyre must have at least 1.6 mm of tread. The Dutch motoring association ANWB advises replacing a summer tyre at around 3 mm and a winter tyre at around 4 mm.",
+            "Always fit two identical tyres on one axle: same size, brand and type. If you want a different size, first check that it is approved for your car."
+          ]
+        }
+      ]
+    },
+    "winterTyres": {
+      "title": "Winter tyres: when and why",
+      "metaTitle": "Winter tyres: when do you need them and how do you recognise them?",
+      "metaDescription": "When winter tyres make sense, how to recognise a real winter tyre by the snowflake symbol, the rules in Germany and Austria, and how much tread you need.",
+      "intro": "Winter tyres aren't mandatory in the Netherlands. Even so, many people drive on them in the cold months, and in some neighbouring countries you do need them in winter conditions.",
+      "allLink": "See all winter tyres",
+      "sections": [
+        {
+          "heading": "What a winter tyre does differently",
+          "paragraphs": [
+            "A winter tyre has a softer rubber compound that stays flexible in the cold, and a tread with many small cuts (sipes). That gives grip on cold, wet roads, on snow and on ice.",
+            "As a rule of thumb, below about 7 °C a winter tyre grips better than a summer tyre, even without snow."
+          ]
+        },
+        {
+          "heading": "Recognising a real winter tyre",
+          "paragraphs": [
+            "Look on the sidewall for the symbol of a three-peaked mountain with a snowflake, also called the alpine symbol or 3PMSF. A tyre with that symbol has been tested on snow.",
+            "M+S (mud and snow) on its own proves nothing: the manufacturer adds it without a test."
+          ]
+        },
+        {
+          "heading": "Rules abroad",
+          "paragraphs": [
+            "Germany has a situational winter tyre requirement: in snow, ice or slippery conditions your car must have tyres with the alpine symbol. Since 1 October 2024 a tyre marked only M+S no longer counts there.",
+            "Austria has a similar rule from 1 November to 15 April. Going skiing? Check the current rules for every country you drive through before you leave, for instance with the ANWB."
+          ]
+        },
+        {
+          "heading": "When to switch",
+          "paragraphs": [
+            "A common rule of thumb is from October to Easter. Better still, look at the temperature: once daytime temperatures stay below 7 °C, it's time."
+          ]
+        },
+        {
+          "heading": "Tread depth",
+          "paragraphs": [
+            "Legally 1.6 mm is enough, but a winter tyre loses its grip on snow well before that. The ANWB advises replacing a winter tyre at around 4 mm of tread."
+          ]
+        },
+        {
+          "heading": "All-season as a middle ground",
+          "paragraphs": [
+            "An all-season tyre is a compromise: better in winter than a summer tyre, not as good as a real winter tyre, and on the car all year. If you want to drive on them in Germany in winter conditions, choose an all-season tyre with the alpine symbol."
+          ]
+        }
+      ]
+    },
+    "engineOil": {
+      "title": "Choosing engine oil",
+      "metaTitle": "Which engine oil does my car need? 5W-30 and specifications explained",
+      "metaDescription": "What 5W-30 means, why your manufacturer's approval matters more than the viscosity, and where to find which oil and how much your car needs.",
+      "intro": "A bottle of engine oil carries two kinds of information: the viscosity, such as 5W-30, and one or more specifications. Both matter for your engine, but the specification matters most.",
+      "ctaTitle": "Engine oil for your car",
+      "ctaBody": "Choose your car by licence plate. The engine oil the catalogue links to your car is then grouped together, and you can filter by viscosity and capacity. Afterwards, compare the specification on the bottle with your owner's manual.",
+      "ctaButton": "Choose your car",
+      "sections": [
+        {
+          "heading": "What 5W-30 means",
+          "paragraphs": [
+            "The number before the W (for winter) tells you how well the oil flows when cold: the lower, the more easily it moves through the engine on a cold start. 0W flows better when cold than 10W.",
+            "The number after the dash tells you how thick the oil is at operating temperature, around 100 °C. A 30 is thinner there than a 40.",
+            "Only use a different viscosity than specified if your manufacturer allows it."
+          ]
+        },
+        {
+          "heading": "The specification matters most",
+          "paragraphs": [
+            "Car makers approve oil with their own code, such as VW 504 00, MB 229.51 or BMW Longlife-04. On top of that there are general classes from ACEA and API.",
+            "Two oils with the same 5W-30 can have different specifications, and then only one of them may suit your car. This matters especially for engines with a particulate filter or long service intervals."
+          ],
+          "table": {
+            "caption": "What's on a bottle of engine oil",
+            "columns": [
+              "On the bottle",
+              "What it is",
+              "Example"
+            ],
+            "rows": [
+              [
+                "Viscosity",
+                "How thick the oil is cold and warm",
+                "5W-30"
+              ],
+              [
+                "Manufacturer approval",
+                "Tested and approved by the car maker",
+                "VW 504 00 / 507 00"
+              ],
+              [
+                "ACEA class",
+                "European standard for the type of engine",
+                "C3"
+              ],
+              [
+                "API class",
+                "American standard; the S stands for petrol engines",
+                "SP"
+              ]
+            ]
+          }
+        },
+        {
+          "heading": "Where to find what your car needs",
+          "paragraphs": [
+            "The owner's manual or service booklet lists the required specification, viscosity and capacity.",
+            "Not sure? Ask a dealer or garage for your make. They can look it up for your exact version."
+          ]
+        },
+        {
+          "heading": "How much oil?",
+          "paragraphs": [
+            "The owner's manual gives the capacity, usually including the oil filter.",
+            "Don't fill to the top mark in one go. Pour in a little less, let the oil settle for a few minutes and check with the dipstick: between the two marks is right.",
+            "Top up preferably with the same oil that's already in the engine."
+          ]
+        }
+      ]
+    }
   }
 }

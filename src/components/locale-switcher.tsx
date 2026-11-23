@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Link, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { familyFromSlug, familySlug } from "@/lib/catalog/families";
+import { guideBySlug, guideSlug } from "@/lib/guides";
 
 export function LocaleSwitcher() {
   const t = useTranslations("localeSwitcher");
@@ -52,6 +53,15 @@ export function LocaleSwitcher() {
    * vertaling zou de taalwissel naar /en/banden/... gaan en dat bestaat niet.
    */
   function paramsForLocale(targetLocale: string) {
+    // Gidsen hebben net zo'n slug per taal (lib/guides.ts, #37):
+    // /nl/gids/winterbanden ↔ /en/guides/winter-tyres.
+    const guideParam = params.guide;
+    if (typeof guideParam === "string") {
+      const guide = guideBySlug(guideParam, locale);
+      return guide
+        ? { ...params, guide: guideSlug(guide, targetLocale) }
+        : params;
+    }
     const familyParam = params.family;
     if (typeof familyParam !== "string") return params;
     const family = familyFromSlug(familyParam, locale);

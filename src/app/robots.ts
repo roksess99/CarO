@@ -38,7 +38,11 @@ export default function robots(): MetadataRoute.Robots {
           // gaat geen inhoud verloren.
           "/*?*auto=",
           // "Meer laden" en filters maken varianten van een pagina die al in
-          // de index staat.
+          // de index staat. `?pagina=` staat hier bewust níet: dat zijn eigen
+          // pagina's met eigen artikelen, en de enige weg waarlangs een
+          // zoekmachine verder komt dan de eerste twintig (#35). Hetzelfde
+          // geldt voor de bandenmaat (`breedte`, `hoogte`, `diameter`) en
+          // het seizoen (`seizoen=winter` is een eigen pagina, #36).
           "/*?*toon=",
           // De persoonlijke retourlink uit de bevestigingsmail
           "/*?*ref=",

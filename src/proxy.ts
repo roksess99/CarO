@@ -29,7 +29,30 @@ function renamedCategoryUrl(request: NextRequest): URL | null {
   return url;
 }
 
+/**
+ * `www.caroparts.nl` → `caroparts.nl`, met een 301.
+ *
+ * GEMETEN 2026-11-23: www antwoordde met een eigen 200 en dus een tweede kopie
+ * van de hele winkel. De canonical wees wel naar het domein zonder www, maar
+ * een zoekmachine moest daarvoor eerst beide crawlen, en links naar www
+ * telden niet mee. De host komt uit de header en niet uit `nextUrl`: achter
+ * de CDN van de hostingpartij is dat het adres dat de bezoeker typte.
+ */
+function canonicalHostUrl(request: NextRequest): URL | null {
+  const host = request.headers.get("host") ?? "";
+  if (!host.startsWith("www.")) return null;
+
+  const url = new URL(request.nextUrl);
+  url.host = host.slice("www.".length);
+  url.protocol = "https:";
+  url.port = "";
+  return url;
+}
+
 export default function proxy(request: NextRequest) {
+  const apex = canonicalHostUrl(request);
+  if (apex) return NextResponse.redirect(apex, 301);
+
   const moved = renamedCategoryUrl(request);
   if (moved) return NextResponse.redirect(moved, 308);
 

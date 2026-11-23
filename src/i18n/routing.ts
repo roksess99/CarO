@@ -73,6 +73,21 @@ export const routing = defineRouting({
       nl: "/algemene-voorwaarden",
       en: "/terms-and-conditions",
     },
+    // Wie de winkel is en hoe hij werkt (docs/DECISIONS.md #37).
+    "/about": {
+      nl: "/over-caroparts",
+      en: "/about",
+    },
+    // Uitleg per zoekvraag. De slug per gids staat in lib/guides.ts en is
+    // per taal anders, net als de familieslugs.
+    "/guides": {
+      nl: "/gids",
+      en: "/guides",
+    },
+    "/guides/[guide]": {
+      nl: "/gids/[guide]",
+      en: "/guides/[guide]",
+    },
     // Drie niveaus: familie / categorie / product. De familieslug is
     // taalafhankelijk (onderdelen|banden vs parts|tyres, zie families.ts);
     // categorie- en productslugs komen uit de catalogus en zijn al
@@ -81,6 +96,12 @@ export const routing = defineRouting({
     "/[family]/[category]": "/[family]/[category]",
     "/[family]/[category]/[part]": "/[family]/[category]/[part]",
   },
+  // Geen hreflang in de HTTP-header. De `<link rel="alternate">`-tags in de
+  // HTML (lib/site.ts → localizedMetadata) zijn de enige bron. Met beide aan
+  // spraken ze elkaar tegen: de header zette x-default op `/`, de HTML op
+  // `/nl` (GEMETEN 2026-11-23 op caroparts.nl). De header kende bovendien
+  // alleen vaste paden en geen productslugs.
+  alternateLinks: false,
 });
 
 export type Locale = (typeof routing.locales)[number];
