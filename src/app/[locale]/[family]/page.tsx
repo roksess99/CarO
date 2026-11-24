@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { GroupList } from "@/components/catalog/group-list";
@@ -42,7 +42,10 @@ import {
   type TyreSize,
   tyreSearchTerm,
 } from "@/lib/catalog/tyre-size";
+import { partGroupKey } from "@/lib/catalog/quick-links";
 import {
+  groupSlug,
+  partGroupByKey,
   partGroupsWithCounts,
   popularPartGroups,
   searchParts,
@@ -57,6 +60,8 @@ type Props = {
   searchParams: Promise<{
     oen?: string | string[];
     auto?: string;
+    /** Een onderdeelgroep uit `POPULAR_PART_GROUPS`, bv. `remschijf` */
+    deel?: string;
     breedte?: string;
     hoogte?: string;
     diameter?: string;
@@ -642,6 +647,7 @@ export default async function FamilyPage({ params, searchParams }: Props) {
   const t = await getTranslations("family");
   const familyName = t(`${family}.title`);
   const tGuides = await getTranslations("guides");
+  const tPart = await getTranslations("partNames");
 
   const query = await searchParams;
   const { oen, auto, breedte, hoogte, diameter, seizoen } = query;
@@ -672,6 +678,30 @@ export default async function FamilyPage({ params, searchParams }: Props) {
   const vehicleCatalog = usesVehicleCatalog(family);
   const carId = /^[0-9]+$/.test(auto ?? "") ? Number(auto) : null;
 
+  // Een tegel op de homepage of een link in de voettekst wijst een
+  // onderdeelgroep aan in plaats van een zoekterm — zoeken op "Remschijf"
+  // gaf bij de leverancier schroeven (de meetreeks staat in
+  // `lib/footer-links.ts`). Die groep hangt aan de auto, dus hier komen de
+  // twee bij elkaar: mét auto springen we door naar de groep zelf, zonder
+  // auto vragen we er eerst één.
+  //
+  // Dit kost geen verzoek extra: de boom staat een dag in de cache en
+  // `PartGroups` hieronder leest dezelfde. Een onbekende waarde in de URL
+  // valt stil weg; dan is het gewoon de onderdelenpagina.
+  const wantedPart = vehicleCatalog ? partGroupKey(query.deel) : null;
+  const wantedGroup =
+    wantedPart && carId ? await partGroupByKey(carId, wantedPart) : null;
+  if (wantedGroup) {
+    const target = getPathname({
+      locale: locale as Locale,
+      href: {
+        pathname: "/[family]/[category]",
+        params: { family: slug, category: groupSlug(wantedGroup) },
+      },
+    });
+    redirect(`${target}?auto=${carId}`);
+  }
+
   const formAction = getPathname({
     locale: locale as Locale,
     href: { pathname: "/[family]", params: { family: slug } },
@@ -685,14 +715,18 @@ export default async function FamilyPage({ params, searchParams }: Props) {
           ? t("sizeHeading", { size: formatTyreSize(tyreSize) })
           : seasonLanding
             ? t(`season.${seasonLanding}.heading`)
-            : familyName}
+            : wantedPart
+              ? t("partHeading", { part: tPart(wantedPart) })
+              : familyName}
       </h1>
       <p className="mt-4 max-w-xl text-muted">
         {tyreSize
           ? t("sizeIntro", { size: formatTyreSize(tyreSize) })
           : seasonLanding
             ? t(`season.${seasonLanding}.intro`)
-            : t(`${family}.intro`)}
+            : wantedPart
+              ? t("partIntro")
+              : t(`${family}.intro`)}
       </p>
       {/* De winterpagina en de gids over winterbanden wijzen naar elkaar
           (#37): wie twijfelt of hij ze nodig heeft, leest daar verder. */}
@@ -756,6 +790,60 @@ export default async function FamilyPage({ params, searchParams }: Props) {
 
       {vehicleCatalog ? (
         <>
+          {/* **Eerst de auto, dan pas het zoekveld.** Wie op de tegel
+              "Schokdemper" tikte kwam hier eerst drie blokken zoekformulier
+              tegen en zag zijn eigen keuze pas onder de vouw — terwijl juist
+              dát zoekveld bij deze leverancier de verkeerde artikelen
+              oplevert (@docs/DECISIONS.md #38). De primaire handeling staat
+              nu bovenaan, net als in de hero: kenteken eerst, zoeken daarna. */}
+          {carId ? (
+            // Hierboven is de groep al opgezocht; staat hij niet in de boom
+            // van deze auto (niet elke motor heeft een distributieriem), dan
+            // zeggen we dat in plaats van de klant op een pagina te zetten
+            // die er niets mee doet. Bewust rustig opgemaakt: de handeling
+            // staat eronder, in het categorierooster.
+            wantedPart && (
+              <p className="mt-8 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
+                {t("partNotForCar", { part: tPart(wantedPart) })}
+              </p>
+            )
+          ) : (
+            <>
+              <SelectedCarInUrl
+                active
+                keep={wantedPart ? { deel: wantedPart } : undefined}
+              />
+              {/* Mét een knop erbij: de zin vroeg om een auto en liet de
+                  klant vervolgens zelf zoeken waar dat kon. Op /mijn-auto
+                  staan de kentekenzoeker én de merk/model-kiezer.
+
+                  Komt de klant van een onderdeeltegel, dan staat het waarom
+                  al in de intro hierboven en blijft er alleen de knop over —
+                  en een kaart om één knop heen is een leeg vlak. Dan dus de
+                  knop zelf. Zonder die intro blijft de kaart staan, met een
+                  oranje bovenrand omdat dit de hoofdhandeling van het scherm
+                  is; als grijze terzijde las het als een voetnoot. */}
+              {wantedPart ? (
+                <Link
+                  href="/my-car"
+                  className="mt-8 inline-block rounded-md bg-caro-orange px-6 py-3 font-semibold text-caro-ink"
+                >
+                  {t("chooseCarLink")}
+                </Link>
+              ) : (
+                <div className="mt-8 max-w-xl rounded-lg border border-border border-t-2 border-t-caro-orange bg-surface p-6">
+                  <p>{t("chooseCarToBrowse")}</p>
+                  <Link
+                    href="/my-car"
+                    className="mt-4 inline-block rounded-md bg-caro-orange px-5 py-2.5 font-semibold text-caro-ink"
+                  >
+                    {t("chooseCarLink")}
+                  </Link>
+                </div>
+              )}
+            </>
+          )}
+
           {/* Gewoon een GET-formulier: werkt zonder JavaScript en het
               resultaat is deelbaar via de URL */}
           <form action={formAction} className="mt-8 max-w-lg">
@@ -783,20 +871,12 @@ export default async function FamilyPage({ params, searchParams }: Props) {
             <p className="mt-2 text-sm text-muted">{t("oenHint")}</p>
           </form>
 
-          {/* De boom hangt aan de auto: zonder gekozen voertuig kan de
-              leverancier hem niet leveren, dus dan tonen we een uitnodiging
-              in plaats van een lege rij. */}
-          {carId ? (
+          {/* De categorieboom hangt aan de auto; zonder gekozen voertuig
+              staat de uitnodiging hierboven al. */}
+          {carId && (
             <Suspense fallback={<GroupsFallback />}>
               <PartGroups carId={carId} familySlugParam={slug} />
             </Suspense>
-          ) : (
-            <>
-              <SelectedCarInUrl active />
-              <p className="mt-8 max-w-xl rounded-lg border border-border bg-surface p-6 text-muted">
-                {t("chooseCarToBrowse")}
-              </p>
-            </>
           )}
 
           {searchTerm && (

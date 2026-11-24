@@ -1,8 +1,9 @@
 import Image from "next/image";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { familySlug } from "@/lib/catalog/families";
 import { GROUP_PHOTO_SIZE, groupPhoto } from "@/lib/catalog/group-photos";
-import { POPULAR_PART_PHOTOS, POPULAR_PARTS } from "@/lib/footer-links";
+import { POPULAR_PARTS } from "@/lib/footer-links";
 
 /**
  * Veelgezochte onderdelen als fototegels, direct onder de hero.
@@ -13,15 +14,22 @@ import { POPULAR_PART_PHOTOS, POPULAR_PARTS } from "@/lib/footer-links";
  * de klant die "remblokken" zocht moest eerst naar Onderdelen en daar een
  * auto opgeven.
  *
- * De tegels zoeken op naam, net als "Veelgezocht" in de footer: dat werkt
- * zonder gekozen auto, en elke term is gemeten op treffers
- * (`lib/footer-links.ts`). De labels blijven in beide talen Nederlands, want
- * het label ís de zoekterm en de catalogus spreekt geen Engels.
+ * **De tegels zochten tot 2026-11-24 op naam en dat was fout.** Zes van de
+ * acht kwamen uit bij iets anders: "Remschijf" gaf schroeven en dekplaten,
+ * "Schokdemper" beschermkappen. De meetreeks staat bij `POPULAR_PARTS` in
+ * `lib/footer-links.ts`. Ze wijzen nu een eindgroep aan in de boom van de
+ * auto — hetzelfde pad als de rij "meest gezocht" op de onderdelenpagina —
+ * en daarom mag het label wél vertaald worden: het is geen zoekterm meer.
  *
  * Kost geen verzoek bij de leverancier: de lijst en de foto's staan bij ons.
  */
 export async function PopularParts() {
-  const t = await getTranslations("homeInfo");
+  const [t, tPart, locale] = await Promise.all([
+    getTranslations("homeInfo"),
+    getTranslations("partNames"),
+    getLocale(),
+  ]);
+  const parts = familySlug("onderdelen", locale);
 
   return (
     <section className="site-container pt-12 md:pt-16">
@@ -38,15 +46,29 @@ export async function PopularParts() {
 
       {/* Op een telefoon ook vier naast elkaar, met kleine foto's. In twee
           kolommen waren acht tegels samen 1.040px hoog (GEMETEN 2026-11-23 op
-          375px) en duwden ze alles eronder anderhalf scherm weg. */}
-      <ul className="mt-6 grid grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+          375px) en duwden ze alles eronder anderhalf scherm weg.
+
+          Op `xl` juist acht op één rij. GEMETEN 2026-11-24 op 1280px: met
+          vier kolommen was een tegel 292px breed om een foto van 144px
+          (`max-w-36`) heen — ruim de helft lege tegel. Met acht is hij 138px
+          en vult de foto hem bijna; het blok is dan ook één rij in plaats
+          van twee. */}
+      <ul className="mt-6 grid grid-cols-4 gap-2 sm:gap-3 md:gap-4 xl:grid-cols-8">
         {POPULAR_PARTS.map((part) => {
-          const photo = groupPhoto(POPULAR_PART_PHOTOS[part]);
+          const photo = groupPhoto(part.photo);
           return (
-            <li key={part}>
+            <li key={part.key}>
               <Link
-                href={{ pathname: "/search", query: { q: part } }}
-                className="group flex h-full flex-col items-center gap-2 rounded-lg border border-border bg-background px-1 py-2 text-center hover:border-caro-orange sm:gap-3 sm:p-4"
+                href={{
+                  pathname: "/[family]",
+                  params: { family: parts },
+                  query: { deel: part.key },
+                }}
+                // Dezelfde omlijning als de rij "meest gezocht" op de
+                // onderdelenpagina (`group-list.tsx`, compact): het zijn
+                // dezelfde onderdelen in dezelfde rol, dus ze horen er
+                // hetzelfde uit te zien.
+                className="group flex h-full flex-col items-center gap-2 rounded-lg border border-caro-orange/40 bg-background px-1 py-2 text-center transition-colors hover:border-caro-orange hover:bg-surface sm:gap-3 sm:p-4"
               >
                 {photo && (
                   <Image
@@ -59,13 +81,18 @@ export async function PopularParts() {
                     className="aspect-square w-full max-w-36 rounded-md bg-white object-contain p-1 ring-1 ring-caro-ink/10 sm:p-2"
                   />
                 )}
-                {/* lang="nl": het label is ook op de Engelse pagina Nederlands,
-                    en zo breekt "Distributieriem" op een lettergreep in
-                    plaats van midden in een woord. */}
-                <span
-                  lang="nl"
-                  className="w-full text-xs font-semibold [overflow-wrap:anywhere] hyphens-auto sm:text-base group-hover:underline group-hover:decoration-caro-orange group-hover:decoration-2 group-hover:underline-offset-4">
-                  {part}
+                {/* **Het afbreekpunt staat in de vertaling zelf**, als een
+                    zacht afbreekstreepje (`­`) in `partNames`. GEMETEN
+                    2026-11-24 op 375px: het labelvak is dan 70px en
+                    "Distributieriem" 86px, dus drie van de acht braken
+                    middenin — "Remblokke / n", "Schokdemp / er". Dat is wat
+                    `[overflow-wrap:anywhere]` doet, en `hyphens-auto` komt er
+                    niet aan te pas: dat vraagt een woordenlijst die niet elke
+                    browser heeft. Een zacht streepje werkt overal, is
+                    onzichtbaar waar het past en wordt door schermlezers
+                    genegeerd. De regel hieronder blijft staan als vangnet. */}
+                <span className="w-full text-xs font-semibold [overflow-wrap:anywhere] hyphens-auto sm:text-sm group-hover:underline group-hover:decoration-caro-orange group-hover:decoration-2 group-hover:underline-offset-4">
+                  {tPart(part.label)}
                 </span>
               </Link>
             </li>

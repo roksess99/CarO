@@ -4114,3 +4114,156 @@ De bewaartermijn is al beslist: twee jaar na de laatste bestelling.
 | 2026-11-23 | Over CaroParts en drie gidsen in plaats van vergelijkingspagina's | Een vergelijking met Autodoc of Winparts verliezen we nu op beoordelingen, en iDEAL staat nog niet aan; uitleg per zoekvraag en een eerlijke over-pagina werken zonder een concurrent te noemen (#37) |
 | 2026-11-01 | De browser krijgt alleen de teksten die hij rendert | GEMETEN: 27% van de HTML was de hele berichtenboom, de maileksten incluis; negentien van de achtendertig namespaces zijn genoeg, en `pnpm messages:check` houdt die lijst eerlijk (#34) |
 | 2026-09-19 | Beoordelingen verschijnen meteen, verbergen alleen met reden | Selectief publiceren is een oneerlijke handelspraktijk; antwoorden werkt beter dan weghalen (#18) |
+
+---
+
+## 38. Een onderdeeltegel wijst een groep aan, geen zoekterm — VASTGESTELD 2026-11-24
+
+De eigenaar klikte op de homepage op **Remschijf** en kwam uit bij schroeven.
+Hij meldde er meteen bij dat de labels Nederlands bleven op de Engelse site.
+
+### Wat er aan de hand was
+
+De acht tegels (en hetzelfde rijtje in de voettekst) linkten naar
+`/nl/zoeken?q=<naam>`. De zoekfunctie van de leverancier zoekt over meerdere
+velden tegelijk, dus "Remschijf" matcht net zo goed op "Schroef, remschijf".
+GEMETEN 2026-11-24 over de eerste twaalf treffers per tegel:
+
+| Tegel | Raak | Wat er in plaats daarvan stond |
+|---|---|---|
+| Remblokken | 12/12 | — |
+| Bougie | 11/12 | — |
+| Luchtfilter | 3/12 | houder, afdichting, aanzuigslang |
+| Accu | 3/12 | accuvet, accupoolklem, batterijkast |
+| Oliefilter | 2/12 | afdichtring, pakking oliefilterhuis |
+| Remschijf | **0/12** | schroef, schroevenset, dekplaat |
+| Distributieriem | **0/12** | afscherming, spanrol, geleiderol |
+| Schokdemper | **0/12** | beschermkap, ophanging |
+
+Het was dus niet één knop maar zes van de acht. `rankByName()` in
+`wearparts-provider.ts` haalt treffers naar voren waarvan de naam met de term
+begint, maar die sortering kan niets doen als er in de opgehaalde acht geen
+enkele remschijf zit.
+
+### Dieper halen of bij de leverancier filteren kan geen van beide
+
+GEMETEN, aantal artikelen van het juiste soortnummer per paginagrootte:
+
+| Tegel | 30 | 60 | 120 | 240 |
+|---|---|---|---|---|
+| Remblokken (402) | 30 | 60 | 120 | 240 |
+| Bougie (686) | 29 | 58 | 115 | 225 |
+| Oliefilter (7) | 13 | 41 | 97 | 210 |
+| Luchtfilter (8) | 16 | 41 | 95 | 214 |
+| Remschijf (82) | 1 | 2 | 11 | 19 |
+| **Schokdemper (854)** | **0** | **0** | **0** | **0** |
+| **Distributieriem (1123)** | **0** | **0** | **0** | **0** |
+
+Voor twee van de acht levert een zoekopdracht op naam dus **geen enkel**
+artikel van het goede soort op, hoe diep je ook gaat. En zo'n antwoord is bij
+`limit=240` ook nog eens megabytes groot (@docs/api/WEARPARTS.md).
+
+Bij de leverancier afvangen kan evenmin. GEMETEN op alle elf soortnummers uit
+`lib/admin/part-kinds.ts`:
+
+| Poging | Uitkomst |
+|---|---|
+| `filter[genericArticleId]=82` | HTTP 400 — hij bestaat niet als filter |
+| `search=…&filter[genericArticleId]=…` | HTTP 500 bij 8 van de 11 |
+| `exact=1` | willekeurig HTTP 500, of juist méér ruis |
+| `filter[category]=570` zonder `carId` | HTTP 400 |
+
+De specificatie zegt het zelf, en dat was over het hoofd gezien:
+`filter[genericArticleId]` is er *"to get attributes and vehicle attributes in
+facets"* — het is geen filter maar een facettenschakelaar.
+
+### Wat er nu staat
+
+**De tegel wijst een eindgroep aan in de boom van de auto**, precies zoals de
+rij "meest gezocht" op de onderdelenpagina dat al deed (#7, 2026-09-25). De
+sleutels staan in `POPULAR_PART_GROUPS`; `footer-links.ts` typt zijn lijst op
+`PartGroupKey`, dus een tikfout houdt de build tegen.
+
+```
+tegel → /nl/onderdelen?deel=remschijf
+         ├─ auto bekend → 308 naar /nl/onderdelen/remschijf-570?auto=…
+         └─ geen auto   → "Remschijf — kies eerst je auto", knop naar /mijn-auto
+```
+
+De auto komt uit localStorage; `SelectedCarInUrl` zet hem in de URL en draagt
+`deel=` daarbij mee — zonder dat raakte de klant zijn keuze kwijt op precies
+het moment dat de auto bekend werd. Het kost **geen verzoek extra**: de
+categorieboom staat een dag in de cache en die pagina haalt hem toch al op.
+
+GEMETEN na de wijziging op carId 128136 (Citroën C3 Aircross): alle acht
+tegels komen uit op hun eigen groep met echte artikelen — ook schokdemper
+(20 artikelen) en distributieriem (1, een **ketting**, want deze motor heeft
+geen riem). Dat laatste is meteen het bewijs dat de boom de waarheid vertelt
+en een zoekopdracht niet.
+
+**Staat de groep niet in de boom van die auto, dan zegt de pagina dat.** Op de
+McLaren 720S (140906) heeft de leverancier alleen oliefilter, motorolie,
+rem- en koelvloeistof als eindgroep; daar staat nu *"Remschijf is voor deze
+auto niet apart te tonen"* met het categorierooster eronder, in plaats van
+een doorverwijzing naar niets.
+
+### En daarmee mogen de labels vertaald worden
+
+Hier stond in `footer-links.ts`: *"de labels blijven in beide talen
+Nederlands, want het label ís de zoekterm en de catalogus spreekt geen
+Engels."* Dat klopte zolang het een zoekterm was. Nu is de sleutel het label
+niet meer, dus de tegels en het voettekstrijtje lezen **Brake disc, Brake
+pads, Oil filter…** op de Engelse site (`partNames` in `messages/`).
+
+**Bij de merken blijft het wél zo**: `CAR_MAKES` en `PART_BRANDS` zijn nog
+steeds zoektermen, en een merknaam vertaal je sowieso niet.
+
+### Nagelopen 2026-11-24: de landingspagina erkende de keuze te laat
+
+Een ontwerpbeoordeling over dit werk leverde drie punten op die alle drie zijn
+uitgevoerd.
+
+**De klant kwam onder de vouw uit.** Op `/nl/onderdelen?deel=schokdemper` was
+de leesvolgorde: eyebrow, kop "Onderdelen", generieke intro, zoekveld met knop
+en drie regels helptekst, en pas als zesde blok "Schokdemper — kies eerst je
+auto". Op 375px stond dat laatste half achter de tabbalk. En het blok
+erbovenop was het zoekveld — precies de weg die hierboven als onbetrouwbaar
+gemeten staat.
+
+Het keuzeblok staat nu vóór het formulier, en **de pagina neemt de kop van het
+onderdeel over**: "Schokdemper voor jouw auto", net zoals een bandenmaat
+"205/55 R16 banden kopen" geeft (#35). De intro legt uit waarom er een auto
+nodig is; de kaart eromheen verviel daarmee tot één knop, en een kaart om één
+knop heen is een leeg vlak — dus staat er de knop zelf. Zonder `deel=` blijft
+de kaart staan, met een oranje bovenrand omdat het de hoofdhandeling is.
+
+**De labels braken middenin een woord.** GEMETEN op 375px: het labelvak van
+een tegel is 70px en "Distributieriem" 86px, dus er stond "Distributieri /
+em", "Remblokke / n" en "Schokdemp / er". Dat is `[overflow-wrap:anywhere]`
+die toeslaat vóórdat `hyphens-auto` aan bod komt — en die laatste vraagt een
+woordenlijst die niet elke browser heeft.
+
+Het afbreekpunt staat nu **in de vertaling zelf**, als een zacht
+afbreekstreepje (`­`) in `partNames`: `Distributie­riem`. Dat werkt
+overal, is onzichtbaar waar het past, wordt door schermlezers genegeerd en
+levert een echt koppelteken op bij de breuk. Deze fout stond er al vóór deze
+wijziging.
+
+**Acht kolommen op `xl` in plaats van vier.** GEMETEN op 1280px: een tegel was
+292px breed om een foto van 144px heen (`max-w-36`), dus ruim de helft lege
+tegel, verdeeld over twee rijen. Nu is hij 138px met een foto van 105px en
+past het blok op één rij. Het label gaat daar van `text-base` naar `text-sm`.
+Mobiel verandert er niets: vier kolommen, 80px per tegel.
+
+Meegenomen omdat het dezelfde inconsistentie was: de tegels dragen nu dezelfde
+omlijning als de rij "meest gezocht" (`border-caro-orange/40`, hover naar
+`bg-surface`) — het zijn dezelfde onderdelen in dezelfde rol op twee schermen.
+En de voettekstkolom heet geen "Veelgezocht" meer maar "Populaire onderdelen":
+er wordt niet meer gezocht.
+
+### Wat dit niet oplost
+
+**Het zoekveld zelf.** Wie "remschijf" intypt krijgt nog steeds schroeven
+boven de remschijven, want daar is geen soort bekend om op te mikken. Dat is
+dezelfde ruis bij dezelfde bron; het vraagt een eigen afweging (meer ophalen
+en zelf rangschikken kost megabytes per zoekopdracht) en is niet gevraagd.

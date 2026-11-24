@@ -28,6 +28,7 @@ import {
 } from "./part-filters";
 import {
   MAINTENANCE_GROUPS,
+  type PartGroupKey,
   type PartGroupMatch,
   POPULAR_PART_GROUPS,
 } from "./quick-links";
@@ -439,6 +440,31 @@ export async function popularPartGroups(
 ): Promise<AssemblyGroup[]> {
   const { popular } = await partGroupsAndPopular(carId);
   return popular;
+}
+
+/**
+ * Eén eindgroep uit de boom van déze auto, aangewezen met een vaste sleutel.
+ *
+ * Waarvoor: een tegel op de homepage of een link in de voettekst zegt
+ * "remschijf" en moet uitkomen bij de remschijven van de gekozen auto. Zoeken
+ * op naam bij de leverancier doet dat niet — dat gaf schroeven (de meetreeks
+ * staat in `lib/footer-links.ts`).
+ *
+ * Kost geen verzoek extra: de boom staat een dag in de cache en de pagina
+ * haalt hem toch al op. Er wordt bewust **niet** geteld, anders dan bij
+ * `popularPartGroups`: we hoeven hier geen aantal te tonen, alleen te weten
+ * waar de klant heen moet. Staat de groep niet in de boom van deze auto — niet
+ * elke auto heeft een distributieriem — dan `null`, en zegt de pagina dat.
+ */
+export async function partGroupByKey(
+  carId: number,
+  key: PartGroupKey,
+): Promise<AssemblyGroup | null> {
+  const def = POPULAR_PART_GROUPS.find((group) => group.key === key);
+  if (!def) return null;
+  const tree = await assemblyTree(carId);
+  const byId = new Map(tree.map((group) => [group.id, group]));
+  return matchGroups(tree, byId, def)[0] ?? null;
 }
 
 /**

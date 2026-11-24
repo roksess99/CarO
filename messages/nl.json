@@ -172,7 +172,11 @@
         "heading": "All-season banden",
         "intro": "All-season banden rijden het hele jaar onder de auto, zonder wisselen. Kies hieronder de maat die op de zijkant van je huidige band staat, dan zie je alleen all-seasonbanden die passen."
       }
-    }
+    },
+    "partNotForCar": "{part} is voor deze auto niet apart te tonen. Blader hieronder verder door de categorieën.",
+    "chooseCarLink": "Kies je auto",
+    "partHeading": "{part} voor jouw auto",
+    "partIntro": "Welke onderdelen passen hangt van je auto af. Kies hem hieronder, dan tonen we alleen wat erop past."
   },
   "tyres": {
     "pickerTitle": "Kies je bandenmaat",
@@ -405,7 +409,7 @@
     "linkReturns": "Retourneren",
     "linkContact": "Contact",
     "partsTitle": "Populaire onderdelen",
-    "partsIntro": "Zoek direct op onderdeel. Wil je alleen zien wat op jouw auto past, vul dan bovenaan je kenteken in.",
+    "partsIntro": "Kies een onderdeel: we tonen wat op jouw auto past. Nog geen auto gekozen, dan vragen we eerst je kenteken.",
     "partsByCar": "Onderdelen op kenteken",
     "makesTitle": "Populaire automerken",
     "makesIntro": "Kies je merk, daarna model en uitvoering, en zie welke onderdelen passen.",
@@ -416,6 +420,16 @@
     "offersTitle": "Nu in de aanbieding",
     "offersAll": "Alle aanbiedingen",
     "tyresAll": "Alle banden in {size}"
+  },
+  "partNames": {
+    "remschijf": "Remschijf",
+    "remblok": "Rem­blokken",
+    "oliefilter": "Olie­filter",
+    "luchtfilter": "Lucht­filter",
+    "schokdemper": "Schok­demper",
+    "bougie": "Bougie",
+    "distributieriem": "Distributie­riem",
+    "accu": "Accu"
   },
   "offers": {
     "title": "Aanbiedingen",
@@ -707,7 +721,7 @@
     "offersLink": "Aanbiedingen",
     "makesTitle": "Automerken",
     "brandsTitle": "Fabrikanten",
-    "popularTitle": "Veelgezocht",
+    "popularTitle": "Populaire onderdelen",
     "cartLink": "Winkelwagen",
     "myCarLink": "Mijn auto",
     "moreMakes": "Meer merken",
