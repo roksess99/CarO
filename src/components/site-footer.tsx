@@ -44,6 +44,7 @@ function Column({
 export function SiteFooter() {
   const t = useTranslations("footer");
   const tFamily = useTranslations("family");
+  const tPart = useTranslations("partNames");
   const locale = useLocale();
   return (
     <footer className="mt-16 border-t border-border">
@@ -164,14 +165,22 @@ export function SiteFooter() {
             ))}
           </Column>
 
+          {/* Deze wijzen een groep aan in de onderdelenboom en niet een
+              zoekterm: de leverancier gaf op "Remschijf" schroeven terug
+              (de meetreeks staat in lib/footer-links.ts). Daarom mag het
+              label hier wél vertaald worden, anders dan bij de merken. */}
           <Column title={t("popularTitle")}>
             {POPULAR_PARTS.map((part) => (
-              <li key={part}>
+              <li key={part.key}>
                 <Link
-                  href={{ pathname: "/search", query: { q: part } }}
+                  href={{
+                    pathname: "/[family]",
+                    params: { family: familySlug("onderdelen", locale) },
+                    query: { deel: part.key },
+                  }}
                   className={linkClass}
                 >
-                  {part}
+                  {tPart(part.label)}
                 </Link>
               </li>
             ))}

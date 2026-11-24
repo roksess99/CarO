@@ -49,6 +49,11 @@ export default function robots(): MetadataRoute.Robots {
           "/*?*alles=",
           // Merk + bandenmaat: dezelfde soort variant als een filter.
           "/*?*merk=",
+          // De onderdeeltegels op de homepage en in de voettekst. Dit is
+          // geen pagina maar een doorverwijzing: mét auto springt hij door
+          // naar de groep, zonder auto staat er een uitnodiging. De groep
+          // zelf hangt aan `?auto=` en staat hierboven al op disallow.
+          "/*?*deel=",
           `/*?*${FILTER_PARAM}=`,
         ],
       },

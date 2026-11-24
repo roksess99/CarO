@@ -94,7 +94,7 @@ export const MAINTENANCE_GROUPS: ReadonlyArray<PartGroupMatch> = [
  * Een groep die deze auto niet heeft valt weg — niet elke auto heeft een
  * distributieriem (sommige hebben een ketting) of een interieurfilter.
  */
-export const POPULAR_PART_GROUPS: ReadonlyArray<PartGroupMatch> = [
+export const POPULAR_PART_GROUPS = [
   { key: "oliefilter", match: /^oliefilter$/i, under: /^filter$/i },
   { key: "luchtfilter", match: /^luchtfilter$/i, under: /^filter$/i },
   { key: "brandstoffilter", match: /^brandstoffilter$/i, under: /^filter$/i },
@@ -110,4 +110,19 @@ export const POPULAR_PART_GROUPS: ReadonlyArray<PartGroupMatch> = [
   { key: "bougie", match: /^bougies?$/i },
   { key: "schokdemper", match: /^schokdempers?$/i },
   { key: "distributieriem", match: /^distributieriem$/i },
-];
+] as const satisfies ReadonlyArray<PartGroupMatch>;
+
+/**
+ * De sleutels van de rij hierboven als type.
+ *
+ * Daarmee kan een tegel of een voettekstlink een groep aanwijzen zonder dat
+ * een tikfout stil doorglipt: `footer-links.ts` typt zijn sleutels hierop, en
+ * TypeScript weigert te bouwen bij "remschijven" of "oliefilters".
+ */
+export type PartGroupKey = (typeof POPULAR_PART_GROUPS)[number]["key"];
+
+/** Hoort deze tekst uit de URL bij een bekende groep? */
+export function partGroupKey(value: string | undefined): PartGroupKey | null {
+  const found = POPULAR_PART_GROUPS.find((group) => group.key === value);
+  return found ? found.key : null;
+}

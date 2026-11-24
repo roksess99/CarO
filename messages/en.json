@@ -172,7 +172,11 @@
         "heading": "All-season tyres",
         "intro": "All-season tyres stay on the car all year, no switching needed. Choose the size on the sidewall of your current tyre below to see only all-season tyres that fit."
       }
-    }
+    },
+    "partNotForCar": "{part} cannot be shown separately for this car. Browse the categories below.",
+    "chooseCarLink": "Choose your car",
+    "partHeading": "{part} for your car",
+    "partIntro": "Which parts fit depends on your car. Choose it below and we will only show what fits."
   },
   "tyres": {
     "pickerTitle": "Choose your tyre size",
@@ -405,7 +409,7 @@
     "linkReturns": "Returns",
     "linkContact": "Contact",
     "partsTitle": "Popular parts",
-    "partsIntro": "Search straight for a part. To see only what fits your car, enter your number plate at the top.",
+    "partsIntro": "Pick a part and we show what fits your car. No car chosen yet? We ask for your registration first.",
     "partsByCar": "Parts by number plate",
     "makesTitle": "Popular car makes",
     "makesIntro": "Choose your make, then model and version, and see which parts fit.",
@@ -416,6 +420,16 @@
     "offersTitle": "On offer now",
     "offersAll": "All offers",
     "tyresAll": "All tyres in {size}"
+  },
+  "partNames": {
+    "remschijf": "Brake disc",
+    "remblok": "Brake pads",
+    "oliefilter": "Oil filter",
+    "luchtfilter": "Air filter",
+    "schokdemper": "Shock absorber",
+    "bougie": "Spark plug",
+    "distributieriem": "Timing belt",
+    "accu": "Battery"
   },
   "offers": {
     "title": "Offers",
@@ -706,7 +720,7 @@
     "offersLink": "Offers",
     "makesTitle": "Car makes",
     "brandsTitle": "Manufacturers",
-    "popularTitle": "Popular searches",
+    "popularTitle": "Popular parts",
     "cartLink": "Cart",
     "myCarLink": "My car",
     "moreMakes": "More makes",
